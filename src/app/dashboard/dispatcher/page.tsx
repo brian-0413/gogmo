@@ -5,11 +5,30 @@ import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Badge, OrderStatusBadge } from '@/components/ui/Badge'
 import { parseBatchOrders, ParsedOrder, BatchOrderDefaults } from '@/lib/ai'
 import { format, parseISO } from 'date-fns'
 import { zhTW } from 'date-fns/locale'
+import {
+  ClipboardList,
+  Plus,
+  Search,
+  UserCheck,
+  Wallet,
+  FileText,
+  Car,
+  BarChart3,
+  Building2,
+  User,
+  Phone,
+  Plane,
+  LogOut,
+  Radio,
+  TrendingUp,
+  CheckCircle,
+  Clock,
+} from 'lucide-react'
+import Link from 'next/link'
 
 type Tab = 'orders' | 'create' | 'review' | 'drivers' | 'settlement'
 type OrderStatus = 'PENDING' | 'PUBLISHED' | 'ASSIGNED' | 'ACCEPTED' | 'ARRIVED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED'
@@ -315,10 +334,10 @@ export default function DispatcherDashboard() {
 
   if (isLoading || !user) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto" />
-          <p className="mt-4 text-slate-600">載入中...</p>
+          <div className="w-12 h-12 border-2 border-[#ff8c42] border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="mt-4 text-[#666]">載入中...</p>
         </div>
       </div>
     )
@@ -331,103 +350,144 @@ export default function DispatcherDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-100">
-      {/* Header */}
-      <header className="bg-white shadow-sm sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-xl font-bold text-slate-900">🏢 {user.dispatcher?.companyName || '車頭專區'}</h1>
-              <p className="text-sm text-slate-600">{user.name}</p>
-            </div>
-            <Button variant="outline" size="sm" onClick={logout}>
-              登出
-            </Button>
-          </div>
+    <div className="min-h-screen bg-black text-white">
+      {/* Background Effects */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-0 left-1/4 w-[400px] h-[400px] bg-[#ff8c42]/5 rounded-full blur-[150px]" />
+      </div>
 
-          {/* Quick Stats */}
-          <div className="grid grid-cols-3 gap-3 mt-4">
-            <div className="bg-amber-50 rounded-lg p-3 text-center">
-              <p className="text-xl font-bold text-amber-600">{statusCounts.PUBLISHED}</p>
-              <p className="text-xs text-amber-600">待搶單</p>
-            </div>
-            <div className="bg-blue-50 rounded-lg p-3 text-center">
-              <p className="text-xl font-bold text-blue-600">{statusCounts.ACTIVE}</p>
-              <p className="text-xs text-blue-600">進行中</p>
-            </div>
-            <div className="bg-green-50 rounded-lg p-3 text-center">
-              <p className="text-xl font-bold text-green-600">{statusCounts.COMPLETED}</p>
-              <p className="text-xs text-green-600">已完成</p>
+      {/* Header */}
+      <header className="relative z-10 bg-black/80 backdrop-blur-xl border-b border-white/5 sticky top-0">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex items-center justify-between h-16">
+            <Link href="/" className="flex items-center gap-2 group">
+              <div className="w-8 h-8 rounded-lg bg-[#ff8c42] flex items-center justify-center">
+                <Plane className="w-4 h-4 text-black" />
+              </div>
+              <span className="text-[#ff8c42] font-semibold tracking-tight">
+                {user.dispatcher?.companyName || '車頭專區'}
+              </span>
+            </Link>
+            <div className="flex items-center gap-6">
+              <div className="flex items-center gap-2 text-xs text-[#22c55e]">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#22c55e] opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-[#22c55e]"></span>
+                </span>
+                {drivers.filter(d => d.status === 'ONLINE').length} 司機在線
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="text-right">
+                  <p className="text-sm font-medium">{user.name}</p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={logout}
+                  className="border-white/20 text-[#666] hover:bg-white/10 hover:text-white"
+                >
+                  <LogOut className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
           </div>
         </div>
       </header>
 
+      {/* Quick Stats Bar */}
+      <div className="relative z-10 bg-black/50 backdrop-blur-xl border-b border-white/5">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="grid grid-cols-3 gap-4">
+            <div className="bg-gradient-to-br from-[#ff8c42]/20 to-[#ff8c42]/5 border border-[#ff8c42]/20 rounded-xl p-4 text-center">
+              <div className="flex items-center justify-center gap-2 mb-1">
+                <Clock className="w-4 h-4 text-[#ff8c42]" />
+              </div>
+              <p className="text-2xl font-bold text-white">{statusCounts.PUBLISHED}</p>
+              <p className="text-xs text-[#666]">待搶單</p>
+            </div>
+            <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-center">
+              <div className="flex items-center justify-center gap-2 mb-1">
+                <TrendingUp className="w-4 h-4 text-[#3b82f6]" />
+              </div>
+              <p className="text-2xl font-bold text-white">{statusCounts.ACTIVE}</p>
+              <p className="text-xs text-[#666]">進行中</p>
+            </div>
+            <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-center">
+              <div className="flex items-center justify-center gap-2 mb-1">
+                <CheckCircle className="w-4 h-4 text-[#22c55e]" />
+              </div>
+              <p className="text-2xl font-bold text-white">{statusCounts.COMPLETED}</p>
+              <p className="text-xs text-[#666]">已完成</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Tab Navigation */}
-      <div className="bg-white border-b border-slate-200 sticky top-[140px] z-10">
-        <div className="max-w-7xl mx-auto px-4">
+      <div className="relative z-10 bg-black/50 backdrop-blur-xl border-b border-white/5 sticky top-[156px]">
+        <div className="max-w-7xl mx-auto px-6">
           <div className="flex">
             <button
               onClick={() => setActiveTab('orders')}
-              className={`px-4 py-3 text-sm font-medium border-b-2 ${
+              className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
                 activeTab === 'orders'
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-slate-600'
+                  ? 'border-[#ff8c42] text-[#ff8c42]'
+                  : 'border-transparent text-[#666] hover:text-[#a0a0a0]'
               }`}
             >
-              📋 訂單管理
+              <ClipboardList className="w-4 h-4" /> 訂單管理
             </button>
             <button
               onClick={() => setActiveTab('create')}
-              className={`px-4 py-3 text-sm font-medium border-b-2 ${
+              className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
                 activeTab === 'create'
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-slate-600'
+                  ? 'border-[#ff8c42] text-[#ff8c42]'
+                  : 'border-transparent text-[#666] hover:text-[#a0a0a0]'
               }`}
             >
-              ➕ 批次建單
+              <Plus className="w-4 h-4" /> 批次建單
             </button>
             {reviewItems.length > 0 && (
               <button
                 onClick={() => setActiveTab('review')}
-                className={`px-4 py-3 text-sm font-medium border-b-2 ${
+                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
                   activeTab === 'review'
-                    ? 'border-blue-600 text-blue-600'
-                    : 'border-transparent text-slate-600'
+                    ? 'border-[#ff8c42] text-[#ff8c42]'
+                    : 'border-transparent text-[#666] hover:text-[#a0a0a0]'
                 }`}
               >
-                🔍 審核清單 ({reviewItems.length})
+                <Search className="w-4 h-4" /> 審核清單 ({reviewItems.length})
               </button>
             )}
             <button
               onClick={() => setActiveTab('drivers')}
-              className={`px-4 py-3 text-sm font-medium border-b-2 ${
+              className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
                 activeTab === 'drivers'
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-slate-600'
+                  ? 'border-[#ff8c42] text-[#ff8c42]'
+                  : 'border-transparent text-[#666] hover:text-[#a0a0a0]'
               }`}
             >
-              👨‍✈️ 司機列表
+              <UserCheck className="w-4 h-4" /> 司機列表
             </button>
             <button
               onClick={() => setActiveTab('settlement')}
-              className={`px-4 py-3 text-sm font-medium border-b-2 ${
+              className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
                 activeTab === 'settlement'
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-slate-600'
+                  ? 'border-[#ff8c42] text-[#ff8c42]'
+                  : 'border-transparent text-[#666] hover:text-[#a0a0a0]'
               }`}
             >
-              💰 對帳表
+              <Wallet className="w-4 h-4" /> 對帳表
             </button>
           </div>
         </div>
       </div>
 
       {/* Content */}
-      <main className="max-w-7xl mx-auto px-4 py-6">
+      <main className="relative z-10 max-w-7xl mx-auto px-6 py-6">
         {loading ? (
           <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mx-auto" />
+            <div className="w-10 h-10 border-2 border-[#ff8c42] border-t-transparent rounded-full animate-spin mx-auto" />
           </div>
         ) : (
           <>
@@ -435,72 +495,71 @@ export default function DispatcherDashboard() {
             {activeTab === 'orders' && (
               <div className="space-y-4">
                 {orders.length === 0 ? (
-                  <Card>
-                    <CardContent className="text-center py-12">
-                      <p className="text-slate-500">還沒有訂單</p>
-                      <Button className="mt-4" onClick={() => setActiveTab('create')}>
-                        建立第一筆訂單
-                      </Button>
-                    </CardContent>
-                  </Card>
+                  <div className="text-center py-24 border border-white/10 rounded-3xl bg-white/5 backdrop-blur-sm">
+                    <p className="text-[#a0a0a0] mb-2 text-lg">還沒有訂單</p>
+                    <Button className="mt-4 bg-[#ff8c42] hover:bg-[#ff9d5c] text-black" onClick={() => setActiveTab('create')}>
+                      建立第一筆訂單
+                    </Button>
+                  </div>
                 ) : (
                   orders.map(order => (
-                    <Card key={order.id} variant="elevated">
-                      <CardContent>
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="flex items-center gap-2">
-                            <span className="text-lg font-bold text-blue-600">
+                    <div key={order.id} className="bg-[#1a1a1a] border border-white/10 rounded-xl overflow-hidden hover:border-white/20 transition-all">
+                      <div className="p-5">
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex items-center gap-3">
+                            <span className="text-xl font-bold" style={{ color: '#ff8c42' }}>
                               NT${order.price}
                             </span>
                             <OrderStatusBadge status={order.status} />
                           </div>
                           <div className="text-right">
-                            <p className="text-xs text-slate-500">#{order.id.slice(0, 8)}</p>
-                            <p className="text-xs text-slate-400">
+                            <p className="text-xs text-[#666] font-mono">#{order.id.slice(0, 8)}</p>
+                            <p className="text-xs text-[#666]">
                               {order.scheduledTime ? format(parseISO(order.scheduledTime), 'MM/dd HH:mm', { locale: zhTW }) : '-'}
                             </p>
                           </div>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4 mb-3">
+                        <div className="grid grid-cols-2 gap-4 mb-4">
                           <div>
-                            <p className="text-xs text-slate-500">航班</p>
-                            <p className="font-mono font-medium">{order.flightNumber || '-'}</p>
+                            <p className="text-xs text-[#666] mb-1">航班</p>
+                            <p className="font-mono font-medium text-[#e0e0e0]">{order.flightNumber || '-'}</p>
                           </div>
                           <div>
-                            <p className="text-xs text-slate-500">時間</p>
-                            <p className="font-medium">
+                            <p className="text-xs text-[#666] mb-1">時間</p>
+                            <p className="font-medium text-[#e0e0e0]">
                               {order.scheduledTime ? format(parseISO(order.scheduledTime), 'HH:mm') : '-'}
                             </p>
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-4 mb-3">
-                          <div className="flex items-center gap-1">
-                            <div className="w-2 h-2 rounded-full bg-green-500" />
-                            <span className="text-sm truncate">{order.pickupLocation}</span>
+                        <div className="flex items-center gap-4 mb-4">
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full bg-[#22c55e]" />
+                            <span className="text-sm text-[#e0e0e0] truncate">{order.pickupLocation}</span>
                           </div>
-                          <span className="text-slate-400">→</span>
-                          <div className="flex items-center gap-1">
-                            <div className="w-2 h-2 rounded-full bg-red-500" />
-                            <span className="text-sm truncate">{order.dropoffLocation}</span>
+                          <span className="text-[#666]">→</span>
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full bg-[#ef4444]" />
+                            <span className="text-sm text-[#e0e0e0] truncate">{order.dropoffLocation}</span>
                           </div>
                         </div>
 
-                        <div className="text-sm text-slate-600 mb-3">
-                          👤 {order.passengerName || '待確認'} • 📞 {order.passengerPhone || '待確認'}
+                        <div className="flex items-center gap-4 text-sm text-[#666] mb-4">
+                          <span className="flex items-center gap-1"><User className="w-4 h-4" /> {order.passengerName || '待確認'}</span>
+                          <span className="flex items-center gap-1"><Phone className="w-4 h-4" /> {order.passengerPhone || '待確認'}</span>
                         </div>
 
                         {order.note && (
-                          <div className="text-xs text-slate-500 italic mb-3 bg-slate-50 p-2 rounded">
-                            📝 {order.note}
+                          <div className="text-xs text-[#888] italic mb-4 bg-white/5 p-2 rounded flex items-start gap-1">
+                            <FileText className="w-3 h-3 mt-0.5 flex-shrink-0" /> {order.note}
                           </div>
                         )}
 
                         {/* Assign Driver Section */}
                         {order.status === 'PUBLISHED' && (
-                          <div className="border-t border-slate-100 pt-3">
-                            <p className="text-xs text-slate-500 mb-2">指派司機：</p>
+                          <div className="border-t border-white/5 pt-4">
+                            <p className="text-xs text-[#666] mb-2">指派司機：</p>
                             <div className="flex flex-wrap gap-2">
                               {drivers
                                 .filter(d => d.status === 'ONLINE')
@@ -511,12 +570,13 @@ export default function DispatcherDashboard() {
                                     size="sm"
                                     onClick={() => handleAssignDriver(order.id, driver.id)}
                                     disabled={actionLoading === order.id}
+                                    className="border-white/20 text-[#a0a0a0] hover:bg-white/10 hover:text-white"
                                   >
                                     {driver.user.name} ({driver.licensePlate})
                                   </Button>
                                 ))}
                               {drivers.filter(d => d.status === 'ONLINE').length === 0 && (
-                                <p className="text-xs text-slate-400">目前沒有在線司機</p>
+                                <p className="text-xs text-[#444]">目前沒有在線司機</p>
                               )}
                             </div>
                           </div>
@@ -524,14 +584,14 @@ export default function DispatcherDashboard() {
 
                         {/* Assigned Driver */}
                         {order.driver && (
-                          <div className="border-t border-slate-100 pt-3">
-                            <Badge variant="info">
-                              👨‍✈️ {order.driver.user.name} ({order.driver.licensePlate})
+                          <div className="border-t border-white/5 pt-4">
+                            <Badge variant="info" className="bg-[#3b82f6]/20 text-[#3b82f6] border-[#3b82f6]/30">
+                              <UserCheck className="w-3 h-3 inline mr-1" /> {order.driver.user.name} ({order.driver.licensePlate})
                             </Badge>
                           </div>
                         )}
-                      </CardContent>
-                    </Card>
+                      </div>
+                    </div>
                   ))
                 )}
               </div>
@@ -541,23 +601,21 @@ export default function DispatcherDashboard() {
             {activeTab === 'create' && (
               <div className="space-y-6">
                 {/* Defaults Selection */}
-                <Card variant="elevated">
-                  <CardHeader>
-                    <CardTitle>📋 批次建單 - 設定預設值</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-slate-600 mb-4">
-                      選擇預設值後，貼上的所有訂單都會套用這些設定
-                    </p>
+                <div className="bg-[#1a1a1a] border border-white/10 rounded-2xl overflow-hidden">
+                  <div className="px-6 py-4 border-b border-white/5">
+                    <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                      <ClipboardList className="w-4 h-4 text-[#ff8c42]" /> 批次建單 - 設定預設值
+                    </h3>
+                    <p className="text-sm text-[#666] mt-1">選擇預設值後，貼上的所有訂單都會套用這些設定</p>
+                  </div>
+                  <div className="p-6">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">
-                          價格（統一）
-                        </label>
+                      <div className="space-y-2">
+                        <label className="text-sm text-[#a0a0a0] font-medium">價格（統一）</label>
                         <select
                           value={defaults.price || ''}
                           onChange={(e) => setDefaults(prev => ({ ...prev, price: parseInt(e.target.value) || undefined }))}
-                          className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:border-[#ff8c42]/50"
                         >
                           {PRICE_OPTIONS.map(opt => (
                             <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -565,14 +623,12 @@ export default function DispatcherDashboard() {
                         </select>
                       </div>
 
-                      <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">
-                          日期（統一）
-                        </label>
+                      <div className="space-y-2">
+                        <label className="text-sm text-[#a0a0a0] font-medium">日期（統一）</label>
                         <select
                           value={defaults.date || ''}
                           onChange={(e) => setDefaults(prev => ({ ...prev, date: e.target.value }))}
-                          className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:border-[#ff8c42]/50"
                         >
                           {DATE_OPTIONS.map(opt => (
                             <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -580,14 +636,12 @@ export default function DispatcherDashboard() {
                         </select>
                       </div>
 
-                      <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">
-                          車型要求
-                        </label>
+                      <div className="space-y-2">
+                        <label className="text-sm text-[#a0a0a0] font-medium">車型要求</label>
                         <select
                           value={defaults.carType || ''}
                           onChange={(e) => setDefaults(prev => ({ ...prev, carType: e.target.value }))}
-                          className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:border-[#ff8c42]/50"
                         >
                           {CAR_TYPE_OPTIONS.map(opt => (
                             <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -595,14 +649,12 @@ export default function DispatcherDashboard() {
                         </select>
                       </div>
 
-                      <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">
-                          人數（統一）
-                        </label>
+                      <div className="space-y-2">
+                        <label className="text-sm text-[#a0a0a0] font-medium">人數（統一）</label>
                         <select
                           value={defaults.passengerCount || 1}
                           onChange={(e) => setDefaults(prev => ({ ...prev, passengerCount: parseInt(e.target.value) }))}
-                          className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:border-[#ff8c42]/50"
                         >
                           {PASSENGER_OPTIONS.map(opt => (
                             <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -610,18 +662,20 @@ export default function DispatcherDashboard() {
                         </select>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
 
                 {/* Text Input */}
-                <Card variant="elevated">
-                  <CardHeader>
-                    <CardTitle>📝 貼上訂單文字</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-slate-600 mb-4">
-                      每行一筆訂單，格式：<code className="bg-slate-100 px-1 rounded">時間 上下車地點 /備註</code>
+                <div className="bg-[#1a1a1a] border border-white/10 rounded-2xl overflow-hidden">
+                  <div className="px-6 py-4 border-b border-white/5">
+                    <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                      <FileText className="w-4 h-4 text-[#ff8c42]" /> 貼上訂單文字
+                    </h3>
+                    <p className="text-sm text-[#666] mt-1">
+                      每行一筆訂單，格式：<code className="bg-white/10 px-1.5 py-0.5 rounded text-xs">時間 上下車地點 /備註</code>
                     </p>
+                  </div>
+                  <div className="p-6">
                     <textarea
                       value={rawText}
                       onChange={(e) => setRawText(e.target.value)}
@@ -632,52 +686,60 @@ export default function DispatcherDashboard() {
 0430 新竹東區送桃機/休旅 $1000
 1545 桃機接萬華 $700
 ...`}
-                      className="w-full h-48 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
+                      className="w-full h-48 bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-white text-sm font-mono focus:outline-none focus:border-[#ff8c42]/50 resize-none placeholder-[#444]"
                     />
-                    <Button onClick={handleParseBatch} className="mt-4 w-full" size="lg">
+                    <Button
+                      onClick={handleParseBatch}
+                      className="mt-4 w-full bg-[#ff8c42] hover:bg-[#ff9d5c] text-black font-semibold h-12 rounded-xl flex items-center justify-center gap-2"
+                      size="lg"
+                    >
                       解析並進入審核
+                      <Search className="w-4 h-4" />
                     </Button>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               </div>
             )}
 
             {/* Review Tab */}
             {activeTab === 'review' && (
               <div className="space-y-6">
-                <Card variant="elevated">
-                  <CardHeader>
-                    <CardTitle>🔍 審核清單 ({reviewItems.length} 筆)</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-slate-600 mb-4">
-                      請確認每一筆訂單的資訊，確認無誤後點擊「發布」按鈕
-                    </p>
-
+                <div className="bg-[#1a1a1a] border border-white/10 rounded-2xl overflow-hidden">
+                  <div className="px-6 py-4 border-b border-white/5">
+                    <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                      <Search className="w-4 h-4 text-[#ff8c42]" /> 審核清單 ({reviewItems.length} 筆)
+                    </h3>
+                    <p className="text-sm text-[#666] mt-1">請確認每一筆訂單的資訊，確認無誤後點擊「發布」按鈕</p>
+                  </div>
+                  <div className="p-6">
                     {reviewItems.length === 0 ? (
-                      <p className="text-center text-slate-500 py-8">暫無待審核的訂單</p>
+                      <p className="text-center text-[#666] py-8">暫無待審核的訂單</p>
                     ) : (
                       <div className="space-y-4">
                         {reviewItems.map((item, idx) => (
-                          <div key={item.reviewId} className="border border-slate-200 rounded-lg p-4">
+                          <div key={item.reviewId} className="bg-[#0a0a0a] border border-white/10 rounded-xl p-4">
                             {editingId === item.reviewId ? (
                               // Edit mode
                               <div className="space-y-3">
                                 <div className="flex items-center justify-between">
-                                  <p className="font-medium">編輯訂單 #{idx + 1}</p>
+                                  <p className="font-medium text-white">編輯訂單 #{idx + 1}</p>
                                 </div>
                                 <div className="grid grid-cols-2 gap-3">
-                                  <Input
-                                    label="時間 (HH:mm)"
-                                    value={editForm.scheduledTime || ''}
-                                    onChange={(e) => setEditForm(prev => ({ ...prev, scheduledTime: e.target.value }))}
-                                  />
-                                  <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">價格</label>
+                                  <div className="space-y-1">
+                                    <label className="text-xs text-[#666]">時間 (HH:mm)</label>
+                                    <input
+                                      type="text"
+                                      value={editForm.scheduledTime || ''}
+                                      onChange={(e) => setEditForm(prev => ({ ...prev, scheduledTime: e.target.value }))}
+                                      className="w-full bg-[#1a1a1a] border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
+                                    />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <label className="text-xs text-[#666]">價格</label>
                                     <select
                                       value={editForm.price || ''}
                                       onChange={(e) => setEditForm(prev => ({ ...prev, price: parseInt(e.target.value) }))}
-                                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                                      className="w-full bg-[#1a1a1a] border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
                                     >
                                       {PRICE_OPTIONS.filter(p => p.value > 0).map(opt => (
                                         <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -685,26 +747,38 @@ export default function DispatcherDashboard() {
                                     </select>
                                   </div>
                                 </div>
-                                <Input
-                                  label="上車地點"
-                                  value={editForm.pickupLocation || ''}
-                                  onChange={(e) => setEditForm(prev => ({ ...prev, pickupLocation: e.target.value }))}
-                                />
-                                <Input
-                                  label="下地點"
-                                  value={editForm.dropoffLocation || ''}
-                                  onChange={(e) => setEditForm(prev => ({ ...prev, dropoffLocation: e.target.value }))}
-                                />
-                                <Input
-                                  label="備註"
-                                  value={editForm.note || ''}
-                                  onChange={(e) => setEditForm(prev => ({ ...prev, note: e.target.value }))}
-                                />
+                                <div className="space-y-1">
+                                  <label className="text-xs text-[#666]">上車地點</label>
+                                  <input
+                                    type="text"
+                                    value={editForm.pickupLocation || ''}
+                                    onChange={(e) => setEditForm(prev => ({ ...prev, pickupLocation: e.target.value }))}
+                                    className="w-full bg-[#1a1a1a] border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
+                                  />
+                                </div>
+                                <div className="space-y-1">
+                                  <label className="text-xs text-[#666]">下下地點</label>
+                                  <input
+                                    type="text"
+                                    value={editForm.dropoffLocation || ''}
+                                    onChange={(e) => setEditForm(prev => ({ ...prev, dropoffLocation: e.target.value }))}
+                                    className="w-full bg-[#1a1a1a] border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
+                                  />
+                                </div>
+                                <div className="space-y-1">
+                                  <label className="text-xs text-[#666]">備註</label>
+                                  <input
+                                    type="text"
+                                    value={editForm.note || ''}
+                                    onChange={(e) => setEditForm(prev => ({ ...prev, note: e.target.value }))}
+                                    className="w-full bg-[#1a1a1a] border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
+                                  />
+                                </div>
                                 <div className="flex gap-2">
-                                  <Button onClick={() => handleSaveEdit(item.reviewId)} size="sm">
+                                  <Button onClick={() => handleSaveEdit(item.reviewId)} size="sm" className="bg-[#ff8c42] hover:bg-[#ff9d5c] text-black">
                                     儲存
                                   </Button>
-                                  <Button variant="outline" onClick={() => setEditingId(null)} size="sm">
+                                  <Button variant="outline" onClick={() => setEditingId(null)} size="sm" className="border-white/20 text-[#666] hover:bg-white/10">
                                     取消
                                   </Button>
                                 </div>
@@ -712,63 +786,62 @@ export default function DispatcherDashboard() {
                             ) : (
                               // View mode
                               <div>
-                                <div className="flex items-start justify-between mb-2">
+                                <div className="flex items-start justify-between mb-3">
                                   <div className="flex items-center gap-2">
-                                    <span className="text-sm font-medium text-slate-500">#{idx + 1}</span>
-                                    {/* Order Type Badge */}
+                                    <span className="text-sm font-medium text-[#666]">#{idx + 1}</span>
                                     {item.orderType === 'pickup' ? (
-                                      <Badge variant="success">接機</Badge>
+                                      <Badge className="bg-[#22c55e]/20 text-[#22c55e] border-[#22c55e]/30">接機</Badge>
                                     ) : item.orderType === 'dropoff' ? (
-                                      <Badge variant="danger">送機</Badge>
+                                      <Badge className="bg-[#3b82f6]/20 text-[#3b82f6] border-[#3b82f6]/30">送機</Badge>
                                     ) : null}
-                                    <span className="text-xs text-slate-400 font-mono">{item.rawText}</span>
+                                    <span className="text-xs text-[#444] font-mono">{item.rawText}</span>
                                   </div>
                                   <div className="flex gap-2">
-                                    <Button variant="outline" size="sm" onClick={() => handleEditItem(item)}>
+                                    <Button variant="outline" size="sm" onClick={() => handleEditItem(item)} className="border-white/20 text-[#666] hover:bg-white/10 text-xs py-1 px-2">
                                       編輯
                                     </Button>
-                                    <Button variant="danger" size="sm" onClick={() => handleDeleteItem(item.reviewId)}>
+                                    <Button variant="outline" size="sm" onClick={() => handleDeleteItem(item.reviewId)} className="border-[#ef4444]/30 text-[#ef4444] hover:bg-[#ef4444]/10 text-xs py-1 px-2">
                                       刪除
                                     </Button>
                                   </div>
                                 </div>
 
-                                <div className="grid grid-cols-3 gap-4">
+                                <div className="grid grid-cols-3 gap-4 mb-3">
                                   <div>
-                                    <p className="text-xs text-slate-500">時間</p>
-                                    <p className="font-mono font-medium">
+                                    <p className="text-xs text-[#666]">時間</p>
+                                    <p className="font-mono font-medium text-[#e0e0e0]">
                                       {item.editedTime || item.scheduledTime || '-'}
                                     </p>
                                   </div>
                                   <div>
-                                    <p className="text-xs text-slate-500">費用</p>
-                                    <p className="font-bold text-blue-600">
+                                    <p className="text-xs text-[#666]">費用</p>
+                                    <p className="font-bold" style={{ color: '#ff8c42' }}>
                                       NT${item.editedPrice || item.price || defaults.price || 800}
                                     </p>
                                   </div>
                                   <div>
-                                    <p className="text-xs text-slate-500">車型</p>
-                                    <p className="font-medium">
+                                    <p className="text-xs text-[#666]">車型</p>
+                                    <p className="font-medium text-[#e0e0e0]">
                                       {item.note?.includes('休旅') || defaults.carType === '休旅車' ? '休旅車' : '小車'}
                                     </p>
                                   </div>
                                 </div>
 
-                                <div className="mt-2 flex items-center gap-2">
-                                  <div className="flex items-center gap-1">
-                                    <div className="w-2 h-2 rounded-full bg-green-500" />
-                                    <span className="text-sm">{item.editedPickup || item.pickupLocation || '-'}</span>
+                                <div className="flex items-center gap-3 text-sm">
+                                  <div className="flex items-center gap-1.5">
+                                    <div className="w-2 h-2 rounded-full bg-[#22c55e]" />
+                                    <span className="text-[#e0e0e0]">{item.editedPickup || item.pickupLocation || '-'}</span>
                                   </div>
-                                  <span className="text-slate-400">→</span>
-                                  <div className="flex items-center gap-1">
-                                    <div className="w-2 h-2 rounded-full bg-red-500" />
-                                    <span className="text-sm">{item.editedDropoff || item.dropoffLocation || '-'}</span>
+                                  <span className="text-[#666]">→</span>
+                                  <div className="flex items-center gap-1.5">
+                                    <div className="w-2 h-2 rounded-full bg-[#ef4444]" />
+                                    <span className="text-[#e0e0e0]">{item.editedDropoff || item.dropoffLocation || '-'}</span>
                                   </div>
                                 </div>
 
                                 {(item.editedNote || item.note) && (
-                                  <p className="text-xs text-slate-500 italic mt-2">
-                                    📝 {item.editedNote || item.note}
+                                  <p className="text-xs text-[#888] italic mt-2 flex items-center gap-1">
+                                    <FileText className="w-3 h-3" /> {item.editedNote || item.note}
                                   </p>
                                 )}
                               </div>
@@ -777,19 +850,29 @@ export default function DispatcherDashboard() {
                         ))}
 
                         {reviewItems.length > 0 && (
-                          <div className="flex gap-4 pt-4 border-t border-slate-200">
-                            <Button onClick={handlePublishOrders} loading={createLoading} size="lg" className="flex-1">
+                          <div className="flex gap-4 pt-4 border-t border-white/5">
+                            <Button
+                              onClick={handlePublishOrders}
+                              loading={createLoading}
+                              size="lg"
+                              className="flex-1 bg-[#ff8c42] hover:bg-[#ff9d5c] text-black font-semibold h-12 rounded-xl flex items-center justify-center gap-2"
+                            >
                               發布 {reviewItems.length} 筆訂單
                             </Button>
-                            <Button variant="outline" onClick={() => setActiveTab('create')} size="lg">
+                            <Button
+                              variant="outline"
+                              onClick={() => setActiveTab('create')}
+                              size="lg"
+                              className="border-white/20 text-[#666] hover:bg-white/10 hover:text-white"
+                            >
                               繼續新增
                             </Button>
                           </div>
                         )}
                       </div>
                     )}
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               </div>
             )}
 
@@ -797,30 +880,30 @@ export default function DispatcherDashboard() {
             {activeTab === 'drivers' && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {drivers.length === 0 ? (
-                  <Card className="col-span-full">
-                    <CardContent className="text-center py-12">
-                      <p className="text-slate-500">目前沒有司機資料</p>
-                    </CardContent>
-                  </Card>
+                  <div className="col-span-full text-center py-24 border border-white/10 rounded-3xl bg-white/5 backdrop-blur-sm">
+                    <p className="text-[#a0a0a0] mb-2 text-lg">目前沒有司機資料</p>
+                  </div>
                 ) : (
                   drivers.map(driver => (
-                    <Card key={driver.id} variant="elevated">
-                      <CardContent>
-                        <div className="flex items-start justify-between mb-3">
-                          <div>
-                            <p className="font-medium text-slate-900">{driver.user.name}</p>
-                            <p className="text-sm text-slate-600">{driver.user.phone}</p>
-                          </div>
-                          <Badge variant={driver.status === 'ONLINE' ? 'success' : 'default'}>
-                            {driver.status === 'ONLINE' ? '在線' : driver.status}
-                          </Badge>
+                    <div key={driver.id} className="bg-[#1a1a1a] border border-white/10 rounded-xl p-5 hover:border-white/20 transition-all">
+                      <div className="flex items-start justify-between mb-4">
+                        <div>
+                          <p className="font-medium text-white">{driver.user.name}</p>
+                          <p className="text-sm text-[#666]">{driver.user.phone}</p>
                         </div>
-                        <div className="text-sm text-slate-600">
-                          <p>🚗 {driver.licensePlate}</p>
-                          <p>{driver.carType} / {driver.carColor}</p>
-                        </div>
-                      </CardContent>
-                    </Card>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          driver.status === 'ONLINE'
+                            ? 'bg-[#22c55e]/20 text-[#22c55e] border border-[#22c55e]/30'
+                            : 'bg-white/10 text-[#666] border border-white/10'
+                        }`}>
+                          {driver.status === 'ONLINE' ? '在線' : driver.status}
+                        </span>
+                      </div>
+                      <div className="text-sm text-[#a0a0a0] space-y-1">
+                        <p className="flex items-center gap-2"><Car className="w-4 h-4 text-[#ff8c42]" /> {driver.licensePlate}</p>
+                        <p>{driver.carType} / {driver.carColor}</p>
+                      </div>
+                    </div>
                   ))
                 )}
               </div>
@@ -828,19 +911,17 @@ export default function DispatcherDashboard() {
 
             {/* Settlement Tab */}
             {activeTab === 'settlement' && (
-              <Card variant="elevated">
-                <CardHeader>
-                  <CardTitle>📊 對帳表</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-slate-600">
-                    查看已完成行程的帳務概況和司機轉帳清單
-                  </p>
-                  <div className="mt-4 text-center py-8 text-slate-500">
-                    功能開發中...
-                  </div>
-                </CardContent>
-              </Card>
+              <div className="bg-[#1a1a1a] border border-white/10 rounded-2xl overflow-hidden">
+                <div className="px-6 py-4 border-b border-white/5">
+                  <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                    <BarChart3 className="w-4 h-4 text-[#ff8c42]" /> 對帳表
+                  </h3>
+                  <p className="text-sm text-[#666] mt-1">查看已完成行程的帳務概況和司機轉帳清單</p>
+                </div>
+                <div className="p-12 text-center">
+                  <p className="text-[#666]">功能開發中...</p>
+                </div>
+              </div>
             )}
           </>
         )}

@@ -1,21 +1,25 @@
-import { HTMLAttributes } from 'react'
+import { cn } from "@/lib/utils"
 
-interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
-  variant?: 'default' | 'success' | 'warning' | 'danger' | 'info'
+interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
+  variant?: "default" | "success" | "warning" | "danger" | "info"
 }
 
-function Badge({ className = '', variant = 'default', children, ...props }: BadgeProps) {
+function Badge({ className = "", variant = "default", children, ...props }: BadgeProps) {
   const variants = {
-    default: 'bg-slate-100 text-slate-700',
-    success: 'bg-green-100 text-green-800',
-    warning: 'bg-amber-100 text-amber-800',
-    danger: 'bg-red-100 text-red-800',
-    info: 'bg-blue-100 text-blue-800',
+    default: "bg-[#2a2a2a] text-white border-[#3a3a3a]",
+    success: "bg-[#10b981]/20 text-[#10b981] border-[#10b981]/30",
+    warning: "bg-[#eab308]/20 text-[#eab308] border-[#eab308]/30",
+    danger: "bg-[#ef4444]/20 text-[#ef4444] border-[#ef4444]/30",
+    info: "bg-[#3b82f6]/20 text-[#3b82f6] border-[#3b82f6]/30",
   }
 
   return (
     <span
-      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${variants[variant]} ${className}`}
+      className={cn(
+        "inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium border",
+        variants[variant],
+        className
+      )}
       {...props}
     >
       {children}
@@ -29,18 +33,18 @@ interface OrderStatusBadgeProps {
 }
 
 function OrderStatusBadge({ status }: OrderStatusBadgeProps) {
-  const statusMap: Record<string, { label: string; variant: BadgeProps['variant'] }> = {
-    PENDING: { label: '待審核', variant: 'warning' },
-    PUBLISHED: { label: '已發布', variant: 'success' },
-    ASSIGNED: { label: '已指派', variant: 'info' },
-    ACCEPTED: { label: '已接單', variant: 'info' },
-    ARRIVED: { label: '已抵達', variant: 'info' },
-    IN_PROGRESS: { label: '進行中', variant: 'success' },
-    COMPLETED: { label: '已完成', variant: 'success' },
-    CANCELLED: { label: '已取消', variant: 'danger' },
+  const statusMap: Record<string, { label: string; variant: BadgeProps["variant"] }> = {
+    PENDING: { label: "待審核", variant: "warning" },
+    PUBLISHED: { label: "已發布", variant: "success" },
+    ASSIGNED: { label: "已指派", variant: "info" },
+    ACCEPTED: { label: "已接單", variant: "info" },
+    ARRIVED: { label: "已抵達", variant: "info" },
+    IN_PROGRESS: { label: "進行中", variant: "success" },
+    COMPLETED: { label: "已完成", variant: "success" },
+    CANCELLED: { label: "已取消", variant: "danger" },
   }
 
-  const config = statusMap[status] || { label: status, variant: 'default' as const }
+  const config = statusMap[status] || { label: status, variant: "default" as const }
 
   return <Badge variant={config.variant}>{config.label}</Badge>
 }
@@ -51,13 +55,13 @@ interface DriverStatusBadgeProps {
 }
 
 function DriverStatusBadge({ status }: DriverStatusBadgeProps) {
-  const statusMap: Record<string, { label: string; variant: BadgeProps['variant'] }> = {
-    ONLINE: { label: '在線', variant: 'success' },
-    OFFLINE: { label: '離線', variant: 'default' },
-    BUSY: { label: '忙碌中', variant: 'warning' },
+  const statusMap: Record<string, { label: string; variant: BadgeProps["variant"] }> = {
+    ONLINE: { label: "在線", variant: "success" },
+    OFFLINE: { label: "離線", variant: "default" },
+    BUSY: { label: "忙碌中", variant: "warning" },
   }
 
-  const config = statusMap[status] || { label: status, variant: 'default' as const }
+  const config = statusMap[status] || { label: status, variant: "default" as const }
 
   return <Badge variant={config.variant}>{config.label}</Badge>
 }

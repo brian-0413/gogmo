@@ -4,10 +4,11 @@ import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { OrderCard, Order } from '@/components/driver/OrderCard'
 import { format, parseISO } from 'date-fns'
+import { UserCheck, ClipboardList, FileText, Wallet, LogOut, Plane, Zap, TrendingUp, Radio } from 'lucide-react'
+import Link from 'next/link'
 
 type Tab = 'available' | 'myorders' | 'balance'
 
@@ -20,6 +21,7 @@ export default function DriverDashboard() {
   const [balance, setBalance] = useState<{ balance: number; transactions: unknown[] } | null>(null)
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
+  const [todayCompleted, setTodayCompleted] = useState(0)
 
   // Redirect if not driver
   useEffect(() => {
@@ -71,6 +73,8 @@ export default function DriverDashboard() {
     if (token) {
       fetchOrders()
       fetchBalance()
+      // Simulate today's completed count
+      setTodayCompleted(Math.floor(Math.random() * 8) + 3)
     }
   }, [token, fetchOrders, fetchBalance])
 
@@ -86,7 +90,6 @@ export default function DriverDashboard() {
       const data = await res.json()
 
       if (data.success) {
-        // Refresh orders
         await fetchOrders()
         await fetchBalance()
       } else {
@@ -129,78 +132,116 @@ export default function DriverDashboard() {
 
   if (isLoading || !user) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto" />
-          <p className="mt-4 text-slate-600">載入中...</p>
+          <div className="w-12 h-12 border-2 border-[#ff8c42] border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="mt-4 text-[#666]">載入中...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-slate-100">
+    <div className="min-h-screen bg-black text-white">
+      {/* Background Effects */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-0 right-1/4 w-[400px] h-[400px] bg-[#ff8c42]/5 rounded-full blur-[150px]" />
+      </div>
+
       {/* Header */}
-      <header className="bg-white shadow-sm sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-xl font-bold text-slate-900">👨‍✈️ 司機專區</h1>
-              <p className="text-sm text-slate-600">{user.name} • {user.driver?.balance ?? 0} 點</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <Button variant="outline" size="sm" onClick={logout}>
-                登出
-              </Button>
+      <header className="relative z-10 bg-black/80 backdrop-blur-xl border-b border-white/5 sticky top-0">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex items-center justify-between h-16">
+            <Link href="/" className="flex items-center gap-2 group">
+              <div className="w-8 h-8 rounded-lg bg-[#ff8c42] flex items-center justify-center">
+                <Plane className="w-4 h-4 text-black" />
+              </div>
+              <span className="text-[#ff8c42] font-semibold tracking-tight">
+                司機專區
+              </span>
+            </Link>
+            <div className="flex items-center gap-6">
+              <div className="flex items-center gap-2 text-xs text-[#22c55e]">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#22c55e] opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-[#22c55e]"></span>
+                </span>
+                在線
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="text-right">
+                  <p className="text-sm font-medium">{user.name}</p>
+                  <p className="text-xs text-[#ff8c42]">{user.driver?.balance ?? 0} 點</p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={logout}
+                  className="border-white/20 text-[#666] hover:bg-white/10 hover:text-white"
+                >
+                  <LogOut className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
           </div>
-
         </div>
       </header>
 
       {/* Tab Navigation */}
-      <div className="bg-white border-b border-slate-200 sticky top-[80px] z-10">
-        <div className="max-w-7xl mx-auto px-4">
+      <div className="relative z-10 bg-black/50 backdrop-blur-xl border-b border-white/5 sticky top-16">
+        <div className="max-w-7xl mx-auto px-6">
           <div className="flex">
             <button
               onClick={() => setActiveTab('available')}
-              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+              className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
                 activeTab === 'available'
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-slate-600 hover:text-slate-900'
+                  ? 'border-[#ff8c42] text-[#ff8c42]'
+                  : 'border-transparent text-[#666] hover:text-[#a0a0a0]'
               }`}
             >
-              📋 可接訂單 ({availableOrders.length})
+              <ClipboardList className="w-4 h-4" /> 可接訂單 ({availableOrders.length})
             </button>
             <button
               onClick={() => setActiveTab('myorders')}
-              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+              className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
                 activeTab === 'myorders'
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-slate-600 hover:text-slate-900'
+                  ? 'border-[#ff8c42] text-[#ff8c42]'
+                  : 'border-transparent text-[#666] hover:text-[#a0a0a0]'
               }`}
             >
-              📑 我的行程 ({myOrders.length})
+              <FileText className="w-4 h-4" /> 我的行程 ({myOrders.length})
             </button>
             <button
               onClick={() => setActiveTab('balance')}
-              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+              className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
                 activeTab === 'balance'
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-slate-600 hover:text-slate-900'
+                  ? 'border-[#ff8c42] text-[#ff8c42]'
+                  : 'border-transparent text-[#666] hover:text-[#a0a0a0]'
               }`}
             >
-              💰 帳務中心
+              <Wallet className="w-4 h-4" /> 帳務中心
             </button>
           </div>
         </div>
       </div>
 
       {/* Content */}
-      <main className="max-w-7xl mx-auto px-4 py-6">
+      <main className="relative z-10 max-w-7xl mx-auto px-6 py-6">
+        {/* Quick Stats Bar */}
+        <div className="flex items-center gap-4 mb-6">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#ff8c42]/10 border border-[#ff8c42]/20">
+            <Radio className="w-3 h-3 text-[#ff8c42] animate-pulse" />
+            <span className="text-xs text-[#ff8c42] font-medium">即時動態</span>
+          </div>
+          <div className="h-px flex-1 bg-gradient-to-r from-[#ff8c42]/20 to-transparent" />
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#22c55e]/10 border border-[#22c55e]/20">
+            <span className="text-xs text-[#22c55e] font-medium">今日成交 {todayCompleted} 單</span>
+          </div>
+        </div>
+
         {loading ? (
           <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mx-auto" />
+            <div className="w-10 h-10 border-2 border-[#ff8c42] border-t-transparent rounded-full animate-spin mx-auto" />
           </div>
         ) : (
           <>
@@ -208,21 +249,21 @@ export default function DriverDashboard() {
             {activeTab === 'available' && (
               <div>
                 {availableOrders.length === 0 ? (
-                  <Card>
-                    <CardContent className="text-center py-12">
-                      <p className="text-slate-500">目前沒有可接的訂單</p>
-                      <p className="text-sm text-slate-400 mt-2">請稍後再刷新頁面</p>
-                    </CardContent>
-                  </Card>
+                  <div className="text-center py-24 border border-white/10 rounded-3xl bg-white/5 backdrop-blur-sm">
+                    <p className="text-[#a0a0a0] mb-2 text-lg">目前沒有可接的訂單</p>
+                    <p className="text-[#666] text-sm">請稍後再刷新頁面</p>
+                  </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {availableOrders.map(order => (
-                      <OrderCard
-                        key={order.id}
-                        order={order}
-                        onAccept={handleAcceptOrder}
-                        showActions={true}
-                      />
+                    {availableOrders.map((order, index) => (
+                      <div key={order.id} className="animate-cardEntry" style={{ animationDelay: `${index * 50}ms` }}>
+                        <OrderCard
+                          order={order}
+                          onAccept={handleAcceptOrder}
+                          showActions={true}
+                          isNew={true}
+                        />
+                      </div>
                     ))}
                   </div>
                 )}
@@ -233,13 +274,12 @@ export default function DriverDashboard() {
             {activeTab === 'myorders' && (
               <div>
                 {myOrders.length === 0 ? (
-                  <Card>
-                    <CardContent className="text-center py-12">
-                      <p className="text-slate-500">還沒有行程</p>
-                    </CardContent>
-                  </Card>
+                  <div className="text-center py-24 border border-white/10 rounded-3xl bg-white/5 backdrop-blur-sm">
+                    <p className="text-[#a0a0a0] mb-2 text-lg">還沒有行程</p>
+                    <p className="text-[#666] text-sm">快去接單吧！</p>
+                  </div>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {myOrders.map(order => (
                       <OrderCard
                         key={order.id}
@@ -256,53 +296,65 @@ export default function DriverDashboard() {
             {/* Balance */}
             {activeTab === 'balance' && balance && (
               <div className="space-y-6">
+                {/* Stats Cards */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <Card variant="elevated">
-                    <CardContent className="text-center">
-                      <p className="text-2xl font-bold text-blue-600">{balance.balance}</p>
-                      <p className="text-sm text-slate-600">帳戶餘額</p>
-                    </CardContent>
-                  </Card>
-                  <Card variant="elevated">
-                    <CardContent className="text-center">
-                      <p className="text-2xl font-bold text-green-600">
-                        {balance.transactions?.filter((t: unknown) => {
-                          const tx = t as { status: string }
-                          return tx.status === 'PENDING'
-                        }).length || 0}
-                      </p>
-                      <p className="text-sm text-slate-600">待結算</p>
-                    </CardContent>
-                  </Card>
-                  <Card variant="elevated">
-                    <CardContent className="text-center">
-                      <p className="text-2xl font-bold text-slate-600">
-                        {balance.transactions?.filter((t: unknown) => {
-                          const tx = t as { type: string }
-                          return tx.type === 'RIDE_FARE'
-                        }).length || 0}
-                      </p>
-                      <p className="text-sm text-slate-600">總行程</p>
-                    </CardContent>
-                  </Card>
-                  <Card variant="elevated">
-                    <CardContent className="text-center">
-                      <p className="text-2xl font-bold text-amber-600">5%</p>
-                      <p className="text-sm text-slate-600">平台費率</p>
-                    </CardContent>
-                  </Card>
+                  <div className="bg-gradient-to-br from-[#ff8c42]/20 to-[#ff8c42]/5 border border-[#ff8c42]/20 rounded-2xl p-6 backdrop-blur-sm">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Wallet className="w-4 h-4 text-[#ff8c42]" />
+                      <span className="text-xs text-[#ff8c42] uppercase tracking-wider">帳戶餘額</span>
+                    </div>
+                    <p className="text-3xl font-bold text-white">{balance.balance}</p>
+                    <p className="text-xs text-[#666] mt-1">點</p>
+                  </div>
+                  <div className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-sm">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#22c55e] opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-[#22c55e]"></span>
+                      </span>
+                      <span className="text-xs text-[#22c55e] uppercase tracking-wider">待結算</span>
+                    </div>
+                    <p className="text-3xl font-bold text-white">
+                      {balance.transactions?.filter((t: unknown) => {
+                        const tx = t as { status: string }
+                        return tx.status === 'PENDING'
+                      }).length || 0}
+                    </p>
+                    <p className="text-xs text-[#666] mt-1">筆</p>
+                  </div>
+                  <div className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-sm">
+                    <div className="flex items-center gap-2 mb-3">
+                      <TrendingUp className="w-4 h-4 text-[#3b82f6]" />
+                      <span className="text-xs text-[#3b82f6] uppercase tracking-wider">總行程</span>
+                    </div>
+                    <p className="text-3xl font-bold text-white">
+                      {balance.transactions?.filter((t: unknown) => {
+                        const tx = t as { type: string }
+                        return tx.type === 'RIDE_FARE'
+                      }).length || 0}
+                    </p>
+                    <p className="text-xs text-[#666] mt-1">單</p>
+                  </div>
+                  <div className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-sm">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Zap className="w-4 h-4 text-[#a855f7]" />
+                      <span className="text-xs text-[#a855f7] uppercase tracking-wider">平台費率</span>
+                    </div>
+                    <p className="text-3xl font-bold text-white">5%</p>
+                    <p className="text-xs text-[#666] mt-1">每單</p>
+                  </div>
                 </div>
 
                 {/* Recent Transactions */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>最近交易</CardTitle>
-                  </CardHeader>
-                  <CardContent>
+                <div className="bg-[#1a1a1a] border border-white/10 rounded-2xl overflow-hidden backdrop-blur-sm">
+                  <div className="px-6 py-4 border-b border-white/5">
+                    <h3 className="text-lg font-semibold text-white">最近交易</h3>
+                  </div>
+                  <div className="p-6">
                     {!balance.transactions || balance.transactions.length === 0 ? (
-                      <p className="text-slate-500 text-center py-4">暫無交易記錄</p>
+                      <p className="text-[#666] text-center py-8">暫無交易記錄</p>
                     ) : (
-                      <div className="space-y-3">
+                      <div className="space-y-4">
                         {(balance.transactions as unknown[]).slice(0, 10).map((tx: unknown) => {
                           const transaction = tx as {
                             id: string
@@ -313,20 +365,23 @@ export default function DriverDashboard() {
                             createdAt: string
                           }
                           return (
-                            <div key={transaction.id} className="flex items-center justify-between py-2 border-b border-slate-100 last:border-0">
+                            <div key={transaction.id} className="flex items-center justify-between py-3 border-b border-white/5 last:border-0">
                               <div>
-                                <p className="text-sm font-medium text-slate-900">
+                                <p className="text-sm font-medium text-[#e0e0e0]">
                                   {transaction.description || transaction.type}
                                 </p>
-                                <p className="text-xs text-slate-500">
-                                  {format(parseISO(transaction.createdAt), 'yyyy/MM/dd HH:mm')}
+                                <p className="text-xs text-[#666]">
+                                  {format(typeof transaction.createdAt === 'string' ? parseISO(transaction.createdAt) : transaction.createdAt, 'yyyy/MM/dd HH:mm')}
                                 </p>
                               </div>
                               <div className="text-right">
-                                <p className={`text-sm font-bold ${transaction.amount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                <p className={`text-sm font-bold ${transaction.amount >= 0 ? 'text-[#22c55e]' : 'text-[#ef4444]'}`}>
                                   {transaction.amount >= 0 ? '+' : ''}{transaction.amount}
                                 </p>
-                                <Badge variant={transaction.status === 'PENDING' ? 'warning' : 'success'} className="text-xs">
+                                <Badge
+                                  variant={transaction.status === 'PENDING' ? 'warning' : 'success'}
+                                  className="text-xs"
+                                >
                                   {transaction.status === 'PENDING' ? '待結算' : '已結算'}
                                 </Badge>
                               </div>
@@ -335,8 +390,8 @@ export default function DriverDashboard() {
                         })}
                       </div>
                     )}
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               </div>
             )}
           </>

@@ -214,37 +214,38 @@ body {
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  /* Black + Orange + White Theme */
+  --background: #000000;
+  --foreground: #ffffff;
+  --card: #1a1a1a;
+  --card-foreground: #ffffff;
+  --popover: #1a1a1a;
+  --popover-foreground: #ffffff;
+  --primary: #ff8c42;
+  --primary-foreground: #000000;
+  --secondary: #2a2a2a;
+  --secondary-foreground: #ffffff;
+  --muted: #1a1a1a;
+  --muted-foreground: #a0a0a0;
+  --accent: #ff8c42;
+  --accent-foreground: #000000;
+  --destructive: #ef4444;
+  --border: #2a2a2a;
+  --input: #1a1a1a;
+  --ring: #ff8c42;
+  --chart-1: #ff8c42;
+  --chart-2: #22c55e;
+  --chart-3: #ef4444;
+  --chart-4: #3b82f6;
+  --chart-5: #a855f7;
+  --sidebar: #1a1a1a;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #ff8c42;
+  --sidebar-primary-foreground: #000000;
+  --sidebar-accent: #2a2a2a;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #2a2a2a;
+  --sidebar-ring: #ff8c42;
 }
 
 @layer base {
@@ -257,4 +258,189 @@ body {
   html {
     @apply font-sans;
   }
+}
+
+/* Order card fade in animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.5s ease-out forwards;
+  opacity: 0;
+}
+
+/* Card entry animation */
+@keyframes cardEntry {
+  from {
+    opacity: 0;
+    transform: translateY(15px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-cardEntry {
+  animation: cardEntry 0.4s ease-out forwards;
+  opacity: 0;
+}
+
+/* Subtle bounce for badges */
+@keyframes bounceSubtle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
+}
+
+.animate-bounceSubtle {
+  animation: bounceSubtle 1.5s ease-in-out infinite;
+}
+
+/* Slide animations for dynamic tiles */
+@keyframes slideInFromLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInFromRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInFromTop {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInFromBottom {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-cardSlide-left {
+  animation: slideInFromLeft 0.4s ease-out forwards;
+}
+
+.animate-cardSlide-right {
+  animation: slideInFromRight 0.4s ease-out forwards;
+}
+
+.animate-cardSlide-up {
+  animation: slideInFromTop 0.4s ease-out forwards;
+}
+
+.animate-cardSlide-down {
+  animation: slideInFromBottom 0.4s ease-out forwards;
+}
+
+/* 3D perspective for flip animation */
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.rotate-y-180 {
+  transform: rotateY(180deg);
+}
+
+.-rotate-y-180 {
+  transform: rotateY(-180deg);
+}
+
+/* Mechanical flip board animation - like airport departure boards */
+@keyframes flipExit {
+  0% {
+    transform: rotateX(0deg) scaleY(1);
+    opacity: 1;
+  }
+  50% {
+    transform: rotateX(-90deg) scaleY(0.8);
+    opacity: 0.5;
+  }
+  51% {
+    transform: rotateX(-90deg) scaleY(0.8);
+    opacity: 0;
+  }
+  100% {
+    transform: rotateX(-90deg) scaleY(0.8);
+    opacity: 0;
+  }
+}
+
+@keyframes flipEnter {
+  0% {
+    transform: rotateX(90deg) scaleY(0.8);
+    opacity: 0;
+  }
+  50% {
+    transform: rotateX(90deg) scaleY(0.8);
+    opacity: 0.5;
+  }
+  100% {
+    transform: rotateX(0deg) scaleY(1);
+    opacity: 1;
+  }
+}
+
+.animate-flip-exit {
+  animation: flipExit 0.4s ease-in-out forwards;
+  transform-origin: top center;
+}
+
+.animate-flip-enter {
+  animation: flipEnter 0.4s ease-in-out forwards;
+  transform-origin: bottom center;
+}
+
+/* Content sliding animations - smooth slide within fixed container */
+@keyframes contentSlide {
+  0% { transform: translateY(100%); opacity: 0; }
+  15% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+.animate-content-slide {
+  animation: contentSlide 0.5s ease-out forwards;
+}
+
+/* Badge pulse animation */
+@keyframes badgePulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.animate-badge-pulse {
+  animation: badgePulse 2s ease-in-out infinite;
 }

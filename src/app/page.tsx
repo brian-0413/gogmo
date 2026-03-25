@@ -1,85 +1,206 @@
-import Link from 'next/link'
-import { prisma } from '@/lib/prisma'
-import { format, parseISO } from 'date-fns'
+import Link from "next/link"
+import { prisma } from "@/lib/prisma"
+import { format, parseISO, differenceInMinutes } from "date-fns"
+import { Button } from "@/components/ui/Button"
+import { Badge } from "@/components/ui/Badge"
+import {
+  Plane,
+  MapPin,
+  Clock,
+  Car,
+  Users,
+  Wallet,
+  ArrowRight,
+  ChevronRight,
+  Zap,
+  TrendingUp,
+  Eye,
+  UserCheck,
+} from "lucide-react"
+import { FlipboardGrid } from "@/components/FlipboardGrid"
+import { LiveTicker } from "@/components/LiveTicker"
+import { DriverStatusCarousel } from "@/components/DriverStatusCarousel"
 
 // Fetch published orders
 async function getPublishedOrders() {
   try {
     const orders = await prisma.order.findMany({
       where: {
-        status: 'PUBLISHED',
+        status: "PUBLISHED",
       },
       orderBy: {
-        scheduledTime: 'asc',
+        scheduledTime: "asc",
       },
-      take: 200, // Increased limit to show more orders
+      take: 100,
     })
     return orders
   } catch (error) {
-    console.error('Failed to fetch orders:', error)
+    console.error("Failed to fetch orders:", error)
     return []
   }
 }
 
-// Determine order type (pickup = 接機, dropoff = 送機)
-function getOrderType(pickupLocation: string, dropoffLocation: string): 'pickup' | 'dropoff' {
-  if (pickupLocation.includes('桃園機場') || pickupLocation.includes('機場')) {
-    return 'pickup'
+// Fetch stats
+async function getStats() {
+  try {
+    const [totalOrders, drivers] = await Promise.all([
+      prisma.order.count({ where: { status: "PUBLISHED" } }),
+      prisma.driver.count(),
+    ])
+
+    // Published orders for display
+    const publishedOrders = await prisma.order.findMany({
+      where: { status: "PUBLISHED" },
+      select: { pickupLocation: true, price: true, scheduledTime: true },
+    })
+
+    // All orders for total amount calculation
+    const allOrders = await prisma.order.findMany({
+      select: { price: true },
+    })
+
+    // Today's completed orders
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const todayCompleted = await prisma.order.count({
+      where: {
+        status: "COMPLETED",
+        updatedAt: { gte: today },
+      },
+    })
+
+    const now = new Date()
+    const recentOrders = publishedOrders.filter(o => {
+      const time = typeof o.scheduledTime === 'string' ? parseISO(o.scheduledTime) : o.scheduledTime
+      const diff = differenceInMinutes(time, now)
+      return diff > 0 && diff <= 60
+    })
+
+    const pickupCount = publishedOrders.filter(o =>
+      o.pickupLocation.includes("桃園機場") || o.pickupLocation.includes("機場")
+    ).length
+
+    // Sum ALL orders' prices
+    const totalAmount = allOrders.reduce((sum, o) => sum + o.price, 0)
+
+    return {
+      pickupCount,
+      dropoffCount: publishedOrders.length - pickupCount,
+      driverCount: drivers,
+      totalAmount,
+      recentCount: recentOrders.length,
+      todayCompleted,
+    }
+  } catch (error) {
+    console.error("Failed to fetch stats:", error)
+    return {
+      pickupCount: 0,
+      dropoffCount: 0,
+      driverCount: 0,
+      totalAmount: 0,
+      recentCount: 0,
+      todayCompleted: 0,
+    }
   }
-  if (dropoffLocation.includes('桃園機場') || dropoffLocation.includes('機場')) {
-    return 'dropoff'
-  }
-  return 'dropoff'
 }
 
-// Format time from datetime string
+// Determine order type
+function getOrderType(pickupLocation: string, dropoffLocation: string): "pickup" | "dropoff" {
+  if (pickupLocation.includes("桃園機場") || pickupLocation.includes("機場")) {
+    return "pickup"
+  }
+  if (dropoffLocation.includes("桃園機場") || dropoffLocation.includes("機場")) {
+    return "dropoff"
+  }
+  return "dropoff"
+}
+
+// Get time urgency level
+function getTimeUrgency(scheduledTime: string | Date): "urgent" | "soon" | "normal" {
+  const now = new Date()
+  const time = typeof scheduledTime === 'string' ? parseISO(scheduledTime) : new Date(scheduledTime)
+  const diff = differenceInMinutes(time, now)
+  if (diff <= 30) return "urgent"
+  if (diff <= 60) return "soon"
+  return "normal"
+}
+
+// Get card glow level based on price
+function getPriceGlow(price: number): "high" | "medium" | "low" {
+  if (price >= 1500) return "high"
+  if (price >= 1000) return "medium"
+  return "low"
+}
+
+// Format time
 function formatTime(dateTime: string | Date): string {
   try {
-    const date = typeof dateTime === 'string' ? parseISO(dateTime) : dateTime
-    return format(date, 'HH:mm')
+    const date = typeof dateTime === "string" ? parseISO(dateTime) : new Date(dateTime)
+    return format(date, "HH:mm")
   } catch {
-    return '--:--'
+    return "--:--"
   }
 }
 
-// Format date from datetime string
+// Format date for display
 function formatDate(dateTime: string | Date): string {
   try {
-    const date = typeof dateTime === 'string' ? parseISO(dateTime) : dateTime
-    return format(date, 'M/d')
+    const date = typeof dateTime === "string" ? parseISO(dateTime) : new Date(dateTime)
+    return format(date, "M/d")
   } catch {
-    return '--'
+    return "--"
   }
 }
 
 export default async function Home() {
   const orders = await getPublishedOrders()
+  const stats = await getStats()
 
   return (
-    <div className="min-h-screen bg-[#0f0f1a] text-white">
+    <div className="min-h-screen bg-black text-white selection:bg-[#ff8c42]/30">
+      {/* Background Effects */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-[#ff8c42]/10 rounded-full blur-[150px]" />
+        <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-[#ff8c42]/5 rounded-full blur-[100px]" />
+      </div>
+
       {/* Navigation */}
-      <nav className="sticky top-0 z-50 bg-[#0f0f1a]/90 backdrop-blur border-b border-white/10">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <h1 className="text-xl font-bold text-cyan-400">✈️ 機場接送派單平台</h1>
-            <div className="flex gap-3">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-xl border-b border-white/5">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex items-center justify-between h-16">
+            <Link href="/" className="flex items-center gap-2 group">
+              <div className="w-8 h-8 rounded-lg bg-[#ff8c42] flex items-center justify-center">
+                <Plane className="w-4 h-4 text-black" />
+              </div>
+              <span className="text-[#ff8c42] font-semibold tracking-tight">
+                機場接送派單平台
+              </span>
+            </Link>
+
+            <div className="flex items-center gap-8">
+              <div className="flex items-center gap-2 text-xs text-[#22c55e]">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#22c55e] opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-[#22c55e]"></span>
+                </span>
+                {stats.driverCount} 司機在線
+              </div>
               <Link
                 href="/login"
-                className="px-4 py-2 text-sm text-white/80 hover:text-white transition-colors"
+                className="text-sm text-[#666] hover:text-white transition-colors"
               >
                 司機登入
               </Link>
               <Link
                 href="/login"
-                className="px-4 py-2 text-sm text-white/80 hover:text-white transition-colors"
+                className="text-sm text-[#666] hover:text-white transition-colors"
               >
                 車頭登入
               </Link>
-              <Link
-                href="/register"
-                className="px-4 py-2 text-sm bg-cyan-500 text-black font-medium rounded-lg hover:bg-cyan-400 transition-colors"
-              >
-                立即註冊
+              <Link href="/register">
+                <Button size="sm" variant="primary" className="font-medium">
+                  立即註冊
+                </Button>
               </Link>
             </div>
           </div>
@@ -87,135 +208,155 @@ export default async function Home() {
       </nav>
 
       {/* Hero Section */}
-      <div className="bg-gradient-to-b from-[#0f0f1a] to-[#1a1a2e]">
-        <div className="max-w-7xl mx-auto px-4 py-16 text-center">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">
-            機場接送派單平台
-          </h1>
-          <p className="text-xl text-cyan-400 mb-2">
-            接單不再等，單單都搶快
-          </p>
-          <p className="text-white/60 mb-8">
-            立即查看最新行程，快速搶單
-          </p>
-          <div className="flex gap-4 justify-center">
+      <section className="pt-32 pb-12 px-6 relative">
+        <div className="max-w-7xl mx-auto">
+          {/* Live Ticker */}
+          <LiveTicker todayCompleted={stats.todayCompleted} />
+
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            {/* Left Content */}
+            <div>
+              <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-white tracking-tight mb-6 leading-[1.1]">
+                機場接送
+                <br />
+                <span className="text-[#ff8c42]">派單平台</span>
+              </h1>
+
+              <p className="text-xl text-[#a0a0a0] mb-8 max-w-lg">
+                為台灣接送產業而生的智能派單系統，讓司機快速掌握接單機會
+              </p>
+
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                <Link href="/register" className="w-full sm:w-auto">
+                  <Button size="lg" variant="primary" className="w-full font-semibold gap-2">
+                    立即加入司機行列
+                    <ArrowRight className="w-4 h-4" />
+                  </Button>
+                </Link>
+                <Link href="/login" className="w-full sm:w-auto">
+                  <Button size="lg" variant="outline" className="w-full font-medium">
+                    登入系統
+                  </Button>
+                </Link>
+              </div>
+            </div>
+
+            {/* Right Stats */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-gradient-to-br from-[#ff8c42]/20 to-[#ff8c42]/5 border border-[#ff8c42]/20 rounded-2xl p-6 backdrop-blur-sm">
+                <div className="flex items-center gap-2 mb-3">
+                  <Zap className="w-4 h-4 text-[#ff8c42]" />
+                  <span className="text-xs text-[#ff8c42] uppercase tracking-wider">最新訂單</span>
+                </div>
+                <p className="text-3xl font-bold text-white mb-1">{stats.pickupCount + stats.dropoffCount}</p>
+                <p className="text-xs text-[#666]">筆可接訂單</p>
+              </div>
+
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-sm">
+                <div className="flex items-center gap-2 mb-3">
+                  <TrendingUp className="w-4 h-4 text-[#22c55e]" />
+                  <span className="text-xs text-[#22c55e] uppercase tracking-wider">一小時內</span>
+                </div>
+                <p className="text-3xl font-bold text-white mb-1">{stats.recentCount}</p>
+                <p className="text-xs text-[#666]">筆新訂單</p>
+              </div>
+
+              <DriverStatusCarousel />
+
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-sm">
+                <div className="flex items-center gap-2 mb-3">
+                  <Wallet className="w-4 h-4 text-[#a855f7]" />
+                  <span className="text-xs text-[#a855f7] uppercase tracking-wider">案件總額</span>
+                </div>
+                <p className="text-3xl font-bold text-white mb-1">NT${stats.totalAmount.toLocaleString()}</p>
+                <p className="text-xs text-[#666]">元</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Orders Section */}
+      <section className="py-12 px-6 relative">
+        <div className="max-w-7xl mx-auto">
+          {/* Section Header */}
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <h2 className="text-2xl font-bold text-white">
+                  即刻可接行程
+                </h2>
+                <span className="px-3 py-1 rounded-full bg-[#ff8c42]/20 text-[#ff8c42] text-sm font-medium border border-[#ff8c42]/30">
+                  {orders.length} 筆
+                </span>
+              </div>
+              <div className="flex items-center gap-2 text-xs text-[#22c55e]">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#22c55e] opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-[#22c55e]"></span>
+                </span>
+                即時更新中
+              </div>
+            </div>
             <Link
               href="/register"
-              className="px-6 py-3 bg-cyan-500 text-black font-semibold rounded-lg hover:bg-cyan-400 transition-colors"
+              className="flex items-center gap-2 text-sm text-[#ff8c42] hover:text-[#ff9d5c] transition-colors"
             >
-              立即加入司機行列
+              查看完整清單
+              <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
+
+          {/* Flipboard Grid */}
+          <FlipboardGrid orders={orders} gridSize={20} />
+
+          {/* View More */}
+          {orders.length > 20 && (
+            <div className="mt-8 text-center">
+              <Link
+                href="/register"
+                className="inline-flex items-center gap-2 text-sm text-[#666] hover:text-[#ff8c42] transition-colors"
+              >
+                查看全部 {orders.length} 筆訂單
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+          )}
         </div>
-      </div>
-
-      {/* Orders Grid - 展示廳 */}
-      <div className="max-w-7xl mx-auto px-4 py-12">
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="text-2xl font-bold">
-            <span className="text-cyan-400">▶</span> 即刻可接行程 ({orders.length})
-          </h2>
-          <div className="flex items-center gap-2 text-sm text-white/60">
-            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-            即時更新
-          </div>
-        </div>
-
-        {orders.length === 0 ? (
-          <div className="text-center py-20">
-            <div className="text-6xl mb-4">📭</div>
-            <p className="text-xl text-white/60 mb-4">目前沒有可接的行程</p>
-            <p className="text-white/40">請稍後再回來查看，或聯繫車頭發布新行程</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {orders.map((order) => {
-              const orderType = getOrderType(order.pickupLocation, order.dropoffLocation)
-              const isPickup = orderType === 'pickup'
-
-              return (
-                <div
-                  key={order.id}
-                  className="bg-[#1a1a2e] border border-white/10 rounded-xl p-4 hover:border-cyan-500/50 transition-all hover:shadow-lg hover:shadow-cyan-500/10"
-                >
-                  {/* Header */}
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      {/* Order Type Badge */}
-                      <span
-                        className={`px-2 py-1 rounded text-xs font-medium ${
-                          isPickup
-                            ? 'bg-green-500/20 text-green-400'
-                            : 'bg-red-500/20 text-red-400'
-                        }`}
-                      >
-                        {isPickup ? '🔼 接機' : '🔽 送機'}
-                      </span>
-                      <span className="text-xs text-white/40">
-                        #{order.id.slice(0, 6)}
-                      </span>
-                    </div>
-                    <span className="text-lg font-bold text-cyan-400">
-                      NT${order.price}
-                    </span>
-                  </div>
-
-                  {/* Time */}
-                  <div className="mb-3">
-                    <div className="text-2xl font-mono font-bold text-white">
-                      {formatTime(order.scheduledTime)}
-                    </div>
-                    <div className="text-xs text-white/40">
-                      {formatDate(order.scheduledTime)}
-                    </div>
-                  </div>
-
-                  {/* Route */}
-                  <div className="space-y-2 mb-3">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-green-500" />
-                      <span className="text-sm truncate">{order.pickupLocation}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-red-500" />
-                      <span className="text-sm truncate">{order.dropoffLocation}</span>
-                    </div>
-                  </div>
-
-                  {/* Car Type & Passengers */}
-                  <div className="flex items-center justify-between text-xs text-white/50">
-                    <span>🚗 {order.note || '小車'}</span>
-                    <span>👤 {order.passengerCount}人</span>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        )}
-      </div>
+      </section>
 
       {/* CTA Section */}
-      <div className="bg-[#1a1a2e] border-t border-white/10">
-        <div className="max-w-7xl mx-auto px-4 py-16 text-center">
-          <h2 className="text-2xl font-bold mb-4">準備好加入了嗎？</h2>
-          <p className="text-white/60 mb-8">
+      <section className="py-20 px-6">
+        <div className="max-w-3xl mx-auto text-center">
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+            準備好加入了嗎？
+          </h2>
+          <p className="text-[#666] mb-8 text-lg">
             成為我們的司機，享受快速派單、智能帳務的便利
           </p>
-          <div className="flex gap-4 justify-center">
-            <Link
-              href="/register"
-              className="px-8 py-4 bg-cyan-500 text-black font-semibold rounded-lg hover:bg-cyan-400 transition-colors"
-            >
-              立即註冊成為司機
-            </Link>
-          </div>
+          <Link href="/register">
+            <Button size="lg" variant="primary" className="font-semibold gap-2 px-8">
+              立即註冊
+              <ArrowRight className="w-4 h-4" />
+            </Button>
+          </Link>
         </div>
-      </div>
+      </section>
 
       {/* Footer */}
-      <footer className="bg-[#0f0f1a] border-t border-white/10 py-8">
-        <div className="max-w-7xl mx-auto px-4 text-center text-white/40 text-sm">
-          <p>© 2026 機場接送派單平台. 為台灣接送產業而生。</p>
+      <footer className="py-6 px-6 border-t border-white/5">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded bg-[#ff8c42] flex items-center justify-center">
+              <Plane className="w-3 h-3 text-black" />
+            </div>
+            <span className="text-sm text-[#666]">
+              機場接送派單平台
+            </span>
+          </div>
+          <p className="text-xs text-[#444]">
+            2026 Airport Dispatch Platform. All rights reserved.
+          </p>
         </div>
       </footer>
     </div>

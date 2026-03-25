@@ -1,42 +1,43 @@
-import { InputHTMLAttributes, forwardRef } from 'react'
+"use client"
 
-interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
+import { forwardRef, InputHTMLAttributes } from "react"
+import { cn } from "@/lib/utils"
+
+export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string
   error?: string
 }
 
 const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ className = '', label, error, id, ...props }, ref) => {
-    const inputId = id || props.name
-
+  ({ className, label, error, type = "text", ...props }, ref) => {
     return (
       <div className="w-full">
         {label && (
-          <label htmlFor={inputId} className="block text-sm font-medium text-slate-700 mb-1">
+          <label className="block text-sm font-medium text-[#a0a0a0] mb-1.5">
             {label}
           </label>
         )}
         <input
+          type={type}
           ref={ref}
-          id={inputId}
-          className={`
-            w-full px-3 py-2 border rounded-lg text-slate-900 placeholder-slate-400
-            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-            disabled:bg-slate-100 disabled:cursor-not-allowed
-            ${error ? 'border-red-500' : 'border-slate-300'}
-            ${className}
-          `}
+          className={cn(
+            "w-full px-4 py-3 bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg",
+            "text-white placeholder-[#666]",
+            "focus:outline-none focus:border-[#ff8c42] focus:ring-1 focus:ring-[#ff8c42]",
+            "transition-colors duration-200",
+            error && "border-[#ef4444] focus:border-[#ef4444] focus:ring-[#ef4444]",
+            className
+          )}
           {...props}
         />
         {error && (
-          <p className="mt-1 text-sm text-red-600">{error}</p>
+          <p className="mt-1 text-xs text-[#ef4444]">{error}</p>
         )}
       </div>
     )
   }
 )
 
-Input.displayName = 'Input'
+Input.displayName = "Input"
 
 export { Input }
-export type { InputProps }
