@@ -13,6 +13,9 @@ RUN npm ci
 # 複製其餘程式碼
 COPY . .
 
+# 生成 Prisma Client
+RUN npx prisma generate
+
 # 建置 Next.js
 RUN npm run build
 
