@@ -1,0 +1,192 @@
+// Prisma schema for Airport Dispatch Platform
+// Version: 1.0
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============== Enums ==============
+
+enum UserRole {
+  DRIVER
+  DISPATCHER
+  ADMIN
+}
+
+enum DriverStatus {
+  ONLINE
+  OFFLINE
+  BUSY
+}
+
+enum OrderStatus {
+  PENDING      // 待審核（草稿）
+  PUBLISHED    // 已發布（可見於首頁）
+  ASSIGNED     // 已指派司機
+  ACCEPTED     // 司機已接單
+  ARRIVED      // 司機已抵達
+  IN_PROGRESS  // 行程進行中
+  COMPLETED    // 已完成
+  CANCELLED    // 已取消
+}
+
+enum TransactionType {
+  RIDE_FARE      // 車資收入
+  PLATFORM_FEE    // 平台費支出
+  RECHARGE        // 儲值
+  WITHDRAW        // 提領
+}
+
+enum TransactionStatus {
+  PENDING  // 待結算
+  SETTLED   // 已結算
+}
+
+// ============== Models ==============
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  phone     String
+  role      UserRole
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  driver     Driver?
+  dispatcher Dispatcher?
+  admin      Admin?
+
+  @@map("users")
+}
+
+model Admin {
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("admins")
+}
+
+model Driver {
+  id              String       @id @default(uuid())
+  userId          String       @unique
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  licensePlate    String       // 車牌
+  carType         String       // 車型（如：轎車、SUV、福祉車）
+  carColor        String       // 車色
+  balance         Int          @default(0) // 點數餘額（整數，1點=1元）
+  status          DriverStatus @default(OFFLINE)
+  currentLat      Float?
+  currentLng      Float?
+  lastLocationAt  DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  // Relations
+  orders          Order[]
+  transactions    Transaction[]
+
+  @@map("drivers")
+}
+
+model Dispatcher {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyName     String   // 公司/車隊名稱
+  commissionRate  Float    @default(0) // 抽成比例
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  orders          Order[]
+
+  @@map("dispatchers")
+}
+
+model Order {
+  id              String      @id @default(uuid())
+  dispatcherId     String
+  dispatcher       Dispatcher  @relation(fields: [dispatcherId], references: [id])
+
+  // Driver assignment (null = 待接單)
+  driverId        String?
+  driver          Driver?     @relation(fields: [driverId], references: [id])
+
+  status          OrderStatus @default(PENDING)
+
+  // 乘客資訊
+  passengerName   String
+  passengerPhone  String
+
+  // 航班資訊
+  flightNumber    String
+
+  // 上車地點
+  pickupLocation  String      // 地點名（如：桃園機場第一航廈）
+  pickupAddress   String      // 完整地址
+  pickupLat       Float?
+  pickupLng       Float?
+
+  // 下車地點
+  dropoffLocation String
+  dropoffAddress  String
+  dropoffLat      Float?
+  dropoffLng      Float?
+
+  // 乘客資訊
+  passengerCount  Int         @default(1)
+  luggageCount    Int         @default(0)
+
+  // 時間與價格
+  scheduledTime   DateTime    // 預定時間
+  price           Int          // 價格（整數）
+
+  // AI 解析用
+  rawText         String?     // AI解析前的原始文字
+  parsedData      Json?       // AI解析後的結構化資料
+
+  note            String?      // 備註
+
+  // Timestamps
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  completedAt     DateTime?   // 完成時間
+
+  // Relations
+  transaction     Transaction?
+
+  @@index([status])
+  @@index([driverId])
+  @@index([dispatcherId])
+  @@index([scheduledTime])
+  @@map("orders")
+}
+
+model Transaction {
+  id          String            @id @default(uuid())
+  orderId     String?           @unique
+  order       Order?            @relation(fields: [orderId], references: [id])
+  driverId    String
+  driver      Driver            @relation(fields: [driverId], references: [id])
+
+  amount      Int               // 金額（正=收入，負=支出）
+  type        TransactionType
+  status      TransactionStatus @default(PENDING)
+
+  description String?          // 描述
+  createdAt   DateTime         @default(now())
+  settledAt   DateTime?        // 結算時間
+
+  @@index([driverId])
+  @@index([status])
+  @@map("transactions")
+}

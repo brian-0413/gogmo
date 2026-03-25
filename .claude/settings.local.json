@@ -3,7 +3,24 @@
     "allow": [
       "Bash(dir \"C:\\\\Users\\\\BrianNB\\\\airport-dispatch-platform\")",
       "Bash(/model claude-opus-4-6:*)",
-      "Bash(npx create-next-app@latest . --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\" --no-turbopack --yes)"
+      "Bash(npx create-next-app@latest . --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\" --no-turbopack --yes)",
+      "Bash(npm install:*)",
+      "Bash(npx prisma:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(cd:*)",
+      "Bash(psql --version)",
+      "Bash(docker --version)",
+      "Bash(curl -I https://db.vwvixbmnqbxfoyexuzvs.supabase.co)",
+      "Bash(ping -c 1 db.vwvixbmnqbxfoyexuzvs.supabase.co)",
+      "Bash(nslookup db.vwvixbmnqbxfoyexuzvs.supabase.co)",
+      "Bash(PGPASSWORD=FoGNvtwHVpaAXvFv psql -h db.vwvixbmnqbxfoyexuzvs.supabase.co -p 5432 -U postgres -d postgres -c \"SELECT 1\" 2>&1)",
+      "Bash(node -e \":*)",
+      "Bash(curl -s -X POST http://localhost:3000/api/auth/[...nextauth] -H \"Content-Type: application/json\" -d '{:*)",
+      "Bash(curl -s http://localhost:3000/api/auth/[...nextauth])",
+      "Bash(curl -s http://localhost:3000)",
+      "Bash(taskkill /F /PID 11016)",
+      "Bash(netstat -ano)",
+      "Bash(powershell -Command \"Stop-Process -Id 11016 -Force\" 2>&1)"
     ]
   }
 }
