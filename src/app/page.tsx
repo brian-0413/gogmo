@@ -49,13 +49,13 @@ async function getStats() {
     ])
 
     // Published orders for display
-    const publishedOrders = await prisma.order.findMany({
+    const publishedOrders: { pickupLocation: string; price: number; scheduledTime: Date }[] = await prisma.order.findMany({
       where: { status: "PUBLISHED" },
       select: { pickupLocation: true, price: true, scheduledTime: true },
     })
 
     // All orders for total amount calculation
-    const allOrders = await prisma.order.findMany({
+    const allOrders: { price: number }[] = await prisma.order.findMany({
       select: { price: true },
     })
 
