@@ -43,7 +43,7 @@ export async function POST(
     }
 
     // If assigned to someone else, they need to release it first
-    if (order.status === 'ASSIGNED' && order.driverId && order.driverId !== user.driver.id) {
+    if (order.status === 'ASSIGNED' && order.driverId && user.driver && order.driverId !== user.driver.id) {
       return NextResponse.json<ApiResponse>(
         { success: false, error: '此訂單已指派給其他司機' },
         { status: 400 }
@@ -53,11 +53,21 @@ export async function POST(
     // Calculate platform fee (5%)
     const platformFee = Math.floor(order.price * 0.05)
 
+    // Guard: ensure user.driver exists
+    if (!user.driver) {
+      return NextResponse.json<ApiResponse>(
+        { success: false, error: '找不到司機資料' },
+        { status: 400 }
+      )
+    }
+
+    const driverId = user.driver.id
+
     // Use transaction to prevent race condition
     const updated = await prisma.$transaction(async (tx) => {
       // Re-fetch driver with lock (PostgreSQL does this automatically)
       const driver = await tx.driver.findUnique({
-        where: { id: user.driver.id },
+        where: { id: driverId },
       })
 
       if (!driver) {
@@ -73,7 +83,7 @@ export async function POST(
       const updatedOrder = await tx.order.update({
         where: { id },
         data: {
-          driverId: user.driver.id,
+          driverId: driverId,
           status: 'ACCEPTED',
         },
         include: {
@@ -84,7 +94,7 @@ export async function POST(
 
       // Deduct platform fee from driver balance
       await tx.driver.update({
-        where: { id: user.driver.id },
+        where: { id: driverId },
         data: {
           balance: driver.balance - platformFee,
         },
@@ -94,7 +104,7 @@ export async function POST(
       await tx.transaction.create({
         data: {
           orderId: id,
-          driverId: user.driver.id,
+          driverId: driverId,
           amount: -platformFee,
           type: 'PLATFORM_FEE',
           status: 'SETTLED',
