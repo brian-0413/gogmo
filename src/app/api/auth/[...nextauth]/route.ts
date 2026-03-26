@@ -1,9 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { register, login, getUserFromToken } from '@/lib/auth'
 import { ApiResponse, RegisterRequest, LoginRequest } from '@/types'
+import { checkRateLimit, rateLimitConfigs, getClientIP } from '@/lib/api-utils'
 
 // Register new user
 export async function POST(request: NextRequest) {
+  // Apply rate limiting for auth endpoints
+  const rateLimitResult = checkRateLimit(request, { type: 'auth' })
+  if (rateLimitResult) return rateLimitResult
+
   try {
     const body = await request.json() as RegisterRequest
     const { email, password, name, phone, role, licensePlate, carType, carColor, companyName } = body
@@ -58,6 +63,10 @@ export async function POST(request: NextRequest) {
 
 // Login
 export async function PUT(request: NextRequest) {
+  // Apply rate limiting for auth endpoints
+  const rateLimitResult = checkRateLimit(request, { type: 'auth' })
+  if (rateLimitResult) return rateLimitResult
+
   try {
     const body = await request.json() as LoginRequest
     const { email, password } = body

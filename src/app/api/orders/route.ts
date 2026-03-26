@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { getUserFromToken } from '@/lib/auth'
 import { parseOrderText, validateParsedOrder } from '@/lib/ai'
 import { ApiResponse, CreateOrderRequest } from '@/types'
+import { checkRateLimit } from '@/lib/api-utils'
 
 // Helper to get user from request
 async function getUser(request: NextRequest) {
@@ -13,6 +14,10 @@ async function getUser(request: NextRequest) {
 
 // GET /api/orders - List orders
 export async function GET(request: NextRequest) {
+  // Apply rate limiting for read endpoints
+  const rateLimitResult = checkRateLimit(request, { type: 'read' })
+  if (rateLimitResult) return rateLimitResult
+
   try {
     const user = await getUser(request)
     if (!user) {
@@ -26,6 +31,9 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status')
     const driverId = searchParams.get('driverId')
     const myOrders = searchParams.get('myOrders') === 'true'
+    const page = parseInt(searchParams.get('page') || '1', 10)
+    const limit = Math.min(parseInt(searchParams.get('limit') || '20', 10), 100) // Max 100 per page
+    const skip = (page - 1) * limit
 
     const where: Record<string, unknown> = {}
 
@@ -52,18 +60,31 @@ export async function GET(request: NextRequest) {
       where.driverId = driverId
     }
 
-    const orders = await prisma.order.findMany({
-      where,
-      include: {
-        dispatcher: { include: { user: true } },
-        driver: { include: { user: true } },
-      },
-      orderBy: { scheduledTime: 'asc' },
-    })
+    const [orders, total] = await Promise.all([
+      prisma.order.findMany({
+        where,
+        include: {
+          dispatcher: { include: { user: true } },
+          driver: { include: { user: true } },
+        },
+        orderBy: { scheduledTime: 'asc' },
+        take: limit,
+        skip,
+      }),
+      prisma.order.count({ where }),
+    ])
 
     return NextResponse.json<ApiResponse>({
       success: true,
-      data: orders,
+      data: {
+        orders,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        },
+      },
     })
   } catch (error) {
     console.error('Get orders error:', error)
@@ -76,6 +97,10 @@ export async function GET(request: NextRequest) {
 
 // POST /api/orders - Create order (dispatcher only)
 export async function POST(request: NextRequest) {
+  // Apply rate limiting for order operations
+  const rateLimitResult = checkRateLimit(request, { type: 'orders' })
+  if (rateLimitResult) return rateLimitResult
+
   try {
     const user = await getUser(request)
     if (!user) {

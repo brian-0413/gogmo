@@ -53,53 +53,64 @@ export async function POST(
     // Calculate platform fee (5%)
     const platformFee = Math.floor(order.price * 0.05)
 
-    // Check if driver has enough balance
-    if (user.driver.balance < platformFee) {
-      return NextResponse.json<ApiResponse>(
-        { success: false, error: `點數不足，需要 ${platformFee} 點` },
-        { status: 400 }
-      )
-    }
+    // Use transaction to prevent race condition
+    const updated = await prisma.$transaction(async (tx) => {
+      // Re-fetch driver with lock (PostgreSQL does this automatically)
+      const driver = await tx.driver.findUnique({
+        where: { id: user.driver.id },
+      })
 
-    // Update order
-    const updated = await prisma.order.update({
-      where: { id },
-      data: {
-        driverId: user.driver.id,
-        status: 'ACCEPTED',
-      },
-      include: {
-        dispatcher: { include: { user: true } },
-        driver: { include: { user: true } },
-      },
-    })
+      if (!driver) {
+        throw new Error('找不到司機資料')
+      }
 
-    // Deduct platform fee from driver balance
-    await prisma.driver.update({
-      where: { id: user.driver.id },
-      data: {
-        balance: user.driver.balance - platformFee,
-      },
-    })
+      // Check balance atomically
+      if (driver.balance < platformFee) {
+        throw new Error(`點數不足，需要 ${platformFee} 點`)
+      }
 
-    // Create transaction record
-    await prisma.transaction.create({
-      data: {
-        orderId: id,
-        driverId: user.driver.id,
-        amount: -platformFee,
-        type: 'PLATFORM_FEE',
-        status: 'SETTLED',
-        description: `接單平台費 (5%) - 訂單 #${id.slice(0, 8)}`,
-      },
+      // Update order
+      const updatedOrder = await tx.order.update({
+        where: { id },
+        data: {
+          driverId: user.driver.id,
+          status: 'ACCEPTED',
+        },
+        include: {
+          dispatcher: { include: { user: true } },
+          driver: { include: { user: true } },
+        },
+      })
+
+      // Deduct platform fee from driver balance
+      await tx.driver.update({
+        where: { id: user.driver.id },
+        data: {
+          balance: driver.balance - platformFee,
+        },
+      })
+
+      // Create transaction record
+      await tx.transaction.create({
+        data: {
+          orderId: id,
+          driverId: user.driver.id,
+          amount: -platformFee,
+          type: 'PLATFORM_FEE',
+          status: 'SETTLED',
+          description: `接單平台費 (5%) - 訂單 #${id.slice(0, 8)}`,
+        },
+      })
+
+      return updatedOrder
     })
 
     return NextResponse.json<ApiResponse>({
       success: true,
       data: {
-        ...updated,
+        order: updated,
         platformFee,
-        newBalance: user.driver.balance - platformFee,
+        newBalance: updated.driver?.balance,
       },
     })
   } catch (error) {

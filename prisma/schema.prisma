@@ -168,6 +168,8 @@ model Order {
   @@index([driverId])
   @@index([dispatcherId])
   @@index([scheduledTime])
+  @@index([dispatcherId, status])
+  @@index([scheduledTime, status])
   @@map("orders")
 }
 
@@ -188,5 +190,7 @@ model Transaction {
 
   @@index([driverId])
   @@index([status])
+  @@index([driverId, status])
+  @@index([orderId])
   @@map("transactions")
 }
