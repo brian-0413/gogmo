@@ -252,6 +252,43 @@ export async function PATCH(
         'passengerCount', 'luggageCount', 'scheduledTime', 'price', 'note',
       ]
 
+      // Validate field lengths
+      const MAX_LENGTHS: Record<string, number> = {
+        passengerName: 50,
+        passengerPhone: 20,
+        pickupLocation: 100,
+        pickupAddress: 200,
+        dropoffLocation: 100,
+        dropoffAddress: 200,
+        flightNumber: 20,
+        note: 500,
+      }
+
+      for (const [field, maxLength] of Object.entries(MAX_LENGTHS)) {
+        const value = body[field]
+        if (value && typeof value === 'string' && value.length > maxLength) {
+          return NextResponse.json<ApiResponse>(
+            { success: false, error: `${field} 輸入過長，最多 ${maxLength} 字符` },
+            { status: 400 }
+          )
+        }
+      }
+
+      // Validate price and passenger count if provided
+      if (body.price !== undefined && (body.price < 0 || body.price > 100000)) {
+        return NextResponse.json<ApiResponse>(
+          { success: false, error: '價格必須在 0 - 100,000 元之間' },
+          { status: 400 }
+        )
+      }
+
+      if (body.passengerCount !== undefined && (body.passengerCount < 1 || body.passengerCount > 20)) {
+        return NextResponse.json<ApiResponse>(
+          { success: false, error: '乘客人數必須在 1 - 20 人之間' },
+          { status: 400 }
+        )
+      }
+
       const updateData: Record<string, unknown> = {}
       for (const field of allowedFields) {
         if (body[field] !== undefined) {

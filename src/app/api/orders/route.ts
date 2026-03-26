@@ -31,6 +31,7 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status')
     const driverId = searchParams.get('driverId')
     const myOrders = searchParams.get('myOrders') === 'true'
+    const recommended = searchParams.get('recommended') === 'true'
     const page = parseInt(searchParams.get('page') || '1', 10)
     const limit = Math.min(parseInt(searchParams.get('limit') || '20', 10), 100) // Max 100 per page
     const skip = (page - 1) * limit
@@ -60,24 +61,60 @@ export async function GET(request: NextRequest) {
       where.driverId = driverId
     }
 
-    const [orders, total] = await Promise.all([
-      prisma.order.findMany({
-        where,
-        include: {
-          dispatcher: { include: { user: true } },
-          driver: { include: { user: true } },
-        },
-        orderBy: { scheduledTime: 'asc' },
-        take: limit,
-        skip,
-      }),
-      prisma.order.count({ where }),
-    ])
+    // Smart order recommendation for drivers
+    // Returns orders sorted by a score based on urgency + price
+    if (recommended && user.role === 'DRIVER' && user.driver) {
+      where.status = 'PUBLISHED' // Only recommend published orders
+    }
+
+    // Fetch orders - for recommended, fetch more to sort in memory
+    const fetchLimit = recommended ? Math.min(limit * 3, 100) : limit
+    const orders = await prisma.order.findMany({
+      where,
+      include: {
+        dispatcher: { include: { user: true } },
+        driver: { include: { user: true } },
+      },
+      orderBy: recommended ? undefined : { scheduledTime: 'asc' },
+      take: recommended ? fetchLimit : limit,
+      skip: recommended ? 0 : skip,
+    })
+
+    let sortedOrders = orders
+
+    // Smart recommendation scoring for drivers
+    if (recommended && user.role === 'DRIVER') {
+      const now = new Date()
+      sortedOrders = orders
+        .map(order => {
+          // Calculate time urgency score (0-100, higher = more urgent)
+          const timeDiff = new Date(order.scheduledTime).getTime() - now.getTime()
+          const minutesUntil = timeDiff / (1000 * 60)
+          let urgencyScore = 0
+          if (minutesUntil <= 30) urgencyScore = 100
+          else if (minutesUntil <= 60) urgencyScore = 80
+          else if (minutesUntil <= 120) urgencyScore = 60
+          else if (minutesUntil <= 180) urgencyScore = 40
+          else urgencyScore = 20
+
+          // Calculate price score (0-100, normalized to 2000)
+          const priceScore = Math.min((order.price / 2000) * 100, 100)
+
+          // Combined score: urgency (60%) + price (40%)
+          const recommendationScore = Math.round(urgencyScore * 0.6 + priceScore * 0.4)
+
+          return { ...order, recommendationScore }
+        })
+        .sort((a, b) => b.recommendationScore - a.recommendationScore)
+        .slice(0, limit) // Return only requested limit after sorting
+    }
+
+    const total = await prisma.order.count({ where })
 
     return NextResponse.json<ApiResponse>({
       success: true,
       data: {
-        orders,
+        orders: sortedOrders,
         pagination: {
           page,
           limit,
@@ -136,6 +173,54 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         )
       }
+    }
+
+    // Validate field lengths to prevent database errors
+    const MAX_LENGTHS: Record<string, number> = {
+      passengerName: 50,
+      passengerPhone: 20,
+      pickupLocation: 100,
+      pickupAddress: 200,
+      dropoffLocation: 100,
+      dropoffAddress: 200,
+      flightNumber: 20,
+      note: 500,
+    }
+
+    for (const [field, maxLength] of Object.entries(MAX_LENGTHS)) {
+      const value = body[field as keyof CreateOrderRequest]
+      if (value && typeof value === 'string' && value.length > maxLength) {
+        return NextResponse.json<ApiResponse>(
+          { success: false, error: `${field} 輸入過長，最多 ${maxLength} 字符` },
+          { status: 400 }
+        )
+      }
+    }
+
+    // Validate price range
+    if (body.price < 0 || body.price > 100000) {
+      return NextResponse.json<ApiResponse>(
+        { success: false, error: '價格必須在 0 - 100,000 元之間' },
+        { status: 400 }
+      )
+    }
+
+    // Validate passenger count
+    if (body.passengerCount < 1 || body.passengerCount > 20) {
+      return NextResponse.json<ApiResponse>(
+        { success: false, error: '乘客人數必須在 1 - 20 人之間' },
+        { status: 400 }
+      )
+    }
+
+    // Validate scheduled time is in the future
+    const scheduledDate = new Date(body.scheduledTime)
+    const now = new Date()
+    if (scheduledDate < now) {
+      return NextResponse.json<ApiResponse>(
+        { success: false, error: '預定時間不能是過去的時間' },
+        { status: 400 }
+      )
     }
 
     const order = await prisma.order.create({

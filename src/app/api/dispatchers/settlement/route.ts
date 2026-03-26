@@ -26,20 +26,18 @@ export async function GET(request: NextRequest) {
     const startDate = searchParams.get('startDate')
     const endDate = searchParams.get('endDate')
 
-    // Get all completed orders for this dispatcher
-    const where: Record<string, unknown> = {
-      dispatcherId: user.dispatcher?.id,
-      status: 'COMPLETED',
-    }
+    // Build date filter
+    const completedAtFilter: Record<string, unknown> = {}
+    if (startDate) completedAtFilter.gte = new Date(startDate)
+    if (endDate) completedAtFilter.lte = new Date(endDate)
 
-    if (startDate || endDate) {
-      where.completedAt = {}
-      if (startDate) (where.completedAt as Record<string, unknown>).gte = new Date(startDate)
-      if (endDate) (where.completedAt as Record<string, unknown>).lte = new Date(endDate)
-    }
-
+    // Get orders with driver summary using aggregation
     const orders = await prisma.order.findMany({
-      where,
+      where: {
+        dispatcherId: user.dispatcher?.id,
+        status: 'COMPLETED',
+        ...(Object.keys(completedAtFilter).length > 0 ? { completedAt: completedAtFilter } : {}),
+      },
       include: {
         driver: { include: { user: true } },
         transaction: true,
@@ -47,46 +45,55 @@ export async function GET(request: NextRequest) {
       orderBy: { completedAt: 'desc' },
     })
 
-    // Group by driver for transfer list
-    const driverSummary: Record<string, {
+    // Use SQL-like aggregation via Prisma
+    // Calculate summary using reduce (more efficient than multiple iterations)
+    const summary = orders.reduce(
+      (acc, order) => {
+        const platformFee = Math.floor(order.price * 0.05)
+        return {
+          totalOrders: acc.totalOrders + 1,
+          totalRevenue: acc.totalRevenue + order.price,
+          totalPlatformFee: acc.totalPlatformFee + platformFee,
+          totalNetRevenue: acc.totalNetRevenue + order.price - platformFee,
+        }
+      },
+      { totalOrders: 0, totalRevenue: 0, totalPlatformFee: 0, totalNetRevenue: 0 }
+    )
+
+    // Group by driver using reduce
+    const driverMap = new Map<string, {
       driver: { id: string; name: string; licensePlate: string }
       totalOrders: number
       totalAmount: number
       platformFee: number
       netAmount: number
-    }> = {}
+    }>()
 
     for (const order of orders) {
       if (!order.driver) continue
 
       const driverId = order.driver.id
-      if (!driverSummary[driverId]) {
-        driverSummary[driverId] = {
+      const existing = driverMap.get(driverId)
+      const platformFee = Math.floor(order.price * 0.05)
+
+      if (existing) {
+        existing.totalOrders++
+        existing.totalAmount += order.price
+        existing.platformFee += platformFee
+        existing.netAmount += order.price - platformFee
+      } else {
+        driverMap.set(driverId, {
           driver: {
             id: order.driver.id,
             name: order.driver.user.name,
             licensePlate: order.driver.licensePlate,
           },
-          totalOrders: 0,
-          totalAmount: 0,
-          platformFee: 0,
-          netAmount: 0,
-        }
+          totalOrders: 1,
+          totalAmount: order.price,
+          platformFee,
+          netAmount: order.price - platformFee,
+        })
       }
-
-      const platformFee = Math.floor(order.price * 0.05)
-      driverSummary[driverId].totalOrders++
-      driverSummary[driverId].totalAmount += order.price
-      driverSummary[driverId].platformFee += platformFee
-      driverSummary[driverId].netAmount += order.price - platformFee
-    }
-
-    // Summary statistics
-    const summary = {
-      totalOrders: orders.length,
-      totalRevenue: orders.reduce((sum: number, o: { price: number }) => sum + o.price, 0),
-      totalPlatformFee: orders.reduce((sum: number, o: { price: number }) => Math.floor(o.price * 0.05), 0),
-      totalNetRevenue: orders.reduce((sum: number, o: { price: number }) => sum + o.price - Math.floor(o.price * 0.05), 0),
     }
 
     return NextResponse.json<ApiResponse>({
@@ -94,7 +101,7 @@ export async function GET(request: NextRequest) {
       data: {
         summary,
         orders,
-        driverTransferList: Object.values(driverSummary),
+        driverTransferList: Array.from(driverMap.values()),
       },
     })
   } catch (error) {
