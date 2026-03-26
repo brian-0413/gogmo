@@ -2,14 +2,16 @@ import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { prisma } from './prisma'
 
-const JWT_SECRET = process.env.JWT_SECRET as string // Type assertion - env vars are set at runtime
-
-// Validate at startup
-if (!JWT_SECRET) {
-  throw new Error('JWT_SECRET environment variable is not set')
-}
-
+const JWT_SECRET = process.env.JWT_SECRET
 const JWT_EXPIRES_IN = '7d'
+
+// Get JWT secret with lazy validation
+function getJwtSecret(): string {
+  if (!JWT_SECRET) {
+    throw new Error('JWT_SECRET environment variable is not set')
+  }
+  return JWT_SECRET
+}
 
 export interface JwtPayload {
   userId: string
@@ -37,12 +39,12 @@ export async function verifyPassword(password: string, hashedPassword: string): 
 }
 
 export function generateToken(payload: JwtPayload): string {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN })
+  return jwt.sign(payload, getJwtSecret(), { expiresIn: JWT_EXPIRES_IN })
 }
 
 export function verifyToken(token: string): JwtPayload | null {
   try {
-    return jwt.verify(token, JWT_SECRET) as JwtPayload
+    return jwt.verify(token, getJwtSecret()) as JwtPayload
   } catch {
     return null
   }
