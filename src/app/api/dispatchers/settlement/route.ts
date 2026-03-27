@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
       },
       include: {
         driver: { include: { user: true } },
-        transaction: true,
+        transactions: true,
       },
       orderBy: { completedAt: 'desc' },
     })
