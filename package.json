@@ -9,8 +9,7 @@
     "lint": "eslint",
     "db:push": "prisma db push",
     "db:seed": "prisma db seed",
-    "db:setup": "prisma db push --skip-generate && prisma db seed",
-    "postinstall": "prisma generate"
+    "db:setup": "prisma db push --skip-generate && prisma db seed"
   },
   "prisma": {
     "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
