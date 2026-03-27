@@ -134,13 +134,13 @@ export default function LoginPage() {
             <div className="space-y-2 text-xs">
               <div className="flex items-center gap-2">
                 <span className="text-[#666]">司機：</span>
-                <span className="font-mono text-[#3b82f6]">driver@test.com</span>
-                <span className="text-[#444]">/ password123</span>
+                <span className="font-mono text-[#3b82f6]">driver1@test.com</span>
+                <span className="text-[#444]">/ test123</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-[#666]">車頭：</span>
-                <span className="font-mono text-[#22c55e]">dispatcher@test.com</span>
-                <span className="text-[#444]">/ password123</span>
+                <span className="font-mono text-[#22c55e]">dispatcher1@test.com</span>
+                <span className="text-[#444]">/ test123</span>
               </div>
             </div>
           </div>

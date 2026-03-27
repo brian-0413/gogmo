@@ -162,7 +162,7 @@ model Order {
   completedAt     DateTime?   // 完成時間
 
   // Relations
-  transaction     Transaction?
+  transactions     Transaction[]
 
   @@index([status])
   @@index([driverId])
@@ -175,8 +175,8 @@ model Order {
 
 model Transaction {
   id          String            @id @default(uuid())
-  orderId     String?           @unique
-  order       Order?            @relation(fields: [orderId], references: [id])
+  orderId     String?
+  order       Order?            @relation(fields: [orderId], references: [id], onDelete: SetNull)
   driverId    String
   driver      Driver            @relation(fields: [driverId], references: [id])
 
