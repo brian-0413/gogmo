@@ -69,6 +69,22 @@ export async function PATCH(request: NextRequest) {
       }
     }
 
+    // Status transition validation
+    if (body.status !== undefined) {
+      const validStatuses = ['ONLINE', 'OFFLINE', 'BUSY']
+      if (!validStatuses.includes(body.status)) {
+        return NextResponse.json<ApiResponse>(
+          { success: false, error: `無效的狀態：${body.status}。有效狀態為：${validStatuses.join(', ')}` },
+          { status: 400 }
+        )
+      }
+
+      // When going ONLINE, update lastLocationAt to now
+      if (body.status === 'ONLINE') {
+        updateData.lastLocationAt = new Date()
+      }
+    }
+
     const updated = await prisma.driver.update({
       where: { id: user.driver.id },
       data: updateData,

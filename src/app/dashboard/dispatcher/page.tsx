@@ -126,6 +126,458 @@ function generateId() {
   return Math.random().toString(36).substring(2, 9)
 }
 
+// ========== Settlement Tab ==========
+interface SettlementSummary {
+  totalOrders: number
+  totalRevenue: number
+  totalPlatformFee: number
+  totalNetRevenue: number
+}
+
+interface DriverTransfer {
+  driver: { id: string; name: string; licensePlate: string }
+  totalOrders: number
+  totalAmount: number
+  platformFee: number
+  netAmount: number
+}
+
+interface SettlementOrder {
+  id: string
+  price: number
+  completedAt: string | Date
+  createdAt: string | Date
+  driver?: { user: { name: string }; licensePlate: string }
+}
+
+interface SettlementData {
+  summary: SettlementSummary
+  orders: SettlementOrder[]
+  driverTransferList: DriverTransfer[]
+}
+
+function SettlementTab({ token }: { token: string | null }) {
+  const [loading, setLoading] = useState(true)
+  const [settlementData, setSettlementData] = useState<SettlementData | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [activeSubTab, setActiveSubTab] = useState<'summary' | 'drivers' | 'orders'>('summary')
+
+  // Date range state
+  const [startDate, setStartDate] = useState(() => {
+    const d = new Date()
+    d.setDate(d.getDate() - 7)
+    return format(d, 'yyyy-MM-dd')
+  })
+  const [endDate, setEndDate] = useState(() => format(new Date(), 'yyyy-MM-dd'))
+
+  const fetchSettlement = useCallback(async () => {
+    if (!token) return
+    setLoading(true)
+    setError(null)
+
+    try {
+      const res = await fetch(
+        `/api/dispatchers/settlement?startDate=${startDate}&endDate=${endDate}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      const data = await res.json()
+
+      if (data.success) {
+        setSettlementData(data.data)
+      } else {
+        setError(data.error || '載入失敗')
+      }
+    } catch {
+      setError('網路錯誤')
+    } finally {
+      setLoading(false)
+    }
+  }, [token, startDate, endDate])
+
+  useEffect(() => {
+    if (token) {
+      fetchSettlement()
+    }
+  }, [token, fetchSettlement])
+
+  const handleDatePreset = (days: number) => {
+    const end = new Date()
+    const start = new Date()
+    start.setDate(start.getDate() - days)
+    setStartDate(format(start, 'yyyy-MM-dd'))
+    setEndDate(format(end, 'yyyy-MM-dd'))
+  }
+
+  if (!token) return null
+
+  return (
+    <div className="space-y-6">
+      {/* Date Range Picker */}
+      <div className="bg-[#1a1a1a] border border-white/10 rounded-2xl p-6 backdrop-blur-sm">
+        <div className="flex flex-col md:flex-row md:items-end gap-4">
+          <div className="flex-1">
+            <label className="block text-xs text-[#666] mb-2 uppercase tracking-wider font-medium">起始日期</label>
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:border-[#ff8c42]/50"
+            />
+          </div>
+          <div className="flex-1">
+            <label className="block text-xs text-[#666] mb-2 uppercase tracking-wider font-medium">結束日期</label>
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:border-[#ff8c42]/50"
+            />
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleDatePreset(7)}
+              className="border-white/10 text-[#a0a0a0] hover:bg-white/10 hover:text-white text-xs"
+            >
+              近7天
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleDatePreset(30)}
+              className="border-white/10 text-[#a0a0a0] hover:bg-white/10 hover:text-white text-xs"
+            >
+              近30天
+            </Button>
+            <Button
+              size="sm"
+              onClick={fetchSettlement}
+              loading={loading}
+              className="bg-[#ff8c42] hover:bg-[#ff9d5c] text-black font-medium"
+            >
+              查詢
+            </Button>
+          </div>
+        </div>
+        <div className="mt-3 text-xs text-[#666]">
+          查詢區間：{startDate} ~ {endDate}
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="text-center py-12">
+          <div className="w-10 h-10 border-2 border-[#ff8c42] border-t-transparent rounded-full animate-spin mx-auto" />
+        </div>
+      ) : error ? (
+        <div className="bg-[#ef4444]/10 border border-[#ef4444]/20 rounded-xl p-6 text-center">
+          <p className="text-[#ef4444]">{error}</p>
+        </div>
+      ) : settlementData ? (
+        <>
+          {/* Summary Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="bg-gradient-to-br from-[#ff8c42]/20 to-[#ff8c42]/5 border border-[#ff8c42]/20 rounded-2xl p-5 backdrop-blur-sm">
+              <p className="text-xs text-[#ff8c42] uppercase tracking-wider mb-2">總訂單數</p>
+              <p className="text-3xl font-bold text-white">{settlementData.summary.totalOrders}</p>
+              <p className="text-xs text-[#666] mt-1">筆</p>
+            </div>
+            <div className="bg-gradient-to-br from-[#22c55e]/20 to-[#22c55e]/5 border border-[#22c55e]/20 rounded-2xl p-5 backdrop-blur-sm">
+              <p className="text-xs text-[#22c55e] uppercase tracking-wider mb-2">總營收</p>
+              <p className="text-3xl font-bold text-white">NT${settlementData.summary.totalRevenue.toLocaleString()}</p>
+              <p className="text-xs text-[#666] mt-1">元</p>
+            </div>
+            <div className="bg-gradient-to-br from-[#ef4444]/20 to-[#ef4444]/5 border border-[#ef4444]/20 rounded-2xl p-5 backdrop-blur-sm">
+              <p className="text-xs text-[#ef4444] uppercase tracking-wider mb-2">平台費 (5%)</p>
+              <p className="text-3xl font-bold text-white">-NT${settlementData.summary.totalPlatformFee.toLocaleString()}</p>
+              <p className="text-xs text-[#666] mt-1">元</p>
+            </div>
+            <div className="bg-gradient-to-br from-[#3b82f6]/20 to-[#3b82f6]/5 border border-[#3b82f6]/20 rounded-2xl p-5 backdrop-blur-sm">
+              <p className="text-xs text-[#3b82f6] uppercase tracking-wider mb-2">淨營收</p>
+              <p className="text-3xl font-bold text-white">NT${settlementData.summary.totalNetRevenue.toLocaleString()}</p>
+              <p className="text-xs text-[#666] mt-1">元</p>
+            </div>
+          </div>
+
+          {/* Sub Navigation */}
+          <div className="bg-[#1a1a1a] border border-white/10 rounded-xl">
+            <div className="flex border-b border-white/5">
+              <button
+                onClick={() => setActiveSubTab('summary')}
+                className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+                  activeSubTab === 'summary'
+                    ? 'text-[#ff8c42] border-b-2 border-[#ff8c42]'
+                    : 'text-[#666] hover:text-[#a0a0a0]'
+                }`}
+              >
+                概況總覽
+              </button>
+              <button
+                onClick={() => setActiveSubTab('drivers')}
+                className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+                  activeSubTab === 'drivers'
+                    ? 'text-[#ff8c42] border-b-2 border-[#ff8c42]'
+                    : 'text-[#666] hover:text-[#a0a0a0]'
+                }`}
+              >
+                司機轉帳清單 ({settlementData.driverTransferList.length})
+              </button>
+              <button
+                onClick={() => setActiveSubTab('orders')}
+                className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+                  activeSubTab === 'orders'
+                    ? 'text-[#ff8c42] border-b-2 border-[#ff8c42]'
+                    : 'text-[#666] hover:text-[#a0a0a0]'
+                }`}
+              >
+                訂單明细 ({settlementData.orders.length})
+              </button>
+            </div>
+
+            <div className="p-6">
+              {/* Summary Sub Tab */}
+              {activeSubTab === 'summary' && (
+                <div className="space-y-6">
+                  {settlementData.driverTransferList.length === 0 ? (
+                    <div className="text-center py-12">
+                      <BarChart3 className="w-12 h-12 text-[#333] mx-auto mb-3" />
+                      <p className="text-[#666]">此區間尚無完成的訂單</p>
+                    </div>
+                  ) : (
+                    <>
+                      {/* Revenue breakdown chart */}
+                      <div className="bg-[#0a0a0a] border border-white/5 rounded-xl p-5">
+                        <p className="text-sm font-medium text-[#e0e0e0] mb-4">營收組成</p>
+                        <div className="space-y-3">
+                          {settlementData.driverTransferList
+                            .sort((a, b) => b.totalAmount - a.totalAmount)
+                            .map((item) => (
+                              <div key={item.driver.id} className="flex items-center gap-3">
+                                <div className="w-32 truncate text-sm text-[#a0a0a0]">{item.driver.name}</div>
+                                <div className="flex-1 h-6 bg-white/5 rounded overflow-hidden relative">
+                                  <div
+                                    className="h-full bg-gradient-to-r from-[#ff8c42] to-[#ff8c42]/60 rounded transition-all"
+                                    style={{
+                                      width: `${settlementData.summary.totalRevenue > 0
+                                        ? (item.totalAmount / settlementData.summary.totalRevenue) * 100
+                                        : 0}%`,
+                                    }}
+                                  />
+                                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-[#e0e0e0]">
+                                    NT${item.totalAmount.toLocaleString()}
+                                  </span>
+                                </div>
+                                <div className="w-16 text-right text-xs text-[#666]">
+                                  {settlementData.summary.totalRevenue > 0
+                                    ? Math.round((item.totalAmount / settlementData.summary.totalRevenue) * 100)
+                                    : 0}%
+                                </div>
+                              </div>
+                            ))}
+                        </div>
+                      </div>
+
+                      {/* Fee breakdown */}
+                      <div className="bg-[#0a0a0a] border border-white/5 rounded-xl p-5">
+                        <p className="text-sm font-medium text-[#e0e0e0] mb-4">費用分析</p>
+                        <div className="grid grid-cols-3 gap-4">
+                          <div className="text-center p-4 bg-white/5 rounded-xl">
+                            <p className="text-2xl font-bold text-[#ff8c42]">
+                              NT${settlementData.summary.totalRevenue.toLocaleString()}
+                            </p>
+                            <p className="text-xs text-[#666] mt-1">司機總營收</p>
+                          </div>
+                          <div className="text-center p-4 bg-white/5 rounded-xl">
+                            <p className="text-2xl font-bold text-[#ef4444]">
+                              -NT${settlementData.summary.totalPlatformFee.toLocaleString()}
+                            </p>
+                            <p className="text-xs text-[#666] mt-1">平台服務費 (5%)</p>
+                          </div>
+                          <div className="text-center p-4 bg-white/5 rounded-xl">
+                            <p className="text-2xl font-bold text-[#22c55e]">
+                              NT${settlementData.summary.totalNetRevenue.toLocaleString()}
+                            </p>
+                            <p className="text-xs text-[#666] mt-1">司機實收</p>
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+
+              {/* Drivers Sub Tab */}
+              {activeSubTab === 'drivers' && (
+                <div>
+                  {settlementData.driverTransferList.length === 0 ? (
+                    <div className="text-center py-12">
+                      <UserCheck className="w-12 h-12 text-[#333] mx-auto mb-3" />
+                      <p className="text-[#666]">尚無司機完成行程</p>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead>
+                          <tr className="border-b border-white/5">
+                            <th className="text-left text-xs text-[#666] uppercase tracking-wider py-3 px-4 font-medium">司機</th>
+                            <th className="text-left text-xs text-[#666] uppercase tracking-wider py-3 px-4 font-medium">車牌</th>
+                            <th className="text-right text-xs text-[#666] uppercase tracking-wider py-3 px-4 font-medium">總趟次</th>
+                            <th className="text-right text-xs text-[#666] uppercase tracking-wider py-3 px-4 font-medium">總金額</th>
+                            <th className="text-right text-xs text-[#666] uppercase tracking-wider py-3 px-4 font-medium">平台費</th>
+                            <th className="text-right text-xs text-[#666] uppercase tracking-wider py-3 px-4 font-medium">實收金額</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {settlementData.driverTransferList
+                            .sort((a, b) => b.netAmount - a.netAmount)
+                            .map((item) => (
+                              <tr key={item.driver.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                                <td className="py-3 px-4">
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-7 h-7 rounded-full bg-[#ff8c42]/20 flex items-center justify-center">
+                                      <span className="text-xs font-bold text-[#ff8c42]">
+                                        {item.driver.name.charAt(0)}
+                                      </span>
+                                    </div>
+                                    <span className="text-sm font-medium text-[#e0e0e0]">{item.driver.name}</span>
+                                  </div>
+                                </td>
+                                <td className="py-3 px-4">
+                                  <span className="text-sm text-[#a0a0a0] font-mono">{item.driver.licensePlate}</span>
+                                </td>
+                                <td className="py-3 px-4 text-right">
+                                  <span className="text-sm font-medium text-[#e0e0e0]">{item.totalOrders}</span>
+                                  <span className="text-xs text-[#666] ml-1">筆</span>
+                                </td>
+                                <td className="py-3 px-4 text-right">
+                                  <span className="text-sm font-medium text-[#e0e0e0]">
+                                    NT${item.totalAmount.toLocaleString()}
+                                  </span>
+                                </td>
+                                <td className="py-3 px-4 text-right">
+                                  <span className="text-sm text-[#ef4444]">
+                                    -NT${item.platformFee.toLocaleString()}
+                                  </span>
+                                </td>
+                                <td className="py-3 px-4 text-right">
+                                  <span className="text-sm font-bold text-[#22c55e]">
+                                    NT${item.netAmount.toLocaleString()}
+                                  </span>
+                                </td>
+                              </tr>
+                            ))}
+                          {/* Total Row */}
+                          <tr className="bg-white/5">
+                            <td colSpan={2} className="py-3 px-4">
+                              <span className="text-sm font-bold text-[#e0e0e0]">合計</span>
+                            </td>
+                            <td className="py-3 px-4 text-right">
+                              <span className="text-sm font-bold text-[#e0e0e0]">
+                                {settlementData.driverTransferList.reduce((acc, d) => acc + d.totalOrders, 0)} 筆
+                              </span>
+                            </td>
+                            <td className="py-3 px-4 text-right">
+                              <span className="text-sm font-bold text-[#e0e0e0]">
+                                NT${settlementData.summary.totalRevenue.toLocaleString()}
+                              </span>
+                            </td>
+                            <td className="py-3 px-4 text-right">
+                              <span className="text-sm font-bold text-[#ef4444]">
+                                -NT${settlementData.summary.totalPlatformFee.toLocaleString()}
+                              </span>
+                            </td>
+                            <td className="py-3 px-4 text-right">
+                              <span className="text-sm font-bold text-[#22c55e]">
+                                NT${settlementData.summary.totalNetRevenue.toLocaleString()}
+                              </span>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Orders Sub Tab */}
+              {activeSubTab === 'orders' && (
+                <div>
+                  {settlementData.orders.length === 0 ? (
+                    <div className="text-center py-12">
+                      <ClipboardList className="w-12 h-12 text-[#333] mx-auto mb-3" />
+                      <p className="text-[#666]">尚無完成的訂單</p>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead>
+                          <tr className="border-b border-white/5">
+                            <th className="text-left text-xs text-[#666] uppercase tracking-wider py-3 px-4 font-medium">日期</th>
+                            <th className="text-left text-xs text-[#666] uppercase tracking-wider py-3 px-4 font-medium">司機</th>
+                            <th className="text-right text-xs text-[#666] uppercase tracking-wider py-3 px-4 font-medium">車牌</th>
+                            <th className="text-right text-xs text-[#666] uppercase tracking-wider py-3 px-4 font-medium">金額</th>
+                            <th className="text-right text-xs text-[#666] uppercase tracking-wider py-3 px-4 font-medium">平台費</th>
+                            <th className="text-right text-xs text-[#666] uppercase tracking-wider py-3 px-4 font-medium">實收</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {settlementData.orders.map((order) => {
+                            const fee = Math.floor(order.price * 0.05)
+                            const net = order.price - fee
+                            return (
+                              <tr key={order.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                                <td className="py-3 px-4">
+                                  <span className="text-sm text-[#a0a0a0]">
+                                    {format(
+                                      typeof order.completedAt === 'string'
+                                        ? parseISO(order.completedAt)
+                                        : order.completedAt,
+                                      'MM/dd HH:mm'
+                                    )}
+                                  </span>
+                                </td>
+                                <td className="py-3 px-4">
+                                  <span className="text-sm font-medium text-[#e0e0e0]">
+                                    {order.driver?.user?.name || '-'}
+                                  </span>
+                                </td>
+                                <td className="py-3 px-4 text-right">
+                                  <span className="text-sm text-[#666] font-mono">
+                                    {order.driver?.licensePlate || '-'}
+                                  </span>
+                                </td>
+                                <td className="py-3 px-4 text-right">
+                                  <span className="text-sm font-medium text-[#e0e0e0]">
+                                    NT${order.price.toLocaleString()}
+                                  </span>
+                                </td>
+                                <td className="py-3 px-4 text-right">
+                                  <span className="text-xs text-[#ef4444]">
+                                    -NT${fee.toLocaleString()}
+                                  </span>
+                                </td>
+                                <td className="py-3 px-4 text-right">
+                                  <span className="text-sm font-bold text-[#22c55e]">
+                                    NT${net.toLocaleString()}
+                                  </span>
+                                </td>
+                              </tr>
+                            )
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </>
+      ) : null}
+    </div>
+  )
+}
+
 export default function DispatcherDashboard() {
   const { user, token, isLoading, logout } = useAuth()
   const router = useRouter()
@@ -911,17 +1363,7 @@ export default function DispatcherDashboard() {
 
             {/* Settlement Tab */}
             {activeTab === 'settlement' && (
-              <div className="bg-[#1a1a1a] border border-white/10 rounded-2xl overflow-hidden">
-                <div className="px-6 py-4 border-b border-white/5">
-                  <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-                    <BarChart3 className="w-4 h-4 text-[#ff8c42]" /> 對帳表
-                  </h3>
-                  <p className="text-sm text-[#666] mt-1">查看已完成行程的帳務概況和司機轉帳清單</p>
-                </div>
-                <div className="p-12 text-center">
-                  <p className="text-[#666]">功能開發中...</p>
-                </div>
-              </div>
+              <SettlementTab token={token} />
             )}
           </>
         )}

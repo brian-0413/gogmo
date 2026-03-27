@@ -6,14 +6,15 @@ const prisma = new PrismaClient()
 async function main() {
   console.log('🌱 Starting seed...')
 
-  // Clean existing data
-  await prisma.transaction.deleteMany()
-  await prisma.order.deleteMany()
-  await prisma.driver.deleteMany()
-  await prisma.dispatcher.deleteMany()
-  await prisma.user.deleteMany()
+  // Check if test users already exist (idempotent - skip if already seeded)
+  const existingDriver = await prisma.user.findUnique({ where: { email: 'driver1@test.com' } })
+  if (existingDriver) {
+    console.log('ℹ️  Seed data already exists, skipping...')
+    console.log('   To re-seed, manually delete the test users first.')
+    return
+  }
 
-  console.log('✅ Cleaned existing data')
+  console.log('✅ No existing seed data, proceeding...')
 
   // Hash password for test users
   const hashedPassword = await bcrypt.hash('test123', 12)

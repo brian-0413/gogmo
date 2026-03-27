@@ -53,6 +53,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const storedToken = localStorage.getItem('token')
     if (storedToken) {
       setToken(storedToken)
+      // Also set the cookie for SSE auth
+      document.cookie = `auth_token=${storedToken}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Lax`
       fetchUser(storedToken)
     } else {
       setIsLoading(false)
@@ -92,6 +94,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setToken(data.data.token)
         setUser(data.data.user)
         localStorage.setItem('token', data.data.token)
+        // Set auth cookie for SSE endpoint (EventSource can't set custom headers)
+        document.cookie = `auth_token=${data.data.token}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Lax`
         router.push(data.data.user.role === 'DRIVER' ? '/dashboard/driver' : '/dashboard/dispatcher')
         return { success: true }
       } else {
@@ -115,6 +119,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setToken(resData.data.token)
         setUser(resData.data.user)
         localStorage.setItem('token', resData.data.token)
+        // Set auth cookie for SSE endpoint (EventSource can't set custom headers)
+        document.cookie = `auth_token=${resData.data.token}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Lax`
         router.push(data.role === 'DRIVER' ? '/dashboard/driver' : '/dashboard/dispatcher')
         return { success: true }
       } else {
@@ -129,6 +135,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null)
     setToken(null)
     localStorage.removeItem('token')
+    // Clear auth cookie for SSE endpoint
+    document.cookie = 'auth_token=; path=/; max-age=0; SameSite=Lax'
     router.push('/login')
   }
 

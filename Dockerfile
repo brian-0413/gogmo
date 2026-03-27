@@ -16,6 +16,9 @@ COPY . .
 # 生成 Prisma Client
 RUN npx prisma generate
 
+# 將 seed script 的相依項目加入
+# (bcryptjs & ts-node already in node_modules from npm ci)
+
 # 建置 Next.js
 RUN npm run build
 
