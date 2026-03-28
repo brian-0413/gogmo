@@ -5,7 +5,7 @@ import { useAuth } from '@/lib/auth-context'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import Link from 'next/link'
-import { Plane, ArrowRight, User, Lock, Radio } from 'lucide-react'
+import { Plane, ArrowRight, User, Lock } from 'lucide-react'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -123,26 +123,6 @@ export default function LoginPage() {
                 </Link>
               </div>
             </form>
-          </div>
-
-          {/* Demo accounts */}
-          <div className="mt-6 bg-white/5 border border-white/10 rounded-xl p-4 backdrop-blur-sm">
-            <div className="flex items-center gap-2 mb-3">
-              <Radio className="w-3 h-3 text-[#22c55e]" />
-              <span className="text-xs text-[#22c55e] uppercase tracking-wider">測試帳號</span>
-            </div>
-            <div className="space-y-2 text-xs">
-              <div className="flex items-center gap-2">
-                <span className="text-[#666]">司機：</span>
-                <span className="font-mono text-[#3b82f6]">driver1@test.com</span>
-                <span className="text-[#444]">/ password123</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-[#666]">車頭：</span>
-                <span className="font-mono text-[#22c55e]">dispatcher1@test.com</span>
-                <span className="text-[#444]">/ password123</span>
-              </div>
-            </div>
           </div>
 
           {/* Back to home */}
