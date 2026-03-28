@@ -1,30 +1,17 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect } from 'react'
 import { useAuth } from '@/lib/auth-context'
-import { Button } from '@/components/ui/Button'
-import { Input } from '@/components/ui/Input'
 import Link from 'next/link'
-import { Plane, ArrowRight, User, Lock } from 'lucide-react'
+import { Plane } from 'lucide-react'
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
   const { login } = useAuth()
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError('')
-    setLoading(true)
-
-    const result = await login(email, password)
-    if (!result.success) {
-      setError(result.error || '登入失敗')
-    }
-    setLoading(false)
-  }
+  useEffect(() => {
+    // Auto-login with test driver account on mount
+    login('driver1@test.com', 'test123')
+  }, [])
 
   return (
     <div className="min-h-screen bg-black text-white relative overflow-hidden">
@@ -46,91 +33,18 @@ export default function LoginPage() {
         </Link>
       </nav>
 
-      {/* Login Form */}
+      {/* Loading State */}
       <div className="relative z-10 flex items-center justify-center min-h-[calc(100vh-80px)] px-6">
-        <div className="w-full max-w-md">
-          {/* Header */}
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#ff8c42]/10 border border-[#ff8c42]/20 mb-4">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#ff8c42] opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#ff8c42]"></span>
-              </span>
-              <span className="text-xs text-[#ff8c42] font-medium">系統登入</span>
-            </div>
-            <h1 className="text-3xl font-bold text-white mb-2">歡迎回來</h1>
-            <p className="text-[#666]">登入您的帳戶以開始接單</p>
+        <div className="text-center">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#ff8c42]/10 border border-[#ff8c42]/20 mb-4">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#ff8c42] opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-[#ff8c42]"></span>
+            </span>
+            <span className="text-xs text-[#ff8c42] font-medium">自動登入中...</span>
           </div>
-
-          {/* Form Card */}
-          <div className="bg-[#1a1a1a] border border-white/10 rounded-2xl p-8 backdrop-blur-sm">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {error && (
-                <div className="bg-[#ef4444]/10 border border-[#ef4444]/20 text-[#ef4444] px-4 py-3 rounded-xl text-sm">
-                  {error}
-                </div>
-              )}
-
-              <div className="space-y-2">
-                <label className="text-sm text-[#a0a0a0] font-medium">Email</label>
-                <div className="relative">
-                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#666]" />
-                  <input
-                    type="email"
-                    placeholder="請輸入 Email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 pl-12 text-white placeholder-[#444] focus:outline-none focus:border-[#ff8c42]/50 focus:ring-1 focus:ring-[#ff8c42]/20 transition-all"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm text-[#a0a0a0] font-medium">密碼</label>
-                <div className="relative">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#666]" />
-                  <input
-                    type="password"
-                    placeholder="請輸入密碼"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 pl-12 text-white placeholder-[#444] focus:outline-none focus:border-[#ff8c42]/50 focus:ring-1 focus:ring-[#ff8c42]/20 transition-all"
-                  />
-                </div>
-              </div>
-
-              <Button
-                type="submit"
-                className="w-full bg-[#ff8c42] hover:bg-[#ff9d5c] text-black font-semibold h-12 rounded-xl flex items-center justify-center gap-2 transition-all"
-                disabled={loading}
-              >
-                {loading ? (
-                  <span className="animate-pulse">登入中...</span>
-                ) : (
-                  <>
-                    登入
-                    <ArrowRight className="w-4 h-4" />
-                  </>
-                )}
-              </Button>
-
-              <div className="text-center text-sm text-[#666]">
-                還沒有帳戶？{' '}
-                <Link href="/register" className="text-[#ff8c42] hover:text-[#ff9d5c] transition-colors">
-                  立即註冊
-                </Link>
-              </div>
-            </form>
-          </div>
-
-          {/* Back to home */}
-          <div className="mt-6 text-center">
-            <Link href="/" className="text-xs text-[#666] hover:text-[#ff8c42] transition-colors">
-              返回首頁
-            </Link>
-          </div>
+          <h1 className="text-2xl font-bold text-white mb-2">司機端測試模式</h1>
+          <p className="text-[#666] text-sm">使用 driver1@test.com / test123</p>
         </div>
       </div>
     </div>
