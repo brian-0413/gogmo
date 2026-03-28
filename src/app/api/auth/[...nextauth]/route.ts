@@ -78,7 +78,11 @@ export async function PUT(request: NextRequest) {
       )
     }
 
+    console.log('[AUTH ROUTE] Login request:', { email, hasPassword: !!password })
+
     const result = await login(email, password)
+
+    console.log('[AUTH ROUTE] Login result:', { success: result.success, error: result.error, hasToken: !!result.token })
 
     if (!result.success) {
       return NextResponse.json<ApiResponse>(
