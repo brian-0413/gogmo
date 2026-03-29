@@ -37,6 +37,10 @@ export interface Dispatcher {
   user?: User
 }
 
+export type OrderType = 'pickup' | 'dropoff' | 'transfer' | 'charter' | 'pending'
+export type VehicleType = 'small' | 'suv' | 'van9' | 'any' | 'any_r' | 'pending'
+export type PlateType = 'R' | 'T' | 'any'
+
 export interface Order {
   id: string
   dispatcherId: string
@@ -57,6 +61,10 @@ export interface Order {
   luggageCount: number
   scheduledTime: Date
   price: number
+  type: OrderType
+  vehicle: VehicleType
+  plateType: PlateType
+  notes?: string
   note?: string
   rawText?: string
   createdAt: Date
@@ -118,7 +126,12 @@ export interface CreateOrderRequest {
   luggageCount: number
   scheduledTime: string
   price: number
+  type?: OrderType
+  vehicle?: VehicleType
+  plateType?: PlateType
+  notes?: string
   note?: string
+  rawText?: string
 }
 
 export interface ParseOrderRequest {

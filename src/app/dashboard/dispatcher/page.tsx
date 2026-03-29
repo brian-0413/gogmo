@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Badge, OrderStatusBadge } from '@/components/ui/Badge'
-import { parseBatchOrders, ParsedOrder, BatchOrderDefaults } from '@/lib/ai'
+import { parseBatchOrders, ParsedOrder, BatchOrderDefaults, VEHICLE_LABELS, TYPE_LABELS } from '@/lib/ai'
 import { format, parseISO } from 'date-fns'
 import { zhTW } from 'date-fns/locale'
 import {
@@ -68,7 +68,10 @@ interface ReviewItem extends ParsedOrder {
   editedTime?: string
   editedPickup?: string
   editedDropoff?: string
-  editedNote?: string
+  editedNotes?: string
+  editedType?: string
+  editedVehicle?: string
+  editedPlateType?: string
 }
 
 // Date options
@@ -106,11 +109,19 @@ const PRICE_OPTIONS = [
 ]
 
 // Car type options
-const CAR_TYPE_OPTIONS = [
-  { value: '', label: '選擇車型...' },
-  { value: '小車', label: '小車（一般轎車）' },
-  { value: '休旅車', label: '休旅車' },
-  { value: '任何車', label: '不限車型' },
+const VEHICLE_OPTIONS: { value: string; label: string }[] = [
+  { value: 'any', label: '任意車型' },
+  { value: 'small', label: '小車（轎車）' },
+  { value: 'suv', label: '休旅車' },
+  { value: 'van9', label: '9人座' },
+  { value: 'any_r', label: '任意R牌' },
+]
+
+// Plate type options
+const PLATETYPE_OPTIONS = [
+  { value: 'any', label: '任意車牌' },
+  { value: 'R', label: 'R牌' },
+  { value: 'T', label: 'T牌' },
 ]
 
 // Passenger count options
@@ -590,7 +601,8 @@ export default function DispatcherDashboard() {
   // Batch order defaults
   const [defaults, setDefaults] = useState<BatchOrderDefaults>({
     price: 800,
-    carType: '',
+    vehicle: 'any',
+    plateType: 'any',
     date: '',
     passengerCount: 1,
     flightNumber: '',
@@ -598,7 +610,13 @@ export default function DispatcherDashboard() {
   const [rawText, setRawText] = useState('')
   const [reviewItems, setReviewItems] = useState<ReviewItem[]>([])
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [editForm, setEditForm] = useState<Partial<ParsedOrder>>({})
+  const [editForm, setEditForm] = useState<{
+    price?: number
+    scheduledTime?: string
+    pickupLocation?: string
+    dropoffLocation?: string
+    note?: string
+  }>({})
   const [createLoading, setCreateLoading] = useState(false)
 
   // Redirect if not dispatcher
@@ -664,10 +682,10 @@ export default function DispatcherDashboard() {
     setEditingId(item.reviewId)
     setEditForm({
       price: item.price || defaults.price || 800,
-      scheduledTime: item.scheduledTime,
-      pickupLocation: item.pickupLocation,
-      dropoffLocation: item.dropoffLocation,
-      note: item.note,
+      scheduledTime: item.time || undefined,
+      pickupLocation: item.pickupLocation || undefined,
+      dropoffLocation: item.dropoffLocation || undefined,
+      note: item.notes || undefined,
     })
   }
 
@@ -681,7 +699,7 @@ export default function DispatcherDashboard() {
               editedTime: editForm.scheduledTime,
               editedPickup: editForm.pickupLocation,
               editedDropoff: editForm.dropoffLocation,
-              editedNote: editForm.note,
+              editedNotes: editForm.note,
             }
           : item
       )
@@ -716,7 +734,7 @@ export default function DispatcherDashboard() {
 
       // Create orders one by one
       for (const item of reviewItems) {
-        const scheduledDateTime = `${orderDate}T${item.editedTime || item.scheduledTime}:00`
+        const scheduledDateTime = `${orderDate}T${item.editedTime || item.time}:00`
 
         await fetch('/api/orders', {
           method: 'POST',
@@ -736,7 +754,11 @@ export default function DispatcherDashboard() {
             luggageCount: 0,
             scheduledTime: scheduledDateTime,
             price: item.editedPrice || item.price || defaults.price || 800,
-            note: item.editedNote || item.note || '',
+            type: item.editedType || item.type || 'pending',
+            vehicle: item.editedVehicle || item.vehicle || defaults.vehicle || 'any',
+            plateType: item.editedPlateType || item.plateType || defaults.plateType || 'any',
+            notes: item.editedNotes || item.notes || '',
+            note: '',
             rawText: item.rawText || '',
           }),
         })
@@ -1091,11 +1113,24 @@ export default function DispatcherDashboard() {
                       <div className="space-y-2">
                         <label className="text-sm text-[#a0a0a0] font-medium">車型要求</label>
                         <select
-                          value={defaults.carType || ''}
-                          onChange={(e) => setDefaults(prev => ({ ...prev, carType: e.target.value }))}
+                          value={defaults.vehicle || 'any'}
+                          onChange={(e) => setDefaults(prev => ({ ...prev, vehicle: e.target.value as BatchOrderDefaults['vehicle'] }))}
                           className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:border-[#ff8c42]/50"
                         >
-                          {CAR_TYPE_OPTIONS.map(opt => (
+                          {VEHICLE_OPTIONS.map(opt => (
+                            <option key={opt.value} value={opt.value}>{opt.label}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-sm text-[#a0a0a0] font-medium">車牌限制</label>
+                        <select
+                          value={defaults.plateType || 'any'}
+                          onChange={(e) => setDefaults(prev => ({ ...prev, plateType: e.target.value as BatchOrderDefaults['plateType'] }))}
+                          className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:border-[#ff8c42]/50"
+                        >
+                          {PLATETYPE_OPTIONS.map(opt => (
                             <option key={opt.value} value={opt.value}>{opt.label}</option>
                           ))}
                         </select>
@@ -1124,7 +1159,7 @@ export default function DispatcherDashboard() {
                       <FileText className="w-4 h-4 text-[#ff8c42]" /> 貼上訂單文字
                     </h3>
                     <p className="text-sm text-[#666] mt-1">
-                      每行一筆訂單，格式：<code className="bg-white/10 px-1.5 py-0.5 rounded text-xs">時間 上下車地點 /備註</code>
+                      每行一筆訂單，格式：<code className="bg-white/10 px-1.5 py-0.5 rounded text-xs">時間 地點 送機/接機 /車型 /備註</code>
                     </p>
                   </div>
                   <div className="p-6">
@@ -1134,9 +1169,9 @@ export default function DispatcherDashboard() {
                       placeholder={`範例：
 0400 內湖送桃機
 0400 松山送桃機/休旅
-0410 文山送桃機/休旅
-0430 新竹東區送桃機/休旅 $1000
-1545 桃機接萬華 $700
+0430 新竹東區送桃機/9座 $1000
+2310 tr875 接北屯+北區 任意車2000
+1545 桃機接萬華 任意R 800
 ...`}
                       className="w-full h-48 bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-white text-sm font-mono focus:outline-none focus:border-[#ff8c42]/50 resize-none placeholder-[#444]"
                     />
@@ -1241,11 +1276,25 @@ export default function DispatcherDashboard() {
                                 <div className="flex items-start justify-between mb-3">
                                   <div className="flex items-center gap-2">
                                     <span className="text-sm font-medium text-[#666]">#{idx + 1}</span>
-                                    {item.orderType === 'pickup' ? (
-                                      <Badge className="bg-[#22c55e]/20 text-[#22c55e] border-[#22c55e]/30">接機</Badge>
-                                    ) : item.orderType === 'dropoff' ? (
-                                      <Badge className="bg-[#3b82f6]/20 text-[#3b82f6] border-[#3b82f6]/30">送機</Badge>
-                                    ) : null}
+                                    <Badge className={
+                                      item.type === 'pickup' ? 'bg-[#22c55e]/20 text-[#22c55e] border-[#22c55e]/30'
+                                      : item.type === 'dropoff' ? 'bg-[#3b82f6]/20 text-[#3b82f6] border-[#3b82f6]/30'
+                                      : item.type === 'transfer' ? 'bg-[#a855f7]/20 text-[#a855f7] border-[#a855f7]/30'
+                                      : item.type === 'charter' ? 'bg-[#f59e0b]/20 text-[#f59e0b] border-[#f59e0b]/30'
+                                      : 'bg-white/10 text-[#888] border-white/20'
+                                    }>
+                                      {TYPE_LABELS[item.type] || '待確認'}
+                                    </Badge>
+                                    <Badge className={
+                                      item.vehicle === 'van9' ? 'bg-[#ef4444]/20 text-[#ef4444] border-[#ef4444]/30'
+                                      : item.vehicle === 'suv' ? 'bg-[#f59e0b]/20 text-[#f59e0b] border-[#f59e0b]/30'
+                                      : item.vehicle === 'small' ? 'bg-white/10 text-[#e0e0e0] border-white/20'
+                                      : item.vehicle === 'any_r' ? 'bg-[#3b82f6]/20 text-[#3b82f6] border-[#3b82f6]/30'
+                                      : 'bg-white/10 text-[#a0a0a0] border-white/20'
+                                    }>
+                                      {VEHICLE_LABELS[item.vehicle] || '待確認'}
+                                      {item.plateType && item.plateType !== 'any' ? ` (${item.plateType}牌)` : ''}
+                                    </Badge>
                                     <span className="text-xs text-[#444] font-mono">{item.rawText}</span>
                                   </div>
                                   <div className="flex gap-2">
@@ -1262,7 +1311,7 @@ export default function DispatcherDashboard() {
                                   <div>
                                     <p className="text-xs text-[#666]">時間</p>
                                     <p className="font-mono font-medium text-[#e0e0e0]">
-                                      {item.editedTime || item.scheduledTime || '-'}
+                                      {item.editedTime || item.time || '-'}
                                     </p>
                                   </div>
                                   <div>
@@ -1274,7 +1323,7 @@ export default function DispatcherDashboard() {
                                   <div>
                                     <p className="text-xs text-[#666]">車型</p>
                                     <p className="font-medium text-[#e0e0e0]">
-                                      {item.note?.includes('休旅') || defaults.carType === '休旅車' ? '休旅車' : '小車'}
+                                      {VEHICLE_LABELS[item.vehicle] || '待確認'}
                                     </p>
                                   </div>
                                 </div>
@@ -1291,9 +1340,9 @@ export default function DispatcherDashboard() {
                                   </div>
                                 </div>
 
-                                {(item.editedNote || item.note) && (
-                                  <p className="text-xs text-[#888] italic mt-2 flex items-center gap-1">
-                                    <FileText className="w-3 h-3" /> {item.editedNote || item.note}
+                                {(item.editedNotes || item.notes) && (
+                                  <p className="text-xs text-[#888] italic mt-2 flex items-start gap-1">
+                                    <FileText className="w-3 h-3 mt-0.5 flex-shrink-0" /> {item.editedNotes || item.notes}
                                   </p>
                                 )}
                               </div>

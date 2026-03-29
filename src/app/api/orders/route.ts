@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getUserFromToken } from '@/lib/auth'
-import { parseOrderText, validateParsedOrder } from '@/lib/ai'
+import { parseOrderText } from '@/lib/ai'
 import { ApiResponse, CreateOrderRequest } from '@/types'
 import { checkRateLimit } from '@/lib/api-utils'
 
@@ -185,6 +185,8 @@ export async function POST(request: NextRequest) {
       dropoffAddress: 200,
       flightNumber: 20,
       note: 500,
+      notes: 500,
+      rawText: 1000,
     }
 
     for (const [field, maxLength] of Object.entries(MAX_LENGTHS)) {
@@ -241,7 +243,12 @@ export async function POST(request: NextRequest) {
         luggageCount: body.luggageCount || 0,
         scheduledTime: new Date(body.scheduledTime),
         price: body.price,
+        type: body.type || 'pending',
+        vehicle: body.vehicle || 'any',
+        plateType: body.plateType || 'any',
+        notes: body.notes,
         note: body.note,
+        rawText: body.rawText,
         status: 'PUBLISHED', // Dispatcher-created orders are immediately visible
       },
       include: {

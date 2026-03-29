@@ -25,8 +25,18 @@
 - 每次修改後要 git commit
 - API 回傳格式統一為 { success: boolean, data: any, error?: string }
 
-## 目前已知問題
-- 司機儀表板 availableOrders.map 錯誤（修復中）
+## 訂單解析規則
+本平台處理台灣機場接送 LINE 群組訂單，格式極不統一。
+詳細解析規則見 docs/order-parsing-rules.md
+
+核心重點：
+- 訂單只需精確提取 5 個欄位：日期、時間、種類（接機/送機/交通接駁/包車）、車型、金額
+- 其餘內容全文保留到「備註」欄位，讓司機自行閱讀
+- 車型分類：小車(5人座)、休旅(7人座)、9人座、任意、任意R牌
+- 大車可接小車的單，小車不能接大車的單
+- 車牌分 R牌(租賃車) 和 T牌(計程車)，需分開標記
+- 機場簡稱：桃機(TPE)、松機(TSA)、小港(KHH)、清泉崗(RMQ)
+- 開發訂單相關功能時，務必先讀 docs/order-parsing-rules.md
 
 ## 測試帳號
 - 司機：driver1@test.com

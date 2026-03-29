@@ -1,7 +1,273 @@
 // AI Order Parsing Utility
-// Uses pattern matching and heuristics to parse order text
+// 以 regex 為主，精確提取五個關鍵欄位（日期/時間/種類/車型/金額）
+// 其餘全部保留原文至備註欄位
+
+export type OrderType = 'pickup' | 'dropoff' | 'transfer' | 'charter' | 'pending'
+export type VehicleType = 'small' | 'suv' | 'van9' | 'any' | 'any_r' | 'pending'
+export type PlateType = 'R' | 'T' | 'any'
 
 export interface ParsedOrder {
+  date: string | null       // "3/28" 格式，相對日期
+  time: string | null       // "23:10" 或 "05:00"
+  type: OrderType
+  vehicle: VehicleType
+  plateType: PlateType
+  price: number | null
+  notes: string              // 所有未解析的內容
+  rawText: string            // 原始行文字
+  // 地點（由外層補全）
+  pickupLocation?: string
+  dropoffLocation?: string
+}
+
+export interface BatchOrderDefaults {
+  price?: number
+  vehicle?: VehicleType
+  plateType?: PlateType
+  date?: string
+  passengerCount?: number
+  flightNumber?: string
+}
+
+// ============ 時間解析 ============
+function extractTime(line: string): string | null {
+  // 1. HH:MM 格式
+  const hmMatch = line.match(/(\d{1,2}):(\d{2})(?!\d)/)
+  if (hmMatch) {
+    const h = parseInt(hmMatch[1])
+    const m = parseInt(hmMatch[2])
+    if (h >= 0 && h <= 23 && m >= 0 && m <= 59) {
+      return `${h.toString().padStart(2, '0')}:${m}`
+    }
+  }
+
+  // 2. HHMM 格式（行首）
+  const hmmMatch = line.match(/^(\d{4})/)
+  if (hmmMatch) {
+    const h = parseInt(hmmMatch[1].substring(0, 2))
+    const m = parseInt(hmmMatch[1].substring(2, 4))
+    if (h >= 0 && h <= 23 && m >= 0 && m <= 59) {
+      return `${h.toString().padStart(2, '0')}:${m}`
+    }
+  }
+
+  // 3. 單獨時分格式 "5:00" / "05:00"
+  const singleTime = line.match(/(?<!\d)(\d{1,2}):(\d{2})(?!\d)/)
+  if (singleTime) {
+    const h = parseInt(singleTime[1])
+    const m = parseInt(singleTime[2])
+    if (h >= 0 && h <= 23 && m >= 0 && m <= 59) {
+      return `${h.toString().padStart(2, '0')}:${m}`
+    }
+  }
+
+  return null
+}
+
+// ============ 金額解析 ============
+function extractPrice(line: string): number | null {
+  // $數字、💲數字、結尾數字
+  const dollarMatch = line.match(/[$💲](\d+)/)
+  if (dollarMatch) return parseInt(dollarMatch[1], 10)
+
+  // 句尾純數字（至少3位，避免誤抓時間）
+  const endNumMatch = line.match(/(\d{3,})$/)
+  if (endNumMatch) return parseInt(endNumMatch[1], 10)
+
+  return null
+}
+
+// ============ 車型解析 ============
+function extractVehicle(line: string): { vehicle: VehicleType; plateType: PlateType } {
+  const vehicleLower = line.toLowerCase
+
+  // 車型關鍵字
+  if (line.includes('9人') || line.includes('九人') || line.includes('VAN') || line.match(/van9/i)) {
+    return { vehicle: 'van9', plateType: 'any' }
+  }
+  if (line.includes('休旅') || line.match(/suv/i)) {
+    // 任意R = 車牌R開頭的休旅車
+    if (line.includes('任意R') || line.includes('任R') || line.match(/any.?r/i)) {
+      return { vehicle: 'any_r', plateType: 'R' }
+    }
+    return { vehicle: 'suv', plateType: 'any' }
+  }
+  if (line.includes('小車') || line.includes('轎車') || line.match(/\/小\b|\/轎\b/)) {
+    return { vehicle: 'small', plateType: 'any' }
+  }
+  if (line.includes('任意') || line.includes('不限') || line.match(/any|隨便/i)) {
+    return { vehicle: 'any', plateType: 'any' }
+  }
+
+  // 車牌類型單獨出現
+  if (line.includes('R牌') || line.includes('R牌') || line.match(/\/R\b/)) {
+    return { vehicle: 'any', plateType: 'R' }
+  }
+  if (line.includes('T牌') || line.match(/\/T\b/)) {
+    return { vehicle: 'any', plateType: 'T' }
+  }
+
+  return { vehicle: 'any', plateType: 'any' }
+}
+
+// ============ 種類解析 ============
+function extractType(line: string): OrderType {
+  if (line.includes('接機') || line.includes('桃機接') || line.match(/機場接|抵達/i)) return 'pickup'
+  if (line.includes('送機') || line.match(/送桃機|送.*機/i)) return 'dropoff'
+  if (line.includes('接駁') || line.includes('交通')) return 'transfer'
+  if (line.includes('包車')) return 'charter'
+
+  // 推斷：含桃園/機場字樣
+  const isAirportPickup = line.includes('桃機') || line.includes('機場')
+  if (isAirportPickup) {
+    if (line.includes('送')) return 'dropoff'
+    if (line.includes('接')) return 'pickup'
+  }
+
+  return 'pending'
+}
+
+// ============ 日期解析 ============
+function extractDate(line: string, defaultDate: string): string | null {
+  // M/D 格式
+  const mdMatch = line.match(/(\d{1,2})\/(\d{1,2})/)
+  if (mdMatch) {
+    return `${mdMatch[1]}/${mdMatch[2]}`
+  }
+
+  // 今天/明天
+  if (line.includes('今天') || line.includes('今日')) return 'today'
+  if (line.includes('明天') || line.includes('明日')) return 'tomorrow'
+
+  return null
+}
+
+// ============ 單行解析 ============
+function parseSingleLine(line: string, defaults: BatchOrderDefaults): ParsedOrder {
+  const trimmed = line.trim()
+  if (!trimmed) {
+    return {
+      date: null, time: null, type: 'pending',
+      vehicle: defaults.vehicle || 'any', plateType: defaults.plateType || 'any',
+      price: null, notes: '', rawText: '',
+    }
+  }
+
+  const time = extractTime(trimmed)
+  const price = extractPrice(trimmed)
+  const { vehicle, plateType } = extractVehicle(trimmed)
+  const type = extractType(trimmed)
+  const date = extractDate(trimmed, defaults.date || '')
+
+  // 組合備註：移除已解析的部分，保留原文
+  let notes = trimmed
+
+  // 移除已提取的時間
+  if (time) {
+    if (notes.match(/^\d{4}/)) {
+      notes = notes.replace(/^\d{4}/, '').trim()
+    } else {
+      notes = notes.replace(/\d{1,2}:\d{2}/, '').trim()
+    }
+  }
+
+  // 移除已提取的金額
+  if (price !== null) {
+    notes = notes.replace(/[$💲]\d+/, '').replace(/\d{3,}$/, '').trim()
+  }
+
+  // 移除日期
+  if (date && date !== 'today' && date !== 'tomorrow') {
+    notes = notes.replace(/\d{1,2}\/\d{1,2}/, '').trim()
+  }
+
+  // 移除常見標記
+  notes = notes.replace(/[\[\]【】()（）]/g, '').trim()
+
+  return {
+    date,
+    time,
+    type,
+    vehicle,
+    plateType,
+    price,
+    notes,
+    rawText: trimmed,
+  }
+}
+
+// ============ 批次解析 ============
+export function parseBatchOrders(
+  text: string,
+  defaults: BatchOrderDefaults
+): ParsedOrder[] {
+  const lines = text.split(/\n/).map(l => l.trim()).filter(Boolean)
+  const results: ParsedOrder[] = []
+  let lastDate: string | null = null
+
+  for (const line of lines) {
+    const parsed = parseSingleLine(line, defaults)
+
+    // 跨行日期邏輯：如果這行有日期，則更新 lastDate
+    if (parsed.date === 'today') {
+      lastDate = new Date().toLocaleDateString('zh-TW', { month: 'numeric', day: 'numeric' })
+    } else if (parsed.date === 'tomorrow') {
+      const d = new Date()
+      d.setDate(d.getDate() + 1)
+      lastDate = d.toLocaleDateString('zh-TW', { month: 'numeric', day: 'numeric' })
+    } else if (parsed.date) {
+      lastDate = parsed.date
+    }
+
+    // 套用預設車型
+    if (parsed.vehicle === 'any' && defaults.vehicle) {
+      parsed.vehicle = defaults.vehicle
+    }
+    if (parsed.plateType === 'any' && defaults.plateType) {
+      parsed.plateType = defaults.plateType
+    }
+
+    // 套用預設金額
+    if (parsed.price === null && defaults.price) {
+      parsed.price = defaults.price
+    }
+
+    // 推斷接送種類並設定地點
+    if (parsed.type === 'pickup' || line.includes('桃機接') || line.includes('接機')) {
+      // 接機：從桃園機場到某地
+      const location = parsed.notes.replace(/^(接機|桃機接)/, '').replace(/\/.*$/, '').trim()
+      if (location) parsed.dropoffLocation = location
+      else if (parsed.notes) parsed.dropoffLocation = parsed.notes
+      parsed.pickupLocation = '桃園機場'
+      if (parsed.type === 'pending') parsed.type = 'pickup'
+    } else if (parsed.type === 'dropoff' || line.includes('送桃機') || line.includes('送機')) {
+      // 送機：從某地到桃園機場
+      const location = parsed.notes.replace(/^(送機|送桃機)/, '').replace(/\/.*$/, '').trim()
+      if (location) parsed.pickupLocation = location
+      else if (parsed.notes) parsed.pickupLocation = parsed.notes
+      parsed.dropoffLocation = '桃園機場'
+      if (parsed.type === 'pending') parsed.type = 'dropoff'
+    }
+
+    // 清理 notes 中的接送種類標記
+    parsed.notes = parsed.notes
+      .replace(/^(接機|送機|桃機接|送桃機|接駁|包車)/, '')
+      .replace(/\/.*$/, '') // 移除 / 後面的車型標記（已單獨解析）
+      .replace(/^(任意|不限)/, '')
+      .replace(/任意R|任R|任意.*車|不限.*車/g, '')
+      .trim()
+
+    // 只有包含時間的才視為有效訂單
+    if (parsed.time) {
+      results.push(parsed)
+    }
+  }
+
+  return results
+}
+
+// ============ 舊版 API 相容性 ============
+export interface LegacyParsedOrder {
   passengerName?: string
   passengerPhone?: string
   flightNumber?: string
@@ -16,117 +282,12 @@ export interface ParsedOrder {
   price?: number
   note?: string
   rawText?: string
-  orderType?: 'pickup' | 'dropoff' // 接機 or 送機
+  orderType?: 'pickup' | 'dropoff'
 }
 
-// Default values for batch order creation
-export interface BatchOrderDefaults {
-  price?: number
-  carType?: string
-  date?: string
-  passengerCount?: number
-  flightNumber?: string
-}
-
-// Parse a single line of order text
-function parseOrderLine(line: string, defaults: BatchOrderDefaults): Partial<ParsedOrder> {
-  const result: Partial<ParsedOrder> = {}
-  const trimmed = line.trim()
-
-  if (!trimmed) return result
-
-  // Extract time - first 4 digit number (HHMM format)
-  const timeMatch = trimmed.match(/^(\d{4})/)
-  if (timeMatch) {
-    const timeStr = timeMatch[1]
-    const hours = timeStr.substring(0, 2)
-    const minutes = timeStr.substring(2, 4)
-    // Validate it's a reasonable time (00-23:00-59)
-    const h = parseInt(hours)
-    const m = parseInt(minutes)
-    if (h >= 0 && h <= 23 && m >= 0 && m <= 59) {
-      result.scheduledTime = `${hours}:${minutes}`
-    }
-  }
-
-  // Extract price if explicitly marked with $
-  const priceMatch = trimmed.match(/\$(\d+)/)
-  if (priceMatch) {
-    result.price = parseInt(priceMatch[1], 10)
-  }
-
-  // Extract car type requirements from notes
-  const notes: string[] = []
-  if (trimmed.includes('/休旅')) notes.push('休旅車')
-  if (trimmed.includes('/限V')) notes.push('限V')
-  if (trimmed.includes('+安')) notes.push('+安')
-  if (trimmed.includes('+大園')) notes.push('+大園')
-  if (notes.length > 0) {
-    result.note = notes.join('、')
-  }
-
-  // Determine direction and locations
-  // "送桃機" = going to airport (pickup: XX, dropoff: 桃園機場) → 送機
-  // "接XX" = from airport (pickup: 桃園機場, dropoff: XX) → 接機
-  if (trimmed.includes('送桃機')) {
-    // Format: "0400 XX送桃機" or "0400 XX送桃機/休旅"
-    result.orderType = 'dropoff' // 送機
-    const match = trimmed.match(/(\d{4})?\s*(.+?)\s*送桃機/)
-    if (match) {
-      result.pickupLocation = match[2].replace(/\/.*$/, '').trim()
-      result.dropoffLocation = '桃園機場'
-      result.pickupAddress = result.pickupLocation
-      result.dropoffAddress = '桃園國際機場'
-    }
-  } else if (trimmed.includes('桃機接')) {
-    // Format: "1545桃機接萬華"
-    result.orderType = 'pickup' // 接機
-    const match = trimmed.match(/(\d{4})?\s*桃機接(.+)/)
-    if (match) {
-      result.pickupLocation = '桃園機場'
-      result.dropoffLocation = match[2].replace(/\/.*$/, '').trim()
-      result.pickupAddress = '桃園國際機場'
-      result.dropoffAddress = result.dropoffLocation
-    }
-  }
-
-  return result
-}
-
-// Batch parse multiple order lines
-export function parseBatchOrders(
-  text: string,
-  defaults: BatchOrderDefaults
-): ParsedOrder[] {
-  const lines = text.split(/\n/).map(l => l.trim()).filter(Boolean)
-  const results: ParsedOrder[] = []
-
-  for (const line of lines) {
-    const parsed = parseOrderLine(line, defaults)
-
-    // Apply defaults
-    const order: ParsedOrder = {
-      ...parsed,
-      price: parsed.price ?? defaults.price,
-      scheduledDate: defaults.date,
-      passengerCount: defaults.passengerCount ?? 1,
-      flightNumber: defaults.flightNumber,
-      rawText: line,
-      note: parsed.note || undefined,
-    }
-
-    // Only add if we have at least time and a location
-    if (order.scheduledTime && (order.pickupLocation || order.dropoffLocation)) {
-      results.push(order)
-    }
-  }
-
-  return results
-}
-
-// Old parse function for backward compatibility
-export function parseOrderText(rawText: string): ParsedOrder {
-  const result: ParsedOrder = {}
+// 舊版 parseOrderText（保留相容性）
+export function parseOrderText(rawText: string): LegacyParsedOrder {
+  const result: LegacyParsedOrder = {}
 
   const lines = rawText.split(/[\n,，;；]+/).map(l => l.trim()).filter(Boolean)
   const fullText = rawText.replace(/[\n,，;；]/g, ' ')
@@ -179,7 +340,7 @@ export function parseOrderText(rawText: string): ParsedOrder {
 
 // Validate parsed order has required fields
 export function validateParsedOrder(order: ParsedOrder): { valid: boolean; missingFields: string[] } {
-  const requiredFields = ['scheduledTime', 'pickupLocation', 'dropoffLocation']
+  const requiredFields = ['time', 'pickupLocation', 'dropoffLocation']
   const missingFields: string[] = []
 
   for (const field of requiredFields) {
@@ -192,4 +353,28 @@ export function validateParsedOrder(order: ParsedOrder): { valid: boolean; missi
     valid: missingFields.length === 0,
     missingFields,
   }
+}
+
+// 車型顯示用
+export const VEHICLE_LABELS: Record<VehicleType, string> = {
+  small: '小車',
+  suv: '休旅車',
+  van9: '9人座',
+  any: '任意車型',
+  any_r: '任意R牌',
+  pending: '待確認',
+}
+
+export const TYPE_LABELS: Record<OrderType, string> = {
+  pickup: '接機',
+  dropoff: '送機',
+  transfer: '接駁',
+  charter: '包車',
+  pending: '待確認',
+}
+
+export const PLATETYPE_LABELS: Record<PlateType, string> = {
+  R: 'R牌',
+  T: 'T牌',
+  any: '任意',
 }

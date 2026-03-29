@@ -150,11 +150,19 @@ model Order {
   scheduledTime   DateTime    // 預定時間
   price           Int          // 價格（整數）
 
+  // 接送種類與車型要求
+  type            String      @default("pending") // pickup / dropoff / transfer / charter / pending
+  vehicle         String      @default("pending") // small / suv / van9 / any / any_r / pending
+  plateType       String      @default("any")     // R / T / any
+
+  // 解析後備註（原文保留）
+  notes           String?
+
   // AI 解析用
-  rawText         String?     // AI解析前的原始文字
+  rawText         String?     // 完整原始訊息
   parsedData      Json?       // AI解析後的結構化資料
 
-  note            String?      // 備註
+  note            String?      // 車頭自填備註
 
   // Timestamps
   createdAt       DateTime    @default(now())

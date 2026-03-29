@@ -4,8 +4,11 @@ import { Badge, OrderStatusBadge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { format, parseISO, differenceInMinutes } from 'date-fns'
 import { zhTW } from 'date-fns/locale'
-import { User, Package, FileText, Zap, Clock, Car, MapPin } from 'lucide-react'
+import { User, Package, FileText, Zap, Clock, Car } from 'lucide-react'
 import { useState, useEffect } from 'react'
+
+type OrderType = 'pickup' | 'dropoff' | 'transfer' | 'charter' | 'pending'
+type VehicleType = 'small' | 'suv' | 'van9' | 'any' | 'any_r' | 'pending'
 
 interface Order {
   id: string
@@ -21,7 +24,12 @@ interface Order {
   luggageCount: number
   scheduledTime: string | Date
   price: number
+  type?: OrderType
+  vehicle?: VehicleType
+  plateType?: string
+  notes?: string | null
   note?: string | null
+  rawText?: string | null
   dispatcher?: {
     companyName: string
   }
@@ -36,10 +44,21 @@ interface OrderCardProps {
   isNew?: boolean
 }
 
-function getOrderType(pickupLocation: string, dropoffLocation: string): "pickup" | "dropoff" {
-  if (pickupLocation.includes("桃園機場") || pickupLocation.includes("機場")) return "pickup"
-  if (dropoffLocation.includes("桃園機場") || dropoffLocation.includes("機場")) return "dropoff"
-  return "dropoff"
+const VEHICLE_LABELS: Record<VehicleType, string> = {
+  small: '小車',
+  suv: '休旅',
+  van9: '9人座',
+  any: '任意車',
+  any_r: '任意R',
+  pending: '待確認',
+}
+
+const TYPE_LABELS: Record<OrderType, string> = {
+  pickup: '接機',
+  dropoff: '送機',
+  transfer: '接駁',
+  charter: '包車',
+  pending: '待確認',
 }
 
 function getTimeUrgency(scheduledTime: string | Date): "urgent" | "soon" | "normal" {
@@ -53,8 +72,8 @@ function getTimeUrgency(scheduledTime: string | Date): "urgent" | "soon" | "norm
 
 function OrderCard({ order, onAccept, onView, showActions = true, compact = false, isNew = false }: OrderCardProps) {
   const scheduledDate = typeof order.scheduledTime === 'string' ? parseISO(order.scheduledTime) : order.scheduledTime
-  const orderType = getOrderType(order.pickupLocation, order.dropoffLocation)
-  const isPickup = orderType === "pickup"
+  const orderType: OrderType = order.type || 'pending'
+  const vehicle: VehicleType = order.vehicle || 'any'
   const urgency = getTimeUrgency(order.scheduledTime)
   const [countdown, setCountdown] = useState<string>('')
 
@@ -76,18 +95,40 @@ function OrderCard({ order, onAccept, onView, showActions = true, compact = fals
     }
   }, [order.scheduledTime, urgency])
 
-  const badgeColor = isPickup ? '#3b82f6' : '#22c55e'
+  // 種類 Badge 顏色
+  const typeBadgeColor = orderType === 'pickup' ? { bg: '#22c55e', text: 'white' }
+    : orderType === 'dropoff' ? { bg: '#3b82f6', text: 'white' }
+    : orderType === 'transfer' ? { bg: '#a855f7', text: 'white' }
+    : orderType === 'charter' ? { bg: '#f59e0b', text: 'black' }
+    : { bg: '#444', text: '#a0a0a0' }
+
+  // 車型 Badge 顏色
+  const vehicleBadgeColor = vehicle === 'van9' ? { bg: '#ef4444', text: 'white' }
+    : vehicle === 'suv' ? { bg: '#f59e0b', text: 'black' }
+    : vehicle === 'small' ? { bg: '#666', text: 'white' }
+    : vehicle === 'any_r' ? { bg: '#3b82f6', text: 'white' }
+    : { bg: '#444', text: '#a0a0a0' }
+
+  // 接送地點標題
+  const isPickup = orderType === 'pickup'
+  const pickupLabel = isPickup ? '桃園機場' : '上車'
+  const dropoffLabel = isPickup ? '目的地' : '桃園機場'
 
   return (
     <div className={`bg-[#1a1a1a] border border-white/10 rounded-xl overflow-hidden transition-all hover:border-white/20 ${isNew ? 'animate-cardEntry' : ''}`}>
       <div className="p-4">
-        {/* Header */}
-        <div className="flex items-start justify-between mb-3">
+        {/* Header: 日期 + 種類 + 金額 */}
+        <div className="flex items-start justify-between mb-2">
           <div className="flex items-center gap-2">
             <span className="text-xl font-bold" style={{ color: '#ff8c42' }}>
               NT${order.price}
             </span>
-            <OrderStatusBadge status={order.status} />
+            <span
+              className="text-[10px] font-bold px-2 py-1 rounded"
+              style={{ backgroundColor: typeBadgeColor.bg, color: typeBadgeColor.text }}
+            >
+              {TYPE_LABELS[orderType]}
+            </span>
           </div>
           <div className="flex items-center gap-2">
             {urgency !== "normal" && (
@@ -99,28 +140,42 @@ function OrderCard({ order, onAccept, onView, showActions = true, compact = fals
                 {countdown || '00:00'}
               </span>
             )}
-            <span className="text-[10px] text-[#666] font-mono">
-              #{order.id.slice(0, 8)}
-            </span>
+            <OrderStatusBadge status={order.status} />
           </div>
         </div>
 
-        {/* Flight Info */}
-        <div className="flex items-center gap-2 mb-3">
-          <span className="bg-white/10 px-2 py-1 rounded font-mono text-xs text-[#e0e0e0]">
-            {order.flightNumber}
+        {/* 次行: 日期 + 時間 + 航班 */}
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-sm font-medium text-[#e0e0e0]">
+            {format(scheduledDate, 'M/dd (E)', { locale: zhTW })}
           </span>
-          <span className="text-xs text-[#a0a0a0]">
-            {format(scheduledDate, 'MM/dd (E)', { locale: zhTW })} • {format(scheduledDate, 'HH:mm')}
+          <span className="text-sm font-mono font-bold text-white">
+            {format(scheduledDate, 'HH:mm')}
+          </span>
+          {order.flightNumber && (
+            <span className="bg-white/10 px-2 py-0.5 rounded font-mono text-xs text-[#e0e0e0]">
+              {order.flightNumber}
+            </span>
+          )}
+        </div>
+
+        {/* 車型 Badge */}
+        <div className="flex items-center gap-2 mb-3">
+          <span
+            className="text-[10px] font-bold px-2 py-1 rounded"
+            style={{ backgroundColor: vehicleBadgeColor.bg, color: vehicleBadgeColor.text }}
+          >
+            {VEHICLE_LABELS[vehicle]}
+            {order.plateType && order.plateType !== 'any' ? ` (${order.plateType}牌)` : ''}
           </span>
         </div>
 
         {/* Locations */}
         <div className="space-y-2 mb-3">
           <div className="flex items-start gap-2">
-            <div className="w-2 h-2 rounded-full mt-1.5" style={{ backgroundColor: badgeColor }} />
+            <div className="w-2 h-2 rounded-full mt-1.5" style={{ backgroundColor: typeBadgeColor.bg }} />
             <div className="flex-1 min-w-0">
-              <p className="text-xs text-[#a0a0a0] mb-0.5">{isPickup ? '桃園機場' : '上車地點'}</p>
+              <p className="text-xs text-[#a0a0a0] mb-0.5">{pickupLabel}</p>
               <p className="text-sm font-medium text-[#e0e0e0] truncate">
                 {order.pickupLocation}
               </p>
@@ -129,7 +184,7 @@ function OrderCard({ order, onAccept, onView, showActions = true, compact = fals
           <div className="flex items-start gap-2">
             <div className="w-2 h-2 rounded-full bg-[#666] mt-1.5" />
             <div className="flex-1 min-w-0">
-              <p className="text-xs text-[#a0a0a0] mb-0.5">{isPickup ? '目的地' : '桃園機場'}</p>
+              <p className="text-xs text-[#a0a0a0] mb-0.5">{dropoffLabel}</p>
               <p className="text-sm font-medium text-[#e0e0e0] truncate">
                 {order.dropoffLocation}
               </p>
@@ -143,10 +198,10 @@ function OrderCard({ order, onAccept, onView, showActions = true, compact = fals
           <span className="flex items-center gap-1"><Package className="w-3 h-3" /> {order.passengerCount}人 / {order.luggageCount}行李</span>
         </div>
 
-        {/* Note */}
-        {order.note && (
+        {/* Notes (原文備註) */}
+        {(order.notes || order.note) && (
           <div className="text-xs text-[#888] italic mb-3 bg-white/5 p-2 rounded flex items-start gap-1">
-            <FileText className="w-3 h-3 mt-0.5 flex-shrink-0" /> {order.note}
+            <FileText className="w-3 h-3 mt-0.5 flex-shrink-0" /> {order.notes || order.note}
           </div>
         )}
 

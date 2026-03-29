@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUserFromToken } from '@/lib/auth'
-import { parseOrderText, validateParsedOrder } from '@/lib/ai'
+import { parseBatchOrders } from '@/lib/ai'
 import { ApiResponse } from '@/types'
 
-// POST /api/orders/parse - AI parse order text
+// POST /api/orders/parse - Parse order text using new regex engine
 export async function POST(request: NextRequest) {
   try {
     const token = request.headers.get('Authorization')?.replace('Bearer ', '')
@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { text } = body
+    const { text, defaults } = body
 
     if (!text || typeof text !== 'string') {
       return NextResponse.json<ApiResponse>(
@@ -39,14 +39,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const parsed = parseOrderText(text)
-    const validation = validateParsedOrder(parsed)
+    const parsed = parseBatchOrders(text, defaults || {})
 
     return NextResponse.json<ApiResponse>({
       success: true,
       data: {
-        parsed,
-        validation,
+        orders: parsed,
+        count: parsed.length,
       },
     })
   } catch (error) {
