@@ -634,7 +634,7 @@ export default function DispatcherDashboard() {
         headers: { Authorization: `Bearer ${token}` },
       })
       const data = await res.json()
-      if (data.success) setOrders(data.data)
+      if (data.success) setOrders(data.data.orders || [])
     } catch (error) {
       console.error('Failed to fetch orders:', error)
     } finally {

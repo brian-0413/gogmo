@@ -149,10 +149,10 @@ export default function DriverDashboard() {
       const myData = await myRes.json()
 
       if (availableData.success) {
-        setAvailableOrders(availableData.data)
+        setAvailableOrders(availableData.data.orders || [])
       }
       if (myData.success) {
-        setMyOrders(myData.data)
+        setMyOrders(myData.data.orders || [])
       }
     } catch (error) {
       console.error('Failed to fetch orders:', error)
