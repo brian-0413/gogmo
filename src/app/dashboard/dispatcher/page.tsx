@@ -511,7 +511,6 @@ export default function DispatcherDashboard() {
   const [orders, setOrders] = useState<Order[]>([])
   const [drivers, setDrivers] = useState<Driver[]>([])
   const [loading, setLoading] = useState(true)
-  const [actionLoading, setActionLoading] = useState<string | null>(null)
 
   // Batch order defaults
   const [defaults, setDefaults] = useState<BatchOrderDefaults>({
@@ -701,35 +700,6 @@ export default function DispatcherDashboard() {
       alert('發布訂單失敗')
     } finally {
       setCreateLoading(false)
-    }
-  }
-
-  const handleAssignDriver = async (orderId: string, driverId: string) => {
-    if (!token) return
-
-    setActionLoading(orderId)
-
-    try {
-      const res = await fetch(`/api/orders/${orderId}`, {
-        method: 'PATCH',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ _action: 'assign', driverId }),
-      })
-
-      const data = await res.json()
-
-      if (data.success) {
-        await fetchOrders()
-      } else {
-        alert(data.error || '指派失敗')
-      }
-    } catch {
-      alert('網路錯誤')
-    } finally {
-      setActionLoading(null)
     }
   }
 
@@ -929,7 +899,7 @@ export default function DispatcherDashboard() {
                           : order.status === 'COMPLETED' ? 'bg-white/10 text-[#666] border border-white/10'
                           : 'bg-white/10 text-[#888] border border-white/20'
                         }`}>
-                          {order.status === 'PENDING' ? '待接單' : order.status === 'PUBLISHED' ? '待搶單' : order.status === 'ASSIGNED' ? '已指派' : order.status === 'ACCEPTED' ? '已接單' : order.status === 'ARRIVED' ? '已抵達' : order.status === 'IN_PROGRESS' ? '進行中' : order.status === 'COMPLETED' ? '已完成' : order.status === 'CANCELLED' ? '已取消' : order.status}
+                          {order.status === 'PENDING' ? '待接單' : order.status === 'PUBLISHED' ? '待接單' : order.status === 'ASSIGNED' ? '已指派' : order.status === 'ACCEPTED' ? '已接單' : order.status === 'ARRIVED' ? '已抵達' : order.status === 'IN_PROGRESS' ? '進行中' : order.status === 'COMPLETED' ? '已完成' : order.status === 'CANCELLED' ? '已取消' : order.status}
                         </span>
                         {isKenichi && (
                           <span className="px-1.5 py-0.5 rounded text-xs font-medium bg-[#a855f7]/20 text-[#a855f7] border border-[#a855f7]/30">
@@ -955,28 +925,6 @@ export default function DispatcherDashboard() {
                           {order.scheduledTime ? format(parseISO(order.scheduledTime), 'MM/dd HH:mm', { locale: zhTW }) : '-'}
                         </span>
                       </div>
-                      {/* Assign Driver Section for PUBLISHED */}
-                      {order.status === 'PUBLISHED' && (
-                        <div className="border-t border-white/5 pt-2 mt-2">
-                          <div className="flex flex-wrap gap-1">
-                            {drivers
-                              .filter(d => d.status === 'ONLINE')
-                              .map(driver => (
-                                <button
-                                  key={driver.id}
-                                  onClick={() => handleAssignDriver(order.id, driver.id)}
-                                  disabled={actionLoading === order.id}
-                                  className="px-2 py-1 bg-white/5 hover:bg-white/10 border border-white/10 rounded text-xs text-[#a0a0a0] hover:text-white transition-all disabled:opacity-50"
-                                >
-                                  {driver.user.name} ({driver.licensePlate})
-                                </button>
-                              ))}
-                            {drivers.filter(d => d.status === 'ONLINE').length === 0 && (
-                              <span className="text-xs text-[#444]">目前沒有在線司機</span>
-                            )}
-                          </div>
-                        </div>
-                      )}
                     </div>
                   )})
                 )}
