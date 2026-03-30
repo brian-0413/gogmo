@@ -26,12 +26,24 @@ export async function GET(request: NextRequest) {
     const startDate = searchParams.get('startDate')
     const endDate = searchParams.get('endDate')
 
-    // Build date filter
-    const completedAtFilter: Record<string, unknown> = {}
-    if (startDate) completedAtFilter.gte = new Date(startDate)
-    if (endDate) completedAtFilter.lte = new Date(endDate)
+    // Build date filter for createdAt
+    const createdAtFilter: Record<string, unknown> = {}
+    if (startDate) createdAtFilter.gte = new Date(startDate + 'T00:00:00')
+    if (endDate) createdAtFilter.lte = new Date(endDate + 'T23:59:59')
 
-    // Get orders with driver summary using aggregation
+    // Get ALL orders in date range (for total count)
+    const allOrders = await prisma.order.findMany({
+      where: {
+        dispatcherId: user.dispatcher?.id,
+        ...(Object.keys(createdAtFilter).length > 0 ? { createdAt: createdAtFilter } : {}),
+      },
+    })
+
+    // Get completed orders for transfer list
+    const completedAtFilter: Record<string, unknown> = {}
+    if (startDate) completedAtFilter.gte = new Date(startDate + 'T00:00:00')
+    if (endDate) completedAtFilter.lte = new Date(endDate + 'T23:59:59')
+
     const orders = await prisma.order.findMany({
       where: {
         dispatcherId: user.dispatcher?.id,
@@ -39,11 +51,14 @@ export async function GET(request: NextRequest) {
         ...(Object.keys(completedAtFilter).length > 0 ? { completedAt: completedAtFilter } : {}),
       },
       include: {
-        driver: { include: { user: true } },
+        driver: { include: { user: true, transactions: true } },
         transactions: true,
       },
       orderBy: { completedAt: 'desc' },
     })
+
+    // Count pending transfer orders
+    const pendingTransferCount = orders.filter(o => o.transferStatus === 'pending').length
 
     // Use SQL-like aggregation via Prisma
     // Calculate summary using reduce (more efficient than multiple iterations)
@@ -99,6 +114,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json<ApiResponse>({
       success: true,
       data: {
+        allOrdersCount: allOrders.length,
+        pendingTransferCount,
         summary,
         orders,
         driverTransferList: Array.from(driverMap.values()),

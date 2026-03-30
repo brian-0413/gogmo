@@ -87,6 +87,8 @@ model Driver {
   currentLat      Float?
   currentLng      Float?
   lastLocationAt  DateTime?
+  bankCode        String?      // 銀行代碼
+  bankAccount     String?      // 銀行帳號
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
 
@@ -166,6 +168,9 @@ model Order {
 
   // 肯驛系統
   kenichiRequired Boolean     @default(false) // 是否需要肯驛系統
+
+  // 轉帳狀態
+  transferStatus   String     @default("pending") // pending / completed
 
   // Timestamps
   createdAt       DateTime    @default(now())

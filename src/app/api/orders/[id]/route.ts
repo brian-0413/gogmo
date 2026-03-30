@@ -250,6 +250,7 @@ export async function PATCH(
         'passengerName', 'passengerPhone', 'flightNumber',
         'pickupLocation', 'pickupAddress', 'dropoffLocation', 'dropoffAddress',
         'passengerCount', 'luggageCount', 'scheduledTime', 'price', 'note',
+        'transferStatus',
       ]
 
       // Validate field lengths

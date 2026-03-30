@@ -9,15 +9,14 @@ import { Badge } from '@/components/ui/Badge'
 import { parseBatchOrders, ParsedOrder, BatchOrderDefaults, VEHICLE_LABELS, TYPE_LABELS } from '@/lib/ai'
 import { format, parseISO } from 'date-fns'
 import { zhTW } from 'date-fns/locale'
+import * as XLSX from 'xlsx'
 import {
   ClipboardList,
   Plus,
   Search,
-  UserCheck,
   Wallet,
   FileText,
   Car,
-  BarChart3,
   Building2,
   User,
   Phone,
@@ -26,6 +25,7 @@ import {
   Radio,
   TrendingUp,
   Clock,
+  Download,
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -142,33 +142,33 @@ interface SettlementSummary {
   totalNetRevenue: number
 }
 
-interface DriverTransfer {
-  driver: { id: string; name: string; licensePlate: string }
-  totalOrders: number
-  totalAmount: number
-  platformFee: number
-  netAmount: number
-}
-
 interface SettlementOrder {
   id: string
   price: number
   completedAt: string | Date
   createdAt: string | Date
-  driver?: { user: { name: string }; licensePlate: string }
+  transferStatus: string
+  driver?: {
+    user: { name: string }
+    licensePlate: string
+    bankCode?: string
+    bankAccount?: string
+  }
 }
 
 interface SettlementData {
+  allOrdersCount: number
+  pendingTransferCount: number
   summary: SettlementSummary
   orders: SettlementOrder[]
-  driverTransferList: DriverTransfer[]
+  driverTransferList: never[]
 }
 
 function SettlementTab({ token }: { token: string | null }) {
   const [loading, setLoading] = useState(true)
   const [settlementData, setSettlementData] = useState<SettlementData | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [activeSubTab, setActiveSubTab] = useState<'summary' | 'drivers' | 'orders'>('summary')
+  const [togglingId, setTogglingId] = useState<string | null>(null)
 
   // Date range state
   const [startDate, setStartDate] = useState(() => {
@@ -214,6 +214,79 @@ function SettlementTab({ token }: { token: string | null }) {
     start.setDate(start.getDate() - days)
     setStartDate(format(start, 'yyyy-MM-dd'))
     setEndDate(format(end, 'yyyy-MM-dd'))
+  }
+
+  const handleToggleTransfer = async (orderId: string, currentStatus: string) => {
+    if (!token) return
+    const newStatus = currentStatus === 'pending' ? 'completed' : 'pending'
+    setTogglingId(orderId)
+    try {
+      const res = await fetch(`/api/orders/${orderId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ transferStatus: newStatus }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        // Update local state
+        setSettlementData(prev => {
+          if (!prev) return prev
+          return {
+            ...prev,
+            pendingTransferCount: prev.orders.map(o =>
+              o.id === orderId
+                ? { ...o, transferStatus: newStatus }
+                : o
+            ).filter(o => o.transferStatus === 'pending').length,
+            orders: prev.orders.map(o =>
+              o.id === orderId ? { ...o, transferStatus: newStatus } : o
+            ),
+          }
+        })
+      }
+    } catch {
+      console.error('Failed to toggle transfer status')
+    } finally {
+      setTogglingId(null)
+    }
+  }
+
+  const handleDownloadExcel = () => {
+    if (!settlementData) return
+
+    const rows = settlementData.orders.map(order => {
+      const completedAt = order.completedAt
+        ? format(
+            typeof order.completedAt === 'string' ? parseISO(order.completedAt) : order.completedAt,
+            'yyyy-MM-dd HH:mm'
+          )
+        : '-'
+      return {
+        '單號': order.id.slice(0, 8),
+        '完成日期': completedAt,
+        '司機': order.driver?.user?.name || '-',
+        '車牌': order.driver?.licensePlate || '-',
+        '金額': order.price,
+        '銀行代碼': order.driver?.bankCode || '-',
+        '銀行帳號': order.driver?.bankAccount ? `****${order.driver.bankAccount.slice(-4)}` : '-',
+        '轉帳狀態': order.transferStatus === 'completed' ? '已轉帳' : '待轉帳',
+      }
+    })
+
+    const ws = XLSX.utils.json_to_sheet(rows)
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, '轉帳清單')
+
+    // Set column widths
+    ws['!cols'] = [
+      { wch: 12 }, { wch: 18 }, { wch: 10 }, { wch: 10 },
+      { wch: 8 }, { wch: 10 }, { wch: 16 }, { wch: 10 },
+    ]
+
+    XLSX.writeFile(wb, `轉帳清單_${startDate}_${endDate}.xlsx`)
   }
 
   if (!token) return null
@@ -283,11 +356,16 @@ function SettlementTab({ token }: { token: string | null }) {
         </div>
       ) : settlementData ? (
         <>
-          {/* Summary Stats */}
+          {/* Stats Cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-gradient-to-br from-[#ff8c42]/20 to-[#ff8c42]/5 border border-[#ff8c42]/20 rounded-2xl p-5 backdrop-blur-sm">
-              <p className="text-xs text-[#ff8c42] uppercase tracking-wider mb-2">總訂單數</p>
-              <p className="text-3xl font-bold text-white">{settlementData.summary.totalOrders}</p>
+            <div className="bg-gradient-to-br from-[#3b82f6]/20 to-[#3b82f6]/5 border border-[#3b82f6]/20 rounded-2xl p-5 backdrop-blur-sm">
+              <p className="text-xs text-[#3b82f6] uppercase tracking-wider mb-2">總派出單數</p>
+              <p className="text-3xl font-bold text-white">{settlementData.allOrdersCount}</p>
+              <p className="text-xs text-[#666] mt-1">筆</p>
+            </div>
+            <div className="bg-gradient-to-br from-[#f59e0b]/20 to-[#f59e0b]/5 border border-[#f59e0b]/20 rounded-2xl p-5 backdrop-blur-sm">
+              <p className="text-xs text-[#f59e0b] uppercase tracking-wider mb-2">待轉帳筆數</p>
+              <p className="text-3xl font-bold text-white">{settlementData.pendingTransferCount}</p>
               <p className="text-xs text-[#666] mt-1">筆</p>
             </div>
             <div className="bg-gradient-to-br from-[#22c55e]/20 to-[#22c55e]/5 border border-[#22c55e]/20 rounded-2xl p-5 backdrop-blur-sm">
@@ -300,285 +378,125 @@ function SettlementTab({ token }: { token: string | null }) {
               <p className="text-3xl font-bold text-white">-NT${settlementData.summary.totalPlatformFee.toLocaleString()}</p>
               <p className="text-xs text-[#666] mt-1">元</p>
             </div>
-            <div className="bg-gradient-to-br from-[#3b82f6]/20 to-[#3b82f6]/5 border border-[#3b82f6]/20 rounded-2xl p-5 backdrop-blur-sm">
-              <p className="text-xs text-[#3b82f6] uppercase tracking-wider mb-2">淨營收</p>
-              <p className="text-3xl font-bold text-white">NT${settlementData.summary.totalNetRevenue.toLocaleString()}</p>
-              <p className="text-xs text-[#666] mt-1">元</p>
-            </div>
           </div>
 
-          {/* Sub Navigation */}
-          <div className="bg-[#1a1a1a] border border-white/10 rounded-xl">
-            <div className="flex border-b border-white/5">
-              <button
-                onClick={() => setActiveSubTab('summary')}
-                className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
-                  activeSubTab === 'summary'
-                    ? 'text-[#ff8c42] border-b-2 border-[#ff8c42]'
-                    : 'text-[#666] hover:text-[#a0a0a0]'
-                }`}
+          {/* Transfer List */}
+          <div className="bg-[#1a1a1a] border border-white/10 rounded-2xl overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-white/5">
+              <div className="flex items-center gap-3">
+                <h3 className="text-sm font-semibold text-[#e0e0e0]">司機轉帳清單</h3>
+                <span className="text-xs text-[#666]">共 {settlementData.orders.length} 筆已完成行程</span>
+              </div>
+              <Button
+                size="sm"
+                onClick={handleDownloadExcel}
+                className="bg-[#22c55e] hover:bg-[#16a34a] text-white font-medium flex items-center gap-2"
               >
-                概況總覽
-              </button>
-              <button
-                onClick={() => setActiveSubTab('drivers')}
-                className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
-                  activeSubTab === 'drivers'
-                    ? 'text-[#ff8c42] border-b-2 border-[#ff8c42]'
-                    : 'text-[#666] hover:text-[#a0a0a0]'
-                }`}
-              >
-                司機轉帳清單 ({settlementData.driverTransferList.length})
-              </button>
-              <button
-                onClick={() => setActiveSubTab('orders')}
-                className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
-                  activeSubTab === 'orders'
-                    ? 'text-[#ff8c42] border-b-2 border-[#ff8c42]'
-                    : 'text-[#666] hover:text-[#a0a0a0]'
-                }`}
-              >
-                訂單明细 ({settlementData.orders.length})
-              </button>
+                <Download className="w-3.5 h-3.5" />
+                下載 Excel
+              </Button>
             </div>
 
-            <div className="p-6">
-              {/* Summary Sub Tab */}
-              {activeSubTab === 'summary' && (
-                <div className="space-y-6">
-                  {settlementData.driverTransferList.length === 0 ? (
-                    <div className="text-center py-12">
-                      <BarChart3 className="w-12 h-12 text-[#333] mx-auto mb-3" />
-                      <p className="text-[#666]">此區間尚無完成的訂單</p>
-                    </div>
-                  ) : (
-                    <>
-                      {/* Revenue breakdown chart */}
-                      <div className="bg-[#0a0a0a] border border-white/5 rounded-xl p-5">
-                        <p className="text-sm font-medium text-[#e0e0e0] mb-4">營收組成</p>
-                        <div className="space-y-3">
-                          {settlementData.driverTransferList
-                            .sort((a, b) => b.totalAmount - a.totalAmount)
-                            .map((item) => (
-                              <div key={item.driver.id} className="flex items-center gap-3">
-                                <div className="w-32 truncate text-sm text-[#a0a0a0]">{item.driver.name}</div>
-                                <div className="flex-1 h-6 bg-white/5 rounded overflow-hidden relative">
-                                  <div
-                                    className="h-full bg-gradient-to-r from-[#ff8c42] to-[#ff8c42]/60 rounded transition-all"
-                                    style={{
-                                      width: `${settlementData.summary.totalRevenue > 0
-                                        ? (item.totalAmount / settlementData.summary.totalRevenue) * 100
-                                        : 0}%`,
-                                    }}
-                                  />
-                                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-[#e0e0e0]">
-                                    NT${item.totalAmount.toLocaleString()}
-                                  </span>
-                                </div>
-                                <div className="w-16 text-right text-xs text-[#666]">
-                                  {settlementData.summary.totalRevenue > 0
-                                    ? Math.round((item.totalAmount / settlementData.summary.totalRevenue) * 100)
-                                    : 0}%
-                                </div>
-                              </div>
-                            ))}
-                        </div>
-                      </div>
+            {/* Table */}
+            {settlementData.orders.length === 0 ? (
+              <div className="text-center py-16">
+                <ClipboardList className="w-12 h-12 text-[#333] mx-auto mb-3" />
+                <p className="text-[#666]">此區間尚無完成的行程</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-white/5">
+                      <th className="text-left text-xs text-[#666] uppercase tracking-wider py-3 px-4 font-medium">單號</th>
+                      <th className="text-left text-xs text-[#666] uppercase tracking-wider py-3 px-4 font-medium">司機</th>
+                      <th className="text-left text-xs text-[#666] uppercase tracking-wider py-3 px-4 font-medium">車牌</th>
+                      <th className="text-left text-xs text-[#666] uppercase tracking-wider py-3 px-4 font-medium">日期</th>
+                      <th className="text-right text-xs text-[#666] uppercase tracking-wider py-3 px-4 font-medium">金額</th>
+                      <th className="text-left text-xs text-[#666] uppercase tracking-wider py-3 px-4 font-medium">轉帳資料</th>
+                      <th className="text-center text-xs text-[#666] uppercase tracking-wider py-3 px-4 font-medium">轉帳情形</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {settlementData.orders.map((order) => {
+                      const completedAt = order.completedAt
+                        ? format(
+                            typeof order.completedAt === 'string'
+                              ? parseISO(order.completedAt as string)
+                              : order.completedAt,
+                            'MM/dd HH:mm'
+                          )
+                        : '-'
+                      const isPending = order.transferStatus === 'pending'
 
-                      {/* Fee breakdown */}
-                      <div className="bg-[#0a0a0a] border border-white/5 rounded-xl p-5">
-                        <p className="text-sm font-medium text-[#e0e0e0] mb-4">費用分析</p>
-                        <div className="grid grid-cols-3 gap-4">
-                          <div className="text-center p-4 bg-white/5 rounded-xl">
-                            <p className="text-2xl font-bold text-[#ff8c42]">
-                              NT${settlementData.summary.totalRevenue.toLocaleString()}
-                            </p>
-                            <p className="text-xs text-[#666] mt-1">司機總營收</p>
-                          </div>
-                          <div className="text-center p-4 bg-white/5 rounded-xl">
-                            <p className="text-2xl font-bold text-[#ef4444]">
-                              -NT${settlementData.summary.totalPlatformFee.toLocaleString()}
-                            </p>
-                            <p className="text-xs text-[#666] mt-1">平台服務費 (5%)</p>
-                          </div>
-                          <div className="text-center p-4 bg-white/5 rounded-xl">
-                            <p className="text-2xl font-bold text-[#22c55e]">
-                              NT${settlementData.summary.totalNetRevenue.toLocaleString()}
-                            </p>
-                            <p className="text-xs text-[#666] mt-1">司機實收</p>
-                          </div>
-                        </div>
-                      </div>
-                    </>
-                  )}
-                </div>
-              )}
-
-              {/* Drivers Sub Tab */}
-              {activeSubTab === 'drivers' && (
-                <div>
-                  {settlementData.driverTransferList.length === 0 ? (
-                    <div className="text-center py-12">
-                      <UserCheck className="w-12 h-12 text-[#333] mx-auto mb-3" />
-                      <p className="text-[#666]">尚無司機完成行程</p>
-                    </div>
-                  ) : (
-                    <div className="overflow-x-auto">
-                      <table className="w-full">
-                        <thead>
-                          <tr className="border-b border-white/5">
-                            <th className="text-left text-xs text-[#666] uppercase tracking-wider py-3 px-4 font-medium">司機</th>
-                            <th className="text-left text-xs text-[#666] uppercase tracking-wider py-3 px-4 font-medium">車牌</th>
-                            <th className="text-right text-xs text-[#666] uppercase tracking-wider py-3 px-4 font-medium">總趟次</th>
-                            <th className="text-right text-xs text-[#666] uppercase tracking-wider py-3 px-4 font-medium">總金額</th>
-                            <th className="text-right text-xs text-[#666] uppercase tracking-wider py-3 px-4 font-medium">平台費</th>
-                            <th className="text-right text-xs text-[#666] uppercase tracking-wider py-3 px-4 font-medium">實收金額</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {settlementData.driverTransferList
-                            .sort((a, b) => b.netAmount - a.netAmount)
-                            .map((item) => (
-                              <tr key={item.driver.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                                <td className="py-3 px-4">
-                                  <div className="flex items-center gap-2">
-                                    <div className="w-7 h-7 rounded-full bg-[#ff8c42]/20 flex items-center justify-center">
-                                      <span className="text-xs font-bold text-[#ff8c42]">
-                                        {item.driver.name.charAt(0)}
-                                      </span>
-                                    </div>
-                                    <span className="text-sm font-medium text-[#e0e0e0]">{item.driver.name}</span>
-                                  </div>
-                                </td>
-                                <td className="py-3 px-4">
-                                  <span className="text-sm text-[#a0a0a0] font-mono">{item.driver.licensePlate}</span>
-                                </td>
-                                <td className="py-3 px-4 text-right">
-                                  <span className="text-sm font-medium text-[#e0e0e0]">{item.totalOrders}</span>
-                                  <span className="text-xs text-[#666] ml-1">筆</span>
-                                </td>
-                                <td className="py-3 px-4 text-right">
-                                  <span className="text-sm font-medium text-[#e0e0e0]">
-                                    NT${item.totalAmount.toLocaleString()}
-                                  </span>
-                                </td>
-                                <td className="py-3 px-4 text-right">
-                                  <span className="text-sm text-[#ef4444]">
-                                    -NT${item.platformFee.toLocaleString()}
-                                  </span>
-                                </td>
-                                <td className="py-3 px-4 text-right">
-                                  <span className="text-sm font-bold text-[#22c55e]">
-                                    NT${item.netAmount.toLocaleString()}
-                                  </span>
-                                </td>
-                              </tr>
-                            ))}
-                          {/* Total Row */}
-                          <tr className="bg-white/5">
-                            <td colSpan={2} className="py-3 px-4">
-                              <span className="text-sm font-bold text-[#e0e0e0]">合計</span>
-                            </td>
-                            <td className="py-3 px-4 text-right">
-                              <span className="text-sm font-bold text-[#e0e0e0]">
-                                {settlementData.driverTransferList.reduce((acc, d) => acc + d.totalOrders, 0)} 筆
-                              </span>
-                            </td>
-                            <td className="py-3 px-4 text-right">
-                              <span className="text-sm font-bold text-[#e0e0e0]">
-                                NT${settlementData.summary.totalRevenue.toLocaleString()}
-                              </span>
-                            </td>
-                            <td className="py-3 px-4 text-right">
-                              <span className="text-sm font-bold text-[#ef4444]">
-                                -NT${settlementData.summary.totalPlatformFee.toLocaleString()}
-                              </span>
-                            </td>
-                            <td className="py-3 px-4 text-right">
-                              <span className="text-sm font-bold text-[#22c55e]">
-                                NT${settlementData.summary.totalNetRevenue.toLocaleString()}
-                              </span>
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Orders Sub Tab */}
-              {activeSubTab === 'orders' && (
-                <div>
-                  {settlementData.orders.length === 0 ? (
-                    <div className="text-center py-12">
-                      <ClipboardList className="w-12 h-12 text-[#333] mx-auto mb-3" />
-                      <p className="text-[#666]">尚無完成的訂單</p>
-                    </div>
-                  ) : (
-                    <div className="overflow-x-auto">
-                      <table className="w-full">
-                        <thead>
-                          <tr className="border-b border-white/5">
-                            <th className="text-left text-xs text-[#666] uppercase tracking-wider py-3 px-4 font-medium">日期</th>
-                            <th className="text-left text-xs text-[#666] uppercase tracking-wider py-3 px-4 font-medium">司機</th>
-                            <th className="text-right text-xs text-[#666] uppercase tracking-wider py-3 px-4 font-medium">車牌</th>
-                            <th className="text-right text-xs text-[#666] uppercase tracking-wider py-3 px-4 font-medium">金額</th>
-                            <th className="text-right text-xs text-[#666] uppercase tracking-wider py-3 px-4 font-medium">平台費</th>
-                            <th className="text-right text-xs text-[#666] uppercase tracking-wider py-3 px-4 font-medium">實收</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {settlementData.orders.map((order) => {
-                            const fee = Math.floor(order.price * 0.05)
-                            const net = order.price - fee
-                            return (
-                              <tr key={order.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                                <td className="py-3 px-4">
-                                  <span className="text-sm text-[#a0a0a0]">
-                                    {format(
-                                      typeof order.completedAt === 'string'
-                                        ? parseISO(order.completedAt)
-                                        : order.completedAt,
-                                      'MM/dd HH:mm'
-                                    )}
-                                  </span>
-                                </td>
-                                <td className="py-3 px-4">
-                                  <span className="text-sm font-medium text-[#e0e0e0]">
-                                    {order.driver?.user?.name || '-'}
-                                  </span>
-                                </td>
-                                <td className="py-3 px-4 text-right">
-                                  <span className="text-sm text-[#666] font-mono">
-                                    {order.driver?.licensePlate || '-'}
-                                  </span>
-                                </td>
-                                <td className="py-3 px-4 text-right">
-                                  <span className="text-sm font-medium text-[#e0e0e0]">
-                                    NT${order.price.toLocaleString()}
-                                  </span>
-                                </td>
-                                <td className="py-3 px-4 text-right">
-                                  <span className="text-xs text-[#ef4444]">
-                                    -NT${fee.toLocaleString()}
-                                  </span>
-                                </td>
-                                <td className="py-3 px-4 text-right">
-                                  <span className="text-sm font-bold text-[#22c55e]">
-                                    NT${net.toLocaleString()}
-                                  </span>
-                                </td>
-                              </tr>
-                            )
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
+                      return (
+                        <tr key={order.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                          <td className="py-3 px-4">
+                            <span className="text-xs font-mono text-[#666]">#{order.id.slice(0, 8)}</span>
+                          </td>
+                          <td className="py-3 px-4">
+                            <span className="text-sm font-medium text-[#e0e0e0]">
+                              {order.driver?.user?.name || '-'}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4">
+                            <span className="text-sm text-[#a0a0a0] font-mono">
+                              {order.driver?.licensePlate || '-'}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4">
+                            <span className="text-sm text-[#a0a0a0]">{completedAt}</span>
+                          </td>
+                          <td className="py-3 px-4 text-right">
+                            <span className="text-sm font-bold text-[#22c55e]">
+                              NT${order.price.toLocaleString()}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4">
+                            <div className="text-xs text-[#a0a0a0]">
+                              {order.driver?.bankCode
+                                ? <span className="text-[#666]">銀行：{order.driver.bankCode}</span>
+                                : <span className="text-[#444]">未設定</span>}
+                              {order.driver?.bankAccount && (
+                                <span className="ml-2 font-mono">
+                                  {order.driver.bankAccount.slice(0, 3)}****{order.driver.bankAccount.slice(-3)}
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="py-3 px-4 text-center">
+                            <button
+                              onClick={() => handleToggleTransfer(order.id, order.transferStatus)}
+                              disabled={togglingId === order.id}
+                              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                                isPending
+                                  ? 'bg-[#f59e0b]/20 text-[#f59e0b] hover:bg-[#f59e0b]/30 cursor-pointer'
+                                  : 'bg-[#22c55e]/20 text-[#22c55e] hover:bg-[#22c55e]/30 cursor-pointer'
+                              } disabled:opacity-50`}
+                            >
+                              {togglingId === order.id ? (
+                                <div className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin" />
+                              ) : isPending ? (
+                                <>
+                                  <Clock className="w-3 h-3" />
+                                  待轉帳
+                                </>
+                              ) : (
+                                <>
+                                  <TrendingUp className="w-3 h-3" />
+                                  已轉帳
+                                </>
+                              )}
+                            </button>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </>
       ) : null}
