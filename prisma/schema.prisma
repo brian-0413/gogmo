@@ -164,6 +164,9 @@ model Order {
 
   note            String?      // 車頭自填備註
 
+  // 肯驛系統
+  kenichiRequired Boolean     @default(false) // 是否需要肯驛系統
+
   // Timestamps
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt

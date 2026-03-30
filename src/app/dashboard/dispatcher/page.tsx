@@ -76,6 +76,7 @@ interface ReviewItem extends ParsedOrder {
   editedType?: string
   editedVehicle?: string
   editedPlateType?: string
+  editedKenichi?: boolean
 }
 
 // Date options
@@ -126,14 +127,6 @@ const PLATETYPE_OPTIONS = [
   { value: 'any', label: '任意車牌' },
   { value: 'R', label: 'R牌' },
   { value: 'T', label: 'T牌' },
-]
-
-// Passenger count options
-const PASSENGER_OPTIONS = [
-  { value: 1, label: '1 人' },
-  { value: 2, label: '2 人' },
-  { value: 3, label: '3 人' },
-  { value: 4, label: '4 人' },
 ]
 
 // Generate unique ID
@@ -608,7 +601,8 @@ export default function DispatcherDashboard() {
     vehicle: 'any',
     plateType: 'any',
     date: '',
-    passengerCount: 1,
+    type: 'dropoff',
+    kenichiRequired: false,
     flightNumber: '',
   })
   const [rawText, setRawText] = useState('')
@@ -620,6 +614,7 @@ export default function DispatcherDashboard() {
     pickupLocation?: string
     dropoffLocation?: string
     note?: string
+    kenichiRequired?: boolean
   }>({})
   const [createLoading, setCreateLoading] = useState(false)
 
@@ -669,8 +664,16 @@ export default function DispatcherDashboard() {
 
   const handleParseBatch = () => {
     if (!rawText.trim()) return
+    if (!defaults.date) {
+      alert('請選擇日期')
+      return
+    }
+    if (!defaults.type) {
+      alert('請選擇種類（接機/送機/交通接駁/包車）')
+      return
+    }
 
-    const parsed = parseBatchOrders(rawText, defaults)
+    const parsed = parseBatchOrders(rawText, { ...defaults, type: defaults.type })
 
     // Convert to review items with unique IDs
     const items: ReviewItem[] = parsed.map(p => ({
@@ -704,6 +707,7 @@ export default function DispatcherDashboard() {
               editedPickup: editForm.pickupLocation,
               editedDropoff: editForm.dropoffLocation,
               editedNotes: editForm.note,
+              editedKenichi: editForm.kenichiRequired,
             }
           : item
       )
@@ -754,16 +758,17 @@ export default function DispatcherDashboard() {
             pickupAddress: item.editedPickup || item.pickupLocation || '',
             dropoffLocation: item.editedDropoff || item.dropoffLocation || '',
             dropoffAddress: item.editedDropoff || item.dropoffLocation || '',
-            passengerCount: defaults.passengerCount || 1,
+            passengerCount: 1,
             luggageCount: 0,
             scheduledTime: scheduledDateTime,
             price: item.editedPrice || item.price || defaults.price || 800,
-            type: item.editedType || item.type || 'pending',
+            type: item.editedType || item.type || defaults.type || 'pending',
             vehicle: item.editedVehicle || item.vehicle || defaults.vehicle || 'any',
             plateType: item.editedPlateType || item.plateType || defaults.plateType || 'any',
             notes: item.editedNotes || item.notes || '',
             note: '',
             rawText: item.rawText || '',
+            kenichiRequired: item.editedKenichi ?? defaults.kenichiRequired ?? false,
           }),
         })
       }
@@ -1067,12 +1072,51 @@ export default function DispatcherDashboard() {
                 <div className="bg-[#1a1a1a] border border-white/10 rounded-2xl overflow-hidden">
                   <div className="px-6 py-4 border-b border-white/5">
                     <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-                      <ClipboardList className="w-4 h-4 text-[#ff8c42]" /> 批次建單 - 設定預設值
+                      <ClipboardList className="w-4 h-4 text-[#ff8c42]" /> 派單中心 - 設定預設值
                     </h3>
-                    <p className="text-sm text-[#666] mt-1">選擇預設值後，貼上的所有訂單都會套用這些設定</p>
+                    <p className="text-sm text-[#666] mt-1">必選欄位沒填完無法解析訂單，選擇預設值後，貼上的所有訂單都會套用這些設定</p>
                   </div>
-                  <div className="p-6">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="p-6 space-y-5">
+                    {/* Row 1: Date + Type */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-sm text-[#a0a0a0] font-medium">日期（必選）</label>
+                        <input
+                          type="date"
+                          value={defaults.date || ''}
+                          onChange={(e) => setDefaults(prev => ({ ...prev, date: e.target.value }))}
+                          className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:border-[#ff8c42]/50"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-sm text-[#a0a0a0] font-medium">種類（必選，整批統一）</label>
+                        <div className="grid grid-cols-4 gap-1">
+                          {([
+                            { value: 'pickup', label: '接機' },
+                            { value: 'dropoff', label: '送機' },
+                            { value: 'transfer', label: '交通接駁' },
+                            { value: 'charter', label: '包車' },
+                          ] as const).map(opt => (
+                            <button
+                              key={opt.value}
+                              type="button"
+                              onClick={() => setDefaults(prev => ({ ...prev, type: opt.value }))}
+                              className={`py-2 px-2 rounded-lg text-xs font-medium transition-all border ${
+                                defaults.type === opt.value
+                                  ? 'bg-[#ff8c42] text-black border-[#ff8c42]'
+                                  : 'bg-[#0a0a0a] text-[#666] border-white/10 hover:border-white/20 hover:text-[#a0a0a0]'
+                              }`}
+                            >
+                              {opt.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Row 2: Price + Vehicle + PlateType */}
+                    <div className="grid grid-cols-3 gap-4">
                       <div className="space-y-2">
                         <label className="text-sm text-[#a0a0a0] font-medium">價格（統一）</label>
                         <select
@@ -1081,19 +1125,6 @@ export default function DispatcherDashboard() {
                           className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:border-[#ff8c42]/50"
                         >
                           {PRICE_OPTIONS.map(opt => (
-                            <option key={opt.value} value={opt.value}>{opt.label}</option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div className="space-y-2">
-                        <label className="text-sm text-[#a0a0a0] font-medium">日期（統一）</label>
-                        <select
-                          value={defaults.date || ''}
-                          onChange={(e) => setDefaults(prev => ({ ...prev, date: e.target.value }))}
-                          className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:border-[#ff8c42]/50"
-                        >
-                          {DATE_OPTIONS.map(opt => (
                             <option key={opt.value} value={opt.value}>{opt.label}</option>
                           ))}
                         </select>
@@ -1124,19 +1155,35 @@ export default function DispatcherDashboard() {
                           ))}
                         </select>
                       </div>
+                    </div>
 
-                      <div className="space-y-2">
-                        <label className="text-sm text-[#a0a0a0] font-medium">人數（統一）</label>
-                        <select
-                          value={defaults.passengerCount || 1}
-                          onChange={(e) => setDefaults(prev => ({ ...prev, passengerCount: parseInt(e.target.value) }))}
-                          className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:border-[#ff8c42]/50"
-                        >
-                          {PASSENGER_OPTIONS.map(opt => (
-                            <option key={opt.value} value={opt.value}>{opt.label}</option>
-                          ))}
-                        </select>
-                      </div>
+                    {/* Row 3: Kenichi checkbox */}
+                    <div className="flex items-center gap-3">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <div className="relative">
+                          <input
+                            type="checkbox"
+                            checked={defaults.kenichiRequired || false}
+                            onChange={(e) => setDefaults(prev => ({ ...prev, kenichiRequired: e.target.checked }))}
+                            className="sr-only"
+                          />
+                          <div className={`w-5 h-5 rounded border transition-all ${
+                            defaults.kenichiRequired
+                              ? 'bg-[#a855f7] border-[#a855f7]'
+                              : 'bg-[#0a0a0a] border-white/20 hover:border-white/40'
+                          }`}>
+                            {defaults.kenichiRequired && (
+                              <svg className="w-full h-full text-white" viewBox="0 0 12 12" fill="none">
+                                <path d="M2 6L5 9L10 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                              </svg>
+                            )}
+                          </div>
+                        </div>
+                        <span className="text-sm text-[#a0a0a0]">
+                          <span className="text-[#a855f7] font-medium">肯驛系統</span>
+                          <span className="text-[#666]">（勾選後，此批訂單會標記為肯驛單，只有肯驛名單內的司機可以接單）</span>
+                        </span>
+                      </label>
                     </div>
                   </div>
                 </div>
@@ -1250,6 +1297,26 @@ export default function DispatcherDashboard() {
                                     className="w-full bg-[#1a1a1a] border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
                                   />
                                 </div>
+                                <div className="flex items-center gap-2">
+                                  <label className="flex items-center gap-1.5 cursor-pointer">
+                                    <input
+                                      type="checkbox"
+                                      checked={editForm.kenichiRequired || false}
+                                      onChange={(e) => setEditForm(prev => ({ ...prev, kenichiRequired: e.target.checked }))}
+                                      className="sr-only"
+                                    />
+                                    <div className={`w-4 h-4 rounded border transition-all ${
+                                      editForm.kenichiRequired ? 'bg-[#a855f7] border-[#a855f7]' : 'bg-[#1a1a1a] border-white/20'
+                                    }`}>
+                                      {editForm.kenichiRequired && (
+                                        <svg className="w-full h-full text-white" viewBox="0 0 12 12" fill="none">
+                                          <path d="M2 6L5 9L10 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                        </svg>
+                                      )}
+                                    </div>
+                                    <span className="text-xs text-[#a855f7]">肯驛系統</span>
+                                  </label>
+                                </div>
                                 <div className="flex gap-2">
                                   <Button onClick={() => handleSaveEdit(item.reviewId)} size="sm" className="bg-[#ff8c42] hover:bg-[#ff9d5c] text-black">
                                     儲存
@@ -1284,6 +1351,9 @@ export default function DispatcherDashboard() {
                                       {VEHICLE_LABELS[item.vehicle] || '待確認'}
                                       {item.plateType && item.plateType !== 'any' ? ` (${item.plateType}牌)` : ''}
                                     </Badge>
+                                    {(item as any).editedKenichi || defaults.kenichiRequired ? (
+                                      <span className="px-1.5 py-0.5 rounded text-xs font-medium bg-[#a855f7]/20 text-[#a855f7] border border-[#a855f7]/30">肯驛</span>
+                                    ) : null}
                                     <span className="text-xs text-[#444] font-mono">{item.rawText}</span>
                                   </div>
                                   <div className="flex gap-2">

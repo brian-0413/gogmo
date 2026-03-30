@@ -25,7 +25,8 @@ export interface BatchOrderDefaults {
   vehicle?: VehicleType
   plateType?: PlateType
   date?: string
-  passengerCount?: number
+  type?: OrderType
+  kenichiRequired?: boolean
   flightNumber?: string
 }
 
@@ -225,6 +226,11 @@ export function parseBatchOrders(
     }
     if (parsed.plateType === 'any' && defaults.plateType) {
       parsed.plateType = defaults.plateType
+    }
+
+    // 套用預設種類（整批統一，車頭選擇後不再推斷）
+    if (defaults.type && defaults.type !== 'pending') {
+      parsed.type = defaults.type
     }
 
     // 套用預設金額
