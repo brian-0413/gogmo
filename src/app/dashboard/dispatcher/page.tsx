@@ -862,9 +862,9 @@ export default function DispatcherDashboard() {
           <>
             {/* Orders Tab */}
             {activeTab === 'orders' && (
-              <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 {orders.length === 0 ? (
-                  <div className="text-center py-24 border border-white/10 rounded-3xl bg-white/5 backdrop-blur-sm">
+                  <div className="col-span-full text-center py-24 border border-white/10 rounded-3xl bg-white/5 backdrop-blur-sm">
                     <p className="text-[#a0a0a0] mb-2 text-lg">還沒有訂單</p>
                     <Button className="mt-4 bg-[#ff8c42] hover:bg-[#ff9d5c] text-black" onClick={() => setActiveTab('create')}>
                       建立第一筆訂單
@@ -875,9 +875,9 @@ export default function DispatcherDashboard() {
                     const isKenichi = (order.notes || order.note || order.rawText || '').toLowerCase().includes('kenichi') || (order.notes || order.note || order.rawText || '').includes('肯驛')
 
                     return (
-                    <div key={order.id} className="bg-[#1a1a1a] border border-white/10 rounded-lg px-4 py-3 hover:border-white/20 transition-all">
+                    <div key={order.id} className="bg-[#1a1a1a] border border-white/10 rounded-lg px-3 py-2.5 hover:border-white/20 transition-all">
                       {/* Row 1: ID + Price + Type + Status + Kenichi */}
-                      <div className="flex items-center gap-3 flex-wrap">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-xs text-[#666] font-mono">#{order.id.slice(0, 8)}</span>
                         <span className="text-base font-bold" style={{ color: '#ff8c42' }}>NT${order.price.toLocaleString()}</span>
                         {/* Type badge */}
@@ -912,18 +912,18 @@ export default function DispatcherDashboard() {
                         <span className="truncate flex-1">{order.pickupLocation}</span>
                         <span className="text-[#666] flex-shrink-0">→</span>
                         <span className="truncate flex-1 text-right">{order.dropoffLocation}</span>
+                        <span className="text-[#444] font-mono flex-shrink-0">
+                          {order.scheduledTime ? format(parseISO(order.scheduledTime), 'MM/dd HH:mm', { locale: zhTW }) : '-'}
+                        </span>
                       </div>
                       {/* Row 3: Driver */}
-                      <div className="flex items-center gap-2 mt-1 text-xs text-[#666]">
-                        <span>承接：</span>
+                      <div className="flex items-center gap-2 mt-1 text-xs text-[#a0a0a0]">
+                        <span className="text-[#666]">承接：</span>
                         {order.driver ? (
-                          <span className="text-[#a0a0a0]">{order.driver.user.name} ({order.driver.licensePlate})</span>
+                          <span className="truncate">{order.driver.user.name} ({order.driver.licensePlate})</span>
                         ) : (
                           <span className="text-[#444]">待指派</span>
                         )}
-                        <span className="ml-auto text-[#444] font-mono">
-                          {order.scheduledTime ? format(parseISO(order.scheduledTime), 'MM/dd HH:mm', { locale: zhTW }) : '-'}
-                        </span>
                       </div>
                     </div>
                   )})
