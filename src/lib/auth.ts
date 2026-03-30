@@ -123,7 +123,7 @@ export async function register(
   }
 }
 
-export async function login(email: string, _password: string): Promise<AuthResult> {
+export async function login(email: string, password: string): Promise<AuthResult> {
   try {
     console.log('[AUTH] Login attempt for:', email)
 
@@ -138,11 +138,11 @@ export async function login(email: string, _password: string): Promise<AuthResul
       return { success: false, error: '帳號或密碼錯誤' }
     }
 
-    // TEMP: Skip password validation for testing
-    // const isValid = await verifyPassword(password, user.password)
-    // if (!isValid) {
-    //   return { success: false, error: '帳號或密碼錯誤' }
-    // }
+    const isValid = await verifyPassword(password, user.password)
+    if (!isValid) {
+      console.log('[AUTH] Password verification failed')
+      return { success: false, error: '帳號或密碼錯誤' }
+    }
 
     let token: string
     try {

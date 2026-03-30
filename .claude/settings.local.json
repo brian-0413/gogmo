@@ -15,12 +15,16 @@
       "Bash(nslookup db.vwvixbmnqbxfoyexuzvs.supabase.co)",
       "Bash(PGPASSWORD=FoGNvtwHVpaAXvFv psql -h db.vwvixbmnqbxfoyexuzvs.supabase.co -p 5432 -U postgres -d postgres -c \"SELECT 1\" 2>&1)",
       "Bash(node -e \":*)",
-      "Bash(curl -s -X POST http://localhost:3000/api/auth/[...nextauth] -H \"Content-Type: application/json\" -d '{:*)",
-      "Bash(curl -s http://localhost:3000/api/auth/[...nextauth])",
+      "Bash(curl -s -X POST http://localhost:3000/api/auth -H \"Content-Type: application/json\" -d '{:*)",
+      "Bash(curl -s http://localhost:3000/api/auth)",
       "Bash(curl -s http://localhost:3000)",
       "Bash(taskkill /F /PID 11016)",
       "Bash(netstat -ano)",
-      "Bash(powershell -Command \"Stop-Process -Id 11016 -Force\" 2>&1)"
+      "Bash(powershell -Command \"Stop-Process -Id 11016 -Force\" 2>&1)",
+      "Bash(npx tsc:*)",
+      "Bash(curl -s -X PUT http://localhost:3000/api/auth -H \"Content-Type: application/json\" -d '{\"\"\"\"email\"\"\"\":\"\"\"\"driver1@test.com\"\"\"\",\"\"\"\"password\"\"\"\":\"\"\"\"test123\"\"\"\"}')",
+      "Bash(curl:*)",
+      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2YmFmODliZS0yMmU1LTQ4ZTgtODM2NS0zYjI4OGY3NTc1YzkiLCJyb2xlIjoiRFJJVkVSIiwiaWF0IjoxNzc0ODQ4MjU5LCJleHAiOjE3NzU0NTMwNTl9.2twfbVLe4r-ZFWv6DxNqFfuTbJaMWP6S5mt-I6zbYKo\")"
     ]
   }
 }
