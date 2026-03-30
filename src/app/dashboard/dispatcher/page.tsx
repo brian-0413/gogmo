@@ -5,7 +5,7 @@ import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
-import { Badge, OrderStatusBadge } from '@/components/ui/Badge'
+import { Badge } from '@/components/ui/Badge'
 import { parseBatchOrders, ParsedOrder, BatchOrderDefaults, VEHICLE_LABELS, TYPE_LABELS } from '@/lib/ai'
 import { format, parseISO } from 'date-fns'
 import { zhTW } from 'date-fns/locale'
@@ -25,7 +25,6 @@ import {
   LogOut,
   Radio,
   TrendingUp,
-  CheckCircle,
   Clock,
 } from 'lucide-react'
 import Link from 'next/link'
@@ -36,6 +35,9 @@ type OrderStatus = 'PENDING' | 'PUBLISHED' | 'ASSIGNED' | 'ACCEPTED' | 'ARRIVED'
 interface Order {
   id: string
   status: OrderStatus
+  type: string
+  vehicle: string
+  plateType: string
   passengerName: string
   passengerPhone: string
   flightNumber: string
@@ -48,6 +50,8 @@ interface Order {
   scheduledTime: string
   price: number
   note?: string
+  notes?: string
+  rawText?: string
   driver?: { user: { name: string }; licensePlate: string }
   createdAt: string
 }
@@ -818,9 +822,10 @@ export default function DispatcherDashboard() {
   }
 
   const statusCounts = {
-    PUBLISHED: orders.filter(o => o.status === 'PUBLISHED').length,
-    ACTIVE: orders.filter(o => ['ASSIGNED', 'ACCEPTED', 'ARRIVED', 'IN_PROGRESS'].includes(o.status)).length,
-    COMPLETED: orders.filter(o => o.status === 'COMPLETED').length,
+    PICKUP: orders.filter(o => o.type === 'pickup').length,
+    DROPOFF: orders.filter(o => o.type === 'dropoff').length,
+    PENDING: orders.filter(o => ['PENDING', 'PUBLISHED'].includes(o.status)).length,
+    ACCEPTED: orders.filter(o => ['ASSIGNED', 'ACCEPTED', 'ARRIVED', 'IN_PROGRESS'].includes(o.status)).length,
   }
 
   return (
@@ -871,34 +876,41 @@ export default function DispatcherDashboard() {
       {/* Quick Stats Bar */}
       <div className="relative z-10 bg-black/50 backdrop-blur-xl border-b border-white/5">
         <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="grid grid-cols-3 gap-4">
-            <div className="bg-gradient-to-br from-[#ff8c42]/20 to-[#ff8c42]/5 border border-[#ff8c42]/20 rounded-xl p-4 text-center">
-              <div className="flex items-center justify-center gap-2 mb-1">
-                <Clock className="w-4 h-4 text-[#ff8c42]" />
+          <div className="grid grid-cols-4 gap-3">
+            <div className="bg-[#22c55e]/10 border border-[#22c55e]/20 rounded-xl p-3 text-center">
+              <div className="flex items-center justify-center gap-1 mb-1">
+                <Plane className="w-3 h-3 text-[#22c55e]" />
               </div>
-              <p className="text-2xl font-bold text-white">{statusCounts.PUBLISHED}</p>
-              <p className="text-xs text-[#666]">待搶單</p>
+              <p className="text-2xl font-bold text-white">{statusCounts.PICKUP}</p>
+              <p className="text-xs text-[#666]">接機</p>
             </div>
-            <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-center">
-              <div className="flex items-center justify-center gap-2 mb-1">
-                <TrendingUp className="w-4 h-4 text-[#3b82f6]" />
+            <div className="bg-[#3b82f6]/10 border border-[#3b82f6]/20 rounded-xl p-3 text-center">
+              <div className="flex items-center justify-center gap-1 mb-1">
+                <Plane className="w-3 h-3 text-[#3b82f6] rotate-90" />
               </div>
-              <p className="text-2xl font-bold text-white">{statusCounts.ACTIVE}</p>
-              <p className="text-xs text-[#666]">進行中</p>
+              <p className="text-2xl font-bold text-white">{statusCounts.DROPOFF}</p>
+              <p className="text-xs text-[#666]">送機</p>
             </div>
-            <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-center">
-              <div className="flex items-center justify-center gap-2 mb-1">
-                <CheckCircle className="w-4 h-4 text-[#22c55e]" />
+            <div className="bg-[#ff8c42]/10 border border-[#ff8c42]/20 rounded-xl p-3 text-center">
+              <div className="flex items-center justify-center gap-1 mb-1">
+                <Clock className="w-3 h-3 text-[#ff8c42]" />
               </div>
-              <p className="text-2xl font-bold text-white">{statusCounts.COMPLETED}</p>
-              <p className="text-xs text-[#666]">已完成</p>
+              <p className="text-2xl font-bold text-white">{statusCounts.PENDING}</p>
+              <p className="text-xs text-[#666]">待接單</p>
+            </div>
+            <div className="bg-[#a855f7]/10 border border-[#a855f7]/20 rounded-xl p-3 text-center">
+              <div className="flex items-center justify-center gap-1 mb-1">
+                <TrendingUp className="w-3 h-3 text-[#a855f7]" />
+              </div>
+              <p className="text-2xl font-bold text-white">{statusCounts.ACCEPTED}</p>
+              <p className="text-xs text-[#666]">已接單</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Tab Navigation */}
-      <div className="relative z-10 bg-black/50 backdrop-blur-xl border-b border-white/5 sticky top-[156px]">
+      <div className="relative z-10 bg-black/50 backdrop-blur-xl border-b border-white/5 sticky top-[152px]">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex">
             <button
@@ -909,7 +921,7 @@ export default function DispatcherDashboard() {
                   : 'border-transparent text-[#666] hover:text-[#a0a0a0]'
               }`}
             >
-              <ClipboardList className="w-4 h-4" /> 訂單管理
+              <ClipboardList className="w-4 h-4" /> 行控中心
             </button>
             <button
               onClick={() => setActiveTab('create')}
@@ -919,7 +931,7 @@ export default function DispatcherDashboard() {
                   : 'border-transparent text-[#666] hover:text-[#a0a0a0]'
               }`}
             >
-              <Plus className="w-4 h-4" /> 批次建單
+              <Plus className="w-4 h-4" /> 派單中心
             </button>
             {reviewItems.length > 0 && (
               <button
@@ -934,16 +946,6 @@ export default function DispatcherDashboard() {
               </button>
             )}
             <button
-              onClick={() => setActiveTab('drivers')}
-              className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-                activeTab === 'drivers'
-                  ? 'border-[#ff8c42] text-[#ff8c42]'
-                  : 'border-transparent text-[#666] hover:text-[#a0a0a0]'
-              }`}
-            >
-              <UserCheck className="w-4 h-4" /> 司機列表
-            </button>
-            <button
               onClick={() => setActiveTab('settlement')}
               className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
                 activeTab === 'settlement'
@@ -951,7 +953,7 @@ export default function DispatcherDashboard() {
                   : 'border-transparent text-[#666] hover:text-[#a0a0a0]'
               }`}
             >
-              <Wallet className="w-4 h-4" /> 對帳表
+              <Wallet className="w-4 h-4" /> 帳務中心
             </button>
           </div>
         </div>
@@ -976,97 +978,84 @@ export default function DispatcherDashboard() {
                     </Button>
                   </div>
                 ) : (
-                  orders.map(order => (
-                    <div key={order.id} className="bg-[#1a1a1a] border border-white/10 rounded-xl overflow-hidden hover:border-white/20 transition-all">
-                      <div className="p-5">
-                        <div className="flex items-start justify-between mb-4">
-                          <div className="flex items-center gap-3">
-                            <span className="text-xl font-bold" style={{ color: '#ff8c42' }}>
-                              NT${order.price}
-                            </span>
-                            <OrderStatusBadge status={order.status} />
-                          </div>
-                          <div className="text-right">
-                            <p className="text-xs text-[#666] font-mono">#{order.id.slice(0, 8)}</p>
-                            <p className="text-xs text-[#666]">
-                              {order.scheduledTime ? format(parseISO(order.scheduledTime), 'MM/dd HH:mm', { locale: zhTW }) : '-'}
-                            </p>
-                          </div>
-                        </div>
+                  orders.map(order => {
+                    const isKenichi = (order.notes || order.note || order.rawText || '').toLowerCase().includes('kenichi') || (order.notes || order.note || order.rawText || '').includes('肯驛')
 
-                        <div className="grid grid-cols-2 gap-4 mb-4">
-                          <div>
-                            <p className="text-xs text-[#666] mb-1">航班</p>
-                            <p className="font-mono font-medium text-[#e0e0e0]">{order.flightNumber || '-'}</p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-[#666] mb-1">時間</p>
-                            <p className="font-medium text-[#e0e0e0]">
-                              {order.scheduledTime ? format(parseISO(order.scheduledTime), 'HH:mm') : '-'}
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-4 mb-4">
-                          <div className="flex items-center gap-2">
-                            <div className="w-2 h-2 rounded-full bg-[#22c55e]" />
-                            <span className="text-sm text-[#e0e0e0] truncate">{order.pickupLocation}</span>
-                          </div>
-                          <span className="text-[#666]">→</span>
-                          <div className="flex items-center gap-2">
-                            <div className="w-2 h-2 rounded-full bg-[#ef4444]" />
-                            <span className="text-sm text-[#e0e0e0] truncate">{order.dropoffLocation}</span>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-4 text-sm text-[#666] mb-4">
-                          <span className="flex items-center gap-1"><User className="w-4 h-4" /> {order.passengerName || '待確認'}</span>
-                          <span className="flex items-center gap-1"><Phone className="w-4 h-4" /> {order.passengerPhone || '待確認'}</span>
-                        </div>
-
-                        {order.note && (
-                          <div className="text-xs text-[#888] italic mb-4 bg-white/5 p-2 rounded flex items-start gap-1">
-                            <FileText className="w-3 h-3 mt-0.5 flex-shrink-0" /> {order.note}
-                          </div>
-                        )}
-
-                        {/* Assign Driver Section */}
-                        {order.status === 'PUBLISHED' && (
-                          <div className="border-t border-white/5 pt-4">
-                            <p className="text-xs text-[#666] mb-2">指派司機：</p>
-                            <div className="flex flex-wrap gap-2">
-                              {drivers
-                                .filter(d => d.status === 'ONLINE')
-                                .map(driver => (
-                                  <Button
-                                    key={driver.id}
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => handleAssignDriver(order.id, driver.id)}
-                                    disabled={actionLoading === order.id}
-                                    className="border-white/20 text-[#a0a0a0] hover:bg-white/10 hover:text-white"
-                                  >
-                                    {driver.user.name} ({driver.licensePlate})
-                                  </Button>
-                                ))}
-                              {drivers.filter(d => d.status === 'ONLINE').length === 0 && (
-                                <p className="text-xs text-[#444]">目前沒有在線司機</p>
-                              )}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Assigned Driver */}
-                        {order.driver && (
-                          <div className="border-t border-white/5 pt-4">
-                            <Badge variant="info" className="bg-[#3b82f6]/20 text-[#3b82f6] border-[#3b82f6]/30">
-                              <UserCheck className="w-3 h-3 inline mr-1" /> {order.driver.user.name} ({order.driver.licensePlate})
-                            </Badge>
-                          </div>
+                    return (
+                    <div key={order.id} className="bg-[#1a1a1a] border border-white/10 rounded-lg px-4 py-3 hover:border-white/20 transition-all">
+                      {/* Row 1: ID + Price + Type + Status + Kenichi */}
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <span className="text-xs text-[#666] font-mono">#{order.id.slice(0, 8)}</span>
+                        <span className="text-base font-bold" style={{ color: '#ff8c42' }}>NT${order.price.toLocaleString()}</span>
+                        {/* Type badge */}
+                        <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${
+                          order.type === 'pickup' ? 'bg-[#22c55e]/20 text-[#22c55e] border border-[#22c55e]/30'
+                          : order.type === 'dropoff' ? 'bg-[#3b82f6]/20 text-[#3b82f6] border border-[#3b82f6]/30'
+                          : order.type === 'transfer' ? 'bg-[#a855f7]/20 text-[#a855f7] border border-[#a855f7]/30'
+                          : order.type === 'charter' ? 'bg-[#f59e0b]/20 text-[#f59e0b] border border-[#f59e0b]/30'
+                          : 'bg-white/10 text-[#888] border border-white/20'
+                        }`}>
+                          {order.type === 'pickup' ? '接機' : order.type === 'dropoff' ? '送機' : order.type === 'transfer' ? '交通接駁' : order.type === 'charter' ? '包車' : '待確認'}
+                        </span>
+                        {/* Status badge */}
+                        <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${
+                          ['PENDING', 'PUBLISHED'].includes(order.status) ? 'bg-[#ff8c42]/20 text-[#ff8c42] border border-[#ff8c42]/30'
+                          : ['ASSIGNED', 'ACCEPTED'].includes(order.status) ? 'bg-[#3b82f6]/20 text-[#3b82f6] border border-[#3b82f6]/30'
+                          : order.status === 'ARRIVED' ? 'bg-[#a855f7]/20 text-[#a855f7] border border-[#a855f7]/30'
+                          : order.status === 'IN_PROGRESS' ? 'bg-[#22c55e]/20 text-[#22c55e] border border-[#22c55e]/30'
+                          : order.status === 'COMPLETED' ? 'bg-white/10 text-[#666] border border-white/10'
+                          : 'bg-white/10 text-[#888] border border-white/20'
+                        }`}>
+                          {order.status === 'PENDING' ? '待接單' : order.status === 'PUBLISHED' ? '待搶單' : order.status === 'ASSIGNED' ? '已指派' : order.status === 'ACCEPTED' ? '已接單' : order.status === 'ARRIVED' ? '已抵達' : order.status === 'IN_PROGRESS' ? '進行中' : order.status === 'COMPLETED' ? '已完成' : order.status === 'CANCELLED' ? '已取消' : order.status}
+                        </span>
+                        {isKenichi && (
+                          <span className="px-1.5 py-0.5 rounded text-xs font-medium bg-[#a855f7]/20 text-[#a855f7] border border-[#a855f7]/30">
+                            肯驛
+                          </span>
                         )}
                       </div>
+                      {/* Row 2: Pickup → Dropoff */}
+                      <div className="flex items-center gap-2 mt-1 text-xs text-[#a0a0a0]">
+                        <span className="truncate flex-1">{order.pickupLocation}</span>
+                        <span className="text-[#666] flex-shrink-0">→</span>
+                        <span className="truncate flex-1 text-right">{order.dropoffLocation}</span>
+                      </div>
+                      {/* Row 3: Driver */}
+                      <div className="flex items-center gap-2 mt-1 text-xs text-[#666]">
+                        <span>承接：</span>
+                        {order.driver ? (
+                          <span className="text-[#a0a0a0]">{order.driver.user.name} ({order.driver.licensePlate})</span>
+                        ) : (
+                          <span className="text-[#444]">待指派</span>
+                        )}
+                        <span className="ml-auto text-[#444] font-mono">
+                          {order.scheduledTime ? format(parseISO(order.scheduledTime), 'MM/dd HH:mm', { locale: zhTW }) : '-'}
+                        </span>
+                      </div>
+                      {/* Assign Driver Section for PUBLISHED */}
+                      {order.status === 'PUBLISHED' && (
+                        <div className="border-t border-white/5 pt-2 mt-2">
+                          <div className="flex flex-wrap gap-1">
+                            {drivers
+                              .filter(d => d.status === 'ONLINE')
+                              .map(driver => (
+                                <button
+                                  key={driver.id}
+                                  onClick={() => handleAssignDriver(order.id, driver.id)}
+                                  disabled={actionLoading === order.id}
+                                  className="px-2 py-1 bg-white/5 hover:bg-white/10 border border-white/10 rounded text-xs text-[#a0a0a0] hover:text-white transition-all disabled:opacity-50"
+                                >
+                                  {driver.user.name} ({driver.licensePlate})
+                                </button>
+                              ))}
+                            {drivers.filter(d => d.status === 'ONLINE').length === 0 && (
+                              <span className="text-xs text-[#444]">目前沒有在線司機</span>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  ))
+                  )})
                 )}
               </div>
             )}
@@ -1377,7 +1366,7 @@ export default function DispatcherDashboard() {
               </div>
             )}
 
-            {/* Drivers Tab */}
+            {/* Drivers Tab - removed, redirect to orders */}
             {activeTab === 'drivers' && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {drivers.length === 0 ? (
