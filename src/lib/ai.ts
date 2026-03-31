@@ -392,7 +392,7 @@ ${text}
 車牌：${defaults.plateType || '任意'}
 金額：${defaults.price || '未指定'}
 
-只回傳 JSON array，不要任何其他文字。`
+只回傳 JSON array，不要任何其他文字，不要用 markdown code block。`
 
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -403,7 +403,7 @@ ${text}
     },
     body: JSON.stringify({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 4096,
+      max_tokens: 16384,
       system: systemPrompt,
       messages: [{ role: 'user', content: userMessage }],
     }),
@@ -420,12 +420,33 @@ ${text}
   // Parse JSON from response
   let orders: any[] = []
   try {
-    // Try to extract JSON from the response (in case there's extra text)
-    const jsonMatch = rawResponse.match(/\[[\s\S]*\]/)
-    if (jsonMatch) {
-      orders = JSON.parse(jsonMatch[0])
+    // Strip markdown code block markers if present
+    let cleaned = rawResponse
+      .replace(/^```json\s*/i, '')
+      .replace(/^```\s*/i, '')
+      .replace(/\s*```$/i, '')
+      .trim()
+
+    // Try to extract JSON array - find the array boundaries robustly
+    const jsonStart = cleaned.indexOf('[')
+    if (jsonStart !== -1) {
+      // Count brackets to find the matching closing bracket
+      let depth = 0
+      let end = jsonStart
+      for (let i = jsonStart; i < cleaned.length; i++) {
+        if (cleaned[i] === '{') depth++
+        else if (cleaned[i] === '}') depth--
+        else if (cleaned[i] === '[') depth++
+        else if (cleaned[i] === ']') depth--
+        if (depth === 0 && cleaned[i] === ']') {
+          end = i
+          break
+        }
+      }
+      const jsonStr = cleaned.substring(jsonStart, end + 1)
+      orders = JSON.parse(jsonStr)
     } else {
-      orders = JSON.parse(rawResponse)
+      orders = JSON.parse(cleaned)
     }
   } catch (e) {
     throw new Error(`JSON parse error: ${e}, response: ${rawResponse}`)
