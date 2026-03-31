@@ -528,6 +528,7 @@ export default function DispatcherDashboard() {
     kenichiRequired?: boolean
   }>({})
   const [createLoading, setCreateLoading] = useState(false)
+  const [publishResult, setPublishResult] = useState<{ success: number; failed: number } | null>(null)
 
   // Edit modal state
   const [editingOrder, setEditingOrder] = useState<Order | null>(null)
@@ -761,10 +762,12 @@ export default function DispatcherDashboard() {
       }
 
       // Create orders one by one
+      let successCount = 0
+      let failedCount = 0
       for (const item of reviewItems) {
         const scheduledDateTime = `${orderDate}T${item.editedTime || item.time}:00`
 
-        await fetch('/api/orders', {
+        const res = await fetch('/api/orders', {
           method: 'POST',
           headers: {
             Authorization: `Bearer ${token}`,
@@ -791,16 +794,21 @@ export default function DispatcherDashboard() {
             kenichiRequired: item.editedKenichi ?? defaults.kenichiRequired ?? false,
           }),
         })
+        const data = await res.json()
+        if (data.success) {
+          successCount++
+        } else {
+          failedCount++
+        }
       }
 
-      alert(`已成功發布 ${reviewItems.length} 筆訂單！`)
       setRawText('')
       setReviewItems([])
-      setActiveTab('orders')
+      setPublishResult({ success: successCount, failed: failedCount })
       fetchOrders()
     } catch (error) {
       console.error('Failed to create orders:', error)
-      alert('發布訂單失敗')
+      setPublishResult({ success: 0, failed: reviewItems.length })
     } finally {
       setCreateLoading(false)
     }
@@ -1624,6 +1632,60 @@ export default function DispatcherDashboard() {
           </>
         )}
       </main>
+
+      {/* Publish Result Modal */}
+      {publishResult && (
+        <dialog
+          open
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
+        >
+          <div className="bg-[#1a1a1a] border border-white/10 rounded-2xl w-full max-w-sm mx-4 text-center p-8">
+            <div className={`w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center ${
+              publishResult.failed === 0
+                ? 'bg-[#22c55e]/20'
+                : 'bg-[#f59e0b]/20'
+            }`}>
+              {publishResult.failed === 0 ? (
+                <svg className="w-8 h-8 text-[#22c55e]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              ) : (
+                <svg className="w-8 h-8 text-[#f59e0b]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              )}
+            </div>
+            <h3 className="text-xl font-bold text-white mb-2">
+              {publishResult.failed === 0
+                ? `成功發布 ${publishResult.success} 筆訂單`
+                : `發布完成：${publishResult.success} 成功、${publishResult.failed} 失敗`}
+            </h3>
+            <p className="text-sm text-[#666] mb-6">
+              {publishResult.failed === 0
+                ? '司機已可在接單牆看到這些行程'
+                : '部分訂單發布失敗，請稍後重試'}
+            </p>
+            <div className="flex gap-3">
+              <Button
+                onClick={() => setPublishResult(null)}
+                className="flex-1 bg-[#ff8c42] hover:bg-[#ff9d5c] text-black font-semibold"
+              >
+                前往行控中心
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setPublishResult(null)
+                  setActiveTab('create')
+                }}
+                className="flex-1 border-white/20 text-[#666] hover:bg-white/10 hover:text-white"
+              >
+                繼續派單
+              </Button>
+            </div>
+          </div>
+        </dialog>
+      )}
     </div>
   )
 }
