@@ -30,6 +30,7 @@ import {
   Trash2,
   X,
   MapPin,
+  Calendar,
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -1237,12 +1238,15 @@ export default function DispatcherDashboard() {
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <label className="text-sm text-[#a0a0a0] font-medium">日期（必選）</label>
-                        <input
-                          type="date"
-                          value={defaults.date || ''}
-                          onChange={(e) => setDefaults(prev => ({ ...prev, date: e.target.value }))}
-                          className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:border-[#ff8c42]/50"
-                        />
+                        <div className="relative">
+                          <input
+                            type="date"
+                            value={defaults.date || ''}
+                            onChange={(e) => setDefaults(prev => ({ ...prev, date: e.target.value }))}
+                            className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl pl-10 pr-3 py-2.5 text-white text-sm focus:outline-none focus:border-[#ff8c42]/50 appearance-none cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                          />
+                          <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#ff8c42] pointer-events-none" />
+                        </div>
                       </div>
 
                       <div className="space-y-2">
