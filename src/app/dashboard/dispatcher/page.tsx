@@ -822,8 +822,12 @@ export default function DispatcherDashboard() {
             type: item.editedType || item.type || 'pending',
             vehicle: (() => {
               const raw = item.editedVehicle === '自填' ? item.editedVehicleCustom : item.editedVehicle || (defaults.vehicle === '自填' ? defaults.vehicleCustom : defaults.vehicle)
-              const converted = vehicleDisplayToEnum(raw)
-              console.log('[publish] raw vehicle:', raw, '→ converted:', converted)
+              const map: Record<string, string> = {
+                '任意車': 'any', '小車': 'small', '休旅': 'suv',
+                '7人座': 'van9', '9人座': 'van9', 'VITO': 'van9', 'GRANVIA': 'suv',
+              }
+              const converted = raw ? (map[raw] || 'any') : 'any'
+              console.log('[publish] vehicle raw:', raw, '→', converted)
               return converted
             })(),
             plateType: item.editedPlateType || item.plateType || 'any',
