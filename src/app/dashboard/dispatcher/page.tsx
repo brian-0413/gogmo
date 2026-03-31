@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Badge } from '@/components/ui/Badge'
 import { parseBatchOrders, ParsedOrder, BatchOrderDefaults, VEHICLE_LABELS, TYPE_LABELS } from '@/lib/ai'
+import { DispatcherOrderCard } from '@/components/dispatcher/OrderCard'
 import { format, parseISO } from 'date-fns'
 import { zhTW } from 'date-fns/locale'
 import * as XLSX from 'xlsx'
@@ -29,7 +30,6 @@ import {
   Pencil,
   Trash2,
   X,
-  MapPin,
   Calendar,
 } from 'lucide-react'
 import Link from 'next/link'
@@ -57,7 +57,7 @@ interface Order {
   note?: string
   notes?: string
   rawText?: string
-  driver?: { user: { name: string }; licensePlate: string }
+  driver?: { user: { name: string }; licensePlate: string; carType: string; carColor: string } | null
   createdAt: string
 }
 
@@ -509,13 +509,7 @@ export default function DispatcherDashboard() {
 
   // Batch order defaults
   const [defaults, setDefaults] = useState<BatchOrderDefaults>({
-    price: 800,
-    vehicle: 'any',
-    plateType: 'any',
     date: '',
-    type: 'dropoff',
-    kenichiRequired: false,
-    flightNumber: '',
   })
   const [rawText, setRawText] = useState('')
   const [reviewItems, setReviewItems] = useState<ReviewItem[]>([])
@@ -684,33 +678,49 @@ export default function DispatcherDashboard() {
     }
   }
 
-  const handleParseBatch = () => {
+  const handleParseBatch = async () => {
     if (!rawText.trim()) return
     if (!defaults.date) {
       alert('請選擇日期')
       return
     }
-    if (!defaults.type) {
-      alert('請選擇種類（接機/送機/交通接駁/包車）')
-      return
+
+    setCreateLoading(true)
+    try {
+      const res = await fetch('/api/orders/parse', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ text: rawText, defaults }),
+      })
+      const data = await res.json()
+      if (!data.success) {
+        alert(data.error || '解析失敗')
+        return
+      }
+      const parsed = data.data.orders
+
+      // Convert to review items with unique IDs
+      const items: ReviewItem[] = parsed.map((p: any) => ({
+        ...p,
+        reviewId: generateId(),
+      }))
+
+      setReviewItems(items)
+      setActiveTab('review')
+    } catch (e: any) {
+      alert('解析失敗：' + e.message)
+    } finally {
+      setCreateLoading(false)
     }
-
-    const parsed = parseBatchOrders(rawText, { ...defaults, type: defaults.type })
-
-    // Convert to review items with unique IDs
-    const items: ReviewItem[] = parsed.map(p => ({
-      ...p,
-      reviewId: generateId(),
-    }))
-
-    setReviewItems(items)
-    setActiveTab('review')
   }
 
   const handleEditItem = (item: ReviewItem) => {
     setEditingId(item.reviewId)
     setEditForm({
-      price: item.price || defaults.price || 800,
+      price: item.price ?? 800,
       scheduledTime: item.time || undefined,
       pickupLocation: item.pickupLocation || undefined,
       dropoffLocation: item.dropoffLocation || undefined,
@@ -777,7 +787,6 @@ export default function DispatcherDashboard() {
           body: JSON.stringify({
             passengerName: '待確認',
             passengerPhone: '待確認',
-            flightNumber: defaults.flightNumber || '',
             pickupLocation: item.editedPickup || item.pickupLocation || '',
             pickupAddress: item.editedPickup || item.pickupLocation || '',
             dropoffLocation: item.editedDropoff || item.dropoffLocation || '',
@@ -785,14 +794,13 @@ export default function DispatcherDashboard() {
             passengerCount: 1,
             luggageCount: 0,
             scheduledTime: scheduledDateTime,
-            price: item.editedPrice || item.price || defaults.price || 800,
-            type: item.editedType || item.type || defaults.type || 'pending',
-            vehicle: item.editedVehicle || item.vehicle || defaults.vehicle || 'any',
-            plateType: item.editedPlateType || item.plateType || defaults.plateType || 'any',
+            price: item.editedPrice ?? item.price ?? 800,
+            type: item.editedType || item.type || 'pending',
+            vehicle: item.editedVehicle || item.vehicle || 'any',
+            plateType: item.editedPlateType || item.plateType || 'any',
             notes: item.editedNotes || item.notes || '',
             note: '',
             rawText: item.rawText || '',
-            kenichiRequired: item.editedKenichi ?? defaults.kenichiRequired ?? false,
           }),
         })
         const data = await res.json()
@@ -1117,107 +1125,14 @@ export default function DispatcherDashboard() {
                     </Button>
                   </div>
                 ) : (
-                  orders.map(order => {
-                    const isKenichi = (order.notes || order.note || order.rawText || '').toLowerCase().includes('kenichi') || (order.notes || order.note || order.rawText || '').includes('肯驛')
-                    const typeColors: Record<string, string> = {
-                      pickup: 'text-[#22c55e]',
-                      dropoff: 'text-[#3b82f6]',
-                      transfer: 'text-[#a855f7]',
-                      charter: 'text-[#f59e0b]',
-                    }
-                    const typeLabels: Record<string, string> = {
-                      pickup: '接機',
-                      dropoff: '送機',
-                      transfer: '交通接駁',
-                      charter: '包車',
-                    }
-                    const airportKeywords = ['桃機', 'TPE', 'TSA', 'KHH', 'RMQ', '松山', '小港', '清泉', '桃園', '國際機場', '機場']
-                    const inferType = (o: Order): { label: string; color: string } | null => {
-                      const pickup = (o.pickupLocation || '').toLowerCase()
-                      const dropoff = (o.dropoffLocation || '').toLowerCase()
-                      const raw = (o.rawText || o.notes || o.note || '').toLowerCase()
-                      const isAirport = (str: string) => airportKeywords.some(k => str.includes(k.toLowerCase()))
-                      // 優先以地點是否為機場判斷
-                      if (isAirport(dropoff)) return { label: '送機', color: 'text-[#3b82f6]' }
-                      if (isAirport(pickup)) return { label: '接機', color: 'text-[#22c55e]' }
-                      // 其次以文字是否含「送/接」判斷
-                      if (raw.includes('送')) return { label: '送機', color: 'text-[#3b82f6]' }
-                      if (raw.includes('接')) return { label: '接機', color: 'text-[#22c55e]' }
-                      return null
-                    }
-                    const inferred = inferType(order)
-                    const displayType = order.type && typeLabels[order.type]
-                      ? { label: typeLabels[order.type], color: typeColors[order.type] || 'text-[#888]' }
-                      : inferred || { label: '待確認', color: 'text-[#888]' }
-
-                    const scheduledTimeStr = (() => {
-                      if (!order.scheduledTime) return '-'
-                      const d = parseISO(order.scheduledTime)
-                      // 確保 HH:mm 格式完整顯示 padStart
-                      const hh = format(d, 'HH')
-                      const mm = format(d, 'mm')
-                      return `${format(d, 'MM/dd')} ${hh}:${mm}`
-                    })()
-
-                    return (
-                    <div key={order.id} className="bg-[#1a1a1a] border border-white/10 rounded-xl p-3 hover:border-white/20 transition-all">
-                      {/* Top row: Type + buttons */}
-                      <div className="flex items-center justify-between mb-1">
-                        <span className={`text-sm font-bold ${displayType.color}`}>
-                          {displayType.label}
-                        </span>
-                        <div className="flex gap-1">
-                          <button
-                            onClick={() => openEditModal(order)}
-                            className="p-1 rounded text-[#666] hover:text-white hover:bg-white/10 transition-colors"
-                            title="編輯"
-                          >
-                            <Pencil className="w-3 h-3" />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteOrder(order.id)}
-                            className="p-1 rounded text-[#666] hover:text-[#ef4444] hover:bg-[#ef4444]/10 transition-colors"
-                            title="刪除"
-                          >
-                            <Trash2 className="w-3 h-3" />
-                          </button>
-                        </div>
-                      </div>
-                      {/* Price + badges */}
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="text-sm font-bold" style={{ color: '#ff8c42' }}>NT${order.price.toLocaleString()}</span>
-                        <span className={`px-1 py-0.5 rounded text-xs font-medium ${
-                          ['PENDING', 'PUBLISHED'].includes(order.status) ? 'bg-[#ff8c42]/20 text-[#ff8c42] border border-[#ff8c42]/30'
-                          : ['ASSIGNED', 'ACCEPTED'].includes(order.status) ? 'bg-[#3b82f6]/20 text-[#3b82f6] border border-[#3b82f6]/30'
-                          : order.status === 'ARRIVED' ? 'bg-[#a855f7]/20 text-[#a855f7] border border-[#a855f7]/30'
-                          : order.status === 'IN_PROGRESS' ? 'bg-[#22c55e]/20 text-[#22c55e] border border-[#22c55e]/30'
-                          : order.status === 'COMPLETED' ? 'bg-white/10 text-[#666] border border-white/10'
-                          : 'bg-white/10 text-[#888] border border-white/20'
-                        }`}>
-                          {order.status === 'PENDING' ? '待接單' : order.status === 'PUBLISHED' ? '待接單' : order.status === 'ASSIGNED' ? '已指派' : order.status === 'ACCEPTED' ? '已接單' : order.status === 'ARRIVED' ? '已抵達' : order.status === 'IN_PROGRESS' ? '進行中' : order.status === 'COMPLETED' ? '已完成' : order.status === 'CANCELLED' ? '已取消' : order.status}
-                        </span>
-                        {isKenichi && (
-                          <span className="px-1 py-0.5 rounded text-xs font-medium bg-[#a855f7]/20 text-[#a855f7] border border-[#a855f7]/30">
-                            肯驛
-                          </span>
-                        )}
-                      </div>
-                      {/* Route */}
-                      <div className="flex items-center gap-1 mt-1 text-xs text-[#a0a0a0]">
-                        <MapPin className="w-2.5 h-2.5 text-[#22c55e] flex-shrink-0" />
-                        <span className="truncate">{order.pickupLocation}</span>
-                      </div>
-                      <div className="flex items-center gap-1 text-xs text-[#a0a0a0]">
-                        <span className="w-2.5" />
-                        <span className="text-[#666] flex-shrink-0">\u2193</span>
-                        <span className="truncate">{order.dropoffLocation}</span>
-                      </div>
-                      {/* Time */}
-                      <div className="mt-1 text-xs text-[#666] font-mono flex-shrink-0">
-                        {scheduledTimeStr}
-                      </div>
-                    </div>
-                  )})
+                  orders.map(order => (
+                    <DispatcherOrderCard
+                      key={order.id}
+                      order={order}
+                      onEdit={openEditModal}
+                      onDelete={handleDeleteOrder}
+                    />
+                  ))
                 )}
               </div>
               </>
@@ -1230,121 +1145,22 @@ export default function DispatcherDashboard() {
                 <div className="bg-[#1a1a1a] border border-white/10 rounded-2xl overflow-hidden">
                   <div className="px-6 py-4 border-b border-white/5">
                     <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-                      <ClipboardList className="w-4 h-4 text-[#ff8c42]" /> 派單中心 - 設定預設值
+                      <ClipboardList className="w-4 h-4 text-[#ff8c42]" /> 派單中心 - AI 智能解析
                     </h3>
-                    <p className="text-sm text-[#666] mt-1">必選欄位沒填完無法解析訂單，選擇預設值後，貼上的所有訂單都會套用這些設定</p>
+                    <p className="text-sm text-[#666] mt-1">選擇日期後，AI 會自動解析訂單。時間、種類、地點、金額全部由 AI 處理。</p>
                   </div>
-                  <div className="p-6 space-y-5">
-                    {/* Row 1: Date + Type */}
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <label className="text-sm text-[#a0a0a0] font-medium">日期（必選）</label>
-                        <div className="relative">
-                          <input
-                            type="date"
-                            value={defaults.date || ''}
-                            onChange={(e) => setDefaults(prev => ({ ...prev, date: e.target.value }))}
-                            className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl pl-10 pr-3 py-2.5 text-white text-sm focus:outline-none focus:border-[#ff8c42]/50 cursor-pointer [&::-webkit-calendar-picker-indicator]:cursor-pointer"
-                          />
-                          <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#666] pointer-events-none" />
-                        </div>
+                  <div className="p-6">
+                    <div className="space-y-2 max-w-xs">
+                      <label className="text-sm text-[#a0a0a0] font-medium">日期（必選）</label>
+                      <div className="relative">
+                        <input
+                          type="date"
+                          value={defaults.date || ''}
+                          onChange={(e) => setDefaults(prev => ({ ...prev, date: e.target.value }))}
+                          className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl pl-10 pr-3 py-2.5 text-white text-sm focus:outline-none focus:border-[#ff8c42]/50 cursor-pointer [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                        />
+                        <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#666] pointer-events-none" />
                       </div>
-
-                      <div className="space-y-2">
-                        <label className="text-sm text-[#a0a0a0] font-medium">種類（必選，整批統一）</label>
-                        <div className="grid grid-cols-4 gap-1">
-                          {([
-                            { value: 'pickup', label: '接機' },
-                            { value: 'dropoff', label: '送機' },
-                            { value: 'transfer', label: '交通接駁' },
-                            { value: 'charter', label: '包車' },
-                          ] as const).map(opt => (
-                            <button
-                              key={opt.value}
-                              type="button"
-                              onClick={() => setDefaults(prev => ({ ...prev, type: opt.value }))}
-                              className={`py-2 px-2 rounded-lg text-xs font-medium transition-all border ${
-                                defaults.type === opt.value
-                                  ? 'bg-[#ff8c42] text-black border-[#ff8c42]'
-                                  : 'bg-[#0a0a0a] text-[#666] border-white/10 hover:border-white/20 hover:text-[#a0a0a0]'
-                              }`}
-                            >
-                              {opt.label}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Row 2: Price + Vehicle + PlateType */}
-                    <div className="grid grid-cols-3 gap-4">
-                      <div className="space-y-2">
-                        <label className="text-sm text-[#a0a0a0] font-medium">價格（統一）</label>
-                        <select
-                          value={defaults.price || ''}
-                          onChange={(e) => setDefaults(prev => ({ ...prev, price: parseInt(e.target.value) || undefined }))}
-                          className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:border-[#ff8c42]/50"
-                        >
-                          {PRICE_OPTIONS.map(opt => (
-                            <option key={opt.value} value={opt.value}>{opt.label}</option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div className="space-y-2">
-                        <label className="text-sm text-[#a0a0a0] font-medium">車型要求</label>
-                        <select
-                          value={defaults.vehicle || 'any'}
-                          onChange={(e) => setDefaults(prev => ({ ...prev, vehicle: e.target.value as BatchOrderDefaults['vehicle'] }))}
-                          className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:border-[#ff8c42]/50"
-                        >
-                          {VEHICLE_OPTIONS.map(opt => (
-                            <option key={opt.value} value={opt.value}>{opt.label}</option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div className="space-y-2">
-                        <label className="text-sm text-[#a0a0a0] font-medium">車牌限制</label>
-                        <select
-                          value={defaults.plateType || 'any'}
-                          onChange={(e) => setDefaults(prev => ({ ...prev, plateType: e.target.value as BatchOrderDefaults['plateType'] }))}
-                          className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:border-[#ff8c42]/50"
-                        >
-                          {PLATETYPE_OPTIONS.map(opt => (
-                            <option key={opt.value} value={opt.value}>{opt.label}</option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-
-                    {/* Row 3: Kenichi checkbox */}
-                    <div className="flex items-center gap-3">
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <div className="relative">
-                          <input
-                            type="checkbox"
-                            checked={defaults.kenichiRequired || false}
-                            onChange={(e) => setDefaults(prev => ({ ...prev, kenichiRequired: e.target.checked }))}
-                            className="sr-only"
-                          />
-                          <div className={`w-5 h-5 rounded border transition-all ${
-                            defaults.kenichiRequired
-                              ? 'bg-[#a855f7] border-[#a855f7]'
-                              : 'bg-[#0a0a0a] border-white/20 hover:border-white/40'
-                          }`}>
-                            {defaults.kenichiRequired && (
-                              <svg className="w-full h-full text-white" viewBox="0 0 12 12" fill="none">
-                                <path d="M2 6L5 9L10 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                              </svg>
-                            )}
-                          </div>
-                        </div>
-                        <span className="text-sm text-[#a0a0a0]">
-                          <span className="text-[#a855f7] font-medium">肯驛系統</span>
-                          <span className="text-[#666]">（勾選後，此批訂單會標記為肯驛單，只有肯驛名單內的司機可以接單）</span>
-                        </span>
-                      </label>
                     </div>
                   </div>
                 </div>
@@ -1512,7 +1328,7 @@ export default function DispatcherDashboard() {
                                       {VEHICLE_LABELS[item.vehicle] || '待確認'}
                                       {item.plateType && item.plateType !== 'any' ? ` (${item.plateType}牌)` : ''}
                                     </Badge>
-                                    {(item as any).editedKenichi || defaults.kenichiRequired ? (
+                                    {(item as any).editedKenichi ? (
                                       <span className="px-1.5 py-0.5 rounded text-xs font-medium bg-[#a855f7]/20 text-[#a855f7] border border-[#a855f7]/30">肯驛</span>
                                     ) : null}
                                     <span className="text-xs text-[#444] font-mono">{item.rawText}</span>
@@ -1537,7 +1353,7 @@ export default function DispatcherDashboard() {
                                   <div>
                                     <p className="text-xs text-[#666]">費用</p>
                                     <p className="font-bold" style={{ color: '#ff8c42' }}>
-                                      NT${item.editedPrice || item.price || defaults.price || 800}
+                                      NT${item.editedPrice ?? item.price ?? 800}
                                     </p>
                                   </div>
                                   <div>

@@ -76,6 +76,16 @@ function OrderCard({ order, onAccept, onView, showActions = true, compact = fals
   const vehicle: VehicleType = order.vehicle || 'any'
   const urgency = getTimeUrgency(order.scheduledTime)
   const [countdown, setCountdown] = useState<string>('')
+  const notes = order.notes || order.note || order.rawText
+
+  // 單號
+  const orderNo = (() => {
+    let dateStr = format(new Date(), 'yyyyMMdd')
+    try {
+      dateStr = format(scheduledDate, 'yyyyMMdd')
+    } catch { /* use today */ }
+    return `${dateStr}-${order.id.slice(-4)}`
+  })()
 
   useEffect(() => {
     if (urgency === "urgent" || urgency === "soon") {
@@ -114,23 +124,58 @@ function OrderCard({ order, onAccept, onView, showActions = true, compact = fals
   const pickupLabel = isPickup ? '桃園機場' : '上車'
   const dropoffLabel = isPickup ? '目的地' : '桃園機場'
 
+  if (compact) {
+    return (
+      <div className="bg-[#1a1a1a] border border-white/10 rounded-xl p-3 hover:border-white/20 transition-all">
+        {/* 第一列：單號 + 狀態 */}
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-xs font-mono text-[#666]">{orderNo}</span>
+          <OrderStatusBadge status={order.status} />
+        </div>
+        {/* 第二列：日期時間 */}
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-sm font-medium text-[#e0e0e0]">
+            {format(scheduledDate, 'M/dd (E)', { locale: zhTW })}
+          </span>
+          <span className="text-sm font-mono font-bold text-white">
+            {format(scheduledDate, 'HH:mm')}
+          </span>
+        </div>
+        {/* 第三列：金額 (compact版略小) */}
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-lg font-bold" style={{ color: '#ff8c42' }}>
+            NT${order.price}
+          </span>
+          <span
+            className="text-[10px] font-bold px-1.5 py-0.5 rounded"
+            style={{ backgroundColor: typeBadgeColor.bg, color: typeBadgeColor.text }}
+          >
+            {TYPE_LABELS[orderType]}
+          </span>
+        </div>
+        {/* 起迄點 */}
+        <div className="flex items-center gap-1.5 text-xs text-[#a0a0a0] mb-2">
+          <span className="truncate">{order.pickupLocation}</span>
+          <span className="text-[#666] flex-shrink-0">→</span>
+          <span className="truncate">{order.dropoffLocation}</span>
+        </div>
+        {/* 備註 (compact版淡化) */}
+        {notes && (
+          <div className="text-xs text-[#666] italic bg-white/5 p-1.5 rounded truncate">
+            {notes}
+          </div>
+        )}
+      </div>
+    )
+  }
+
   return (
     <div className={`bg-[#1a1a1a] border border-white/10 rounded-xl overflow-hidden transition-all hover:border-white/20 ${isNew ? 'animate-cardEntry' : ''}`}>
       <div className="p-4">
-        {/* Header: 日期 + 種類 + 金額 */}
-        <div className="flex items-start justify-between mb-2">
-          <div className="flex items-center gap-2">
-            <span className="text-xl font-bold" style={{ color: '#ff8c42' }}>
-              NT${order.price}
-            </span>
-            <span
-              className="text-[10px] font-bold px-2 py-1 rounded"
-              style={{ backgroundColor: typeBadgeColor.bg, color: typeBadgeColor.text }}
-            >
-              {TYPE_LABELS[orderType]}
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
+        {/* 第一列：單號 + 即時狀態 */}
+        <div className="flex items-center justify-between mb-1">
+          <span className="text-xs font-mono text-[#666]">{orderNo}</span>
+          <div className="flex items-center gap-1.5">
             {urgency !== "normal" && (
               <span className="text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5" style={{
                 backgroundColor: urgency === "urgent" ? '#ef4444' : '#ff8c42',
@@ -144,7 +189,20 @@ function OrderCard({ order, onAccept, onView, showActions = true, compact = fals
           </div>
         </div>
 
-        {/* 次行: 日期 + 時間 + 航班 */}
+        {/* 第二列：金額 (特別顯眼) */}
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-2xl font-bold" style={{ color: '#ff8c42' }}>
+            NT${order.price.toLocaleString()}
+          </span>
+          <span
+            className="text-[10px] font-bold px-2 py-1 rounded"
+            style={{ backgroundColor: typeBadgeColor.bg, color: typeBadgeColor.text }}
+          >
+            {TYPE_LABELS[orderType]}
+          </span>
+        </div>
+
+        {/* 第三列：日期時間 */}
         <div className="flex items-center gap-2 mb-2">
           <span className="text-sm font-medium text-[#e0e0e0]">
             {format(scheduledDate, 'M/dd (E)', { locale: zhTW })}
@@ -159,19 +217,8 @@ function OrderCard({ order, onAccept, onView, showActions = true, compact = fals
           )}
         </div>
 
-        {/* 車型 Badge */}
-        <div className="flex items-center gap-2 mb-3">
-          <span
-            className="text-[10px] font-bold px-2 py-1 rounded"
-            style={{ backgroundColor: vehicleBadgeColor.bg, color: vehicleBadgeColor.text }}
-          >
-            {VEHICLE_LABELS[vehicle]}
-            {order.plateType && order.plateType !== 'any' ? ` (${order.plateType}牌)` : ''}
-          </span>
-        </div>
-
-        {/* Locations */}
-        <div className="space-y-2 mb-3">
+        {/* 起迄點 */}
+        <div className="space-y-1.5 mb-3">
           <div className="flex items-start gap-2">
             <div className="w-2 h-2 rounded-full mt-1.5" style={{ backgroundColor: typeBadgeColor.bg }} />
             <div className="flex-1 min-w-0">
@@ -192,16 +239,28 @@ function OrderCard({ order, onAccept, onView, showActions = true, compact = fals
           </div>
         </div>
 
-        {/* Passenger Info */}
+        {/* 車型 Badge */}
+        <div className="flex items-center gap-2 mb-3">
+          <span
+            className="text-[10px] font-bold px-2 py-1 rounded"
+            style={{ backgroundColor: vehicleBadgeColor.bg, color: vehicleBadgeColor.text }}
+          >
+            {VEHICLE_LABELS[vehicle]}
+            {order.plateType && order.plateType !== 'any' ? ` (${order.plateType}牌)` : ''}
+          </span>
+        </div>
+
+        {/* 乘客資訊 */}
         <div className="flex items-center gap-3 text-xs text-[#666] mb-3 pt-2 border-t border-white/5">
           <span className="flex items-center gap-1"><User className="w-3 h-3" /> {order.passengerName}</span>
           <span className="flex items-center gap-1"><Package className="w-3 h-3" /> {order.passengerCount}人 / {order.luggageCount}行李</span>
         </div>
 
-        {/* Notes (原文備註) */}
-        {(order.notes || order.note) && (
-          <div className="text-xs text-[#888] italic mb-3 bg-white/5 p-2 rounded flex items-start gap-1">
-            <FileText className="w-3 h-3 mt-0.5 flex-shrink-0" /> {order.notes || order.note}
+        {/* 備註 (原文備註 - 特別顯眼) */}
+        {notes && (
+          <div className="text-xs text-[#a0a0a0] bg-[#ff8c42]/5 border border-[#ff8c42]/20 p-2.5 rounded-lg mb-3 flex items-start gap-1.5">
+            <FileText className="w-3 h-3 mt-0.5 flex-shrink-0 text-[#ff8c42]" />
+            <span className="leading-relaxed">{notes}</span>
           </div>
         )}
 
