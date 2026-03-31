@@ -1122,13 +1122,31 @@ export default function DispatcherDashboard() {
                       transfer: '交通接駁',
                       charter: '包車',
                     }
+                    const airportKeywords = ['桃機', 'TPE', 'TSA', 'KHH', 'RMQ', '松山', '小港', '清泉', '桃園', '國際機場', '機場']
+                    const inferType = (o: Order): { label: string; color: string } | null => {
+                      const pickup = (o.pickupLocation || '').toLowerCase()
+                      const dropoff = (o.dropoffLocation || '').toLowerCase()
+                      const raw = (o.rawText || o.notes || o.note || '').toLowerCase()
+                      const isAirport = (str: string) => airportKeywords.some(k => str.includes(k.toLowerCase()))
+                      // 優先以地點是否為機場判斷
+                      if (isAirport(dropoff)) return { label: '送機', color: 'text-[#3b82f6]' }
+                      if (isAirport(pickup)) return { label: '接機', color: 'text-[#22c55e]' }
+                      // 其次以文字是否含「送/接」判斷
+                      if (raw.includes('送')) return { label: '送機', color: 'text-[#3b82f6]' }
+                      if (raw.includes('接')) return { label: '接機', color: 'text-[#22c55e]' }
+                      return null
+                    }
+                    const inferred = inferType(order)
+                    const displayType = order.type && typeLabels[order.type]
+                      ? { label: typeLabels[order.type], color: typeColors[order.type] || 'text-[#888]' }
+                      : inferred || { label: '待確認', color: 'text-[#888]' }
 
                     return (
                     <div key={order.id} className="bg-[#1a1a1a] border border-white/10 rounded-xl px-4 py-3 hover:border-white/20 transition-all">
                       {/* Type title */}
                       <div className="flex items-center justify-between mb-2">
-                        <span className={`text-lg font-bold ${typeColors[order.type] || 'text-[#888]'}`}>
-                          {typeLabels[order.type] || '待確認'}
+                        <span className={`text-lg font-bold ${displayType.color}`}>
+                          {displayType.label}
                         </span>
                         <div className="flex gap-1">
                           <button
