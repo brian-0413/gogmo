@@ -820,7 +820,12 @@ export default function DispatcherDashboard() {
             scheduledTime: scheduledDateTime,
             price: item.editedPrice ?? item.price ?? 800,
             type: item.editedType || item.type || 'pending',
-            vehicle: vehicleDisplayToEnum(item.editedVehicle === '自填' ? item.editedVehicleCustom : item.editedVehicle || (defaults.vehicle === '自填' ? defaults.vehicleCustom : defaults.vehicle)),
+            vehicle: (() => {
+              const raw = item.editedVehicle === '自填' ? item.editedVehicleCustom : item.editedVehicle || (defaults.vehicle === '自填' ? defaults.vehicleCustom : defaults.vehicle)
+              const converted = vehicleDisplayToEnum(raw)
+              console.log('[publish] raw vehicle:', raw, '→ converted:', converted)
+              return converted
+            })(),
             plateType: item.editedPlateType || item.plateType || 'any',
             notes: item.editedNotes || item.notes || '',
             note: '',

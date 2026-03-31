@@ -225,6 +225,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Validate vehicle enum values (database has ENUM restriction)
+    const validVehicles = ['small', 'suv', 'van9', 'any', 'any_r', 'pending']
+    if (body.vehicle && !validVehicles.includes(body.vehicle)) {
+      return NextResponse.json<ApiResponse>(
+        { success: false, error: `車型 無效：${body.vehicle}。有效值：${validVehicles.join(', ')}` },
+        { status: 400 }
+      )
+    }
+
     const order = await prisma.order.create({
       data: {
         dispatcherId: user.dispatcher.id,
