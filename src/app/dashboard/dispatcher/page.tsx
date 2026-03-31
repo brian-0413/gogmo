@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Badge } from '@/components/ui/Badge'
-import { parseBatchOrders, ParsedOrder, BatchOrderDefaults, VEHICLE_LABELS, TYPE_LABELS } from '@/lib/ai'
+import { parseBatchOrders, ParsedOrder, BatchOrderDefaults, TYPE_LABELS } from '@/lib/ai'
 import { DispatcherOrderCard } from '@/components/dispatcher/OrderCard'
 import { format, parseISO } from 'date-fns'
 import { zhTW } from 'date-fns/locale'
@@ -81,24 +81,23 @@ interface ReviewItem extends ParsedOrder {
   editedNotes?: string
   editedType?: string
   editedVehicle?: string
+  editedVehicleCustom?: string
   editedPlateType?: string
   editedKenichi?: boolean
 }
 
-// Date options
+// Date options - label shows M/D, value is YYYY-MM-DD
 const DATE_OPTIONS = [
   { value: '', label: '選擇日期...' },
-  { value: 'today', label: '今天' },
-  { value: 'tomorrow', label: '明天' },
 ]
 
-// Generate date options for next 7 days
-for (let i = 2; i <= 7; i++) {
+// Generate date options for next 14 days (label shows M/D, no year)
+for (let i = 0; i <= 14; i++) {
   const d = new Date()
   d.setDate(d.getDate() + i)
   const dateStr = format(d, 'yyyy-MM-dd')
-  const label = format(d, 'M/d (EEE)', { locale: zhTW })
-  DATE_OPTIONS.push({ value: dateStr, label })
+  const dayLabel = i === 0 ? '今天' : i === 1 ? '明天' : format(d, 'M/d (EEE)', { locale: zhTW })
+  DATE_OPTIONS.push({ value: dateStr, label: dayLabel })
 }
 
 // Price options
@@ -119,14 +118,11 @@ const PRICE_OPTIONS = [
   { value: 4000, label: '$4000' },
 ]
 
-// Car type options
-const VEHICLE_OPTIONS: { value: string; label: string }[] = [
-  { value: 'any', label: '任意車型' },
-  { value: 'small', label: '小車（轎車）' },
-  { value: 'suv', label: '休旅車' },
-  { value: 'van9', label: '9人座' },
-  { value: 'any_r', label: '任意R牌' },
-]
+// Car type options for dispatcher selection
+const VEHICLE_OPTIONS = [
+  '任意車', '小車', '休旅', '7人座', '9人座', 'VITO', 'GRANVIA', '自填',
+] as const
+type VehicleOption = typeof VEHICLE_OPTIONS[number]
 
 // Plate type options
 const PLATETYPE_OPTIONS = [
@@ -509,8 +505,11 @@ export default function DispatcherDashboard() {
   const [loading, setLoading] = useState(true)
 
   // Batch order defaults
-  const [defaults, setDefaults] = useState<BatchOrderDefaults>({
+  const [defaults, setDefaults] = useState<Omit<BatchOrderDefaults, 'vehicle' | 'kenichiRequired'> & { vehicle?: string; vehicleCustom?: string; kenichiRequired?: boolean }>({
     date: '',
+    vehicle: '任意車',
+    vehicleCustom: '',
+    kenichiRequired: false,
   })
   const [rawText, setRawText] = useState('')
   const [reviewItems, setReviewItems] = useState<ReviewItem[]>([])
@@ -522,6 +521,8 @@ export default function DispatcherDashboard() {
     dropoffLocation?: string
     note?: string
     kenichiRequired?: boolean
+    editedVehicle?: string
+    editedVehicleCustom?: string
   }>({})
   const [createLoading, setCreateLoading] = useState(false)
   const [publishResult, setPublishResult] = useState<{ success: number; failed: number } | null>(null)
@@ -703,10 +704,14 @@ export default function DispatcherDashboard() {
       }
       const parsed = data.data?.orders || []
 
-      // Convert to review items with unique IDs
+      // Convert to review items with unique IDs, apply batch vehicle type and kenichi
+      const batchVehicle = defaults.vehicle === '自填' ? defaults.vehicleCustom : defaults.vehicle
       const items: ReviewItem[] = parsed.map((p: any) => ({
         ...p,
         reviewId: generateId(),
+        editedVehicle: batchVehicle,
+        editedVehicleCustom: '',
+        editedKenichi: defaults.kenichiRequired || false,
       }))
 
       setReviewItems(items)
@@ -726,6 +731,8 @@ export default function DispatcherDashboard() {
       pickupLocation: item.pickupLocation || undefined,
       dropoffLocation: item.dropoffLocation || undefined,
       note: item.notes || undefined,
+      editedVehicle: item.editedVehicle || '',
+      editedVehicleCustom: item.editedVehicleCustom || '',
     })
   }
 
@@ -741,6 +748,7 @@ export default function DispatcherDashboard() {
               editedDropoff: editForm.dropoffLocation,
               editedNotes: editForm.note,
               editedKenichi: editForm.kenichiRequired,
+              editedVehicle: editForm.editedVehicle === '自填' ? editForm.editedVehicleCustom : editForm.editedVehicle,
             }
           : item
       )
@@ -797,12 +805,12 @@ export default function DispatcherDashboard() {
             scheduledTime: scheduledDateTime,
             price: item.editedPrice ?? item.price ?? 800,
             type: item.editedType || item.type || 'pending',
-            vehicle: item.editedVehicle || item.vehicle || 'any',
+            vehicle: item.editedVehicle === '自填' ? (item.editedVehicleCustom || 'any') : (item.editedVehicle || (defaults.vehicle === '自填' ? defaults.vehicleCustom : defaults.vehicle) || 'any'),
             plateType: item.editedPlateType || item.plateType || 'any',
             notes: item.editedNotes || item.notes || '',
             note: '',
             rawText: item.rawText || '',
-            kenichiRequired: item.kenichiRequired || false,
+            kenichiRequired: item.editedKenichi || false,
           }),
         })
         const data = await res.json()
@@ -1149,20 +1157,85 @@ export default function DispatcherDashboard() {
                     <h3 className="text-lg font-semibold text-white flex items-center gap-2">
                       <ClipboardList className="w-4 h-4 text-[#ff8c42]" /> 派單中心 - AI 智能解析
                     </h3>
-                    <p className="text-sm text-[#666] mt-1">選擇日期後，AI 會自動解析訂單。時間、種類、地點、金額全部由 AI 處理。</p>
+                    <p className="text-sm text-[#666] mt-1">選擇日期與車型後，AI 會自動解析訂單。時間、種類、地點、金額全部由 AI 處理。</p>
                   </div>
-                  <div className="p-6">
-                    <div className="space-y-2 max-w-xs">
+                  <div className="p-6 space-y-6">
+                    {/* 日期 */}
+                    <div className="space-y-2">
                       <label className="text-sm text-[#a0a0a0] font-medium">日期（必選）</label>
                       <div className="relative">
-                        <input
-                          type="date"
+                        <select
                           value={defaults.date || ''}
                           onChange={(e) => setDefaults(prev => ({ ...prev, date: e.target.value }))}
-                          className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl pl-10 pr-3 py-2.5 text-white text-sm focus:outline-none focus:border-[#ff8c42]/50 cursor-pointer [&::-webkit-calendar-picker-indicator]:cursor-pointer"
-                        />
+                          className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl pl-10 pr-3 py-2.5 text-white text-sm focus:outline-none focus:border-[#ff8c42]/50 cursor-pointer"
+                        >
+                          {DATE_OPTIONS.map(opt => (
+                            <option key={opt.value} value={opt.value}>{opt.label}</option>
+                          ))}
+                        </select>
                         <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#666] pointer-events-none" />
                       </div>
+                    </div>
+
+                    {/* 車型勾選 */}
+                    <div className="space-y-2">
+                      <label className="text-sm text-[#a0a0a0] font-medium">車型（勾選後套用到此批所有訂單）</label>
+                      <div className="flex flex-wrap gap-2">
+                        {VEHICLE_OPTIONS.filter(v => v !== '自填').map(v => (
+                          <button
+                            key={v}
+                            type="button"
+                            onClick={() => setDefaults(prev => ({ ...prev, vehicle: v, vehicleCustom: '' }))}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                              defaults.vehicle === v
+                                ? 'bg-[#ff8c42] text-black border border-[#ff8c42]'
+                                : 'bg-[#0a0a0a] text-[#a0a0a0] border border-white/10 hover:border-white/20'
+                            }`}
+                          >
+                            {v}
+                          </button>
+                        ))}
+                        {/* 自填 */}
+                        <button
+                          type="button"
+                          onClick={() => setDefaults(prev => ({ ...prev, vehicle: '自填' }))}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                            defaults.vehicle === '自填'
+                              ? 'bg-[#ff8c42] text-black border border-[#ff8c42]'
+                              : 'bg-[#0a0a0a] text-[#a0a0a0] border border-white/10 hover:border-white/20'
+                          }`}
+                        >
+                          自填
+                        </button>
+                      </div>
+                      {defaults.vehicle === '自填' && (
+                        <input
+                          type="text"
+                          value={defaults.vehicleCustom || ''}
+                          onChange={(e) => setDefaults(prev => ({ ...prev, vehicleCustom: e.target.value }))}
+                          placeholder="輸入車型"
+                          className="mt-1 bg-[#0a0a0a] border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#ff8c42]/50 w-full max-w-xs"
+                        />
+                      )}
+                    </div>
+
+                    {/* 肯驛勾選 */}
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setDefaults(prev => ({ ...prev, kenichiRequired: !prev.kenichiRequired }))}
+                        className={`w-4 h-4 rounded border transition-all flex items-center justify-center ${
+                          defaults.kenichiRequired ? 'bg-[#a855f7] border-[#a855f7]' : 'bg-[#0a0a0a] border-white/20'
+                        }`}
+                      >
+                        {defaults.kenichiRequired && (
+                          <svg className="w-full h-full text-white" viewBox="0 0 12 12" fill="none">
+                            <path d="M2 6L5 9L10 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        )}
+                      </button>
+                      <span className="text-xs text-[#a855f7]">肯驛系統</span>
+                      <span className="text-xs text-[#666]">（勾選後，此批訂單會標記為肯驛單）</span>
                     </div>
                   </div>
                 </div>
@@ -1249,6 +1322,46 @@ export default function DispatcherDashboard() {
                                     </select>
                                   </div>
                                 </div>
+                                {/* 車型選擇 */}
+                                <div className="space-y-1">
+                                  <label className="text-xs text-[#666]">車型</label>
+                                  <div className="flex flex-wrap gap-1.5">
+                                    {VEHICLE_OPTIONS.filter(v => v !== '自填').map(v => (
+                                      <button
+                                        key={v}
+                                        type="button"
+                                        onClick={() => setEditForm(prev => ({ ...prev, editedVehicle: v, editedVehicleCustom: '' }))}
+                                        className={`px-2.5 py-1 rounded text-xs font-medium transition-all ${
+                                          editForm.editedVehicle === v
+                                            ? 'bg-[#ff8c42] text-black border border-[#ff8c42]'
+                                            : 'bg-[#0a0a0a] text-[#a0a0a0] border border-white/10 hover:border-white/20'
+                                        }`}
+                                      >
+                                        {v}
+                                      </button>
+                                    ))}
+                                    <button
+                                      type="button"
+                                      onClick={() => setEditForm(prev => ({ ...prev, editedVehicle: '自填' }))}
+                                      className={`px-2.5 py-1 rounded text-xs font-medium transition-all ${
+                                        editForm.editedVehicle === '自填'
+                                          ? 'bg-[#ff8c42] text-black border border-[#ff8c42]'
+                                          : 'bg-[#0a0a0a] text-[#a0a0a0] border border-white/10 hover:border-white/20'
+                                      }`}
+                                    >
+                                      自填
+                                    </button>
+                                  </div>
+                                  {editForm.editedVehicle === '自填' && (
+                                    <input
+                                      type="text"
+                                      value={editForm.editedVehicleCustom || ''}
+                                      onChange={(e) => setEditForm(prev => ({ ...prev, editedVehicleCustom: e.target.value }))}
+                                      placeholder="輸入車型"
+                                      className="mt-1 bg-[#0a0a0a] border border-white/10 rounded-lg px-3 py-1.5 text-white text-xs w-full"
+                                    />
+                                  )}
+                                </div>
                                 <div className="space-y-1">
                                   <label className="text-xs text-[#666]">上車地點</label>
                                   <input
@@ -1321,14 +1434,12 @@ export default function DispatcherDashboard() {
                                       {TYPE_LABELS[item.type] || '待確認'}
                                     </Badge>
                                     <Badge className={
-                                      item.vehicle === 'van9' ? 'bg-[#ef4444]/20 text-[#ef4444] border-[#ef4444]/30'
-                                      : item.vehicle === 'suv' ? 'bg-[#f59e0b]/20 text-[#f59e0b] border-[#f59e0b]/30'
-                                      : item.vehicle === 'small' ? 'bg-white/10 text-[#e0e0e0] border-white/20'
-                                      : item.vehicle === 'any_r' ? 'bg-[#3b82f6]/20 text-[#3b82f6] border-[#3b82f6]/30'
+                                      item.editedVehicle?.includes('9人座') || item.editedVehicle?.includes('VITO') ? 'bg-[#ef4444]/20 text-[#ef4444] border-[#ef4444]/30'
+                                      : item.editedVehicle?.includes('休旅') || item.editedVehicle?.includes('GRANVIA') || item.editedVehicle?.includes('7人座') ? 'bg-[#f59e0b]/20 text-[#f59e0b] border-[#f59e0b]/30'
+                                      : item.editedVehicle?.includes('小車') ? 'bg-white/10 text-[#e0e0e0] border-white/20'
                                       : 'bg-white/10 text-[#a0a0a0] border-white/20'
                                     }>
-                                      {VEHICLE_LABELS[item.vehicle] || '待確認'}
-                                      {item.plateType && item.plateType !== 'any' ? ` (${item.plateType}牌)` : ''}
+                                      {item.editedVehicle || '待確認'}
                                     </Badge>
                                     {(item as any).editedKenichi ? (
                                       <span className="px-1.5 py-0.5 rounded text-xs font-medium bg-[#a855f7]/20 text-[#a855f7] border border-[#a855f7]/30">肯驛</span>
@@ -1361,7 +1472,7 @@ export default function DispatcherDashboard() {
                                   <div>
                                     <p className="text-xs text-[#666]">車型</p>
                                     <p className="font-medium text-[#e0e0e0]">
-                                      {VEHICLE_LABELS[item.vehicle] || '待確認'}
+                                      {item.editedVehicle || '待確認'}
                                     </p>
                                   </div>
                                 </div>
