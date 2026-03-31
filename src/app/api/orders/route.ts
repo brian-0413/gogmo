@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getUserFromToken } from '@/lib/auth'
-import { parseOrderText } from '@/lib/ai'
 import { ApiResponse, CreateOrderRequest } from '@/types'
 import { checkRateLimit } from '@/lib/api-utils'
 
@@ -258,6 +257,7 @@ export async function POST(request: NextRequest) {
         notes: body.notes,
         note: body.note,
         rawText: body.rawText,
+        kenichiRequired: body.kenichiRequired ?? false,
         status: 'PUBLISHED', // Dispatcher-created orders are immediately visible
       },
       include: {
@@ -270,9 +270,20 @@ export async function POST(request: NextRequest) {
       data: order,
     })
   } catch (error) {
-    console.error('Create order error:', error)
+    // Log full error details for debugging
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    const errorStack = error instanceof Error ? error.stack : undefined
+    console.error('=== Create order error ===')
+    console.error('Message:', errorMessage)
+    console.error('Stack:', errorStack)
+    if (error && typeof error === 'object' && 'code' in error) {
+      console.error('Prisma error code:', (error as { code: string }).code)
+    }
+    if (error && typeof error === 'object' && 'meta' in error) {
+      console.error('Prisma meta:', JSON.stringify((error as { meta: unknown }).meta))
+    }
     return NextResponse.json<ApiResponse>(
-      { success: false, error: '伺服器錯誤' },
+      { success: false, error: `伺服器錯誤: ${errorMessage}` },
       { status: 500 }
     )
   }
