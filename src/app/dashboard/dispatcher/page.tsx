@@ -1153,7 +1153,10 @@ export default function DispatcherDashboard() {
                     const scheduledTimeStr = (() => {
                       if (!order.scheduledTime) return '-'
                       const d = parseISO(order.scheduledTime)
-                      return `${format(d, 'MM/dd')} ${format(d, 'HH:mm')}`
+                      // 確保 HH:mm 格式完整顯示 padStart
+                      const hh = format(d, 'HH')
+                      const mm = format(d, 'mm')
+                      return `${format(d, 'MM/dd')} ${hh}:${mm}`
                     })()
 
                     return (
@@ -1210,7 +1213,7 @@ export default function DispatcherDashboard() {
                         <span className="truncate">{order.dropoffLocation}</span>
                       </div>
                       {/* Time */}
-                      <div className="mt-1 text-xs text-[#666] font-mono">
+                      <div className="mt-1 text-xs text-[#666] font-mono flex-shrink-0">
                         {scheduledTimeStr}
                       </div>
                     </div>
