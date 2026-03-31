@@ -83,7 +83,7 @@ function extractTime(line: string): string | null {
     const h = parseInt(hmMatch[1])
     const m = parseInt(hmMatch[2])
     if (h >= 0 && h <= 23 && m >= 0 && m <= 59) {
-      return `${h.toString().padStart(2, '0')}:${m}`
+      return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`
     }
   }
 
@@ -93,7 +93,7 @@ function extractTime(line: string): string | null {
     const h = parseInt(hmmMatch[1].substring(0, 2))
     const m = parseInt(hmmMatch[1].substring(2, 4))
     if (h >= 0 && h <= 23 && m >= 0 && m <= 59) {
-      return `${h.toString().padStart(2, '0')}:${m}`
+      return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`
     }
   }
 
@@ -103,7 +103,7 @@ function extractTime(line: string): string | null {
     const h = parseInt(singleTime[1])
     const m = parseInt(singleTime[2])
     if (h >= 0 && h <= 23 && m >= 0 && m <= 59) {
-      return `${h.toString().padStart(2, '0')}:${m}`
+      return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`
     }
   }
 
@@ -279,8 +279,27 @@ export function parseBatchOrders(
   const results: ParsedOrder[] = []
   let lastDate: string | null = null
 
+  // 標題行繼承：累積的預設值（可被後續標題行覆蓋）
+  let inheritedDefaults = { ...defaults }
+
   for (const line of lines) {
-    const parsed = parseSingleLine(line, defaults)
+    const parsed = parseSingleLine(line, inheritedDefaults)
+
+    // 標題行偵測：沒有時間、沒有接送關鍵字、但有車型關鍵字
+    const hasActionKeyword = /[接送]|到/.test(line)
+    const hasVehicleKeyword = /[休旅]|大車|小車|任意|9座/i.test(line)
+    const hasTime = parsed.time !== null
+
+    if (!hasTime && !hasActionKeyword && hasVehicleKeyword) {
+      // 這是標題行：更新 inheritedDefaults，不寫入 results
+      if (parsed.vehicle !== 'any') {
+        inheritedDefaults = { ...inheritedDefaults, vehicle: parsed.vehicle }
+      }
+      if (parsed.plateType !== 'any') {
+        inheritedDefaults = { ...inheritedDefaults, plateType: parsed.plateType }
+      }
+      continue
+    }
 
     // 跨行日期邏輯：如果這行有日期，則更新 lastDate
     if (parsed.date === 'today') {
@@ -293,22 +312,22 @@ export function parseBatchOrders(
       lastDate = parsed.date
     }
 
-    // 套用預設車型
-    if (parsed.vehicle === 'any' && defaults.vehicle) {
-      parsed.vehicle = defaults.vehicle
+    // 套用 inheritedDefaults 中的預設值（標題行設定）
+    if (parsed.vehicle === 'any' && inheritedDefaults.vehicle) {
+      parsed.vehicle = inheritedDefaults.vehicle
     }
-    if (parsed.plateType === 'any' && defaults.plateType) {
-      parsed.plateType = defaults.plateType
-    }
-
-    // 套用預設種類（整批統一，車頭選擇後不再推斷）
-    if (defaults.type && defaults.type !== 'pending') {
-      parsed.type = defaults.type
+    if (parsed.plateType === 'any' && inheritedDefaults.plateType) {
+      parsed.plateType = inheritedDefaults.plateType
     }
 
-    // 套用預設金額
-    if (parsed.price === null && defaults.price) {
-      parsed.price = defaults.price
+    // 套用 UI 預設種類（最高優先，車頭選擇後覆蓋標題行）
+    if (inheritedDefaults.type && inheritedDefaults.type !== 'pending') {
+      parsed.type = inheritedDefaults.type
+    }
+
+    // 套用 inheritedDefaults 中的預設金額
+    if (parsed.price === null && inheritedDefaults.price) {
+      parsed.price = inheritedDefaults.price
     }
 
     // 推斷接送種類並設定地點（依文件「種類判斷優先順序」）
