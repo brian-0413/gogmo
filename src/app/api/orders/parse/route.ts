@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUserFromToken } from '@/lib/auth'
-import { parseBatchOrders } from '@/lib/ai'
+import { parseBatchOrdersLLM } from '@/lib/ai'
 import { ApiResponse } from '@/types'
 
-// POST /api/orders/parse - Parse order text using new regex engine
+// POST /api/orders/parse - Parse order text using LLM (Claude Haiku)
+// API Key 只存在後端，不會暴露給前端
 export async function POST(request: NextRequest) {
   try {
     const token = request.headers.get('Authorization')?.replace('Bearer ', '')
@@ -39,19 +40,20 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const parsed = parseBatchOrders(text, defaults || {})
+    const result = await parseBatchOrdersLLM(text, defaults || {})
 
     return NextResponse.json<ApiResponse>({
       success: true,
       data: {
-        orders: parsed,
-        count: parsed.length,
+        orders: result.orders,
+        count: result.orders.length,
+        rawResponse: result.rawResponse,
       },
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Parse order error:', error)
     return NextResponse.json<ApiResponse>(
-      { success: false, error: '解析失敗' },
+      { success: false, error: error.message || '解析失敗' },
       { status: 500 }
     )
   }
