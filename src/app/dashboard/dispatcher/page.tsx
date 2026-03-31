@@ -622,7 +622,7 @@ export default function DispatcherDashboard() {
     })
   }
 
-  const handleSaveEdit = async () => {
+  const handleSaveOrderEdit = async () => {
     if (!token || !editingOrder) return
     setEditSaving(true)
     try {
@@ -1080,7 +1080,7 @@ export default function DispatcherDashboard() {
                         </div>
                         <div className="flex gap-3 pt-2">
                           <Button
-                            onClick={handleSaveEdit}
+                            onClick={handleSaveOrderEdit}
                             loading={editSaving}
                             className="flex-1 bg-[#ff8c42] hover:bg-[#ff9d5c] text-black font-semibold"
                           >
