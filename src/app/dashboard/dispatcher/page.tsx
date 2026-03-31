@@ -1150,36 +1150,54 @@ export default function DispatcherDashboard() {
                       ? { label: typeLabels[order.type], color: typeColors[order.type] || 'text-[#888]' }
                       : inferred || { label: '待確認', color: 'text-[#888]' }
 
+                    const scheduledTimeStr = (() => {
+                      if (!order.scheduledTime) return '-'
+                      const d = parseISO(order.scheduledTime)
+                      return `${format(d, 'MM/dd')}${format(d, 'HH:mm')}`
+                    })()
+
+                    // 去除 dropoffLocation 中的重複機場關鍵字
+                    const airportShorts = ['桃機', 'TPE', 'TSA', 'KHH', 'RMQ', '松山', '小港', '清泉']
+                    const cleanDropoff = (() => {
+                      const d = order.dropoffLocation || ''
+                      let result = d
+                      for (const short of airportShorts) {
+                        // 如果同時包含簡寫和完整名，移除簡寫
+                        if (d.includes(short) && d.includes('桃園機場')) {
+                          result = result.replace(short, '').trim()
+                        }
+                      }
+                      return result || d
+                    })()
+
                     return (
-                    <div key={order.id} className="bg-[#1a1a1a] border border-white/10 rounded-xl px-4 py-3 hover:border-white/20 transition-all">
+                    <div key={order.id} className="bg-[#1a1a1a] border border-white/10 rounded-xl p-3 hover:border-white/20 transition-all">
                       {/* Type title */}
-                      <div className="flex items-center justify-between mb-2">
-                        <span className={`text-lg font-bold ${displayType.color}`}>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className={`text-sm font-bold ${displayType.color}`}>
                           {displayType.label}
                         </span>
                         <div className="flex gap-1">
                           <button
                             onClick={() => openEditModal(order)}
-                            className="p-1.5 rounded-lg text-[#666] hover:text-white hover:bg-white/10 transition-colors"
+                            className="p-1 rounded text-[#666] hover:text-white hover:bg-white/10 transition-colors"
                             title="編輯"
                           >
-                            <Pencil className="w-3.5 h-3.5" />
+                            <Pencil className="w-3 h-3" />
                           </button>
                           <button
                             onClick={() => handleDeleteOrder(order.id)}
-                            className="p-1.5 rounded-lg text-[#666] hover:text-[#ef4444] hover:bg-[#ef4444]/10 transition-colors"
+                            className="p-1 rounded text-[#666] hover:text-[#ef4444] hover:bg-[#ef4444]/10 transition-colors"
                             title="刪除"
                           >
-                            <Trash2 className="w-3.5 h-3.5" />
+                            <Trash2 className="w-3 h-3" />
                           </button>
                         </div>
                       </div>
-                      {/* Row 1: ID + Price + Type badge + Status + Kenichi */}
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-xs text-[#666] font-mono">#{order.id.slice(0, 8)}</span>
-                        <span className="text-base font-bold" style={{ color: '#ff8c42' }}>NT${order.price.toLocaleString()}</span>
-                        {/* Status badge */}
-                        <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${
+                      {/* Row 1: Price + Status + Kenichi */}
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-sm font-bold" style={{ color: '#ff8c42' }}>NT${order.price.toLocaleString()}</span>
+                        <span className={`px-1 py-0.5 rounded text-xs font-medium ${
                           ['PENDING', 'PUBLISHED'].includes(order.status) ? 'bg-[#ff8c42]/20 text-[#ff8c42] border border-[#ff8c42]/30'
                           : ['ASSIGNED', 'ACCEPTED'].includes(order.status) ? 'bg-[#3b82f6]/20 text-[#3b82f6] border border-[#3b82f6]/30'
                           : order.status === 'ARRIVED' ? 'bg-[#a855f7]/20 text-[#a855f7] border border-[#a855f7]/30'
@@ -1190,30 +1208,21 @@ export default function DispatcherDashboard() {
                           {order.status === 'PENDING' ? '待接單' : order.status === 'PUBLISHED' ? '待接單' : order.status === 'ASSIGNED' ? '已指派' : order.status === 'ACCEPTED' ? '已接單' : order.status === 'ARRIVED' ? '已抵達' : order.status === 'IN_PROGRESS' ? '進行中' : order.status === 'COMPLETED' ? '已完成' : order.status === 'CANCELLED' ? '已取消' : order.status}
                         </span>
                         {isKenichi && (
-                          <span className="px-1.5 py-0.5 rounded text-xs font-medium bg-[#a855f7]/20 text-[#a855f7] border border-[#a855f7]/30">
+                          <span className="px-1 py-0.5 rounded text-xs font-medium bg-[#a855f7]/20 text-[#a855f7] border border-[#a855f7]/30">
                             肯驛
                           </span>
                         )}
                       </div>
                       {/* Row 2: Pickup → Dropoff */}
-                      <div className="flex items-center gap-2 mt-2 text-xs text-[#a0a0a0]">
-                        <MapPin className="w-3 h-3 text-[#22c55e] flex-shrink-0" />
-                        <span className="truncate flex-1">{order.pickupLocation}</span>
+                      <div className="flex items-center gap-1.5 mt-1.5 text-xs text-[#a0a0a0]">
+                        <MapPin className="w-2.5 h-2.5 text-[#22c55e] flex-shrink-0" />
+                        <span className="truncate flex-1 min-w-0">{order.pickupLocation}</span>
                         <span className="text-[#666] flex-shrink-0">→</span>
-                        <span className="truncate flex-1 text-right">{order.dropoffLocation}</span>
+                        <span className="truncate flex-1 text-right min-w-0">{cleanDropoff}</span>
                       </div>
-                      {/* Row 3: Time + Driver */}
-                      <div className="flex items-center justify-between mt-1 text-xs text-[#a0a0a0]">
-                        <span className="text-[#444] font-mono">
-                          {order.scheduledTime ? format(parseISO(order.scheduledTime), 'MM/dd HH:mm', { locale: zhTW }) : '-'}
-                        </span>
-                        <span>
-                          {order.driver ? (
-                            <span className="truncate">{order.driver.user.name} ({order.driver.licensePlate})</span>
-                          ) : (
-                            <span className="text-[#444]">待指派</span>
-                          )}
-                        </span>
+                      {/* Row 3: Time */}
+                      <div className="mt-1 text-xs text-[#666] font-mono text-right">
+                        {scheduledTimeStr}
                       </div>
                     </div>
                   )})
@@ -1243,9 +1252,9 @@ export default function DispatcherDashboard() {
                             type="date"
                             value={defaults.date || ''}
                             onChange={(e) => setDefaults(prev => ({ ...prev, date: e.target.value }))}
-                            className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl pl-10 pr-3 py-2.5 text-white text-sm focus:outline-none focus:border-[#ff8c42]/50 appearance-none cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                            className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl pl-10 pr-3 py-2.5 text-white text-sm focus:outline-none focus:border-[#ff8c42]/50 cursor-pointer [&::-webkit-calendar-picker-indicator]:cursor-pointer"
                           />
-                          <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#ff8c42] pointer-events-none" />
+                          <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#666] pointer-events-none" />
                         </div>
                       </div>
 
