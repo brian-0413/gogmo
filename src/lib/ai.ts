@@ -30,6 +30,51 @@ export interface BatchOrderDefaults {
   flightNumber?: string
 }
 
+// ============ 機場關鍵字 ============
+const AIRPORT_PATTERNS: Array<{ keyword: string; airport: string }> = [
+  { keyword: '桃園國際機場', airport: '桃園國際機場' },
+  { keyword: '桃園機場', airport: '桃園國際機場' },
+  { keyword: '桃機', airport: '桃園國際機場' },
+  { keyword: 'TPE', airport: '桃園國際機場' },
+  { keyword: '松山國際機場', airport: '松山國際機場' },
+  { keyword: '松山機場', airport: '松山國際機場' },
+  { keyword: '松機', airport: '松山國際機場' },
+  { keyword: 'TSA', airport: '松山國際機場' },
+  { keyword: '高雄國際機場', airport: '高雄國際機場' },
+  { keyword: '高雄機場', airport: '高雄國際機場' },
+  { keyword: '小港', airport: '高雄國際機場' },
+  { keyword: 'KHH', airport: '高雄國際機場' },
+  { keyword: '清泉崗', airport: '清泉崗機場' },
+  { keyword: '台中機場', airport: '清泉崗機場' },
+  { keyword: 'RMQ', airport: '清泉崗機場' },
+]
+
+/** 從文字中找出第一個機場關鍵字及其名稱 */
+function findAirport(str: string): { keyword: string; airport: string } | null {
+  for (const p of AIRPORT_PATTERNS) {
+    if (str.includes(p.keyword)) return p
+  }
+  return null
+}
+
+/** 從文字中移除所有機場關鍵字 */
+function removeAirportKeywords(str: string): string {
+  let result = str
+  for (const p of AIRPORT_PATTERNS) {
+    result = result.replace(new RegExp(p.keyword, 'g'), '')
+  }
+  return result
+}
+
+/** 從文字開頭移除接送/機場標記，回傳剩餘內容 */
+function removeLocationMarkers(str: string): string {
+  return str
+    .replace(/^(接機|桃機接|送機|送桃機|桃機到|桃機 到|松機到|松機 到|小港到|小港 到|清泉崗到|清泉崗 到)/, '')
+    .replace(/^(機場接|機場到|機場送)/, '')
+    .replace(/\/.*$/g, '') // 移除 / 後面的車型標記
+    .trim()
+}
+
 // ============ 時間解析 ============
 function extractTime(line: string): string | null {
   // 1. HH:MM 格式
@@ -112,18 +157,46 @@ function extractVehicle(line: string): { vehicle: VehicleType; plateType: PlateT
 }
 
 // ============ 種類解析 ============
+// 根據文件「種類判斷優先順序」，實作五種格式模式
 function extractType(line: string): OrderType {
-  if (line.includes('接機') || line.includes('桃機接') || line.match(/機場接|抵達/i)) return 'pickup'
-  if (line.includes('送機') || line.match(/送桃機|送.*機/i)) return 'dropoff'
-  if (line.includes('接駁') || line.includes('交通')) return 'transfer'
-  if (line.includes('包車')) return 'charter'
-
-  // 推斷：含桃園/機場字樣
-  const isAirportPickup = line.includes('桃機') || line.includes('機場')
-  if (isAirportPickup) {
-    if (line.includes('送')) return 'dropoff'
-    if (line.includes('接')) return 'pickup'
+  // 模式 A：「機場關鍵字 + 到 + 地點」→ 接機
+  if (findAirport(line)) {
+    if (/桃機.*到|桃園.*到|松機.*到|小港.*到|清泉崗.*到/i.test(line)) return 'pickup'
+    if (/機場.*到/i.test(line)) return 'pickup'
   }
+
+  // 模式 B：「地點 + 到 + 機場關鍵字」→ 送機
+  if (/到.*桃機|到.*桃園|到.*松機|到.*TSA|到.*小港|到.*KHH|到.*清泉崗/i.test(line)) return 'dropoff'
+
+  // 模式 D2：「送機 + 時間 + 地點-機場」→ 送機
+  if (/送機\s*\d|送機.*[到-].*機/i.test(line)) return 'dropoff'
+
+  // 模式 C：「接 + 地點」（如「接土城」「接機北屯」）→ 接機
+  if (line.includes('接')) {
+    const after = line.split('接').slice(1).join('接').trim()
+    // 「接」後面是中文字 → 接機
+    if (after) return 'pickup'
+  }
+
+  // 模式 D2：「送機 + 時間 + 地點-機場」→ 送機
+  if (/送機\s*\d|送機.*[到-].*機/i.test(line)) return 'dropoff'
+
+  // 模式 D：「地點 + 送」（不一定有「機」）→ 送機
+  // 例如「南港送」「板橋送」「彰化市送」「彰化市送桃機」
+  if (line.includes('送')) {
+    const sendIdx = line.indexOf('送')
+    const after = line.substring(sendIdx + 1)
+    // 「送」後面若不是中文字（可能是標點、數字、空）→ 送機
+    if (!/[\u4e00-\u9fff]/.test(after)) return 'dropoff'
+    // 否則「送」後面若含有機場關鍵字 → 送機
+    if (findAirport(after)) return 'dropoff'
+  }
+
+  // 模式 E：交通接駁
+  if (line.includes('交通接駁') || line.includes('上-') || line.includes('下-') || line.includes('上:') || line.includes('下:')) return 'transfer'
+
+  // 包車
+  if (line.includes('包車') || line.includes('時租')) return 'charter'
 
   return 'pending'
 }
@@ -238,62 +311,58 @@ export function parseBatchOrders(
       parsed.price = defaults.price
     }
 
-    // 推斷接送種類並設定地點
-    // 格式：X送桃機 → 送機，起點=X，終點=桃園機場
-    // 格式：X送機 → 送機，起點=X，終點=桃園機場
-    // 格式：X送(非桃機關鍵字) → 送機，起點=X
-    // 格式：桃機到X → 接送，起點=桃園機場，終點=X
-    // 格式：X到Y → 接送，起點=X，終點=Y（若含非桃園機場關鍵字）
+    // 推斷接送種類並設定地點（依文件「種類判斷優先順序」）
+    // 這裡的 notes 是移除時間、金額、日期後的剩餘文字
 
-    // 處理「X送桃機」或「X送機」（送機）
-    if (line.includes('送桃機') || line.includes('送機')) {
-      const location = parsed.notes
-        .replace(/(送機|送桃機)$/, '')  // 移除結尾的送機/送桃機
-        .replace(/\/.*$/, '')           // 移除 / 後面的車型標記
-        .trim()
-      if (location) parsed.pickupLocation = location
-      else if (parsed.notes) parsed.pickupLocation = parsed.notes
-      parsed.dropoffLocation = '桃園機場'
-      if (parsed.type === 'pending') parsed.type = 'dropoff'
-    }
-    // 處理「桃機到X」（接送）
-    else if (line.includes('桃機到')) {
-      const location = parsed.notes
-        .replace(/^(桃機到|桃機 到)/, '')  // 移除開頭的桃機到
-        .replace(/\/.*$/, '')              // 移除 / 後面的車型標記
-        .trim()
-      if (location) parsed.dropoffLocation = location
-      else if (parsed.notes) parsed.dropoffLocation = parsed.notes
-      parsed.pickupLocation = '桃園機場'
-      if (parsed.type === 'pending') parsed.type = 'pickup'
-    }
-    // 處理「X到Y」但不含接送關鍵字
-    else if (line.includes('到') && !line.includes('送') && !line.includes('接')) {
-      const parts = line.split('到')
-      if (parts.length >= 2) {
-        const beforeTo = parts[0].replace(/\/.*$/, '').trim() // 移除 / 後面的車型標記
-        const afterTo = parts.slice(1).join('到').replace(/\/.*$/, '').trim()
-        if (beforeTo) parsed.pickupLocation = beforeTo
-        if (afterTo) parsed.dropoffLocation = afterTo
-        if (parsed.type === 'pending') parsed.type = 'dropoff'
+    const airport = findAirport(line)
+    const raw = parsed.notes
+
+    // 模式 A：「機場關鍵字 + 到 + 地點」→ pickup=桃園/松山/..., dropoff=地點
+    if (airport && raw.includes('到')) {
+      const parts = raw.split('到')
+      const before = removeLocationMarkers(parts[0]).trim()
+      const after = parts.slice(1).join('到').trim()
+      // 機場在前、地點在後 = 接機
+      const airportBefore = findAirport(before)
+      if (airportBefore) {
+        parsed.pickupLocation = airportBefore.airport
+        parsed.dropoffLocation = after || undefined
+        parsed.type = 'pickup'
+      }
+      // 地點在前、機場在後 = 送機
+      else {
+        parsed.pickupLocation = before || undefined
+        parsed.dropoffLocation = airport.airport
+        parsed.type = 'dropoff'
       }
     }
-    // 處理「接機X」或「桃機接X」（接機）
-    else if (line.includes('接機') || line.includes('桃機接')) {
-      const location = parsed.notes
-        .replace(/^(接機|桃機接)/, '')   // 移除開頭的接機/桃機接標記
-        .replace(/\/.*$/, '')            // 移除 / 後面的車型標記
-        .trim()
-      if (location) parsed.dropoffLocation = location
-      else if (parsed.notes) parsed.dropoffLocation = parsed.notes
-      parsed.pickupLocation = '桃園機場'
-      if (parsed.type === 'pending') parsed.type = 'pickup'
+    // 模式 B（無機場關鍵字但有「地點+送」）→ pickup=地點, dropoff=桃園預設
+    else if (parsed.type === 'dropoff' && raw.includes('送')) {
+      const sendIdx = raw.indexOf('送')
+      const before = raw.substring(0, sendIdx).trim()
+      const after = raw.substring(sendIdx + 1).trim()
+      parsed.pickupLocation = before || undefined
+      const afterAirport = findAirport(after)
+      parsed.dropoffLocation = afterAirport ? afterAirport.airport : '桃園國際機場'
+    }
+    // 模式 C：「接+地點」（如「接土城」「接機北屯」）→ pickup=預設, dropoff=地點
+    else if (parsed.type === 'pickup' && raw.includes('接')) {
+      const after = raw.split('接').slice(1).join('接').trim()
+      parsed.dropoffLocation = after || undefined
+      // pickup 預設為桃園（可依上下文或機場關鍵字調整）
+      const airport2 = findAirport(raw)
+      parsed.pickupLocation = airport2 ? airport2.airport : '桃園國際機場'
+    }
+    // 模式 E：交通接駁（有「上-」「下-」）
+    else if (parsed.type === 'transfer') {
+      const upMatch = raw.match(/上[_-](.+)/)
+      const downMatch = raw.match(/下[_-](.+)/)
+      if (upMatch) parsed.pickupLocation = upMatch[1].trim()
+      if (downMatch) parsed.dropoffLocation = downMatch[1].trim()
     }
 
     // 清理 notes 中的接送種類標記
-    parsed.notes = parsed.notes
-      .replace(/^(接機|送機|桃機接|送桃機|桃機到|桃機 到|接駁|包車)/, '')
-      .replace(/\/.*$/, '') // 移除 / 後面的車型標記（已單獨解析）
+    parsed.notes = removeLocationMarkers(raw)
       .replace(/^(任意|不限)/, '')
       .replace(/任意R|任R|任意.*車|不限.*車/g, '')
       .trim()
