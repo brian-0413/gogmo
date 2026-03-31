@@ -8,18 +8,22 @@
 export type OrderType = 'pickup' | 'dropoff' | 'transfer' | 'charter' | 'pending'
 export type VehicleType = 'small' | 'suv' | 'van9' | 'any' | 'any_r' | 'pending'
 export type PlateType = 'R' | 'T' | 'any'
+export type ParseStatus = 'ok' | 'incomplete' | 'rejected'
 
 export interface ParsedOrder {
-  date: string | null       // "3/28" 格式，相對日期
-  time: string | null       // "23:10" 或 "05:00"
+  date: string | null
+  time: string | null       // "23:10" 或 "05:00"，若是落地則 "落地"
   type: OrderType
   vehicle: VehicleType
   plateType: PlateType
   price: number | null
-  notes: string              // 所有未解析的內容（含地點）
+  notes: string              // 原始行完整複製
   rawText: string            // 原始行文字
   pickupLocation?: string
   dropoffLocation?: string
+  status: ParseStatus         // ok=正常, incomplete=待補正, rejected=拒絕
+  reason?: string             // 當 rejected 或 incomplete 時的原因
+  isPaired?: boolean          // 是否為套裝行程
 }
 
 export interface BatchOrderDefaults {
@@ -280,11 +284,171 @@ export function parseBatchOrders(
         rawText: line,
         pickupLocation,
         dropoffLocation,
+        status: 'ok',
       })
     }
   }
 
   return results
+}
+
+// ============ LLM 訂單解析（使用 Claude Haiku） ============
+
+const SYSTEM_PROMPT = `你是台灣機場接送平台的訂單解析專家。負責將 LINE 群組的訂單訊息解析成結構化 JSON。
+
+## 輸出格式
+回傳 JSON array，每個元素是一筆訂單：
+
+{
+  "rawText": "原始行文字",
+  "date": "日期（YYYY-MM-DD 格式，使用預設日期）",
+  "time": "時間 HH:MM，落地則填 \"落地\"",
+  "type": "pickup | dropoff | transfer | charter | pending",
+  "price": 數字或null",
+  "pickupLocation": "起點（如為桃園則填 \"桃園國際機場\"）",
+  "dropoffLocation": "終點",
+  "notes": "原始行完整複製",
+  "status": "ok | incomplete | rejected",
+  "reason": "當 rejected 或 incomplete 時的原因",
+  "isPaired": 是否為套裝行程
+}
+
+## 種類判斷
+- 有「接」（含「接機」「接機台北」等）→ pickup（接機）
+- 有「送」（含「送機」「士林送」等）→ dropoff（送機）
+- ○機-地點（如「桃機-中正」）→ pickup（接機）
+- 地點-○機（如「中正-桃機」）→ dropoff（送機）
+- 含「基隆港」且有接送 → 接送船（比照接送機處理）
+
+## 地點填充
+- 接機：起點=○機，終點=訊息中的地點
+- 送機：起點=訊息中的地點，終點=○機
+- 機場關鍵字：桃園國際機場、桃機、TPE、松山、松機、TSA、小港、高雄機場、KHH、清泉崗、RMQ
+- 若訊息中無明確機場關鍵字，預設「桃園國際機場」
+- 松山、小港、清泉崗需明確標示，否則預設桃園
+
+## 拒絕規則（rejected）
+滿足以下任一條件，status 設為 "rejected"，reason 填寫對應訊息：
+- 含有「配」或「搭」關鍵字 → "系統只接受確定的套裝行程，未確定接送或由要求司機自行搭配之套裝行程，無法刊登。"
+- 缺 2 項以上必備項目（時間、種類、起點、終點、金額）→ "您的訊息無法解析，請修正後再貼"
+- 完全無法識別（如整行都是 emoji 無法提取任何資訊）→ "您的訊息無法解析，請修正後再貼"
+
+## 待補正規則（incomplete）
+滿足以下條件，status 設為 "incomplete"：
+- 只缺 1 項必備項目（如缺金額）
+- 含有 emoji 導致金額無法提取
+- 金額、時間模糊（如「1800新竹送」分不清是時間還是金額）
+
+## 套裝行程（isPaired）
+- 含有「一套」「成套」關鍵字 → isPaired=true
+- 同一 block 有去程+回程 → isPaired=true
+
+## 多目的地
+- 同一趟有多個目的地（如「嘉義溪口、中埔、東區」）→ 放在同一筆記錄，notes 保留完整
+- 不能拆成多筆，拆成多筆代表要多台車
+
+## 特殊格式
+- 「落地」→ time="落地"
+- PM/AM → 轉換成 24 小時制
+- 全形數字 (8)(0)(0) → 800
+- *數字 → 乘客人數，放 notes
+- 「增高」「安椅」「安*1」等 → 附加服務，放 notes
+
+## 備註
+- notes = 原始行完整複製
+- 車型、L、K、V車、限V 等 → 不解析，全部放 notes
+
+## 日期
+使用以下預設日期：{DEFAULT_DATE}
+只解析屬於今天（{DEFAULT_DATE}）的訂單，若訊息標示其他日期則跳過。`.replace('{DEFAULT_DATE}', new Date().toISOString().split('T')[0])
+
+export interface LLMParseResult {
+  orders: ParsedOrder[]
+  rawResponse: string
+}
+
+/**
+ * 使用 Claude Haiku 解析 LINE 訂單文字
+ */
+export async function parseBatchOrdersLLM(
+  text: string,
+  defaults: BatchOrderDefaults
+): Promise<LLMParseResult> {
+  const apiKey = process.env.ANTHROPIC_API_KEY
+  if (!apiKey) {
+    throw new Error('ANTHROPIC_API_KEY 未設定')
+  }
+
+  const defaultDate = defaults.date || new Date().toISOString().split('T')[0]
+  const systemPrompt = SYSTEM_PROMPT.replace('{DEFAULT_DATE}', defaultDate)
+
+  const userMessage = `請解析以下訂單訊息：
+
+${text}
+
+日期：${defaultDate}
+種類：${defaults.type ? defaults.type : '（未指定）'}
+車型：${defaults.vehicle || '任意'}
+車牌：${defaults.plateType || '任意'}
+金額：${defaults.price || '未指定'}
+
+只回傳 JSON array，不要任何其他文字。`
+
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+    },
+    body: JSON.stringify({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 4096,
+      system: systemPrompt,
+      messages: [{ role: 'user', content: userMessage }],
+    }),
+  })
+
+  if (!response.ok) {
+    const error = await response.text()
+    throw new Error(`Anthropic API error: ${response.status} - ${error}`)
+  }
+
+  const data = await response.json()
+  const rawResponse = data.content?.[0]?.text || '[]'
+
+  // Parse JSON from response
+  let orders: any[] = []
+  try {
+    // Try to extract JSON from the response (in case there's extra text)
+    const jsonMatch = rawResponse.match(/\[[\s\S]*\]/)
+    if (jsonMatch) {
+      orders = JSON.parse(jsonMatch[0])
+    } else {
+      orders = JSON.parse(rawResponse)
+    }
+  } catch (e) {
+    throw new Error(`JSON parse error: ${e}, response: ${rawResponse}`)
+  }
+
+  // Validate and normalize each order
+  const validatedOrders: ParsedOrder[] = orders.map((o: any) => ({
+    date: o.date || defaultDate,
+    time: o.time || null,
+    type: (o.type || 'pending') as any,
+    vehicle: (o.vehicle || 'any') as any,
+    plateType: (o.plateType || 'any') as any,
+    price: o.price != null ? Number(o.price) : null,
+    notes: o.notes || o.rawText || '',
+    rawText: o.rawText || '',
+    pickupLocation: o.pickupLocation,
+    dropoffLocation: o.dropoffLocation,
+    status: (o.status || 'ok') as any,
+    reason: o.reason,
+    isPaired: o.isPaired || false,
+  }))
+
+  return { orders: validatedOrders, rawResponse }
 }
 
 // ============ 舊版 API 相容性 ============
