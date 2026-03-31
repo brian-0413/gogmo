@@ -270,20 +270,17 @@ export async function POST(request: NextRequest) {
       data: order,
     })
   } catch (error) {
-    // Log full error details for debugging
+    // Detailed server-side logging for debugging (never expose to client)
     const errorMessage = error instanceof Error ? error.message : String(error)
-    const errorStack = error instanceof Error ? error.stack : undefined
     console.error('=== Create order error ===')
     console.error('Message:', errorMessage)
-    console.error('Stack:', errorStack)
-    if (error && typeof error === 'object' && 'code' in error) {
-      console.error('Prisma error code:', (error as { code: string }).code)
-    }
-    if (error && typeof error === 'object' && 'meta' in error) {
-      console.error('Prisma meta:', JSON.stringify((error as { meta: unknown }).meta))
+    if (error instanceof Error) console.error('Stack:', error.stack)
+    if (typeof error === 'object' && error !== null) {
+      if ('code' in error) console.error('Prisma code:', (error as { code: string }).code)
+      if ('meta' in error) console.error('Prisma meta:', JSON.stringify((error as { meta: unknown }).meta))
     }
     return NextResponse.json<ApiResponse>(
-      { success: false, error: `伺服器錯誤: ${errorMessage}` },
+      { success: false, error: '伺服器錯誤' },
       { status: 500 }
     )
   }
