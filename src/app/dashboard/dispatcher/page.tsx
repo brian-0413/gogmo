@@ -26,6 +26,10 @@ import {
   TrendingUp,
   Clock,
   Download,
+  Pencil,
+  Trash2,
+  X,
+  MapPin,
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -357,7 +361,7 @@ function SettlementTab({ token }: { token: string | null }) {
       ) : settlementData ? (
         <>
           {/* Stats Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 gap-4">
             <div className="bg-gradient-to-br from-[#3b82f6]/20 to-[#3b82f6]/5 border border-[#3b82f6]/20 rounded-2xl p-5 backdrop-blur-sm">
               <p className="text-xs text-[#3b82f6] uppercase tracking-wider mb-2">總派出單數</p>
               <p className="text-3xl font-bold text-white">{settlementData.allOrdersCount}</p>
@@ -367,16 +371,6 @@ function SettlementTab({ token }: { token: string | null }) {
               <p className="text-xs text-[#f59e0b] uppercase tracking-wider mb-2">待轉帳筆數</p>
               <p className="text-3xl font-bold text-white">{settlementData.pendingTransferCount}</p>
               <p className="text-xs text-[#666] mt-1">筆</p>
-            </div>
-            <div className="bg-gradient-to-br from-[#22c55e]/20 to-[#22c55e]/5 border border-[#22c55e]/20 rounded-2xl p-5 backdrop-blur-sm">
-              <p className="text-xs text-[#22c55e] uppercase tracking-wider mb-2">總營收</p>
-              <p className="text-3xl font-bold text-white">NT${settlementData.summary.totalRevenue.toLocaleString()}</p>
-              <p className="text-xs text-[#666] mt-1">元</p>
-            </div>
-            <div className="bg-gradient-to-br from-[#ef4444]/20 to-[#ef4444]/5 border border-[#ef4444]/20 rounded-2xl p-5 backdrop-blur-sm">
-              <p className="text-xs text-[#ef4444] uppercase tracking-wider mb-2">平台費 (5%)</p>
-              <p className="text-3xl font-bold text-white">-NT${settlementData.summary.totalPlatformFee.toLocaleString()}</p>
-              <p className="text-xs text-[#666] mt-1">元</p>
             </div>
           </div>
 
@@ -535,6 +529,22 @@ export default function DispatcherDashboard() {
   }>({})
   const [createLoading, setCreateLoading] = useState(false)
 
+  // Edit modal state
+  const [editingOrder, setEditingOrder] = useState<Order | null>(null)
+  const [editOrderForm, setEditOrderForm] = useState({
+    passengerName: '',
+    passengerPhone: '',
+    flightNumber: '',
+    pickupLocation: '',
+    dropoffLocation: '',
+    passengerCount: 1,
+    luggageCount: 0,
+    scheduledTime: '',
+    price: 0,
+    note: '',
+  })
+  const [editSaving, setEditSaving] = useState(false)
+
   // Redirect if not dispatcher
   useEffect(() => {
     if (!isLoading && (!user || user.role !== 'DISPATCHER')) {
@@ -578,6 +588,99 @@ export default function DispatcherDashboard() {
       fetchDrivers()
     }
   }, [token, fetchOrders, fetchDrivers])
+
+  const openEditModal = (order: Order) => {
+    const scheduled = order.scheduledTime ? parseISO(order.scheduledTime) : null
+    setEditingOrder(order)
+    setEditOrderForm({
+      passengerName: order.passengerName || '',
+      passengerPhone: order.passengerPhone || '',
+      flightNumber: order.flightNumber || '',
+      pickupLocation: order.pickupLocation || '',
+      dropoffLocation: order.dropoffLocation || '',
+      passengerCount: order.passengerCount || 1,
+      luggageCount: order.luggageCount || 0,
+      scheduledTime: scheduled ? format(scheduled, "yyyy-MM-dd'T'HH:mm") : '',
+      price: order.price || 0,
+      note: order.note || order.notes || '',
+    })
+  }
+
+  const closeEditModal = () => {
+    setEditingOrder(null)
+    setEditOrderForm({
+      passengerName: '',
+      passengerPhone: '',
+      flightNumber: '',
+      pickupLocation: '',
+      dropoffLocation: '',
+      passengerCount: 1,
+      luggageCount: 0,
+      scheduledTime: '',
+      price: 0,
+      note: '',
+    })
+  }
+
+  const handleSaveEdit = async () => {
+    if (!token || !editingOrder) return
+    setEditSaving(true)
+    try {
+      const res = await fetch(`/api/orders/${editingOrder.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          passengerName: editOrderForm.passengerName,
+          passengerPhone: editOrderForm.passengerPhone,
+          flightNumber: editOrderForm.flightNumber,
+          pickupLocation: editOrderForm.pickupLocation,
+          dropoffLocation: editOrderForm.dropoffLocation,
+          passengerCount: editOrderForm.passengerCount,
+          luggageCount: editOrderForm.luggageCount,
+          scheduledTime: editOrderForm.scheduledTime,
+          price: editOrderForm.price,
+          note: editOrderForm.note,
+        }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        closeEditModal()
+        fetchOrders()
+      } else {
+        alert(data.error || '更新失敗')
+      }
+    } catch {
+      alert('網路錯誤')
+    } finally {
+      setEditSaving(false)
+    }
+  }
+
+  const handleDeleteOrder = async (orderId: string) => {
+    if (!token) return
+    if (!confirm('確定要刪除這筆行程嗎？')) return
+    try {
+      const res = await fetch(`/api/orders/${orderId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ _action: 'delete' }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        fetchOrders()
+      } else {
+        alert(data.error || '刪除失敗')
+      }
+    } catch {
+      alert('網路錯誤')
+    }
+  }
 
   const handleParseBatch = () => {
     if (!rawText.trim()) return
@@ -862,8 +965,142 @@ export default function DispatcherDashboard() {
           <>
             {/* Orders Tab */}
             {activeTab === 'orders' && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                {orders.length === 0 ? (
+              <>
+                {/* Edit Modal */}
+                {editingOrder && (
+                  <dialog
+                    open
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
+                    onClick={(e) => { if (e.target === e.currentTarget) closeEditModal() }}
+                  >
+                    <div className="bg-[#1a1a1a] border border-white/10 rounded-2xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+                      <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 sticky top-0 bg-[#1a1a1a] z-10">
+                        <h3 className="text-lg font-semibold text-white">編輯行程 #{editingOrder.id.slice(0, 8)}</h3>
+                        <button onClick={closeEditModal} className="text-[#666] hover:text-white transition-colors">
+                          <X className="w-5 h-5" />
+                        </button>
+                      </div>
+                      <div className="p-6 space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-1">
+                            <label className="text-xs text-[#666]">乘客姓名</label>
+                            <input
+                              type="text"
+                              value={editOrderForm.passengerName}
+                              onChange={(e) => setEditOrderForm(prev => ({ ...prev, passengerName: e.target.value }))}
+                              className="w-full bg-[#0a0a0a] border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#ff8c42]/50"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-xs text-[#666]">乘客電話</label>
+                            <input
+                              type="text"
+                              value={editOrderForm.passengerPhone}
+                              onChange={(e) => setEditOrderForm(prev => ({ ...prev, passengerPhone: e.target.value }))}
+                              className="w-full bg-[#0a0a0a] border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#ff8c42]/50"
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-xs text-[#666]">航班</label>
+                          <input
+                            type="text"
+                            value={editOrderForm.flightNumber}
+                            onChange={(e) => setEditOrderForm(prev => ({ ...prev, flightNumber: e.target.value }))}
+                            className="w-full bg-[#0a0a0a] border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#ff8c42]/50"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-xs text-[#666]">上車地點</label>
+                          <input
+                            type="text"
+                            value={editOrderForm.pickupLocation}
+                            onChange={(e) => setEditOrderForm(prev => ({ ...prev, pickupLocation: e.target.value }))}
+                            className="w-full bg-[#0a0a0a] border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#ff8c42]/50"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-xs text-[#666]">下地點</label>
+                          <input
+                            type="text"
+                            value={editOrderForm.dropoffLocation}
+                            onChange={(e) => setEditOrderForm(prev => ({ ...prev, dropoffLocation: e.target.value }))}
+                            className="w-full bg-[#0a0a0a] border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#ff8c42]/50"
+                          />
+                        </div>
+                        <div className="grid grid-cols-3 gap-4">
+                          <div className="space-y-1">
+                            <label className="text-xs text-[#666]">乘客人數</label>
+                            <input
+                              type="number"
+                              min="1"
+                              value={editOrderForm.passengerCount}
+                              onChange={(e) => setEditOrderForm(prev => ({ ...prev, passengerCount: parseInt(e.target.value) || 1 }))}
+                              className="w-full bg-[#0a0a0a] border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#ff8c42]/50"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-xs text-[#666]">行李件數</label>
+                            <input
+                              type="number"
+                              min="0"
+                              value={editOrderForm.luggageCount}
+                              onChange={(e) => setEditOrderForm(prev => ({ ...prev, luggageCount: parseInt(e.target.value) || 0 }))}
+                              className="w-full bg-[#0a0a0a] border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#ff8c42]/50"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-xs text-[#666]">價格</label>
+                            <input
+                              type="number"
+                              min="0"
+                              value={editOrderForm.price}
+                              onChange={(e) => setEditOrderForm(prev => ({ ...prev, price: parseInt(e.target.value) || 0 }))}
+                              className="w-full bg-[#0a0a0a] border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#ff8c42]/50"
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-xs text-[#666]">預定時間</label>
+                          <input
+                            type="datetime-local"
+                            value={editOrderForm.scheduledTime}
+                            onChange={(e) => setEditOrderForm(prev => ({ ...prev, scheduledTime: e.target.value }))}
+                            className="w-full bg-[#0a0a0a] border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#ff8c42]/50"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-xs text-[#666]">備註</label>
+                          <input
+                            type="text"
+                            value={editOrderForm.note}
+                            onChange={(e) => setEditOrderForm(prev => ({ ...prev, note: e.target.value }))}
+                            className="w-full bg-[#0a0a0a] border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#ff8c42]/50"
+                          />
+                        </div>
+                        <div className="flex gap-3 pt-2">
+                          <Button
+                            onClick={handleSaveEdit}
+                            loading={editSaving}
+                            className="flex-1 bg-[#ff8c42] hover:bg-[#ff9d5c] text-black font-semibold"
+                          >
+                            儲存
+                          </Button>
+                          <Button
+                            variant="outline"
+                            onClick={closeEditModal}
+                            className="flex-1 border-white/20 text-[#666] hover:bg-white/10 hover:text-white"
+                          >
+                            取消
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </dialog>
+                )}
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                  {orders.length === 0 ? (
                   <div className="col-span-full text-center py-24 border border-white/10 rounded-3xl bg-white/5 backdrop-blur-sm">
                     <p className="text-[#a0a0a0] mb-2 text-lg">還沒有訂單</p>
                     <Button className="mt-4 bg-[#ff8c42] hover:bg-[#ff9d5c] text-black" onClick={() => setActiveTab('create')}>
@@ -873,23 +1110,47 @@ export default function DispatcherDashboard() {
                 ) : (
                   orders.map(order => {
                     const isKenichi = (order.notes || order.note || order.rawText || '').toLowerCase().includes('kenichi') || (order.notes || order.note || order.rawText || '').includes('肯驛')
+                    const typeColors: Record<string, string> = {
+                      pickup: 'text-[#22c55e]',
+                      dropoff: 'text-[#3b82f6]',
+                      transfer: 'text-[#a855f7]',
+                      charter: 'text-[#f59e0b]',
+                    }
+                    const typeLabels: Record<string, string> = {
+                      pickup: '接機',
+                      dropoff: '送機',
+                      transfer: '交通接駁',
+                      charter: '包車',
+                    }
 
                     return (
-                    <div key={order.id} className="bg-[#1a1a1a] border border-white/10 rounded-lg px-3 py-2.5 hover:border-white/20 transition-all">
-                      {/* Row 1: ID + Price + Type + Status + Kenichi */}
+                    <div key={order.id} className="bg-[#1a1a1a] border border-white/10 rounded-xl px-4 py-3 hover:border-white/20 transition-all">
+                      {/* Type title */}
+                      <div className="flex items-center justify-between mb-2">
+                        <span className={`text-lg font-bold ${typeColors[order.type] || 'text-[#888]'}`}>
+                          {typeLabels[order.type] || '待確認'}
+                        </span>
+                        <div className="flex gap-1">
+                          <button
+                            onClick={() => openEditModal(order)}
+                            className="p-1.5 rounded-lg text-[#666] hover:text-white hover:bg-white/10 transition-colors"
+                            title="編輯"
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteOrder(order.id)}
+                            className="p-1.5 rounded-lg text-[#666] hover:text-[#ef4444] hover:bg-[#ef4444]/10 transition-colors"
+                            title="刪除"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                      {/* Row 1: ID + Price + Type badge + Status + Kenichi */}
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-xs text-[#666] font-mono">#{order.id.slice(0, 8)}</span>
                         <span className="text-base font-bold" style={{ color: '#ff8c42' }}>NT${order.price.toLocaleString()}</span>
-                        {/* Type badge */}
-                        <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${
-                          order.type === 'pickup' ? 'bg-[#22c55e]/20 text-[#22c55e] border border-[#22c55e]/30'
-                          : order.type === 'dropoff' ? 'bg-[#3b82f6]/20 text-[#3b82f6] border border-[#3b82f6]/30'
-                          : order.type === 'transfer' ? 'bg-[#a855f7]/20 text-[#a855f7] border border-[#a855f7]/30'
-                          : order.type === 'charter' ? 'bg-[#f59e0b]/20 text-[#f59e0b] border border-[#f59e0b]/30'
-                          : 'bg-white/10 text-[#888] border border-white/20'
-                        }`}>
-                          {order.type === 'pickup' ? '接機' : order.type === 'dropoff' ? '送機' : order.type === 'transfer' ? '交通接駁' : order.type === 'charter' ? '包車' : '待確認'}
-                        </span>
                         {/* Status badge */}
                         <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${
                           ['PENDING', 'PUBLISHED'].includes(order.status) ? 'bg-[#ff8c42]/20 text-[#ff8c42] border border-[#ff8c42]/30'
@@ -908,27 +1169,30 @@ export default function DispatcherDashboard() {
                         )}
                       </div>
                       {/* Row 2: Pickup → Dropoff */}
-                      <div className="flex items-center gap-2 mt-1 text-xs text-[#a0a0a0]">
+                      <div className="flex items-center gap-2 mt-2 text-xs text-[#a0a0a0]">
+                        <MapPin className="w-3 h-3 text-[#22c55e] flex-shrink-0" />
                         <span className="truncate flex-1">{order.pickupLocation}</span>
                         <span className="text-[#666] flex-shrink-0">→</span>
                         <span className="truncate flex-1 text-right">{order.dropoffLocation}</span>
-                        <span className="text-[#444] font-mono flex-shrink-0">
+                      </div>
+                      {/* Row 3: Time + Driver */}
+                      <div className="flex items-center justify-between mt-1 text-xs text-[#a0a0a0]">
+                        <span className="text-[#444] font-mono">
                           {order.scheduledTime ? format(parseISO(order.scheduledTime), 'MM/dd HH:mm', { locale: zhTW }) : '-'}
                         </span>
-                      </div>
-                      {/* Row 3: Driver */}
-                      <div className="flex items-center gap-2 mt-1 text-xs text-[#a0a0a0]">
-                        <span className="text-[#666]">承接：</span>
-                        {order.driver ? (
-                          <span className="truncate">{order.driver.user.name} ({order.driver.licensePlate})</span>
-                        ) : (
-                          <span className="text-[#444]">待指派</span>
-                        )}
+                        <span>
+                          {order.driver ? (
+                            <span className="truncate">{order.driver.user.name} ({order.driver.licensePlate})</span>
+                          ) : (
+                            <span className="text-[#444]">待指派</span>
+                          )}
+                        </span>
                       </div>
                     </div>
                   )})
                 )}
               </div>
+              </>
             )}
 
             {/* Batch Create Tab */}
