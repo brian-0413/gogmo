@@ -216,15 +216,8 @@ export function parseBatchOrders(
     let px = price
     if (px === null && inheritedDefaults.price) px = inheritedDefaults.price
 
-    // ========== 組合 notes（只移除時間和金額，其餘全部保留） ==========
-    let notes = line
-    if (time) {
-      notes = notes.replace(/^[*#]*\d{4}/, '').trim()
-    }
-    if (price !== null) {
-      notes = notes.replace(/[$💲]\d+/, '').replace(/\d{3,}$/, '').trim()
-    }
-    notes = notes.replace(/[\[\]【】]/g, '').trim() // 只移除書名號，其他全保留
+    // ========== notes = 原始行完整複製 ==========
+    const notes = line // 只移除書名號，其他全保留
 
     // ========== 設定接送地點 ==========
     let pickupLocation: string | undefined
