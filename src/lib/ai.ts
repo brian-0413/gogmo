@@ -70,8 +70,8 @@ function extractTime(line: string): string | null {
     }
   }
 
-  // HHMM 格式（行首）
-  const hmmMatch = line.match(/^(\d{4})/)
+  // HHMM 格式（行首，可能有 * 等前綴）
+  const hmmMatch = line.match(/^[*#]*(\d{4})/)
   if (hmmMatch) {
     const h = parseInt(hmmMatch[1].substring(0, 2))
     const m = parseInt(hmmMatch[1].substring(2, 4))
@@ -122,10 +122,12 @@ function extractVehicle(line: string): { vehicle: VehicleType; plateType: PlateT
 
 // ============ 種類解析 ============
 // 規則（有明確優先順序）：
+// 種類判斷（有優先順序）：
 // 1. 有「接」→ 接機（pickup）
 // 2. 有「送」→ 送機（dropoff）
-// 3. 「○機到X」→ 接機（機場在前、地點在後）
-// 4. 「X到○機」→ 送機（地點在前、機場在後）
+// 3. 「○機-地點」→ 送機（例：桃機-中正）
+// 4. 「○機到X」→ 接機（例：桃機到台中南屯）
+// 5. 「X到○機」→ 送機（例：台中南屯到桃機）
 function extractType(line: string): OrderType {
   // 「接」→ 接機
   if (line.includes('接')) {
@@ -138,17 +140,21 @@ function extractType(line: string): OrderType {
     return 'dropoff'
   }
 
+  // 「○機-地點」→ 送機（例：桃機-中正）
+  if (findAirport(line) && line.includes('-')) {
+    const airport = findAirport(line)!
+    const dashIdx = line.indexOf('-')
+    if (dashIdx > airport.keyword.length) return 'dropoff'
+  }
+
   // 「○機到X」（機場在前、地點在後）→ 接機
-  // 例如「桃機到台中南屯」
   const airportBefore = findAirport(line.split('到')[0] || '')
   if (airportBefore && line.includes('到')) {
     return 'pickup'
   }
 
   // 「X到○機」（地點在前、機場在後）→ 送機
-  // 例如「台中南屯到桃機」
-  const airportAfter = findAirport(line)
-  if (airportAfter && line.includes('到')) {
+  if (findAirport(line) && line.includes('到')) {
     return 'dropoff'
   }
 
@@ -171,14 +177,15 @@ export function parseBatchOrders(
   const lines = text.split(/\n/).map(l => l.trim()).filter(Boolean)
   const results: ParsedOrder[] = []
 
-  // 標題行繼承：累積的預設值（可被後續標題行覆蓋）
+  // 標題行繼承
   let inheritedDefaults = { ...defaults }
 
   for (const line of lines) {
     // ========== 標題行偵測 ==========
+    // 沒有時間、沒有接送動作關鍵字、但有車型或 📌 標記
     const hasTime = /^\d{4}/.test(line) || /\d{1,2}:\d{2}/.test(line)
-    const hasActionKeyword = /[接送]/.test(line) || line.includes('到')
-    const hasVehicleKeyword = /[休旅]|大車|小車|任意|9座/i.test(line)
+    const hasActionKeyword = /[接送]/.test(line) || line.includes('到') || line.includes('-')
+    const hasVehicleKeyword = /[休旅]|大車|小車|任意|9座|📌/.test(line)
 
     if (!hasTime && !hasActionKeyword && hasVehicleKeyword) {
       const { vehicle, plateType } = extractVehicle(line)
@@ -209,76 +216,63 @@ export function parseBatchOrders(
     let px = price
     if (px === null && inheritedDefaults.price) px = inheritedDefaults.price
 
-    // ========== 組合 notes（只移除時間和金額） ==========
+    // ========== 組合 notes（只移除時間和金額，其餘全部保留） ==========
     let notes = line
     if (time) {
-      notes = notes.replace(/^\d{4}/, '').trim()
+      notes = notes.replace(/^[*#]*\d{4}/, '').trim()
     }
     if (price !== null) {
       notes = notes.replace(/[$💲]\d+/, '').replace(/\d{3,}$/, '').trim()
     }
-    notes = notes.replace(/[\[\]【】()（）]/g, '').trim()
+    notes = notes.replace(/[\[\]【】]/g, '').trim() // 只移除書名號，其他全保留
 
     // ========== 設定接送地點 ==========
-    // 接機：起點=○機（外層決定），終點=訊息中的地點
-    // 送機：起點=訊息中的地點，終點=○機（外層決定）
     let pickupLocation: string | undefined
     let dropoffLocation: string | undefined
-
-    // 先從訊息找明確的機場關鍵字（作為參考）
     const airportInLine = findAirport(line)
 
     if (type === 'pickup') {
-      // 接機：終點從訊息提取（「接」後面的內容）
+      // 接機：起點=○機，終點=訊息地點
       pickupLocation = airportInLine?.airport || '桃園國際機場'
       if (line.includes('接')) {
         const parts = line.split('接')
         const after = parts.slice(1).join('接').trim()
-        dropoffLocation = after.replace(/^\d{4}/, '').replace(/[$💲]\d+/, '').replace(/\d{3,}$/, '').replace(/[\[\]【】()（）]/g, '').trim() || undefined
+          .replace(/^\d{4}/, '').replace(/[$💲]\d+/, '').replace(/\d{3,}$/, '').replace(/[\[\]【】()（）]/g, '').replace(/\s+/g, ' ').trim()
+        dropoffLocation = after || undefined
       }
     } else if (type === 'dropoff') {
-      // 送機：起點從訊息提取（「送」前面的內容）
-      dropoffLocation = airportInLine?.airport || '桃園國際機場'
-      if (line.includes('送')) {
+      // 送機：終點=訊息地點，起點=○機
+      // 「○機-地點」格式（例：桃機-中正 (L)）
+      if (airportInLine && line.includes('-')) {
+        const dashIdx = line.indexOf('-')
+        const after = line.substring(dashIdx + 1)
+          .replace(/^\d{4}/, '').replace(/[$💲]\d+/, '').replace(/\d{3,}$/, '').replace(/[\[\]【】]/g, '').replace(/\([LK]\)/, '').replace(/\s+/g, ' ').trim()
+        dropoffLocation = after || undefined
+        pickupLocation = airportInLine.airport
+      }
+      // 「送」格式
+      else if (line.includes('送')) {
         const sendIdx = line.indexOf('送')
         const before = line.substring(0, sendIdx).trim()
-          .replace(/^\d{4}/, '')
-          .replace(/[$💲]\d+/, '')
-          .replace(/\d{3,}$/, '')
-          .replace(/[\[\]【】()（）]/g, '')
-          .trim()
+          .replace(/^\d{4}/, '').replace(/[$💲]\d+/, '').replace(/\d{3,}$/, '').replace(/[\[\]【】]/g, '').trim()
+        dropoffLocation = airportInLine?.airport || '桃園國際機場'
         pickupLocation = before || undefined
       }
       // 「X到○機」格式
-      if (line.includes('到') && airportInLine) {
+      else if (line.includes('到') && airportInLine) {
         const parts = line.split('到')
         const before = parts[0].trim()
-          .replace(/^\d{4}/, '')
-          .replace(/[$💲]\d+/, '')
-          .replace(/\d{3,}$/, '')
-          .replace(/[\[\]【】()（）]/g, '')
-          .trim()
+          .replace(/^\d{4}/, '').replace(/[$💲]\d+/, '').replace(/\d{3,}$/, '').replace(/[\[\]【】]/g, '').trim()
         if (before) pickupLocation = before
         dropoffLocation = airportInLine.airport
       }
     } else if (type === 'transfer') {
-      // 交通接駁：上-為起點，下-為終點
+      // 交通接駁
       const upMatch = line.match(/上[_-](.+)/)
       const downMatch = line.match(/下[_-](.+)/)
       if (upMatch) pickupLocation = upMatch[1].trim()
       if (downMatch) dropoffLocation = downMatch[1].trim()
     }
-
-    // ========== 清理 notes ==========
-    // 移除行首接送關鍵字
-    notes = notes.replace(/^[接送]/g, '').trim()
-    // 移除行尾「送」關鍵字（例：「三重送」→ 只留「三重」）
-    notes = notes.replace(/[送]$/, '').trim()
-    // 移除「到」關鍵字
-    notes = notes.replace(/到/g, ' ')
-    // 移除「○機」機場關鍵字
-    notes = notes.replace(/桃機|桃園|松機|TSA|小港|KHH|清泉崗|RMQ|機場/g, '')
-    notes = notes.replace(/\s+/g, ' ').trim()
 
     // ========== 產出結果 ==========
     if (time) {
