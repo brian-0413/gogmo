@@ -239,9 +239,47 @@ export function parseBatchOrders(
     }
 
     // 推斷接送種類並設定地點
-    if (parsed.type === 'pickup' || line.includes('桃機接') || line.includes('接機')) {
-      // 接機：從桃園機場到某地
-      // "桃機接X" 或 "接機X" → X 是終點
+    // 格式：X送桃機 → 送機，起點=X，終點=桃園機場
+    // 格式：X送機 → 送機，起點=X，終點=桃園機場
+    // 格式：X送(非桃機關鍵字) → 送機，起點=X
+    // 格式：桃機到X → 接送，起點=桃園機場，終點=X
+    // 格式：X到Y → 接送，起點=X，終點=Y（若含非桃園機場關鍵字）
+
+    // 處理「X送桃機」或「X送機」（送機）
+    if (line.includes('送桃機') || line.includes('送機')) {
+      const location = parsed.notes
+        .replace(/(送機|送桃機)$/, '')  // 移除結尾的送機/送桃機
+        .replace(/\/.*$/, '')           // 移除 / 後面的車型標記
+        .trim()
+      if (location) parsed.pickupLocation = location
+      else if (parsed.notes) parsed.pickupLocation = parsed.notes
+      parsed.dropoffLocation = '桃園機場'
+      if (parsed.type === 'pending') parsed.type = 'dropoff'
+    }
+    // 處理「桃機到X」（接送）
+    else if (line.includes('桃機到')) {
+      const location = parsed.notes
+        .replace(/^(桃機到|桃機 到)/, '')  // 移除開頭的桃機到
+        .replace(/\/.*$/, '')              // 移除 / 後面的車型標記
+        .trim()
+      if (location) parsed.dropoffLocation = location
+      else if (parsed.notes) parsed.dropoffLocation = parsed.notes
+      parsed.pickupLocation = '桃園機場'
+      if (parsed.type === 'pending') parsed.type = 'pickup'
+    }
+    // 處理「X到Y」但不含接送關鍵字
+    else if (line.includes('到') && !line.includes('送') && !line.includes('接')) {
+      const parts = line.split('到')
+      if (parts.length >= 2) {
+        const beforeTo = parts[0].replace(/\/.*$/, '').trim() // 移除 / 後面的車型標記
+        const afterTo = parts.slice(1).join('到').replace(/\/.*$/, '').trim()
+        if (beforeTo) parsed.pickupLocation = beforeTo
+        if (afterTo) parsed.dropoffLocation = afterTo
+        if (parsed.type === 'pending') parsed.type = 'dropoff'
+      }
+    }
+    // 處理「接機X」或「桃機接X」（接機）
+    else if (line.includes('接機') || line.includes('桃機接')) {
       const location = parsed.notes
         .replace(/^(接機|桃機接)/, '')   // 移除開頭的接機/桃機接標記
         .replace(/\/.*$/, '')            // 移除 / 後面的車型標記
@@ -250,22 +288,11 @@ export function parseBatchOrders(
       else if (parsed.notes) parsed.dropoffLocation = parsed.notes
       parsed.pickupLocation = '桃園機場'
       if (parsed.type === 'pending') parsed.type = 'pickup'
-    } else if (parsed.type === 'dropoff' || line.includes('送桃機') || line.includes('送機')) {
-      // 送機：從某地到桃園機場
-      // "X送桃機" 或 "X送機" → X 是起點，桃園機場是終點
-      const location = parsed.notes
-        .replace(/(送機|送桃機)$/, '')  // 移除結尾的送機/送桃機標記
-        .replace(/\/.*$/, '')            // 移除 / 後面的車型標記
-        .trim()
-      if (location) parsed.pickupLocation = location
-      else if (parsed.notes) parsed.pickupLocation = parsed.notes
-      parsed.dropoffLocation = '桃園機場'
-      if (parsed.type === 'pending') parsed.type = 'dropoff'
     }
 
     // 清理 notes 中的接送種類標記
     parsed.notes = parsed.notes
-      .replace(/^(接機|送機|桃機接|送桃機|接駁|包車)/, '')
+      .replace(/^(接機|送機|桃機接|送桃機|桃機到|桃機 到|接駁|包車)/, '')
       .replace(/\/.*$/, '') // 移除 / 後面的車型標記（已單獨解析）
       .replace(/^(任意|不限)/, '')
       .replace(/任意R|任R|任意.*車|不限.*車/g, '')
