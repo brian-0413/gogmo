@@ -100,6 +100,21 @@ for (let i = 0; i <= 14; i++) {
   DATE_OPTIONS.push({ value: dateStr, label: dayLabel })
 }
 
+// 將 UI 顯示字串轉為 API vehicle enum
+function vehicleDisplayToEnum(v?: string): string {
+  if (!v) return 'any'
+  const map: Record<string, string> = {
+    '任意車': 'any',
+    '小車': 'small',
+    '休旅': 'suv',
+    '7人座': 'van9',
+    '9人座': 'van9',
+    'VITO': 'van9',
+    'GRANVIA': 'suv',
+  }
+  return map[v] || 'any'
+}
+
 // Price options
 const PRICE_OPTIONS = [
   { value: 0, label: '選擇價格...' },
@@ -805,7 +820,7 @@ export default function DispatcherDashboard() {
             scheduledTime: scheduledDateTime,
             price: item.editedPrice ?? item.price ?? 800,
             type: item.editedType || item.type || 'pending',
-            vehicle: item.editedVehicle === '自填' ? (item.editedVehicleCustom || 'any') : (item.editedVehicle || (defaults.vehicle === '自填' ? defaults.vehicleCustom : defaults.vehicle) || 'any'),
+            vehicle: vehicleDisplayToEnum(item.editedVehicle === '自填' ? item.editedVehicleCustom : item.editedVehicle || (defaults.vehicle === '自填' ? defaults.vehicleCustom : defaults.vehicle)),
             plateType: item.editedPlateType || item.plateType || 'any',
             notes: item.editedNotes || item.notes || '',
             note: '',
