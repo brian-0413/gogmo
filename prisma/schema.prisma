@@ -130,7 +130,7 @@ model Order {
   passengerPhone  String
 
   // 航班資訊
-  flightNumber    String
+  flightNumber    String    @default("")
 
   // 上車地點
   pickupLocation  String      // 地點名（如：桃園機場第一航廈）

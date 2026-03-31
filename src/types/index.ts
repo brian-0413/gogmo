@@ -132,6 +132,7 @@ export interface CreateOrderRequest {
   notes?: string
   note?: string
   rawText?: string
+  kenichiRequired?: boolean
 }
 
 export interface ParseOrderRequest {

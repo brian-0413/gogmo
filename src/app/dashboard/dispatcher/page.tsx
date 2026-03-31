@@ -540,7 +540,7 @@ export default function DispatcherDashboard() {
     editedVehicleCustom?: string
   }>({})
   const [createLoading, setCreateLoading] = useState(false)
-  const [publishResult, setPublishResult] = useState<{ success: number; failed: number } | null>(null)
+  const [publishResult, setPublishResult] = useState<{ success: number; failed: number; errors: Array<{ rawText: string; error: string }> } | null>(null)
 
   // Edit modal state
   const [editingOrder, setEditingOrder] = useState<Order | null>(null)
@@ -779,6 +779,15 @@ export default function DispatcherDashboard() {
   const handlePublishOrders = async () => {
     if (!token || reviewItems.length === 0) return
 
+    // Validate: all items must have time
+    const missingTime = reviewItems.filter(item => !(item.editedTime || item.time))
+    if (missingTime.length > 0) {
+      alert(`以下 ${missingTime.length} 筆訂單缺少時間，請先編輯填入時間：\n\n${
+        missingTime.map((item, i) => `${i + 1}. ${item.rawText || '(未填)'}`).join('\n')
+      }`)
+      return
+    }
+
     setCreateLoading(true)
 
     try {
@@ -799,8 +808,12 @@ export default function DispatcherDashboard() {
       // Create orders one by one
       let successCount = 0
       let failedCount = 0
+      const errors: Array<{ rawText: string; error: string }> = []
       for (const item of reviewItems) {
-        const scheduledDateTime = `${orderDate}T${item.editedTime || item.time}:00`
+        const rawTime = item.editedTime || item.time
+        const scheduledDateTime = rawTime === '落地'
+          ? `${orderDate}T23:59:00`
+          : `${orderDate}T${rawTime}:00`
 
         const res = await fetch('/api/orders', {
           method: 'POST',
@@ -827,7 +840,6 @@ export default function DispatcherDashboard() {
                 '7人座': 'van9', '9人座': 'van9', 'VITO': 'van9', 'GRANVIA': 'suv',
               }
               const converted = raw ? (map[raw] || 'any') : 'any'
-              console.log('[publish] vehicle raw:', raw, '→', converted)
               return converted
             })(),
             plateType: item.editedPlateType || item.plateType || 'any',
@@ -842,16 +854,20 @@ export default function DispatcherDashboard() {
           successCount++
         } else {
           failedCount++
+          errors.push({
+            rawText: (item.rawText || '').substring(0, 30),
+            error: data.error || '未知錯誤',
+          })
         }
       }
 
       setRawText('')
       setReviewItems([])
-      setPublishResult({ success: successCount, failed: failedCount })
+      setPublishResult({ success: successCount, failed: failedCount, errors })
       fetchOrders()
     } catch (error) {
       console.error('Failed to create orders:', error)
-      setPublishResult({ success: 0, failed: reviewItems.length })
+      setPublishResult({ success: 0, failed: reviewItems.length, errors: [] })
     } finally {
       setCreateLoading(false)
     }
@@ -1597,7 +1613,7 @@ export default function DispatcherDashboard() {
           open
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
         >
-          <div className="bg-[#1a1a1a] border border-white/10 rounded-2xl w-full max-w-sm mx-4 text-center p-8">
+          <div className="bg-[#1a1a1a] border border-white/10 rounded-2xl w-full max-w-lg mx-4 text-center p-8 max-h-[80vh] overflow-y-auto">
             <div className={`w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center ${
               publishResult.failed === 0
                 ? 'bg-[#22c55e]/20'
@@ -1618,11 +1634,29 @@ export default function DispatcherDashboard() {
                 ? `成功發布 ${publishResult.success} 筆訂單`
                 : `發布完成：${publishResult.success} 成功、${publishResult.failed} 失敗`}
             </h3>
-            <p className="text-sm text-[#666] mb-6">
+            <p className="text-sm text-[#666] mb-4">
               {publishResult.failed === 0
                 ? '司機已可在接單牆看到這些行程'
-                : '部分訂單發布失敗，請稍後重試'}
+                : '請查看以下失敗原因，修正後重新發布'}
             </p>
+
+            {/* Error details */}
+            {publishResult.failed > 0 && publishResult.errors.length > 0 && (
+              <div className="bg-[#0a0a0a] border border-[#ef4444]/20 rounded-xl p-4 mb-6 text-left">
+                <p className="text-xs text-[#ef4444] font-medium uppercase tracking-wider mb-2">失敗原因</p>
+                <div className="space-y-2 max-h-48 overflow-y-auto">
+                  {publishResult.errors.map((err, i) => (
+                    <div key={i} className="text-sm">
+                      <span className="text-[#666] font-mono text-xs">{err.rawText}</span>
+                      <p className="text-[#f59e0b] text-xs mt-0.5">
+                        <span className="text-[#ef4444] mr-1">✕</span>{err.error}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="flex gap-3">
               <Button
                 onClick={() => setPublishResult(null)}
