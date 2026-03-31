@@ -45,8 +45,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json<ApiResponse>({
       success: true,
       data: {
-        orders: result.orders,
-        count: result.orders.length,
+        orders: result.orders || [],
+        count: (result.orders || []).length,
         rawResponse: result.rawResponse,
       },
     })

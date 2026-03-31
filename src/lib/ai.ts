@@ -24,6 +24,7 @@ export interface ParsedOrder {
   status: ParseStatus         // ok=正常, incomplete=待補正, rejected=拒絕
   reason?: string             // 當 rejected 或 incomplete 時的原因
   isPaired?: boolean          // 是否為套裝行程
+  kenichiRequired?: boolean   // 是否為肯驛單
 }
 
 export interface BatchOrderDefaults {
@@ -304,6 +305,7 @@ const SYSTEM_PROMPT = `你是台灣機場接送平台的訂單解析專家。負
   "date": "日期（YYYY-MM-DD 格式，使用預設日期）",
   "time": "時間 HH:MM，落地則填 \"落地\"",
   "type": "pickup | dropoff | transfer | charter | pending",
+  "vehicle": "small | suv | van9 | any | pending（只能填這五個值之一，中文車型名稱不可填入此欄）",
   "price": 數字或null",
   "pickupLocation": "起點（如為桃園則填 \"桃園國際機場\"）",
   "dropoffLocation": "終點",
@@ -311,15 +313,19 @@ const SYSTEM_PROMPT = `你是台灣機場接送平台的訂單解析專家。負
   "status": "ok | incomplete | rejected",
   "reason": "當 rejected 或 incomplete 時的原因",
   "isPaired": 是否為套裝行程
+  "kenichiRequired": true if "肯驛" or "kenichi" 關鍵字存在於原始文字中
 }
 
 ## 種類判斷
 - 有「接」（含「接機」「接機台北」等）→ pickup（接機）
 - 有「送」（含「送機」「士林送」等）→ dropoff（送機）
-- ○機-一般地點（如「桃機-北投」「桃機-中正」「桃機-萬華」）→ pickup（接機，起點=該機場，終點=訊息中的地點）
-- ○機-另一個機場（如「桃機-松山」「桃機-小港」「桃機-清泉」）→ dropoff（送機，起點=桃園國際機場，終點=另一個機場）
+- ○機-一般地點或區域（如「桃機-北投」「桃機-中正」「桃機-萬華」「桃機-松山」「桃機-大安」）→ pickup（接機，起點=該機場，終點=訊息中的地點或區域）
+- ○機-另一個機場（如「桃機-小港」「桃機-清泉」）→ dropoff（送機，起點=桃園國際機場，終點=另一個機場）
 - 地點-○機（如「中正-桃機」「士林-桃機」「三重-桃機」）→ dropoff（送機，起點=訊息中的地點，終點=桃園國際機場）
+- 【接送船】「基隆港→地點」（含「基隆港-」）→ pickup（接送船，起點=基隆港，終點=訊息中的地點）
 - 含「基隆港」且有接送 → 接送船（比照接送機處理，起點=基隆港，終點=訊息中的地點）
+
+【重要】送機時，松山/小港/清泉 = 對應的機場；接機時，松山/小港/清泉 = 對應的市區（松山區/小港區/清水區）。
 
 ## 地點填充
 - 接機：起點=○機，終點=訊息中的地點
@@ -356,11 +362,38 @@ const SYSTEM_PROMPT = `你是台灣機場接送平台的訂單解析專家。負
 - *數字 → 乘客人數，放 notes
 - 「增高」「安椅」「安*1」等 → 附加服務，放 notes
 
-## 備註
-- notes = 原始行完整複製
-- 車型、L、K、V車、限V 等 → 不解析，全部放 notes
+## 車型解析（重要！）
+LINE 群組訊息中，車型由兩層資訊決定：
+1. 【區塊標題】📌 後面的關鍵字代表該區塊所有訂單的預設車型：
+   - 「小車」或「轎車」→ 預設車型：small
+   - 「休旅」→ 預設車型：suv
+   - 「大車」→ 預設車型：van9
+   - 「V車」或「vito」→ 預設車型：van9（Vito = 9人座商務車）
+   - 「g車」或「granvia」→ 預設車型：suv（Granvia 可用一般休旅車）
+   - 「9座」或「9人座」→ 預設車型：van9
+   - 「特斯拉」或「進口小」→ 預設車型：small
 
-## 日期
+2. 【訂單行的車型標記】（行尾括號內的字母）優先於區塊預設車型，括號內的字母代表的是車款（不是車牌）：
+   - (L) → small（L=轎車=小車，最高優先權）
+   - (K) → small（K=轎車=小車）
+   - (R) → small（R=轎車=小車，R牌租賃車）
+   - (V) → van9（Vito = Mercedes 9人座商務車）
+   - (g) → suv（Granvia = Toyota 休旅車）
+   - 無括號 → 使用區塊預設車型
+
+【重要】vehicle 欄位只能填以下五個值之一：small | suv | van9 | any | pending，不可填中文！
+
+3. 【重要】同一區塊內的所有訂單都繼承該區塊的預設車型，除非訂單行另有標示。
+
+## 備註
+- notes = 原始行完整複製（保留原始括號如 (K)(L)(R)(V)(g)，不做轉換）
+- 區塊標題行（如「📌小車」「📌大車」「📌V車」「📌休旅」「📌小車一套」）不放 notes，忽略
+
+## 肯驛系統
+- 若原始文字含有「肯驛」或「kenichi」關鍵字 → kenichiRequired=true
+- 行程卡片上以紫色 badge 標示「肯驛」
+
+## 只解析有價格的訂單，忽略標題行（如「📌小車」「📌休旅」「📌大車」「📌V車」「📌小車一套」「📌大車+V車一套」等）
 使用以下預設日期：{DEFAULT_DATE}
 只解析屬於今天（{DEFAULT_DATE}）的訂單，若訊息標示其他日期則跳過。`.replace('{DEFAULT_DATE}', new Date().toISOString().split('T')[0])
 
@@ -455,7 +488,7 @@ ${text}
   }
 
   // Validate and normalize each order
-  const validatedOrders: ParsedOrder[] = orders.map((o: any) => ({
+  const validatedOrders: ParsedOrder[] = (orders || []).map((o: any) => ({
     date: o.date || defaultDate,
     time: o.time || null,
     type: (o.type || 'pending') as any,
@@ -469,6 +502,7 @@ ${text}
     status: (o.status || 'ok') as any,
     reason: o.reason,
     isPaired: o.isPaired || false,
+    kenichiRequired: o.kenichiRequired || false,
   }))
 
   return { orders: validatedOrders, rawResponse }

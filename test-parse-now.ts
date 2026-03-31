@@ -24,11 +24,13 @@ const text = `4/1
 
 async function main() {
   const result = await parseBatchOrdersLLM(text, { date: '2026-04-01' })
-  console.log('解析結果（共' + result.orders.length + '筆）：\n')
+  console.log('rawResponse:\n', result.rawResponse.substring(0, 3000))
+  console.log('\n解析結果（共' + result.orders.length + '筆）：\n')
   result.orders.forEach((o: any, i: number) => {
     const icon = o.status === 'ok' ? 'V' : o.status === 'incomplete' ? '?' : 'X'
-    console.log(`${icon}. [${o.status}] ${o.time} | ${o.type} | ${o.pickupLocation} -> ${o.dropoffLocation} | $${o.price}`)
+    console.log(`${icon}. [${o.status}] ${o.time} | ${o.type} | vehicle:${o.vehicle} | ${o.pickupLocation} -> ${o.dropoffLocation} | $${o.price}`)
     console.log(`   notes: ${o.notes}`)
+    if (o.kenichiRequired) console.log(`   肯驛: YES`)
     if (o.reason) console.log(`   原因: ${o.reason}`)
     console.log()
   })

@@ -149,12 +149,20 @@ export function DispatcherOrderCard({ order, onEdit, onDelete }: DispatcherOrder
         <span className="text-lg font-bold" style={{ color: '#ff8c42' }}>
           NT${order.price.toLocaleString()}
         </span>
-        {/* 車型 badge */}
-        {order.vehicle && order.vehicle !== 'pending' && (
-          <span className="px-2 py-0.5 rounded text-xs font-medium bg-white/10 text-[#a0a0a0] border border-white/10">
-            {order.vehicle === 'small' ? '小車' : order.vehicle === 'suv' ? '休旅' : order.vehicle === 'van9' ? '9人座' : order.vehicle}
-          </span>
-        )}
+        <div className="flex gap-1.5">
+          {/* 肯驛 badge */}
+          {order.kenichiRequired && (
+            <span className="px-2 py-0.5 rounded text-xs font-medium bg-[#a855f7]/20 text-[#a855f7] border border-[#a855f7]/30">
+              肯驛
+            </span>
+          )}
+          {/* 車型 badge */}
+          {order.vehicle && order.vehicle !== 'pending' && (
+            <span className="px-2 py-0.5 rounded text-xs font-medium bg-white/10 text-[#a0a0a0] border border-white/10">
+              {order.vehicle === 'small' ? '小車' : order.vehicle === 'suv' ? '休旅' : order.vehicle === 'van9' ? '9人座' : order.vehicle}
+            </span>
+          )}
+        </div>
       </div>
     </div>
   )

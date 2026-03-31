@@ -57,6 +57,7 @@ interface Order {
   note?: string
   notes?: string
   rawText?: string
+  kenichiRequired?: boolean
   driver?: { user: { name: string }; licensePlate: string; carType: string; carColor: string } | null
   createdAt: string
 }
@@ -700,7 +701,7 @@ export default function DispatcherDashboard() {
         alert(data.error || '解析失敗')
         return
       }
-      const parsed = data.data.orders
+      const parsed = data.data?.orders || []
 
       // Convert to review items with unique IDs
       const items: ReviewItem[] = parsed.map((p: any) => ({
@@ -801,6 +802,7 @@ export default function DispatcherDashboard() {
             notes: item.editedNotes || item.notes || '',
             note: '',
             rawText: item.rawText || '',
+            kenichiRequired: item.kenichiRequired || false,
           }),
         })
         const data = await res.json()
