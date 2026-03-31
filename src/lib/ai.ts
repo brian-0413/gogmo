@@ -241,14 +241,22 @@ export function parseBatchOrders(
     // 推斷接送種類並設定地點
     if (parsed.type === 'pickup' || line.includes('桃機接') || line.includes('接機')) {
       // 接機：從桃園機場到某地
-      const location = parsed.notes.replace(/^(接機|桃機接)/, '').replace(/\/.*$/, '').trim()
+      // "桃機接X" 或 "接機X" → X 是終點
+      const location = parsed.notes
+        .replace(/^(接機|桃機接)/, '')   // 移除開頭的接機/桃機接標記
+        .replace(/\/.*$/, '')            // 移除 / 後面的車型標記
+        .trim()
       if (location) parsed.dropoffLocation = location
       else if (parsed.notes) parsed.dropoffLocation = parsed.notes
       parsed.pickupLocation = '桃園機場'
       if (parsed.type === 'pending') parsed.type = 'pickup'
     } else if (parsed.type === 'dropoff' || line.includes('送桃機') || line.includes('送機')) {
       // 送機：從某地到桃園機場
-      const location = parsed.notes.replace(/^(送機|送桃機)/, '').replace(/\/.*$/, '').trim()
+      // "X送桃機" 或 "X送機" → X 是起點，桃園機場是終點
+      const location = parsed.notes
+        .replace(/(送機|送桃機)$/, '')  // 移除結尾的送機/送桃機標記
+        .replace(/\/.*$/, '')            // 移除 / 後面的車型標記
+        .trim()
       if (location) parsed.pickupLocation = location
       else if (parsed.notes) parsed.pickupLocation = parsed.notes
       parsed.dropoffLocation = '桃園機場'

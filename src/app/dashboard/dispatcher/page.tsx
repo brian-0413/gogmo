@@ -1153,26 +1153,12 @@ export default function DispatcherDashboard() {
                     const scheduledTimeStr = (() => {
                       if (!order.scheduledTime) return '-'
                       const d = parseISO(order.scheduledTime)
-                      return `${format(d, 'MM/dd')}${format(d, 'HH:mm')}`
-                    })()
-
-                    // 去除 dropoffLocation 中的重複機場關鍵字
-                    const airportShorts = ['桃機', 'TPE', 'TSA', 'KHH', 'RMQ', '松山', '小港', '清泉']
-                    const cleanDropoff = (() => {
-                      const d = order.dropoffLocation || ''
-                      let result = d
-                      for (const short of airportShorts) {
-                        // 如果同時包含簡寫和完整名，移除簡寫
-                        if (d.includes(short) && d.includes('桃園機場')) {
-                          result = result.replace(short, '').trim()
-                        }
-                      }
-                      return result || d
+                      return `${format(d, 'MM/dd')} ${format(d, 'HH:mm')}`
                     })()
 
                     return (
                     <div key={order.id} className="bg-[#1a1a1a] border border-white/10 rounded-xl p-3 hover:border-white/20 transition-all">
-                      {/* Type title */}
+                      {/* Top row: Type + buttons */}
                       <div className="flex items-center justify-between mb-1">
                         <span className={`text-sm font-bold ${displayType.color}`}>
                           {displayType.label}
@@ -1194,7 +1180,7 @@ export default function DispatcherDashboard() {
                           </button>
                         </div>
                       </div>
-                      {/* Row 1: Price + Status + Kenichi */}
+                      {/* Price + badges */}
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <span className="text-sm font-bold" style={{ color: '#ff8c42' }}>NT${order.price.toLocaleString()}</span>
                         <span className={`px-1 py-0.5 rounded text-xs font-medium ${
@@ -1213,15 +1199,18 @@ export default function DispatcherDashboard() {
                           </span>
                         )}
                       </div>
-                      {/* Row 2: Pickup → Dropoff */}
-                      <div className="flex items-center gap-1.5 mt-1.5 text-xs text-[#a0a0a0]">
+                      {/* Route */}
+                      <div className="flex items-center gap-1 mt-1 text-xs text-[#a0a0a0]">
                         <MapPin className="w-2.5 h-2.5 text-[#22c55e] flex-shrink-0" />
-                        <span className="truncate flex-1 min-w-0">{order.pickupLocation}</span>
-                        <span className="text-[#666] flex-shrink-0">→</span>
-                        <span className="truncate flex-1 text-right min-w-0">{cleanDropoff}</span>
+                        <span className="truncate">{order.pickupLocation}</span>
                       </div>
-                      {/* Row 3: Time */}
-                      <div className="mt-1 text-xs text-[#666] font-mono text-right">
+                      <div className="flex items-center gap-1 text-xs text-[#a0a0a0]">
+                        <span className="w-2.5" />
+                        <span className="text-[#666] flex-shrink-0">\u2193</span>
+                        <span className="truncate">{order.dropoffLocation}</span>
+                      </div>
+                      {/* Time */}
+                      <div className="mt-1 text-xs text-[#666] font-mono">
                         {scheduledTimeStr}
                       </div>
                     </div>
