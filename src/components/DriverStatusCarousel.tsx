@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { UserCheck } from 'lucide-react'
+import { Radio } from 'lucide-react'
 
 const driverActivities = [
   { plate: 'REC-2391', route: '林口送機', price: 1200 },
@@ -26,7 +26,6 @@ export function DriverStatusCarousel() {
         setIsTransitioning(false)
       }, 300)
     }, 2500)
-
     return () => clearInterval(interval)
   }, [])
 
@@ -34,42 +33,39 @@ export function DriverStatusCarousel() {
   const isPickup = current.route.includes('接')
 
   return (
-    <div className="bg-[#0c0c10] border border-[#1e1e26] rounded-2xl p-6 backdrop-blur-sm">
-      <div className="flex items-center gap-2 mb-4">
-        <span className="relative flex h-2 w-2">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#22c55e] opacity-75"></span>
-          <span className="relative inline-flex rounded-full h-2 w-2 bg-[#22c55e]"></span>
-        </span>
-        <span className="text-xs text-[#22c55e] uppercase tracking-wider">司機動態</span>
+    <div className="bg-white rounded-xl p-5 border border-[#DDDDDD]">
+      <div className="flex items-center gap-2 mb-3">
+        <div className="w-6 h-6 rounded-lg bg-[#E8F5E8] border border-[#C6E8C6] flex items-center justify-center">
+          <Radio className="w-3.5 h-3.5 text-[#008A05]" />
+        </div>
+        <span className="text-[11px] text-[#717171]">司機動態</span>
       </div>
 
-      <div className="relative h-12 overflow-hidden">
+      <div className="relative h-10 overflow-hidden mb-3">
         <div
           className={`transition-all duration-300 ${
-            isTransitioning ? 'opacity-0 translate-y-2' : 'opacity-100 translate-y-0'
+            isTransitioning ? 'opacity-0 translate-y-1' : 'opacity-100 translate-y-0'
           }`}
         >
           <div className="flex items-center gap-3">
             <span
-              className={`font-mono text-lg font-bold ${
-                isPickup ? 'text-[#3b82f6]' : 'text-[#22c55e]'
-              }`}
+              className="font-mono text-sm font-bold text-[#222222] border border-[#DDDDDD] bg-[#F4EFE9] rounded px-1.5 py-0.5"
             >
               {current.plate}
             </span>
-            <span className="text-[#6b6560]">{current.route}</span>
-            <span className="text-[#ff6b2b] font-bold">NT${current.price}</span>
+            <span className="text-[13px] font-medium text-[#222222] truncate">{current.route}</span>
+            <span className="text-[13px] font-bold text-[#FF385C] font-mono-nums ml-auto">NT${current.price}</span>
           </div>
         </div>
       </div>
 
       {/* Carousel indicators */}
-      <div className="flex items-center justify-center gap-1 mt-4">
+      <div className="flex items-center gap-1">
         {driverActivities.map((_, idx) => (
           <div
             key={idx}
             className={`h-1 rounded-full transition-all duration-300 ${
-              idx === currentIndex ? 'w-4 bg-[#22c55e]' : 'w-1 bg-[#4a4a52]'
+              idx === currentIndex ? 'w-4 bg-[#FF385C]' : 'w-1 bg-[#DDDDDD]'
             }`}
           />
         ))}

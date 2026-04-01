@@ -180,32 +180,38 @@ export default async function Home() {
 
             {/* Right Stats */}
             <div className="grid grid-cols-2 gap-3">
-              <div className="bg-white rounded-xl p-5">
+              <div className="bg-white rounded-xl p-5 border border-[#DDDDDD]">
                 <div className="flex items-center gap-1.5 mb-2">
-                  <Zap className="w-4 h-4 text-[#FF385C]" />
-                  <span className="text-[11px] text-[#FF385C]">最新訂單</span>
+                  <div className="w-6 h-6 rounded-lg bg-[#FFF3E0] border border-[#FFE0B2] flex items-center justify-center">
+                    <Zap className="w-3.5 h-3.5 text-[#B45309]" />
+                  </div>
+                  <span className="text-[11px] text-[#717171]">最新訂單</span>
                 </div>
-                <p className="text-3xl font-medium text-[#222222] mb-1 font-mono-nums">{stats.pickupCount + stats.dropoffCount}</p>
+                <p className="text-3xl font-bold text-[#222222] mb-1 font-mono-nums">{stats.pickupCount + stats.dropoffCount}</p>
                 <p className="text-[13px] text-[#717171]">筆可接訂單</p>
               </div>
 
               <div className="bg-white rounded-xl p-5 border border-[#DDDDDD]">
                 <div className="flex items-center gap-1.5 mb-2">
-                  <TrendingUp className="w-4 h-4 text-[#008A05]" />
-                  <span className="text-[11px] text-[#008A05]">一小時內</span>
+                  <div className="w-6 h-6 rounded-lg bg-[#E6F1FB] border border-[#C2DBF5] flex items-center justify-center">
+                    <TrendingUp className="w-3.5 h-3.5 text-[#0C447C]" />
+                  </div>
+                  <span className="text-[11px] text-[#717171]">一小時內</span>
                 </div>
-                <p className="text-3xl font-medium text-[#222222] mb-1 font-mono-nums">{stats.recentCount}</p>
+                <p className="text-3xl font-bold text-[#222222] mb-1 font-mono-nums">{stats.recentCount}</p>
                 <p className="text-[13px] text-[#717171]">筆新訂單</p>
               </div>
 
               <DriverStatusCarousel />
 
-              <div className="bg-white rounded-xl p-5">
+              <div className="bg-white rounded-xl p-5 border border-[#DDDDDD]">
                 <div className="flex items-center gap-1.5 mb-2">
-                  <Wallet className="w-4 h-4 text-[#6B21A8]" />
-                  <span className="text-[11px] text-[#6B21A8]">案件總額</span>
+                  <div className="w-6 h-6 rounded-lg bg-[#F3E8FF] border border-[#E9D5FF] flex items-center justify-center">
+                    <Wallet className="w-3.5 h-3.5 text-[#6B21A8]" />
+                  </div>
+                  <span className="text-[11px] text-[#717171]">案件總額</span>
                 </div>
-                <p className="text-3xl font-medium text-[#222222] mb-1 font-mono-nums">NT${stats.totalAmount.toLocaleString()}</p>
+                <p className="text-3xl font-bold text-[#222222] mb-1 font-mono-nums">NT${stats.totalAmount.toLocaleString()}</p>
                 <p className="text-[13px] text-[#717171]">元</p>
               </div>
             </div>
