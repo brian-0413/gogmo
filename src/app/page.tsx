@@ -117,9 +117,9 @@ export default async function Home() {
   const stats = await getStats()
 
   return (
-    <div className="min-h-screen bg-white text-[#222222]">
+    <div className="min-h-screen bg-[#FAF8F5] text-[#222222]">
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-[#DDDDDD]">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-[#FAF8F5] border-b border-[#DDDDDD]">
         <div className="max-w-6xl mx-auto px-6">
           <div className="flex items-center justify-between h-14">
             <Link href="/" className="flex items-center gap-2">
@@ -180,7 +180,7 @@ export default async function Home() {
 
             {/* Right Stats */}
             <div className="grid grid-cols-2 gap-3">
-              <div className="bg-[#F7F7F7] rounded-xl p-5">
+              <div className="bg-white rounded-xl p-5">
                 <div className="flex items-center gap-1.5 mb-2">
                   <Zap className="w-4 h-4 text-[#FF385C]" />
                   <span className="text-[11px] text-[#FF385C]">最新訂單</span>
@@ -200,7 +200,7 @@ export default async function Home() {
 
               <DriverStatusCarousel />
 
-              <div className="bg-[#F7F7F7] rounded-xl p-5">
+              <div className="bg-white rounded-xl p-5">
                 <div className="flex items-center gap-1.5 mb-2">
                   <Wallet className="w-4 h-4 text-[#6B21A8]" />
                   <span className="text-[11px] text-[#6B21A8]">案件總額</span>
@@ -220,7 +220,7 @@ export default async function Home() {
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
               <h2 className="text-[18px] font-medium text-[#222222]">即刻可接行程</h2>
-              <span className="px-2.5 py-0.5 rounded-full bg-[#F7F7F7] text-[#717171] text-[13px] border border-[#DDDDDD]">
+              <span className="px-2.5 py-0.5 rounded-full bg-[#F4EFE9] text-[#717171] text-[13px] border border-[#DDDDDD]">
                 {orders.length} 筆
               </span>
             </div>
@@ -259,7 +259,7 @@ export default async function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="py-5 px-6 border-t border-[#DDDDDD] bg-[#F7F7F7]">
+      <footer className="py-5 px-6 border-t border-[#DDDDDD] bg-[#F4EFE9]">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 rounded bg-[#FF385C] flex items-center justify-center">

@@ -8,10 +8,10 @@
   /* Airport Dispatch — Airbnb Design System */
 
   /* === Color System === */
-  /* Background */
-  --bg-primary: #FFFFFF;
-  --bg-secondary: #F7F7F7;
-  --bg-tertiary: #EBEBEB;
+  /* Background — warm cream (Claude.ai style) */
+  --bg-primary: #FAF8F5;
+  --bg-secondary: #F4EFE9;
+  --bg-tertiary: #E8E2D9;
 
   /* Text */
   --text-primary: #222222;
@@ -41,10 +41,10 @@
   --tag-dropoff-bg: #FFF3E0;
   --tag-kenichi: #6B21A8;
   --tag-kenichi-bg: #F3E8FF;
-  --tag-neutral-bg: #F7F7F7;
+  --tag-neutral-bg: #F4EFE9;
 
   /* === Tailwind CSS Variables === */
-  --background: #FFFFFF;
+  --background: #FAF8F5;
   --foreground: #222222;
   --card: #FFFFFF;
   --card-foreground: #222222;
@@ -52,9 +52,9 @@
   --popover-foreground: #222222;
   --primary: #FF385C;
   --primary-foreground: #FFFFFF;
-  --secondary: #F7F7F7;
+  --secondary: #F4EFE9;
   --secondary-foreground: #717171;
-  --muted: #F7F7F7;
+  --muted: #F4EFE9;
   --muted-foreground: #717171;
   --accent: #FF385C;
   --accent-foreground: #FFFFFF;
@@ -74,11 +74,11 @@
   --chart-5: #B45309;
 
   /* Sidebar */
-  --sidebar: #FFFFFF;
+  --sidebar: #FAF8F5;
   --sidebar-foreground: #222222;
   --sidebar-primary: #FF385C;
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #F7F7F7;
+  --sidebar-accent: #F4EFE9;
   --sidebar-accent-foreground: #717171;
   --sidebar-border: #DDDDDD;
   --sidebar-ring: #FF385C;

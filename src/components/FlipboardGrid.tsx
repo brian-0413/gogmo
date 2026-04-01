@@ -1,8 +1,7 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
-import { Zap, Car, Users, Clock } from 'lucide-react'
-import { format, parseISO, differenceInMinutes, differenceInSeconds } from 'date-fns'
+import { MapPin, Users, ArrowRight } from 'lucide-react'
+import { format, parseISO, differenceInMinutes } from 'date-fns'
 
 interface Order {
   id: string
@@ -38,101 +37,90 @@ function formatTime(dateTime: string | Date): string {
   }
 }
 
-interface CardInnerProps {
-  order: Order
-  animationKey: string
+function formatDate(dateTime: string | Date): string {
+  try {
+    const date = typeof dateTime === "string" ? parseISO(dateTime) : new Date(dateTime)
+    return format(date, "M/d")
+  } catch {
+    return "--"
+  }
 }
 
-function CardInner({ order, animationKey }: CardInnerProps) {
+function OrderCard({ order }: { order: Order }) {
   const orderType = getOrderType(order.pickupLocation, order.dropoffLocation)
   const isPickup = orderType === "pickup"
   const urgency = getTimeUrgency(order.scheduledTime)
-  const badgeColor = isPickup ? '#3b82f6' : '#22c55e'
-  const [countdown, setCountdown] = useState<string>('')
 
-  useEffect(() => {
-    if (urgency === "urgent" || urgency === "soon") {
-      const updateCountdown = () => {
-        const now = new Date()
-        const time = typeof order.scheduledTime === 'string' ? parseISO(order.scheduledTime) : new Date(order.scheduledTime)
-        const seconds = differenceInSeconds(time, now)
-        if (seconds > 0) {
-          const mins = Math.floor(seconds / 60)
-          const secs = seconds % 60
-          setCountdown(`${mins}:${secs.toString().padStart(2, '0')}`)
-        }
-      }
-      updateCountdown()
-      const interval = setInterval(updateCountdown, 1000)
-      return () => clearInterval(interval)
-    }
-  }, [order.scheduledTime, urgency])
+  // 接機: 藍色 / 送機: 琥珀色
+  const tagBg = isPickup ? 'bg-[#E6F1FB]' : 'bg-[#FFF3E0]'
+  const tagText = isPickup ? 'text-[#0C447C]' : 'text-[#92400E]'
+
+  // 緊急: 紅色 / 儘快: 橙色 / 一般: 暖灰
+  const urgencyBg = urgency === 'urgent' ? 'bg-[#FCEBEB]' : urgency === 'soon' ? 'bg-[#FFF3E0]' : 'bg-[#F4EFE9]'
+  const urgencyText = urgency === 'urgent' ? 'text-[#A32D2D]' : urgency === 'soon' ? 'text-[#B45309]' : 'text-[#717171]'
+
+  const fromLocation = isPickup
+    ? "桃園機場"
+    : order.pickupLocation.replace("桃園機場", "").replace("國際機場", "").replace("機場", "").trim() || order.pickupLocation
+
+  const toLocation = isPickup
+    ? order.dropoffLocation.replace("桃園機場", "").replace("國際機場", "").replace("機場", "").trim() || order.dropoffLocation
+    : "桃園機場"
+
+  const carLabel = order.note?.includes("休旅") ? "休旅" : order.note?.includes("9座") || order.note?.includes("VITO") ? "9人座" : "小車"
 
   return (
-    <div
-      key={animationKey}
-      className="absolute inset-0 bg-[#0c0c10] rounded-lg p-3 animate-content-slide"
-    >
-      {/* Urgent Badge with countdown */}
-      {urgency === "urgent" && (
-        <div className="absolute -top-1 -right-1 px-2 py-0.5 rounded-full text-[8px] font-bold text-white flex items-center gap-1 z-20 animate-badge-pulse" style={{ backgroundColor: '#ef4444' }}>
-          <Zap className="w-2.5 h-2.5" />
-          <span>{countdown || '00:00'}</span>
+    <div className="bg-white border border-[#DDDDDD] rounded-xl p-4 hover:shadow-[0_2px_12px_rgba(0,0,0,0.08)] transition-shadow">
+      {/* Header row */}
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-normal ${tagBg} ${tagText}`}>
+            {isPickup ? "接機" : "送機"}
+          </span>
+          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-normal ${urgencyBg} ${urgencyText}`}>
+            {urgency === 'urgent' && <span className="text-[#A32D2D]">!</span>}
+            {formatTime(order.scheduledTime)} · {formatDate(order.scheduledTime)}
+          </span>
         </div>
-      )}
-      {urgency === "soon" && (
-        <div className="absolute -top-1 -right-1 px-2 py-0.5 rounded-full text-[8px] font-bold text-[#060608] flex items-center gap-1 z-20" style={{ backgroundColor: '#ff6b2b' }}>
-          <Clock className="w-2.5 h-2.5" />
-          <span>{countdown || '00:00'}</span>
-        </div>
-      )}
-
-      {/* Header */}
-      <div className="flex items-center justify-between mb-2">
-        <span
-          className="text-[9px] font-bold px-1.5 py-0.5 rounded"
-          style={{ backgroundColor: `${badgeColor}20`, color: badgeColor }}
-        >
-          {isPickup ? "接機" : "送機"}
-        </span>
-        <span className="text-[9px] text-[#6b6560] font-mono">
-          {formatTime(order.scheduledTime)}
-        </span>
+        <span className="text-[11px] text-[#B0B0B0] font-mono-nums">#{order.id.slice(0, 6)}</span>
       </div>
 
       {/* Price */}
-      <div className="mb-2">
-        <span className="text-2xl font-bold" style={{ color: '#ff6b2b' }}>
-          NT${order.price}
+      <div className="mb-3">
+        <span className="text-[22px] font-medium text-[#FF385C] font-mono-nums">
+          NT${order.price.toLocaleString()}
         </span>
       </div>
 
       {/* Route */}
-      <div className="space-y-1.5 mb-2">
-        <div className="flex items-center gap-1.5">
-          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: badgeColor }} />
-          <span className="text-[11px] text-[#f0ebe3] truncate font-medium">
-            {isPickup ? "桃園機場" : order.pickupLocation.replace("桃園機場", "").replace("國際機場", "").substring(0, 8)}
-          </span>
+      <div className="space-y-2 mb-3">
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 rounded-full bg-[#FF385C] flex-shrink-0" />
+          <span className="text-[13px] text-[#222222] truncate">{fromLocation}</span>
         </div>
-        <div className="flex items-center gap-1.5">
-          <div className="w-2 h-2 rounded-full bg-[#4a4a52]" />
-          <span className="text-[11px] text-[#f0ebe3] truncate font-medium">
-            {isPickup ? order.dropoffLocation.replace("桃園機場", "").replace("國際機場", "").substring(0, 8) : "桃園機場"}
-          </span>
+        <div className="flex items-center gap-2 pl-0.5">
+          <div className="w-0.5 h-3 bg-[#DDDDDD]" />
+          <ArrowRight className="w-3 h-3 text-[#B0B0B0]" />
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 rounded-full bg-[#DDDDDD] flex-shrink-0" />
+          <span className="text-[13px] text-[#222222] truncate">{toLocation}</span>
         </div>
       </div>
 
+      {/* Divider */}
+      <div className="border-t border-[#EBEBEB] mb-3" />
+
       {/* Meta */}
-      <div className="flex items-center gap-2 text-[9px] text-[#6b6560] pt-1.5 border-t border-[#1e1e26]">
-        <div className="flex items-center gap-1">
-          <Car className="w-3 h-3" />
-          <span>{order.note?.includes("休旅") ? "休旅" : "一般"}</span>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-1 text-[12px] text-[#717171]">
+          <span className="px-2 py-0.5 bg-[#F4EFE9] border border-[#DDDDDD] rounded text-[11px]">{carLabel}</span>
+          <span className="flex items-center gap-1 text-[11px] text-[#B0B0B0]">
+            <Users className="w-3 h-3" />
+            {order.passengerCount || 1}人
+          </span>
         </div>
-        <div className="flex items-center gap-1">
-          <Users className="w-3 h-3" />
-          <span>{order.passengerCount || 1}人</span>
-        </div>
+        <span className="text-[11px] text-[#B0B0B0]">立即接單</span>
       </div>
     </div>
   )
@@ -144,106 +132,23 @@ interface FlipboardGridProps {
 }
 
 export function FlipboardGrid({ orders, gridSize = 20 }: FlipboardGridProps) {
-  const [displayedOrders, setDisplayedOrders] = useState<(Order | null)[]>([])
-  const [currentUpdate, setCurrentUpdate] = useState<{
-    slotIndex: number
-    newOrder: Order
-    phase: 'exiting' | 'entering'
-  } | null>(null)
-  const [animationKeys, setAnimationKeys] = useState<Record<number, string>>({})
-  const [newOrdersPool, setNewOrdersPool] = useState<Order[]>([])
-  const isUpdating = useRef(false)
-  const updateQueueRef = useRef<number[]>([])
-  const updateInterval = 300
-
-  useEffect(() => {
-    if (orders.length > 0) {
-      const initial = orders.slice(0, gridSize)
-      const initialKeys: Record<number, string> = {}
-      initial.forEach((_, i) => { initialKeys[i] = `init-${i}-${Date.now()}` })
-      setAnimationKeys(initialKeys)
-      setDisplayedOrders([...initial, ...Array(gridSize - initial.length).fill(null)])
-      setNewOrdersPool(orders.slice(gridSize))
-    }
-  }, [orders, gridSize])
-
-  const processNextUpdate = useCallback(() => {
-    if (isUpdating.current || updateQueueRef.current.length === 0) return
-
-    isUpdating.current = true
-    const slotIndex = updateQueueRef.current.shift()!
-    const newOrder = newOrdersPool[Math.floor(Math.random() * newOrdersPool.length)]
-
-    setCurrentUpdate({ slotIndex, newOrder, phase: 'exiting' })
-
-    setTimeout(() => {
-      setDisplayedOrders(prev => {
-        const updated = [...prev]
-        updated[slotIndex] = newOrder
-        return updated
-      })
-      setAnimationKeys(prev => ({ ...prev, [slotIndex]: `update-${slotIndex}-${Date.now()}` }))
-      setCurrentUpdate(prev => prev ? { ...prev, phase: 'entering' } : null)
-
-      setTimeout(() => {
-        setCurrentUpdate(null)
-        isUpdating.current = false
-        processNextUpdate()
-      }, 400)
-    }, 400)
-  }, [newOrdersPool])
-
-  useEffect(() => {
-    if (newOrdersPool.length === 0) return
-
-    const interval = setInterval(() => {
-      const numToAdd = Math.floor(Math.random() * 3) + 1
-      const availableSlots = Array.from({ length: gridSize }, (_, i) => i)
-        .filter(i => !updateQueueRef.current.includes(i) && currentUpdate?.slotIndex !== i)
-
-      for (let i = 0; i < numToAdd && availableSlots.length > 0; i++) {
-        const idx = Math.floor(Math.random() * availableSlots.length)
-        updateQueueRef.current.push(availableSlots[idx])
-        availableSlots.splice(idx, 1)
-      }
-
-      if (!isUpdating.current) {
-        processNextUpdate()
-      }
-    }, updateInterval)
-
-    return () => clearInterval(interval)
-  }, [newOrdersPool, updateInterval, gridSize, currentUpdate, processNextUpdate])
-
   if (orders.length === 0) {
     return (
-      <div className="text-center py-24 border border-[#1e1e26] rounded-3xl bg-[#0c0c10]/50 backdrop-blur-sm">
-        <p className="text-[#6b6560] mb-2 text-lg">目前沒有可接的行程</p>
-        <p className="text-[#4a4a52] text-sm">請稍後再回來查看，或聯繫車頭發布新行程</p>
+      <div className="text-center py-24 border border-[#DDDDDD] rounded-xl bg-[#F4EFE9]">
+        <MapPin className="w-10 h-10 text-[#B0B0B0] mx-auto mb-3" />
+        <p className="text-[#717171] mb-1 text-lg font-medium">目前沒有可接的行程</p>
+        <p className="text-[#B0B0B0] text-sm">請稍後再回來查看，或聯繫車頭發布新行程</p>
       </div>
     )
   }
 
-  return (
-    <div className="grid grid-cols-5 gap-2">
-      {displayedOrders.slice(0, gridSize).map((order, index) => {
-        if (!order) {
-          return <div key={`empty-${index}`} className="bg-[#0c0c10]/30 rounded-lg min-h-[120px]" />
-        }
+  const displayOrders = orders.slice(0, gridSize)
 
-        return (
-          <div
-            key={`${order.id}-${index}`}
-            className="relative min-h-[120px] overflow-hidden rounded-lg"
-          >
-            <div className="absolute inset-0 bg-[#0c0c10] rounded-lg" />
-            <CardInner
-              order={order}
-              animationKey={animationKeys[index] || `init-${index}`}
-            />
-          </div>
-        )
-      })}
+  return (
+    <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+      {displayOrders.map((order) => (
+        <OrderCard key={order.id} order={order} />
+      ))}
     </div>
   )
 }
