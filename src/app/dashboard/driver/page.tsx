@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/Badge'
 import { OrderCard, Order } from '@/components/driver/OrderCard'
 import { format, parseISO, startOfDay, startOfWeek } from 'date-fns'
 import { zhTW } from 'date-fns/locale'
-import { ClipboardList, FileText, Wallet, LogOut, Plane, Zap, TrendingUp, Radio, Inbox } from 'lucide-react'
+import { ClipboardList, FileText, Wallet, LogOut, Plane, Zap, TrendingUp, Radio, Inbox, Clock } from 'lucide-react'
 import Link from 'next/link'
 
 type Tab = 'available' | 'myorders' | 'balance'
@@ -435,42 +435,54 @@ export default function DriverDashboard() {
             </div>
 
             {/* Stats row */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <div className="bg-white border border-[#DDDDDD] rounded-xl p-4 shadow-sm">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+              {/* 帳戶餘額 */}
+              <div className="bg-white border border-[#DDDDDD] rounded-xl p-4 hover:shadow-[0_2px_12px_rgba(0,0,0,0.08)] transition-shadow">
                 <div className="flex items-center gap-2 mb-2">
-                  <Wallet className="w-3.5 h-3.5 text-[#F59E0B]" />
-                  <span className="text-[10px] text-[#F59E0B] uppercase tracking-widest">帳戶餘額</span>
+                  <div className="w-6 h-6 rounded-lg bg-[#FFF3E0] border border-[#FFE0B2] flex items-center justify-center">
+                    <Wallet className="w-3.5 h-3.5 text-[#B45309]" />
+                  </div>
+                  <span className="text-[10px] text-[#717171] font-normal">帳戶餘額</span>
                 </div>
-                <p className="text-2xl font-bold text-[#1C1917] font-mono-nums">{balance.balance.toLocaleString()}</p>
-                <p className="text-xs text-[#78716C] mt-0.5">點</p>
+                <p className="text-2xl font-bold text-[#222222] font-mono-nums">{balance.balance.toLocaleString()}</p>
+                <p className="text-[11px] text-[#B0B0B0] mt-0.5">點</p>
               </div>
-              <div className="bg-white border border-[#DDDDDD] rounded-xl p-4 shadow-sm">
+              {/* 待結算 */}
+              <div className="bg-white border border-[#DDDDDD] rounded-xl p-4 hover:shadow-[0_2px_12px_rgba(0,0,0,0.08)] transition-shadow">
                 <div className="flex items-center gap-2 mb-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-[#F59E0B]" />
-                  <span className="text-[10px] text-[#F59E0B] uppercase tracking-widest">待結算</span>
+                  <div className="w-6 h-6 rounded-lg bg-[#FFF3E0] border border-[#FFE0B2] flex items-center justify-center">
+                    <Clock className="w-3.5 h-3.5 text-[#B45309]" />
+                  </div>
+                  <span className="text-[10px] text-[#717171] font-normal">待結算</span>
                 </div>
-                <p className="text-2xl font-bold text-[#1C1917] font-mono-nums">
+                <p className="text-2xl font-bold text-[#222222] font-mono-nums">
                   {(balance.transactions as Array<{ status: string }>).filter(t => t.status === 'PENDING').length}
                 </p>
-                <p className="text-xs text-[#78716C] mt-0.5">筆</p>
+                <p className="text-[11px] text-[#B0B0B0] mt-0.5">筆</p>
               </div>
-              <div className="bg-white border border-[#DDDDDD] rounded-xl p-4 shadow-sm">
+              {/* 總行程 */}
+              <div className="bg-white border border-[#DDDDDD] rounded-xl p-4 hover:shadow-[0_2px_12px_rgba(0,0,0,0.08)] transition-shadow">
                 <div className="flex items-center gap-2 mb-2">
-                  <TrendingUp className="w-3.5 h-3.5 text-[#3B82F6]" />
-                  <span className="text-[10px] text-[#3B82F6] uppercase tracking-widest">總行程</span>
+                  <div className="w-6 h-6 rounded-lg bg-[#E6F1FB] border border-[#C2DBF5] flex items-center justify-center">
+                    <TrendingUp className="w-3.5 h-3.5 text-[#0C447C]" />
+                  </div>
+                  <span className="text-[10px] text-[#717171] font-normal">總行程</span>
                 </div>
-                <p className="text-2xl font-bold text-[#1C1917] font-mono-nums">
+                <p className="text-2xl font-bold text-[#222222] font-mono-nums">
                   {(balance.transactions as Array<{ type: string }>).filter(t => t.type === 'RIDE_FARE').length}
                 </p>
-                <p className="text-xs text-[#78716C] mt-0.5">單</p>
+                <p className="text-[11px] text-[#B0B0B0] mt-0.5">單</p>
               </div>
-              <div className="bg-white border border-[#DDDDDD] rounded-xl p-4 shadow-sm">
+              {/* 平台費率 */}
+              <div className="bg-white border border-[#DDDDDD] rounded-xl p-4 hover:shadow-[0_2px_12px_rgba(0,0,0,0.08)] transition-shadow">
                 <div className="flex items-center gap-2 mb-2">
-                  <Zap className="w-3.5 h-3.5 text-[#A855F7]" />
-                  <span className="text-[10px] text-[#A855F7] uppercase tracking-widest">平台費率</span>
+                  <div className="w-6 h-6 rounded-lg bg-[#F3E8FF] border border-[#E9D5FF] flex items-center justify-center">
+                    <Zap className="w-3.5 h-3.5 text-[#6B21A8]" />
+                  </div>
+                  <span className="text-[10px] text-[#717171] font-normal">平台費率</span>
                 </div>
-                <p className="text-2xl font-bold text-[#1C1917] font-mono-nums">5%</p>
-                <p className="text-xs text-[#78716C] mt-0.5">每單</p>
+                <p className="text-2xl font-bold text-[#222222] font-mono-nums">5%</p>
+                <p className="text-[11px] text-[#B0B0B0] mt-0.5">每單</p>
               </div>
             </div>
 
