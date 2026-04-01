@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import Link from 'next/link'
-import { Plane, Car, Building2, ArrowRight, Loader2, Radio } from 'lucide-react'
+import { Plane, Car, Building2, ArrowRight, Loader2 } from 'lucide-react'
 
 const TEST_ACCOUNTS = {
   DRIVER: { email: 'driver1@test.com', password: 'test123', role: '司機' },
@@ -14,10 +14,9 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [selectedRole, setSelectedRole] = useState<'DRIVER' | 'DISPATCHER' | null>(null)
   const { login } = useAuth()
-  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    setMounted(true)
+    // Auto-redirect if already logged in
   }, [])
 
   const handleAutoLogin = async (role: 'DRIVER' | 'DISPATCHER') => {
@@ -28,160 +27,84 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#060608] text-[#f0ebe3] relative overflow-hidden">
-      {/* Grid background */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute inset-0 grid-bg opacity-60" />
-        <div className="absolute inset-0 scan-lines" />
-
-        {/* Ambient glows */}
-        <div
-          className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[600px] h-[400px] rounded-full opacity-20"
-          style={{
-            background: 'radial-gradient(ellipse, rgba(255,107,43,0.15) 0%, transparent 70%)',
-          }}
-        />
-        <div
-          className="absolute bottom-0 right-1/4 w-[300px] h-[300px] rounded-full opacity-10"
-          style={{
-            background: 'radial-gradient(circle, rgba(255,107,43,0.2) 0%, transparent 70%)',
-          }}
-        />
-      </div>
-
+    <div className="min-h-screen bg-white text-[#222222]">
       {/* Header */}
-      <nav className="relative z-10 px-8 py-6">
-        <Link href="/" className="flex items-center gap-3 group w-fit">
-          <div className="w-9 h-9 rounded-lg bg-[#ff6b2b] flex items-center justify-center shadow-[0_0_20px_rgba(255,107,43,0.4)]">
-            <Plane className="w-4 h-4 text-[#060608]" />
+      <nav className="px-8 py-6">
+        <Link href="/" className="flex items-center gap-2 w-fit">
+          <div className="w-8 h-8 rounded-lg bg-[#FF385C] flex items-center justify-center">
+            <Plane className="w-4 h-4 text-white" />
           </div>
-          <span className="text-[#ff6b2b] font-semibold tracking-tight text-lg">
-            機場接送派單平台
-          </span>
+          <span className="text-[#222222] font-medium text-base">機場接送派單平台</span>
         </Link>
       </nav>
 
       {/* Main content */}
-      <div className="relative z-10 flex items-center justify-center min-h-[calc(100vh-100px)] px-6">
-        <div className="w-full max-w-lg" style={{ opacity: mounted ? 1 : 0, transform: mounted ? 'translateY(0)' : 'translateY(20px)', transition: 'opacity 0.6s ease-out, transform 0.6s ease-out' }}>
-          {/* Hero section */}
-          <div className="text-center mb-10">
-            {/* Live indicator */}
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[#ff6b2b]/20 bg-[#ff6b2b]/5 mb-6">
-              <Radio className="w-3 h-3 text-[#ff6b2b] animate-pulse" />
-              <span className="text-xs text-[#ff6b2b] font-medium tracking-wider uppercase">系統上線中</span>
-            </div>
-
-            {/* Title with gradient */}
-            <h1 className="text-4xl md:text-5xl font-bold mb-3 leading-tight">
-              <span className="text-[#f0ebe3]">選擇你的</span>
-              <br />
-              <span className="gradient-text-ember">角色身份</span>
+      <div className="flex items-center justify-center min-h-[calc(100vh-100px)] px-6">
+        <div className="w-full max-w-md">
+          {/* Title */}
+          <div className="text-center mb-8">
+            <h1 className="text-[22px] font-medium text-[#222222] mb-1">
+              選擇登入身份
             </h1>
-
-            <p className="text-[#6b6560] text-base max-w-sm mx-auto">
+            <p className="text-[13px] text-[#717171]">
               點擊下方按鈕快速登入測試系統
             </p>
-
-            {/* Decorative time display */}
-            <div className="mt-6 inline-flex items-center gap-3 px-4 py-2 rounded-lg bg-[#0c0c10] border border-[#1e1e26]">
-              <span className="font-mono-nums text-xs text-[#6b6560]">LOCAL</span>
-              <span className="font-mono-nums text-sm text-[#ff6b2b] font-semibold">
-                {new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-              </span>
-            </div>
           </div>
 
-          {/* Role Selection Card */}
-          <div className="relative">
-            {/* Decorative border glow */}
-            <div className="absolute -inset-px rounded-[20px] bg-gradient-to-br from-[#ff6b2b]/20 via-transparent to-[#ff6b2b]/10 opacity-50 blur-sm" />
-
-            <div className="relative bg-[#0c0c10] rounded-[20px] p-1 border border-[#1e1e26]">
-              <div className="bg-[#0c0c10] rounded-[18px] p-8 space-y-3">
-
-                {/* Driver card */}
-                <button
-                  onClick={() => handleAutoLogin('DRIVER')}
-                  disabled={loading}
-                  className="group w-full flex items-center gap-5 p-5 rounded-xl border border-[#1e1e26] bg-[#141418] hover:border-[#3b82f6]/40 hover:bg-[#141418]/80 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden"
-                >
-                  {/* Hover glow */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-[#3b82f6]/0 via-[#3b82f6]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
-                  <div className="relative flex items-center gap-5 w-full">
-                    {/* Icon */}
-                    <div className="w-14 h-14 rounded-xl bg-[#3b82f6]/10 border border-[#3b82f6]/20 flex items-center justify-center flex-shrink-0 group-hover:border-[#3b82f6]/40 group-hover:bg-[#3b82f6]/15 transition-all duration-300">
-                      <Car className="w-7 h-7 text-[#3b82f6]" />
-                    </div>
-
-                    {/* Text */}
-                    <div className="flex-1 text-left">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[#f0ebe3] font-semibold text-lg">司機端</span>
-                        <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-[#3b82f6]/15 text-[#3b82f6] border border-[#3b82f6]/20">DRIVER</span>
-                      </div>
-                      <div className="font-mono-nums text-[#6b6560] text-sm mt-0.5">{TEST_ACCOUNTS.DRIVER.email}</div>
-                    </div>
-
-                    {/* Arrow */}
-                    {loading && selectedRole === 'DRIVER' ? (
-                      <Loader2 className="w-5 h-5 text-[#3b82f6] animate-spin flex-shrink-0" />
-                    ) : (
-                      <ArrowRight className="w-5 h-5 text-[#3b82f6]/40 group-hover:text-[#3b82f6] group-hover:translate-x-1 transition-all duration-300 flex-shrink-0" />
-                    )}
-                  </div>
-                </button>
-
-                {/* Dispatcher card */}
-                <button
-                  onClick={() => handleAutoLogin('DISPATCHER')}
-                  disabled={loading}
-                  className="group w-full flex items-center gap-5 p-5 rounded-xl border border-[#1e1e26] bg-[#141418] hover:border-[#ff6b2b]/40 hover:bg-[#141418]/80 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden"
-                >
-                  {/* Hover glow */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-[#ff6b2b]/0 via-[#ff6b2b]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
-                  <div className="relative flex items-center gap-5 w-full">
-                    {/* Icon */}
-                    <div className="w-14 h-14 rounded-xl bg-[#ff6b2b]/10 border border-[#ff6b2b]/20 flex items-center justify-center flex-shrink-0 group-hover:border-[#ff6b2b]/40 group-hover:bg-[#ff6b2b]/15 transition-all duration-300">
-                      <Building2 className="w-7 h-7 text-[#ff6b2b]" />
-                    </div>
-
-                    {/* Text */}
-                    <div className="flex-1 text-left">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[#f0ebe3] font-semibold text-lg">車頭端</span>
-                        <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-[#ff6b2b]/15 text-[#ff6b2b] border border-[#ff6b2b]/20">DISPATCHER</span>
-                      </div>
-                      <div className="font-mono-nums text-[#6b6560] text-sm mt-0.5">{TEST_ACCOUNTS.DISPATCHER.email}</div>
-                    </div>
-
-                    {/* Arrow */}
-                    {loading && selectedRole === 'DISPATCHER' ? (
-                      <Loader2 className="w-5 h-5 text-[#ff6b2b] animate-spin flex-shrink-0" />
-                    ) : (
-                      <ArrowRight className="w-5 h-5 text-[#ff6b2b]/40 group-hover:text-[#ff6b2b] group-hover:translate-x-1 transition-all duration-300 flex-shrink-0" />
-                    )}
-                  </div>
-                </button>
+          {/* Role cards */}
+          <div className="bg-white border border-[#DDDDDD] rounded-xl p-6 space-y-3">
+            {/* Driver card */}
+            <button
+              onClick={() => handleAutoLogin('DRIVER')}
+              disabled={loading}
+              className="group w-full flex items-center gap-4 p-4 rounded-xl border border-[#DDDDDD] bg-[#F7F7F7] hover:border-[#0C447C] hover:bg-[#E6F1FB] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <div className="w-12 h-12 rounded-lg bg-[#E6F1FB] border border-[#C2DBF5] flex items-center justify-center flex-shrink-0">
+                <Car className="w-6 h-6 text-[#0C447C]" />
               </div>
-            </div>
+              <div className="flex-1 text-left">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-[#222222]">司機端</span>
+                  <span className="px-1.5 py-0.5 rounded text-[10px] font-normal bg-[#E6F1FB] text-[#0C447C] border border-[#C2DBF5]">DRIVER</span>
+                </div>
+                <div className="font-mono-nums text-[13px] text-[#717171] mt-0.5">{TEST_ACCOUNTS.DRIVER.email}</div>
+              </div>
+              {loading && selectedRole === 'DRIVER' ? (
+                <Loader2 className="w-5 h-5 text-[#0C447C] animate-spin flex-shrink-0" />
+              ) : (
+                <ArrowRight className="w-5 h-5 text-[#717171] group-hover:text-[#0C447C] group-hover:translate-x-1 transition-all flex-shrink-0" />
+              )}
+            </button>
+
+            {/* Dispatcher card */}
+            <button
+              onClick={() => handleAutoLogin('DISPATCHER')}
+              disabled={loading}
+              className="group w-full flex items-center gap-4 p-4 rounded-xl border border-[#DDDDDD] bg-[#F7F7F7] hover:border-[#FF385C] hover:bg-[#FFF3E0] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <div className="w-12 h-12 rounded-lg bg-[#FFF3E0] border border-[#FFE0B2] flex items-center justify-center flex-shrink-0">
+                <Building2 className="w-6 h-6 text-[#B45309]" />
+              </div>
+              <div className="flex-1 text-left">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-[#222222]">車頭端</span>
+                  <span className="px-1.5 py-0.5 rounded text-[10px] font-normal bg-[#FFF3E0] text-[#B45309] border border-[#FFE0B2]">DISPATCHER</span>
+                </div>
+                <div className="font-mono-nums text-[13px] text-[#717171] mt-0.5">{TEST_ACCOUNTS.DISPATCHER.email}</div>
+              </div>
+              {loading && selectedRole === 'DISPATCHER' ? (
+                <Loader2 className="w-5 h-5 text-[#B45309] animate-spin flex-shrink-0" />
+              ) : (
+                <ArrowRight className="w-5 h-5 text-[#717171] group-hover:text-[#B45309] group-hover:translate-x-1 transition-all flex-shrink-0" />
+              )}
+            </button>
           </div>
 
-          {/* Footer note */}
-          <div className="mt-8 text-center">
-            <Link href="/" className="inline-flex items-center gap-1.5 text-sm text-[#6b6560] hover:text-[#ff6b2b] transition-colors duration-200">
-              <span>返回首頁</span>
-              <ArrowRight className="w-3.5 h-3.5 rotate-180" />
+          {/* Back to home */}
+          <div className="mt-6 text-center">
+            <Link href="/" className="text-[13px] text-[#717171] hover:text-[#222222] transition-colors">
+              返回首頁
             </Link>
-          </div>
-
-          {/* Bottom decorative line */}
-          <div className="mt-8 flex items-center justify-center gap-3">
-            <div className="h-px flex-1 bg-gradient-to-r from-transparent to-[#1e1e26]" />
-            <div className="w-1.5 h-1.5 rounded-full bg-[#ff6b2b]/40" />
-            <div className="h-px flex-1 bg-gradient-to-l from-transparent to-[#1e1e26]" />
           </div>
         </div>
       </div>

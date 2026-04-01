@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       {
-        url: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23ff6b2b'/><path d='M8 16L14 10L20 16L14 22Z' fill='%23060608'/><path d='M14 16L20 10L26 16L20 22Z' fill='%23060608' opacity='0.5'/></svg>",
+        url: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23F59E0B'/><path d='M8 16L14 10L20 16L14 22Z' fill='white'/><path d='M14 16L20 10L26 16L20 22Z' fill='white' opacity='0.6'/></svg>",
         type: "image/svg+xml",
       },
     ],
@@ -37,7 +37,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="zh-TW" className={cn("dark", dmSans.variable, jetbrainsMono.variable)}>
+    <html lang="zh-TW" className={cn(dmSans.variable, jetbrainsMono.variable)}>
       <body className="font-sans antialiased">
         <AuthProvider>
           {children}

@@ -22,10 +22,7 @@ export default function RegisterPage() {
   })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const [mounted, setMounted] = useState(false)
   const { register } = useAuth()
-
-  useState(() => { setMounted(true) })
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }))
@@ -60,66 +57,49 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#060608] text-[#f0ebe3] relative overflow-hidden">
-      {/* Background grid */}
-      <div className="fixed inset-0 pointer-events-none grid-bg opacity-30" />
-
-      {/* Ambient glow */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-[#ff6b2b]/8 rounded-full blur-[150px]" />
-        <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-[#ff6b2b]/4 rounded-full blur-[100px]" />
-      </div>
-
+    <div className="min-h-screen bg-white text-[#222222]">
       {/* Header */}
-      <nav className="relative z-10 px-6 py-4">
-        <Link href="/" className="flex items-center gap-2 group w-fit">
-          <div className="w-8 h-8 rounded-lg bg-[#ff6b2b] flex items-center justify-center">
-            <Plane className="w-4 h-4 text-[#060608]" />
+      <nav className="px-6 py-4">
+        <Link href="/" className="flex items-center gap-2 w-fit">
+          <div className="w-8 h-8 rounded-lg bg-[#FF385C] flex items-center justify-center">
+            <Plane className="w-4 h-4 text-white" />
           </div>
-          <span className="text-[#ff6b2b] font-semibold tracking-tight">
-            機場接送派單平台
-          </span>
+          <span className="text-[#222222] font-medium">機場接送派單平台</span>
         </Link>
       </nav>
 
       {/* Register Form */}
-      <div className="relative z-10 flex items-center justify-center min-h-[calc(100vh-80px)] px-6 py-12">
-        <div className={`w-full max-w-md transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-
+      <div className="flex items-center justify-center px-6 py-8">
+        <div className="w-full max-w-md">
           {/* Header */}
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-[#f0ebe3] mb-2">建立帳戶</h1>
-            <p className="text-[#6b6560]">加入我們的接送服務平台</p>
-            <div className="mt-3 flex items-center justify-center gap-1 text-xs text-[#4a4a52] font-mono-nums">
-              <span>{format(new Date(), 'yyyy/MM/dd HH:mm')}</span>
+          <div className="text-center mb-6">
+            <h1 className="text-[22px] font-medium text-[#222222] mb-1">建立帳戶</h1>
+            <p className="text-[13px] text-[#717171]">加入我們的接送服務平台</p>
+            <div className="mt-2 text-xs text-[#B0B0B0] font-mono-nums">
+              {format(new Date(), 'yyyy/MM/dd HH:mm')}
             </div>
           </div>
 
           {/* Form Card */}
-          <div className="bg-[#0c0c10] border border-[#1e1e26] rounded-2xl p-8">
-            {/* Top accent */}
-            <div className="h-px bg-gradient-to-r from-transparent via-[#ff6b2b]/30 to-transparent mb-6 -mx-8 px-8" />
-
-            <form onSubmit={handleSubmit} className="space-y-5">
+          <div className="bg-white border border-[#DDDDDD] rounded-xl p-6">
+            <form onSubmit={handleSubmit} className="space-y-4">
               {error && (
-                <div className="bg-[#ef4444]/10 border border-[#ef4444]/20 text-[#ef4444] px-4 py-3 rounded-xl text-sm">
+                <div className="bg-[#FCEBEB] border border-[#F5C6C6] text-[#E24B4A] px-4 py-3 rounded-lg text-sm">
                   {error}
                 </div>
               )}
 
               {/* Role Selection */}
               <div className="space-y-2">
-                <label className="text-sm text-[#6b6560] font-medium">
-                  身份類型
-                </label>
+                <label className="text-[11px] text-[#717171] font-normal">身份類型</label>
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     type="button"
                     onClick={() => setFormData(prev => ({ ...prev, role: 'DRIVER' }))}
-                    className={`p-4 rounded-xl border-2 text-sm font-medium transition-all flex flex-col items-center gap-2 ${
+                    className={`p-3 rounded-xl border text-sm font-normal flex flex-col items-center gap-1.5 transition-colors ${
                       formData.role === 'DRIVER'
-                        ? 'border-[#ff6b2b] bg-[#ff6b2b]/10 text-[#ff6b2b]'
-                        : 'border-[#1e1e26] text-[#6b6560] hover:border-[#1e1e26]/80'
+                        ? 'border-[#FF385C] bg-[#FFF3E0] text-[#B45309]'
+                        : 'border-[#DDDDDD] text-[#717171] hover:bg-[#F7F7F7]'
                     }`}
                   >
                     <User className="w-5 h-5" />
@@ -128,10 +108,10 @@ export default function RegisterPage() {
                   <button
                     type="button"
                     onClick={() => setFormData(prev => ({ ...prev, role: 'DISPATCHER' }))}
-                    className={`p-4 rounded-xl border-2 text-sm font-medium transition-all flex flex-col items-center gap-2 ${
+                    className={`p-3 rounded-xl border text-sm font-normal flex flex-col items-center gap-1.5 transition-colors ${
                       formData.role === 'DISPATCHER'
-                        ? 'border-[#ff6b2b] bg-[#ff6b2b]/10 text-[#ff6b2b]'
-                        : 'border-[#1e1e26] text-[#6b6560] hover:border-[#1e1e26]/80'
+                        ? 'border-[#FF385C] bg-[#FFF3E0] text-[#B45309]'
+                        : 'border-[#DDDDDD] text-[#717171] hover:bg-[#F7F7F7]'
                     }`}
                   >
                     <Building2 className="w-5 h-5" />
@@ -141,7 +121,7 @@ export default function RegisterPage() {
               </div>
 
               <div className="space-y-1">
-                <label className="text-sm text-[#6b6560] font-medium">Email</label>
+                <label className="text-[11px] text-[#717171] font-normal">Email</label>
                 <input
                   type="email"
                   name="email"
@@ -149,13 +129,13 @@ export default function RegisterPage() {
                   value={formData.email}
                   onChange={handleChange}
                   required
-                  className="w-full bg-[#0c0c10] border border-[#1e1e26] rounded-xl px-4 py-3 text-[#f0ebe3] placeholder-[#3a3a40] focus:outline-none focus:border-[#ff6b2b]/50 focus:ring-1 focus:ring-[#ff6b2b]/20 transition-all"
+                  className="w-full bg-white border border-[#DDDDDD] rounded-lg px-3 py-2.5 text-[#222222] text-sm placeholder:text-[#B0B0B0] focus:outline-none focus:border-[#222222]"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-sm text-[#6b6560] font-medium">密碼</label>
+                  <label className="text-[11px] text-[#717171] font-normal">密碼</label>
                   <input
                     type="password"
                     name="password"
@@ -163,11 +143,11 @@ export default function RegisterPage() {
                     value={formData.password}
                     onChange={handleChange}
                     required
-                    className="w-full bg-[#0c0c10] border border-[#1e1e26] rounded-xl px-4 py-3 text-[#f0ebe3] placeholder-[#3a3a40] focus:outline-none focus:border-[#ff6b2b]/50 focus:ring-1 focus:ring-[#ff6b2b]/20 transition-all"
+                    className="w-full bg-white border border-[#DDDDDD] rounded-lg px-3 py-2.5 text-[#222222] text-sm placeholder:text-[#B0B0B0] focus:outline-none focus:border-[#222222]"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-sm text-[#6b6560] font-medium">確認密碼</label>
+                  <label className="text-[11px] text-[#717171] font-normal">確認密碼</label>
                   <input
                     type="password"
                     name="confirmPassword"
@@ -175,13 +155,13 @@ export default function RegisterPage() {
                     value={formData.confirmPassword}
                     onChange={handleChange}
                     required
-                    className="w-full bg-[#0c0c10] border border-[#1e1e26] rounded-xl px-4 py-3 text-[#f0ebe3] placeholder-[#3a3a40] focus:outline-none focus:border-[#ff6b2b]/50 focus:ring-1 focus:ring-[#ff6b2b]/20 transition-all"
+                    className="w-full bg-white border border-[#DDDDDD] rounded-lg px-3 py-2.5 text-[#222222] text-sm placeholder:text-[#B0B0B0] focus:outline-none focus:border-[#222222]"
                   />
                 </div>
               </div>
 
               <div className="space-y-1">
-                <label className="text-sm text-[#6b6560] font-medium">姓名</label>
+                <label className="text-[11px] text-[#717171] font-normal">姓名</label>
                 <input
                   type="text"
                   name="name"
@@ -189,12 +169,12 @@ export default function RegisterPage() {
                   value={formData.name}
                   onChange={handleChange}
                   required
-                  className="w-full bg-[#0c0c10] border border-[#1e1e26] rounded-xl px-4 py-3 text-[#f0ebe3] placeholder-[#3a3a40] focus:outline-none focus:border-[#ff6b2b]/50 focus:ring-1 focus:ring-[#ff6b2b]/20 transition-all"
+                  className="w-full bg-white border border-[#DDDDDD] rounded-lg px-3 py-2.5 text-[#222222] text-sm placeholder:text-[#B0B0B0] focus:outline-none focus:border-[#222222]"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-sm text-[#6b6560] font-medium">手機號碼</label>
+                <label className="text-[11px] text-[#717171] font-normal">手機號碼</label>
                 <input
                   type="tel"
                   name="phone"
@@ -202,7 +182,7 @@ export default function RegisterPage() {
                   value={formData.phone}
                   onChange={handleChange}
                   required
-                  className="w-full bg-[#0c0c10] border border-[#1e1e26] rounded-xl px-4 py-3 text-[#f0ebe3] placeholder-[#3a3a40] focus:outline-none focus:border-[#ff6b2b]/50 focus:ring-1 focus:ring-[#ff6b2b]/20 transition-all"
+                  className="w-full bg-white border border-[#DDDDDD] rounded-lg px-3 py-2.5 text-[#222222] text-sm placeholder:text-[#B0B0B0] focus:outline-none focus:border-[#222222]"
                 />
               </div>
 
@@ -210,7 +190,7 @@ export default function RegisterPage() {
               {formData.role === 'DRIVER' && (
                 <>
                   <div className="space-y-1">
-                    <label className="text-sm text-[#6b6560] font-medium">車牌號碼</label>
+                    <label className="text-[11px] text-[#717171] font-normal">車牌號碼</label>
                     <input
                       type="text"
                       name="licensePlate"
@@ -218,29 +198,29 @@ export default function RegisterPage() {
                       value={formData.licensePlate}
                       onChange={handleChange}
                       required
-                      className="w-full bg-[#0c0c10] border border-[#1e1e26] rounded-xl px-4 py-3 text-[#f0ebe3] placeholder-[#3a3a40] focus:outline-none focus:border-[#ff6b2b]/50 focus:ring-1 focus:ring-[#ff6b2b]/20 transition-all"
+                      className="w-full bg-white border border-[#DDDDDD] rounded-lg px-3 py-2.5 text-[#222222] text-sm placeholder:text-[#B0B0B0] focus:outline-none focus:border-[#222222]"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-sm text-[#6b6560] font-medium">車型</label>
+                    <label className="text-[11px] text-[#717171] font-normal">車型</label>
                     <input
                       type="text"
                       name="carType"
                       placeholder="例如：轎車、SUV、福祉車"
                       value={formData.carType}
                       onChange={handleChange}
-                      className="w-full bg-[#0c0c10] border border-[#1e1e26] rounded-xl px-4 py-3 text-[#f0ebe3] placeholder-[#3a3a40] focus:outline-none focus:border-[#ff6b2b]/50 focus:ring-1 focus:ring-[#ff6b2b]/20 transition-all"
+                      className="w-full bg-white border border-[#DDDDDD] rounded-lg px-3 py-2.5 text-[#222222] text-sm placeholder:text-[#B0B0B0] focus:outline-none focus:border-[#222222]"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-sm text-[#6b6560] font-medium">車色</label>
+                    <label className="text-[11px] text-[#717171] font-normal">車色</label>
                     <input
                       type="text"
                       name="carColor"
                       placeholder="例如：黑色、白色、銀色"
                       value={formData.carColor}
                       onChange={handleChange}
-                      className="w-full bg-[#0c0c10] border border-[#1e1e26] rounded-xl px-4 py-3 text-[#f0ebe3] placeholder-[#3a3a40] focus:outline-none focus:border-[#ff6b2b]/50 focus:ring-1 focus:ring-[#ff6b2b]/20 transition-all"
+                      className="w-full bg-white border border-[#DDDDDD] rounded-lg px-3 py-2.5 text-[#222222] text-sm placeholder:text-[#B0B0B0] focus:outline-none focus:border-[#222222]"
                     />
                   </div>
                 </>
@@ -249,26 +229,24 @@ export default function RegisterPage() {
               {/* Dispatcher specific fields */}
               {formData.role === 'DISPATCHER' && (
                 <div className="space-y-1">
-                  <label className="text-sm text-[#6b6560] font-medium">公司/車隊名稱</label>
+                  <label className="text-[11px] text-[#717171] font-normal">公司/車隊名稱</label>
                   <input
                     type="text"
                     name="companyName"
                     placeholder="請輸入公司或車隊名稱"
                     value={formData.companyName}
                     onChange={handleChange}
-                    className="w-full bg-[#0c0c10] border border-[#1e1e26] rounded-xl px-4 py-3 text-[#f0ebe3] placeholder-[#3a3a40] focus:outline-none focus:border-[#ff6b2b]/50 focus:ring-1 focus:ring-[#ff6b2b]/20 transition-all"
+                    className="w-full bg-white border border-[#DDDDDD] rounded-lg px-3 py-2.5 text-[#222222] text-sm placeholder:text-[#B0B0B0] focus:outline-none focus:border-[#222222]"
                   />
                 </div>
               )}
 
               <button
                 type="submit"
-                className="w-full bg-[#ff6b2b] hover:bg-[#e85a1a] text-[#060608] font-semibold h-12 rounded-xl flex items-center justify-center gap-2 transition-all shadow-[0_0_20px_rgba(255,107,43,0.3)]"
+                className="w-full bg-[#FF385C] hover:bg-[#D70466] text-white font-normal h-10 rounded-lg flex items-center justify-center gap-2 transition-colors text-sm"
                 disabled={loading}
               >
-                {loading ? (
-                  <span className="animate-pulse">註冊中...</span>
-                ) : (
+                {loading ? '註冊中...' : (
                   <>
                     註冊
                     <ArrowRight className="w-4 h-4" />
@@ -276,9 +254,9 @@ export default function RegisterPage() {
                 )}
               </button>
 
-              <div className="text-center text-sm text-[#6b6560]">
+              <div className="text-center text-sm text-[#717171]">
                 已有帳戶？{' '}
-                <Link href="/login" className="text-[#ff6b2b] hover:text-[#e85a1a] transition-colors">
+                <Link href="/login" className="text-[#FF385C] hover:text-[#D70466] transition-colors">
                   立即登入
                 </Link>
               </div>
@@ -286,33 +264,32 @@ export default function RegisterPage() {
           </div>
 
           {/* Benefits */}
-          <div className="mt-4 bg-[#0c0c10] border border-[#1e1e26] rounded-xl p-4">
-            <p className="text-[10px] text-[#4a4a52] mb-3 uppercase tracking-wider">加入優勢</p>
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-xs text-[#6b6560]">
-                <Check className="w-3 h-3 text-[#22c55e]" />
+          <div className="mt-3 bg-[#F7F7F7] border border-[#DDDDDD] rounded-xl p-4">
+            <p className="text-[11px] text-[#717171] mb-2">加入優勢</p>
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-2 text-xs text-[#717171]">
+                <Check className="w-3 h-3 text-[#008A05]" />
                 <span>新用戶首刷 NT$500 點</span>
               </div>
-              <div className="flex items-center gap-2 text-xs text-[#6b6560]">
-                <Check className="w-3 h-3 text-[#22c55e]" />
+              <div className="flex items-center gap-2 text-xs text-[#717171]">
+                <Check className="w-3 h-3 text-[#008A05]" />
                 <span>每單僅收取 5% 平台服務費</span>
               </div>
-              <div className="flex items-center gap-2 text-xs text-[#6b6560]">
-                <Check className="w-3 h-3 text-[#22c55e]" />
+              <div className="flex items-center gap-2 text-xs text-[#717171]">
+                <Check className="w-3 h-3 text-[#008A05]" />
                 <span>即時訂單推播，抢单不遗漏</span>
               </div>
             </div>
           </div>
 
           {/* Back to home */}
-          <div className="mt-4 text-center">
-            <Link href="/" className="text-xs text-[#4a4a52] hover:text-[#ff6b2b] transition-colors">
+          <div className="mt-3 text-center">
+            <Link href="/" className="text-[11px] text-[#717171] hover:text-[#222222] transition-colors">
               返回首頁
             </Link>
           </div>
 
-          {/* Terms */}
-          <p className="text-center text-xs text-[#3a3a40] mt-6">
+          <p className="text-center text-[11px] text-[#B0B0B0] mt-4">
             註冊即表示您同意我們的服務條款和隱私政策
           </p>
         </div>

@@ -156,17 +156,17 @@ export default function DriverDashboard() {
 
   if (isLoading || !user) {
     return (
-      <div className="min-h-screen bg-[#060608] flex items-center justify-center">
+      <div className="min-h-screen bg-[#FAF9F7] flex items-center justify-center">
         <div className="text-center">
-          <div className="w-12 h-12 border-2 border-[#ff6b2b] border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="mt-4 text-[#6b6560] text-sm">載入中...</p>
+          <div className="w-12 h-12 border-2 border-[#F59E0B] border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="mt-4 text-[#78716C] text-sm">載入中...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-[#060608] text-[#f0ebe3]">
+    <div className="min-h-screen bg-[#FAF9F7] text-[#1C1917]">
       {/* Background */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute inset-0 grid-bg opacity-30" />
@@ -174,16 +174,16 @@ export default function DriverDashboard() {
       </div>
 
       {/* Header */}
-      <header className="relative z-20 bg-[#060608]/90 backdrop-blur-xl border-b border-[#1e1e26] sticky top-0">
+      <header className="relative z-20 bg-[#FAF9F7]/90 backdrop-blur-xl border-b border-[#E7E5E4] sticky top-0">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex items-center justify-between h-16">
             <Link href="/" className="flex items-center gap-3 group">
-              <div className="w-9 h-9 rounded-lg bg-[#3b82f6] flex items-center justify-center shadow-[0_0_20px_rgba(59,130,246,0.3)]">
-                <Plane className="w-4 h-4 text-[#060608]" />
+              <div className="w-9 h-9 rounded-lg bg-[#F59E0B] flex items-center justify-center shadow-[0_0_20px_rgba(245,158,11,0.25)]">
+                <Plane className="w-4 h-4 text-white" />
               </div>
               <div>
-                <span className="text-[#f0ebe3] font-bold tracking-tight text-lg">司機專區</span>
-                <div className="flex items-center gap-3 text-[10px] text-[#6b6560]">
+                <span className="text-[#1C1917] font-bold tracking-tight text-lg">司機專區</span>
+                <div className="flex items-center gap-3 text-[10px] text-[#78716C]">
                   <span className="font-mono-nums">{new Date().toLocaleDateString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit' })}</span>
                   <span className="font-mono-nums">{new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' })}</span>
                 </div>
@@ -191,23 +191,23 @@ export default function DriverDashboard() {
             </Link>
             <div className="flex items-center gap-6">
               {/* Balance */}
-              <div className="hidden md:flex items-center gap-3 px-4 py-2 bg-[#0c0c10] border border-[#1e1e26] rounded-lg">
+              <div className="hidden md:flex items-center gap-3 px-4 py-2 bg-white border border-[#E7E5E4] rounded-lg shadow-sm">
                 <div className="text-right">
-                  <p className="text-[10px] text-[#6b6560] uppercase tracking-wider">帳戶餘額</p>
-                  <p className="text-lg font-bold text-[#ff6b2b] font-mono-nums">{user.driver?.balance ?? 0}</p>
+                  <p className="text-[10px] text-[#78716C] uppercase tracking-wider">帳戶餘額</p>
+                  <p className="text-lg font-bold text-[#F59E0B] font-mono-nums">{user.driver?.balance ?? 0}</p>
                 </div>
-                <div className="w-px h-8 bg-[#1e1e26]" />
+                <div className="w-px h-8 bg-[#E7E5E4]" />
                 <div className="text-right">
-                  <p className="text-[10px] text-[#6b6560] uppercase tracking-wider">今日成交</p>
-                  <p className="text-lg font-bold text-[#22c55e] font-mono-nums">{balanceStats.todayOrders}</p>
+                  <p className="text-[10px] text-[#78716C] uppercase tracking-wider">今日成交</p>
+                  <p className="text-lg font-bold text-[#22C55E] font-mono-nums">{balanceStats.todayOrders}</p>
                 </div>
               </div>
               <div className="flex items-center gap-4">
                 <div className="text-right">
-                  <p className="text-sm font-medium">{user.name}</p>
-                  <p className="text-xs text-[#6b6560]">{driverProfile?.licensePlate || '未設定車牌'}</p>
+                  <p className="text-sm font-medium text-[#1C1917]">{user.name}</p>
+                  <p className="text-xs text-[#78716C]">{driverProfile?.licensePlate || '未設定車牌'}</p>
                 </div>
-                <Button variant="outline" size="sm" onClick={logout} className="border-[#1e1e26] text-[#6b6560] hover:border-[#ff6b2b]/30 hover:text-[#ff6b2b] hover:bg-[#ff6b2b]/5">
+                <Button variant="outline" size="sm" onClick={logout} className="border-[#E7E5E4] text-[#78716C] hover:border-[#F59E0B]/30 hover:text-[#F59E0B] hover:bg-[#F59E0B]/5">
                   <LogOut className="w-4 h-4" />
                 </Button>
               </div>
@@ -217,78 +217,78 @@ export default function DriverDashboard() {
       </header>
 
       {/* Live indicator bar */}
-      <div className="relative z-10 bg-[#060608]/80 backdrop-blur-xl border-b border-[#1e1e26]">
+      <div className="relative z-10 bg-[#FAF9F7]/80 backdrop-blur-xl border-b border-[#E7E5E4]">
         <div className="max-w-7xl mx-auto px-6 py-2.5">
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-[#22c55e]/5 border border-[#22c55e]/15">
-              <Radio className="w-3 h-3 text-[#22c55e] animate-pulse" />
-              <span className="text-xs text-[#22c55e] font-medium font-mono-nums">即時接收新訂單</span>
+            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-[#22C55E]/5 border border-[#22C55E]/20">
+              <Radio className="w-3 h-3 text-[#22C55E] animate-pulse" />
+              <span className="text-xs text-[#22C55E] font-medium font-mono-nums">即時接收新訂單</span>
             </div>
-            <div className="h-px flex-1 bg-gradient-to-r from-[#1e1e26] to-transparent" />
-            <div className="flex items-center gap-4 text-xs text-[#6b6560] font-mono-nums">
-              <span>今日 <strong className="text-[#22c55e]">{balanceStats.todayOrders}</strong> 單</span>
-              <span className="w-px h-3 bg-[#1e1e26]" />
-              <span>本週 <strong className="text-[#3b82f6]">{balanceStats.weekOrders}</strong> 單</span>
+            <div className="h-px flex-1 bg-gradient-to-r from-[#E7E5E4] to-transparent" />
+            <div className="flex items-center gap-4 text-xs text-[#78716C] font-mono-nums">
+              <span>今日 <strong className="text-[#22C55E]">{balanceStats.todayOrders}</strong> 單</span>
+              <span className="w-px h-3 bg-[#E7E5E4]" />
+              <span>本週 <strong className="text-[#3B82F6]">{balanceStats.weekOrders}</strong> 單</span>
             </div>
           </div>
         </div>
       </div>
 
       {/* Tab Navigation */}
-      <div className="relative z-10 bg-[#060608]/80 backdrop-blur-xl border-b border-[#1e1e26] sticky top-[108px]">
+      <div className="relative z-10 bg-[#FAF9F7]/80 backdrop-blur-xl border-b border-[#E7E5E4] sticky top-[108px]">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex gap-0">
             <button
               onClick={() => { setActiveTab('available'); setNewOrderCount(0) }}
               className={`flex items-center gap-2 px-5 py-3.5 text-sm font-medium border-b-2 transition-all duration-200 relative ${
                 activeTab === 'available'
-                  ? 'border-[#3b82f6] text-[#3b82f6]'
-                  : 'border-transparent text-[#6b6560] hover:text-[#f0ebe3] hover:bg-[#141418]/50'
+                  ? 'border-[#F59E0B] text-[#F59E0B]'
+                  : 'border-transparent text-[#78716C] hover:text-[#1C1917] hover:bg-[#F5F4F0]/50'
               }`}
             >
               <ClipboardList className="w-4 h-4" />
               可接訂單
-              <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-mono-nums bg-[#3b82f6]/15 text-[#3b82f6] border border-[#3b82f6]/20">
+              <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-mono-nums bg-[#F59E0B]/10 text-[#F59E0B] border border-[#F59E0B]/20">
                 {availableOrders.length}
               </span>
               {newOrderCount > 0 && activeTab !== 'available' && (
-                <span className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-[#ef4444] rounded-full text-[10px] font-bold flex items-center justify-center animate-pulse text-white">
+                <span className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-[#EF4444] rounded-full text-[10px] font-bold flex items-center justify-center animate-pulse text-white">
                   {newOrderCount}
                 </span>
               )}
               {activeTab === 'available' && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#3b82f6]" style={{ boxShadow: '0 0 8px rgba(59,130,246,0.5)' }} />
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#F59E0B]" style={{ boxShadow: '0 0 8px rgba(245,158,11,0.4)' }} />
               )}
             </button>
             <button
               onClick={() => setActiveTab('myorders')}
               className={`flex items-center gap-2 px-5 py-3.5 text-sm font-medium border-b-2 transition-all duration-200 relative ${
                 activeTab === 'myorders'
-                  ? 'border-[#3b82f6] text-[#3b82f6]'
-                  : 'border-transparent text-[#6b6560] hover:text-[#f0ebe3] hover:bg-[#141418]/50'
+                  ? 'border-[#F59E0B] text-[#F59E0B]'
+                  : 'border-transparent text-[#78716C] hover:text-[#1C1917] hover:bg-[#F5F4F0]/50'
               }`}
             >
               <FileText className="w-4 h-4" />
               我的行程
-              <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-mono-nums bg-[#141418] text-[#6b6560] border border-[#1e1e26]">
+              <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-mono-nums bg-[#F5F4F0] text-[#78716C] border border-[#E7E5E4]">
                 {myOrders.length}
               </span>
               {activeTab === 'myorders' && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#3b82f6]" style={{ boxShadow: '0 0 8px rgba(59,130,246,0.5)' }} />
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#F59E0B]" style={{ boxShadow: '0 0 8px rgba(245,158,11,0.4)' }} />
               )}
             </button>
             <button
               onClick={() => setActiveTab('balance')}
               className={`flex items-center gap-2 px-5 py-3.5 text-sm font-medium border-b-2 transition-all duration-200 relative ${
                 activeTab === 'balance'
-                  ? 'border-[#3b82f6] text-[#3b82f6]'
-                  : 'border-transparent text-[#6b6560] hover:text-[#f0ebe3] hover:bg-[#141418]/50'
+                  ? 'border-[#F59E0B] text-[#F59E0B]'
+                  : 'border-transparent text-[#78716C] hover:text-[#1C1917] hover:bg-[#F5F4F0]/50'
               }`}
             >
               <Wallet className="w-4 h-4" />
               帳務中心
               {activeTab === 'balance' && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#3b82f6]" style={{ boxShadow: '0 0 8px rgba(59,130,246,0.5)' }} />
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#F59E0B]" style={{ boxShadow: '0 0 8px rgba(245,158,11,0.4)' }} />
               )}
             </button>
           </div>
@@ -303,17 +303,17 @@ export default function DriverDashboard() {
           <>
             {loading ? (
               <div className="text-center py-12">
-                <div className="w-10 h-10 border-2 border-[#3b82f6] border-t-transparent rounded-full animate-spin mx-auto" />
+                <div className="w-10 h-10 border-2 border-[#F59E0B] border-t-transparent rounded-full animate-spin mx-auto" />
               </div>
             ) : availableOrders.length === 0 ? (
-              <div className="text-center py-32 border border-[#1e1e26] rounded-2xl bg-[#0c0c10]/50 relative overflow-hidden">
+              <div className="text-center py-32 border border-[#E7E5E4] rounded-2xl bg-white/50 relative overflow-hidden shadow-sm">
                 <div className="absolute inset-0 dot-matrix opacity-30" />
                 <div className="relative">
-                  <div className="w-16 h-16 rounded-2xl bg-[#141418] border border-[#1e1e26] flex items-center justify-center mx-auto mb-4">
-                    <Inbox className="w-8 h-8 text-[#3a3a40]" />
+                  <div className="w-16 h-16 rounded-2xl bg-[#F5F4F0] border border-[#E7E5E4] flex items-center justify-center mx-auto mb-4">
+                    <Inbox className="w-8 h-8 text-[#D6D3D1]" />
                   </div>
-                  <p className="text-[#6b6560] mb-1 text-lg font-medium">目前沒有可接的訂單</p>
-                  <p className="text-[#3a3a40] text-sm">系統會自動推送新訂單通知</p>
+                  <p className="text-[#78716C] mb-1 text-lg font-medium">目前沒有可接的訂單</p>
+                  <p className="text-[#A8A29E] text-sm">系統會自動推送新訂單通知</p>
                 </div>
               </div>
             ) : (
@@ -332,14 +332,14 @@ export default function DriverDashboard() {
         {activeTab === 'myorders' && (
           <>
             {myOrders.length === 0 ? (
-              <div className="text-center py-32 border border-[#1e1e26] rounded-2xl bg-[#0c0c10]/50 relative overflow-hidden">
+              <div className="text-center py-32 border border-[#E7E5E4] rounded-2xl bg-white/50 relative overflow-hidden shadow-sm">
                 <div className="absolute inset-0 dot-matrix opacity-30" />
                 <div className="relative">
-                  <div className="w-16 h-16 rounded-2xl bg-[#141418] border border-[#1e1e26] flex items-center justify-center mx-auto mb-4">
-                    <FileText className="w-8 h-8 text-[#3a3a40]" />
+                  <div className="w-16 h-16 rounded-2xl bg-[#F5F4F0] border border-[#E7E5E4] flex items-center justify-center mx-auto mb-4">
+                    <FileText className="w-8 h-8 text-[#D6D3D1]" />
                   </div>
-                  <p className="text-[#6b6560] mb-1 text-lg font-medium">還沒有行程</p>
-                  <p className="text-[#3a3a40] text-sm">快去接單吧！</p>
+                  <p className="text-[#78716C] mb-1 text-lg font-medium">還沒有行程</p>
+                  <p className="text-[#A8A29E] text-sm">快去接單吧！</p>
                 </div>
               </div>
             ) : (
@@ -358,14 +358,14 @@ export default function DriverDashboard() {
             {/* Earnings cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               {/* Today */}
-              <div className="bg-[#0c0c10] border border-[#1e1e26] rounded-xl p-5 relative overflow-hidden">
-                <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#22c55e]/50 to-transparent" />
+              <div className="bg-white border border-[#E7E5E4] rounded-xl p-5 relative overflow-hidden shadow-sm">
+                <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#22C55E]/50 to-transparent" />
                 <div className="flex items-center gap-2 mb-3">
-                  <div className="w-1.5 h-1.5 rounded-full bg-[#22c55e] animate-pulse" />
-                  <span className="text-[10px] text-[#22c55e] uppercase tracking-widest font-medium">今日收益</span>
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#22C55E] animate-pulse" />
+                  <span className="text-[10px] text-[#22C55E] uppercase tracking-widest font-medium">今日收益</span>
                 </div>
-                <p className="text-3xl font-bold text-[#f0ebe3] font-mono-nums">{balanceStats.today.toLocaleString()}</p>
-                <p className="text-xs text-[#6b6560] mt-1 font-mono-nums">{balanceStats.todayOrders} 單</p>
+                <p className="text-3xl font-bold text-[#1C1917] font-mono-nums">{balanceStats.today.toLocaleString()}</p>
+                <p className="text-xs text-[#78716C] mt-1 font-mono-nums">{balanceStats.todayOrders} 單</p>
                 {/* Mini sparkline */}
                 <div className="mt-4 flex items-end gap-0.5 h-8">
                   {Array.from({ length: 7 }).map((_, i) => {
@@ -382,8 +382,8 @@ export default function DriverDashboard() {
                     const isToday = i === 6
                     return (
                       <div key={i} className="flex-1 flex flex-col items-center gap-0.5">
-                        <div className={`w-full rounded-sm transition-all ${isToday ? 'bg-[#22c55e]' : 'bg-[#22c55e]/25'}`} style={{ height: `${barH}px` }} />
-                        <span className="text-[8px] text-[#3a3a40] font-mono-nums">{'日一二三四五六'[dayStart.getDay()]}</span>
+                        <div className={`w-full rounded-sm transition-all ${isToday ? 'bg-[#22C55E]' : 'bg-[#22C55E]/25'}`} style={{ height: `${barH}px` }} />
+                        <span className="text-[8px] text-[#A8A29E] font-mono-nums">{'日一二三四五六'[dayStart.getDay()]}</span>
                       </div>
                     )
                   })}
@@ -391,44 +391,44 @@ export default function DriverDashboard() {
               </div>
 
               {/* This Week */}
-              <div className="bg-[#0c0c10] border border-[#1e1e26] rounded-xl p-5 relative overflow-hidden">
-                <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#3b82f6]/50 to-transparent" />
+              <div className="bg-white border border-[#E7E5E4] rounded-xl p-5 relative overflow-hidden shadow-sm">
+                <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#3B82F6]/50 to-transparent" />
                 <div className="flex items-center gap-2 mb-3">
-                  <TrendingUp className="w-3.5 h-3.5 text-[#3b82f6]" />
-                  <span className="text-[10px] text-[#3b82f6] uppercase tracking-widest font-medium">本週收益</span>
+                  <TrendingUp className="w-3.5 h-3.5 text-[#3B82F6]" />
+                  <span className="text-[10px] text-[#3B82F6] uppercase tracking-widest font-medium">本週收益</span>
                 </div>
-                <p className="text-3xl font-bold text-[#f0ebe3] font-mono-nums">{balanceStats.thisWeek.toLocaleString()}</p>
-                <p className="text-xs text-[#6b6560] mt-1 font-mono-nums">{balanceStats.weekOrders} 單</p>
+                <p className="text-3xl font-bold text-[#1C1917] font-mono-nums">{balanceStats.thisWeek.toLocaleString()}</p>
+                <p className="text-xs text-[#78716C] mt-1 font-mono-nums">{balanceStats.weekOrders} 單</p>
                 {/* Progress */}
                 <div className="mt-4">
-                  <div className="flex justify-between text-[10px] text-[#6b6560] mb-1">
+                  <div className="flex justify-between text-[10px] text-[#78716C] mb-1">
                     <span>本週進度</span>
                     <span className="font-mono-nums">{balanceStats.thisWeek >= 5000 ? '已達標' : `${balanceStats.thisWeek}/5000`}</span>
                   </div>
-                  <div className="h-1.5 bg-[#141418] rounded-full overflow-hidden">
-                    <div className="h-full bg-[#3b82f6] rounded-full transition-all" style={{ width: `${Math.min((balanceStats.thisWeek / 5000) * 100, 100)}%` }} />
+                  <div className="h-1.5 bg-[#F5F4F0] rounded-full overflow-hidden">
+                    <div className="h-full bg-[#3B82F6] rounded-full transition-all" style={{ width: `${Math.min((balanceStats.thisWeek / 5000) * 100, 100)}%` }} />
                   </div>
                 </div>
               </div>
 
               {/* All Time */}
-              <div className="bg-[#0c0c10] border border-[#1e1e26] rounded-xl p-5 relative overflow-hidden">
-                <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#a855f7]/50 to-transparent" />
+              <div className="bg-white border border-[#E7E5E4] rounded-xl p-5 relative overflow-hidden shadow-sm">
+                <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#A855F7]/50 to-transparent" />
                 <div className="flex items-center gap-2 mb-3">
-                  <Zap className="w-3.5 h-3.5 text-[#a855f7]" />
-                  <span className="text-[10px] text-[#a855f7] uppercase tracking-widest font-medium">累積收益</span>
+                  <Zap className="w-3.5 h-3.5 text-[#A855F7]" />
+                  <span className="text-[10px] text-[#A855F7] uppercase tracking-widest font-medium">累積收益</span>
                 </div>
-                <p className="text-3xl font-bold text-[#f0ebe3] font-mono-nums">{balanceStats.allTime.toLocaleString()}</p>
-                <p className="text-xs text-[#6b6560] mt-1 font-mono-nums">{balanceStats.allOrders} 單</p>
+                <p className="text-3xl font-bold text-[#1C1917] font-mono-nums">{balanceStats.allTime.toLocaleString()}</p>
+                <p className="text-xs text-[#78716C] mt-1 font-mono-nums">{balanceStats.allOrders} 單</p>
                 {/* Fee breakdown */}
                 <div className="mt-4 space-y-1">
                   <div className="flex justify-between text-[10px]">
-                    <span className="text-[#6b6560]">平台費 (5%)</span>
-                    <span className="text-[#ef4444] font-mono-nums">-{balance.totalPlatformFees?.toLocaleString() || 0}</span>
+                    <span className="text-[#78716C]">平台費 (5%)</span>
+                    <span className="text-[#EF4444] font-mono-nums">-{balance.totalPlatformFees?.toLocaleString() || 0}</span>
                   </div>
                   <div className="flex justify-between text-[10px]">
-                    <span className="text-[#6b6560]">總收入</span>
-                    <span className="text-[#f0ebe3] font-mono-nums">{(balanceStats.allTime + (balance.totalPlatformFees || 0)).toLocaleString()}</span>
+                    <span className="text-[#78716C]">總收入</span>
+                    <span className="text-[#1C1917] font-mono-nums">{(balanceStats.allTime + (balance.totalPlatformFees || 0)).toLocaleString()}</span>
                   </div>
                 </div>
               </div>
@@ -436,67 +436,67 @@ export default function DriverDashboard() {
 
             {/* Stats row */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <div className="bg-[#0c0c10] border border-[#1e1e26] rounded-xl p-4">
+              <div className="bg-white border border-[#E7E5E4] rounded-xl p-4 shadow-sm">
                 <div className="flex items-center gap-2 mb-2">
-                  <Wallet className="w-3.5 h-3.5 text-[#ff6b2b]" />
-                  <span className="text-[10px] text-[#ff6b2b] uppercase tracking-widest">帳戶餘額</span>
+                  <Wallet className="w-3.5 h-3.5 text-[#F59E0B]" />
+                  <span className="text-[10px] text-[#F59E0B] uppercase tracking-widest">帳戶餘額</span>
                 </div>
-                <p className="text-2xl font-bold text-[#f0ebe3] font-mono-nums">{balance.balance.toLocaleString()}</p>
-                <p className="text-xs text-[#6b6560] mt-0.5">點</p>
+                <p className="text-2xl font-bold text-[#1C1917] font-mono-nums">{balance.balance.toLocaleString()}</p>
+                <p className="text-xs text-[#78716C] mt-0.5">點</p>
               </div>
-              <div className="bg-[#0c0c10] border border-[#1e1e26] rounded-xl p-4">
+              <div className="bg-white border border-[#E7E5E4] rounded-xl p-4 shadow-sm">
                 <div className="flex items-center gap-2 mb-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-[#f59e0b]" />
-                  <span className="text-[10px] text-[#f59e0b] uppercase tracking-widest">待結算</span>
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#F59E0B]" />
+                  <span className="text-[10px] text-[#F59E0B] uppercase tracking-widest">待結算</span>
                 </div>
-                <p className="text-2xl font-bold text-[#f0ebe3] font-mono-nums">
+                <p className="text-2xl font-bold text-[#1C1917] font-mono-nums">
                   {(balance.transactions as Array<{ status: string }>).filter(t => t.status === 'PENDING').length}
                 </p>
-                <p className="text-xs text-[#6b6560] mt-0.5">筆</p>
+                <p className="text-xs text-[#78716C] mt-0.5">筆</p>
               </div>
-              <div className="bg-[#0c0c10] border border-[#1e1e26] rounded-xl p-4">
+              <div className="bg-white border border-[#E7E5E4] rounded-xl p-4 shadow-sm">
                 <div className="flex items-center gap-2 mb-2">
-                  <TrendingUp className="w-3.5 h-3.5 text-[#3b82f6]" />
-                  <span className="text-[10px] text-[#3b82f6] uppercase tracking-widest">總行程</span>
+                  <TrendingUp className="w-3.5 h-3.5 text-[#3B82F6]" />
+                  <span className="text-[10px] text-[#3B82F6] uppercase tracking-widest">總行程</span>
                 </div>
-                <p className="text-2xl font-bold text-[#f0ebe3] font-mono-nums">
+                <p className="text-2xl font-bold text-[#1C1917] font-mono-nums">
                   {(balance.transactions as Array<{ type: string }>).filter(t => t.type === 'RIDE_FARE').length}
                 </p>
-                <p className="text-xs text-[#6b6560] mt-0.5">單</p>
+                <p className="text-xs text-[#78716C] mt-0.5">單</p>
               </div>
-              <div className="bg-[#0c0c10] border border-[#1e1e26] rounded-xl p-4">
+              <div className="bg-white border border-[#E7E5E4] rounded-xl p-4 shadow-sm">
                 <div className="flex items-center gap-2 mb-2">
-                  <Zap className="w-3.5 h-3.5 text-[#a855f7]" />
-                  <span className="text-[10px] text-[#a855f7] uppercase tracking-widest">平台費率</span>
+                  <Zap className="w-3.5 h-3.5 text-[#A855F7]" />
+                  <span className="text-[10px] text-[#A855F7] uppercase tracking-widest">平台費率</span>
                 </div>
-                <p className="text-2xl font-bold text-[#f0ebe3] font-mono-nums">5%</p>
-                <p className="text-xs text-[#6b6560] mt-0.5">每單</p>
+                <p className="text-2xl font-bold text-[#1C1917] font-mono-nums">5%</p>
+                <p className="text-xs text-[#78716C] mt-0.5">每單</p>
               </div>
             </div>
 
             {/* Transactions */}
-            <div className="bg-[#0c0c10] border border-[#1e1e26] rounded-xl overflow-hidden">
-              <div className="px-5 py-4 border-b border-[#1e1e26]">
-                <h3 className="text-sm font-semibold text-[#f0ebe3]">最近交易</h3>
+            <div className="bg-white border border-[#E7E5E4] rounded-xl overflow-hidden shadow-sm">
+              <div className="px-5 py-4 border-b border-[#E7E5E4]">
+                <h3 className="text-sm font-semibold text-[#1C1917]">最近交易</h3>
               </div>
               <div className="p-5">
                 {!balance.transactions || balance.transactions.length === 0 ? (
-                  <p className="text-[#6b6560] text-center py-8 text-sm">暫無交易記錄</p>
+                  <p className="text-[#78716C] text-center py-8 text-sm">暫無交易記錄</p>
                 ) : (
                   <div className="space-y-3">
                     {(balance.transactions as unknown[]).slice(0, 10).map((tx: unknown) => {
                       const transaction = tx as { id: string; amount: number; type: string; status: string; description?: string; createdAt: string | Date }
                       const displayAmount = transaction.type === 'RIDE_FARE' ? Math.floor(transaction.amount * 0.95) : transaction.amount
                       return (
-                        <div key={transaction.id} className="flex items-center justify-between py-3 border-b border-[#1e1e26]/50 last:border-0">
+                        <div key={transaction.id} className="flex items-center justify-between py-3 border-b border-[#E7E5E4]/50 last:border-0">
                           <div>
-                            <p className="text-sm font-medium text-[#f0ebe3]">{transaction.description || transaction.type}</p>
-                            <p className="text-xs text-[#6b6560] font-mono-nums">
+                            <p className="text-sm font-medium text-[#1C1917]">{transaction.description || transaction.type}</p>
+                            <p className="text-xs text-[#78716C] font-mono-nums">
                               {format(typeof transaction.createdAt === 'string' ? parseISO(transaction.createdAt) : transaction.createdAt, 'yyyy/MM/dd HH:mm')}
                             </p>
                           </div>
                           <div className="text-right">
-                            <p className={`text-sm font-bold font-mono-nums ${displayAmount >= 0 ? 'text-[#22c55e]' : 'text-[#ef4444]'}`}>
+                            <p className={`text-sm font-bold font-mono-nums ${displayAmount >= 0 ? 'text-[#22C55E]' : 'text-[#EF4444]'}`}>
                               {displayAmount >= 0 ? '+' : ''}{displayAmount.toLocaleString()}
                             </p>
                             <Badge variant={transaction.status === 'PENDING' ? 'warning' : 'success'} className="text-[10px] mt-0.5">

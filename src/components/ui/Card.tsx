@@ -13,9 +13,9 @@ function Card({
   ...props
 }: CardProps) {
   const variants = {
-    default: "bg-[#0c0c10] border-[#1e1e26]",
-    elevated: "bg-[#0c0c10] border-[#1e1e26]",
-    outline: "bg-transparent border-[#1e1e26]",
+    default: "bg-white border border-[#DDDDDD]",
+    elevated: "bg-white border border-[#DDDDDD]",
+    outline: "bg-transparent border border-[#DDDDDD]",
   }
 
   return (
@@ -33,28 +33,19 @@ function Card({
 
 function CardHeader({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
-    <div
-      className={cn("flex flex-col space-y-1.5 pb-4", className)}
-      {...props}
-    />
+    <div className={cn("flex flex-col space-y-1.5 pb-4", className)} {...props} />
   )
 }
 
 function CardTitle({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
-    <div
-      className={cn("text-lg font-semibold leading-none tracking-tight", className)}
-      {...props}
-    />
+    <div className={cn("text-lg font-medium leading-none tracking-tight text-[#222222]", className)} {...props} />
   )
 }
 
 function CardDescription({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
-    <div
-      className={cn("text-sm text-[#6b6560]", className)}
-      {...props}
-    />
+    <div className={cn("text-sm text-[#717171]", className)} {...props} />
   )
 }
 
@@ -64,10 +55,7 @@ function CardContent({ className, ...props }: React.HTMLAttributes<HTMLDivElemen
 
 function CardFooter({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
-    <div
-      className={cn("flex items-center pt-4", className)}
-      {...props}
-    />
+    <div className={cn("flex items-center pt-4", className)} {...props} />
   )
 }
 

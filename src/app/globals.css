@@ -5,128 +5,128 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Primary colors - Taiwan airport theme */
-  --primary: oklch(0.205 0 0);
-  --primary-dark: #1d4ed8;
-  --primary-light: #3b82f6;
+  /* Airport Dispatch — Airbnb Design System */
 
-  /* Accent colors */
-  --accent: oklch(0.97 0 0);
-  --accent-dark: #d97706;
-
-  /* Status colors */
-  --success: #10b981;
-  --warning: #f59e0b;
-  --danger: #ef4444;
-  --info: #3b82f6;
-
+  /* === Color System === */
   /* Background */
-  --surface: #ffffff;
-  --surface-hover: #f1f5f9;
+  --bg-primary: #FFFFFF;
+  --bg-secondary: #F7F7F7;
+  --bg-tertiary: #EBEBEB;
 
   /* Text */
-  --foreground-muted: #64748b;
+  --text-primary: #222222;
+  --text-secondary: #717171;
+  --text-tertiary: #B0B0B0;
 
-  /* Border */
-  --border: oklch(0.922 0 0);
-  --border-hover: #cbd5e1;
+  /* Borders */
+  --border-default: #DDDDDD;
+  --border-hover: #B0B0B0;
 
-  /* Shadows */
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  /* Brand — primary red/pink */
+  --brand-primary: #FF385C;
+  --brand-dark: #D70466;
 
-  /* Ember accent - warm orange for this app */
-  --ember: #ff6b2b;
-  --ember-dark: #e85a1a;
-  --ember-light: #ff6b2b;
-  --ember-glow: rgba(255, 107, 43, 0.4);
-  --ember-glow-sm: rgba(255, 107, 43, 0.2);
+  /* Status */
+  --status-success: #008A05;
+  --status-success-bg: #E8F5E8;
+  --status-warning: #B45309;
+  --status-warning-bg: #FFF3E0;
+  --status-danger: #E24B4A;
+  --status-danger-bg: #FCEBEB;
+  --status-info: #0C447C;
+  --status-info-bg: #E6F1FB;
+
+  /* Tag colors */
+  --tag-dropoff: #92400E;
+  --tag-dropoff-bg: #FFF3E0;
+  --tag-kenichi: #6B21A8;
+  --tag-kenichi-bg: #F3E8FF;
+  --tag-neutral-bg: #F7F7F7;
+
+  /* === Tailwind CSS Variables === */
+  --background: #FFFFFF;
+  --foreground: #222222;
+  --card: #FFFFFF;
+  --card-foreground: #222222;
+  --popover: #FFFFFF;
+  --popover-foreground: #222222;
+  --primary: #FF385C;
+  --primary-foreground: #FFFFFF;
+  --secondary: #F7F7F7;
+  --secondary-foreground: #717171;
+  --muted: #F7F7F7;
+  --muted-foreground: #717171;
+  --accent: #FF385C;
+  --accent-foreground: #FFFFFF;
+  --destructive: #E24B4A;
+  --destructive-foreground: #FFFFFF;
+  --border: #DDDDDD;
+  --input: #DDDDDD;
+  --input-foreground: #222222;
+  --ring: #FF385C;
+  --radius: 0.75rem;
+
+  /* Chart */
+  --chart-1: #FF385C;
+  --chart-2: #008A05;
+  --chart-3: #0C447C;
+  --chart-4: #6B21A8;
+  --chart-5: #B45309;
+
+  /* Sidebar */
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #222222;
+  --sidebar-primary: #FF385C;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #F7F7F7;
+  --sidebar-accent-foreground: #717171;
+  --sidebar-border: #DDDDDD;
+  --sidebar-ring: #FF385C;
 }
 
 @theme inline {
   --color-primary: var(--primary);
-  --color-primary-dark: var(--primary-dark);
-  --color-primary-light: var(--primary-light);
-  --color-accent: var(--accent);
-  --color-accent-dark: var(--accent-dark);
-  --color-success: var(--success);
-  --color-warning: var(--warning);
-  --color-danger: var(--danger);
-  --color-info: var(--info);
-  --font-heading: var(--font-sans);
-  --font-sans: var(--font-sans);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
-  --color-destructive: var(--destructive);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
   --color-primary-foreground: var(--primary-foreground);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
-  --color-card-foreground: var(--card-foreground);
-  --color-card: var(--card);
-  --color-foreground: var(--foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-input-foreground: var(--input-foreground);
+  --color-ring: var(--ring);
   --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-success: var(--status-success);
+  --color-warning: var(--status-warning);
+  --color-danger: var(--status-danger);
+  --color-info: var(--status-info);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) * 1.4);
   --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
-
-  /* Ember theme vars */
-  --color-ember: var(--ember);
-  --color-ember-dark: var(--ember-dark);
-  --color-ember-light: var(--ember-light);
 }
 
 * {
@@ -134,10 +134,14 @@
 }
 
 body {
-  font-family: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  line-height: 1.6;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans TC', sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #222222;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
 }
 
 /* Custom scrollbar */
@@ -145,126 +149,34 @@ body {
   width: 6px;
   height: 6px;
 }
-
 ::-webkit-scrollbar-track {
-  background: var(--surface);
+  background: var(--bg-secondary);
 }
-
 ::-webkit-scrollbar-thumb {
-  background: var(--border);
+  background: var(--border-default);
   border-radius: 3px;
 }
-
 ::-webkit-scrollbar-thumb:hover {
   background: var(--border-hover);
 }
 
 /* Focus styles */
 :focus-visible {
-  outline: 2px solid var(--primary);
+  outline: 2px solid var(--brand-primary);
   outline-offset: 2px;
 }
 
-/* Order status badges */
-.status-pending {
-  background: #fef3c7;
-  color: #92400e;
+/* Monospace numbers */
+.font-mono-nums {
+  font-family: "JetBrains Mono", "Fira Code", "Cascadia Code", monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
 }
 
-.status-assigned {
-  background: #dbeafe;
-  color: #1e40af;
-}
-
-.status-accepted {
-  background: #dbeafe;
-  color: #1e40af;
-}
-
-.status-arrived {
-  background: #e0e7ff;
-  color: #3730a3;
-}
-
-.status-in-progress {
-  background: #d1fae5;
-  color: #065f46;
-}
-
-.status-completed {
-  background: #d1fae5;
-  color: #065f46;
-}
-
-.status-cancelled {
-  background: #fee2e2;
-  color: #991b1b;
-}
-
-/* Animation for new orders */
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animate-slide-in {
-  animation: slideIn 0.3s ease-out;
-}
-
-/* Card hover effect */
-.card-hover {
-  transition: all 0.2s ease;
-}
-
-.card-hover:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
-}
-
-.dark {
-  /* Terminal Command Center - Ink & Ember Theme */
-  --background: #060608;
-  --foreground: #f0ebe3;
-  --card: #0c0c10;
-  --card-foreground: #f0ebe3;
-  --popover: #0c0c10;
-  --popover-foreground: #f0ebe3;
-  --primary: #ff6b2b;
-  --primary-foreground: #060608;
-  --secondary: #141418;
-  --secondary-foreground: #c8c2ba;
-  --muted: #141418;
-  --muted-foreground: #6b6560;
-  --accent: #ff6b2b;
-  --accent-foreground: #060608;
-  --destructive: #ef4444;
-  --border: #1e1e26;
-  --input: #141418;
-  --ring: #ff6b2b;
-  --chart-1: #ff6b2b;
-  --chart-2: #22c55e;
-  --chart-3: #ef4444;
-  --chart-4: #3b82f6;
-  --chart-5: #a855f7;
-  --sidebar: #0c0c10;
-  --sidebar-foreground: #f0ebe3;
-  --sidebar-primary: #ff6b2b;
-  --sidebar-primary-foreground: #060608;
-  --sidebar-accent: #141418;
-  --sidebar-accent-foreground: #f0ebe3;
-  --sidebar-border: #1e1e26;
-  --sidebar-ring: #ff6b2b;
-}
-
+/* === BASE LAYER === */
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
   }
   body {
     @apply bg-background text-foreground;
@@ -272,355 +184,4 @@ body {
   html {
     @apply font-sans;
   }
-}
-
-/* =============================================
-   EMBER THEME - Terminal Command Center
-   ============================================= */
-
-/* Ember glow utilities */
-.ember-glow {
-  box-shadow: 0 0 20px rgba(255, 107, 43, 0.15), 0 0 40px rgba(255, 107, 43, 0.05);
-}
-
-.ember-glow-sm {
-  box-shadow: 0 0 10px rgba(255, 107, 43, 0.2);
-}
-
-.ember-glow-lg {
-  box-shadow: 0 0 30px rgba(255, 107, 43, 0.25), 0 0 60px rgba(255, 107, 43, 0.1);
-}
-
-/* Grid line background pattern */
-.grid-bg {
-  background-image:
-    linear-gradient(rgba(255, 107, 43, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 107, 43, 0.03) 1px, transparent 1px);
-  background-size: 40px 40px;
-}
-
-/* Dot matrix background */
-.dot-matrix {
-  background-image: radial-gradient(circle, rgba(255, 107, 43, 0.08) 1px, transparent 1px);
-  background-size: 20px 20px;
-}
-
-/* Scan line effect */
-.scan-lines {
-  background: repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 2px,
-    rgba(0, 0, 0, 0.03) 2px,
-    rgba(0, 0, 0, 0.03) 4px
-  );
-  pointer-events: none;
-}
-
-/* Top accent line for cards */
-.card-accent-line {
-  position: relative;
-}
-.card-accent-line::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255, 107, 43, 0.5), transparent);
-}
-
-/* =============================================
-   ANIMATIONS
-   ============================================= */
-
-/* Order card fade in animation */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animate-fadeIn {
-  animation: fadeIn 0.5s ease-out forwards;
-  opacity: 0;
-}
-
-/* Card entry animation */
-@keyframes cardEntry {
-  from {
-    opacity: 0;
-    transform: translateY(15px) scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-.animate-cardEntry {
-  animation: cardEntry 0.4s ease-out forwards;
-  opacity: 0;
-}
-
-/* Subtle bounce for badges */
-@keyframes bounceSubtle {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-2px); }
-}
-
-.animate-bounceSubtle {
-  animation: bounceSubtle 1.5s ease-in-out infinite;
-}
-
-/* Slide animations for dynamic tiles */
-@keyframes slideInFromLeft {
-  from {
-    opacity: 0;
-    transform: translateX(-30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes slideInFromRight {
-  from {
-    opacity: 0;
-    transform: translateX(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes slideInFromTop {
-  from {
-    opacity: 0;
-    transform: translateY(-30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes slideInFromBottom {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animate-cardSlide-left {
-  animation: slideInFromLeft 0.4s ease-out forwards;
-}
-
-.animate-cardSlide-right {
-  animation: slideInFromRight 0.4s ease-out forwards;
-}
-
-.animate-cardSlide-up {
-  animation: slideInFromTop 0.4s ease-out forwards;
-}
-
-.animate-cardSlide-down {
-  animation: slideInFromBottom 0.4s ease-out forwards;
-}
-
-/* 3D perspective for flip animation */
-.perspective-1000 {
-  perspective: 1000px;
-}
-
-.rotate-y-180 {
-  transform: rotateY(180deg);
-}
-
-.-rotate-y-180 {
-  transform: rotateY(-180deg);
-}
-
-/* Mechanical flip board animation - like airport departure boards */
-@keyframes flipExit {
-  0% {
-    transform: rotateX(0deg) scaleY(1);
-    opacity: 1;
-  }
-  50% {
-    transform: rotateX(-90deg) scaleY(0.8);
-    opacity: 0.5;
-  }
-  51% {
-    transform: rotateX(-90deg) scaleY(0.8);
-    opacity: 0;
-  }
-  100% {
-    transform: rotateX(-90deg) scaleY(0.8);
-    opacity: 0;
-  }
-}
-
-@keyframes flipEnter {
-  0% {
-    transform: rotateX(90deg) scaleY(0.8);
-    opacity: 0;
-  }
-  50% {
-    transform: rotateX(90deg) scaleY(0.8);
-    opacity: 0.5;
-  }
-  100% {
-    transform: rotateX(0deg) scaleY(1);
-    opacity: 1;
-  }
-}
-
-.animate-flip-exit {
-  animation: flipExit 0.4s ease-in-out forwards;
-  transform-origin: top center;
-}
-
-.animate-flip-enter {
-  animation: flipEnter 0.4s ease-in-out forwards;
-  transform-origin: bottom center;
-}
-
-/* Content sliding animations - smooth slide within fixed container */
-@keyframes contentSlide {
-  0% { transform: translateY(100%); opacity: 0; }
-  15% { opacity: 1; }
-  85% { opacity: 1; }
-  100% { transform: translateY(0); opacity: 1; }
-}
-
-.animate-content-slide {
-  animation: contentSlide 0.5s ease-out forwards;
-}
-
-/* Badge pulse animation */
-@keyframes badgePulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-}
-
-.animate-badge-pulse {
-  animation: badgePulse 2s ease-in-out infinite;
-}
-
-/* =============================================
-   EMBER THEME ANIMATIONS
-   ============================================= */
-
-/* Ember pulse glow */
-@keyframes emberPulse {
-  0%, 100% {
-    box-shadow: 0 0 15px rgba(255, 107, 43, 0.2), 0 0 30px rgba(255, 107, 43, 0.1);
-  }
-  50% {
-    box-shadow: 0 0 25px rgba(255, 107, 43, 0.35), 0 0 50px rgba(255, 107, 43, 0.15);
-  }
-}
-
-.animate-ember-pulse {
-  animation: emberPulse 3s ease-in-out infinite;
-}
-
-/* Status indicator breathing */
-@keyframes statusBreath {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
-}
-
-.animate-status-breath {
-  animation: statusBreath 2s ease-in-out infinite;
-}
-
-/* Shimmer loading effect */
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-
-.animate-shimmer {
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(255, 107, 43, 0.1) 50%,
-    transparent 100%
-  );
-  background-size: 200% 100%;
-  animation: shimmer 1.5s ease-in-out infinite;
-}
-
-/* Float ambient */
-@keyframes floatAmbient {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-8px); }
-}
-
-.animate-float {
-  animation: floatAmbient 4s ease-in-out infinite;
-}
-
-/* Number counter tick */
-@keyframes numberTick {
-  0% { transform: translateY(0); opacity: 1; }
-  50% { transform: translateY(-4px); opacity: 0.5; }
-  100% { transform: translateY(-8px); opacity: 0; }
-}
-
-.animate-number-tick {
-  animation: numberTick 0.3s ease-out;
-}
-
-/* Stagger delay utilities */
-.stagger-1 { animation-delay: 50ms; }
-.stagger-2 { animation-delay: 100ms; }
-.stagger-3 { animation-delay: 150ms; }
-.stagger-4 { animation-delay: 200ms; }
-.stagger-5 { animation-delay: 250ms; }
-.stagger-6 { animation-delay: 300ms; }
-.stagger-7 { animation-delay: 350ms; }
-.stagger-8 { animation-delay: 400ms; }
-
-/* Monospace numbers - for flight numbers, times, prices */
-.font-mono-nums {
-  font-family: "JetBrains Mono", "Fira Code", "Cascadia Code", monospace;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.02em;
-}
-
-/* Glass morphism card */
-.glass-card {
-  background: rgba(12, 12, 16, 0.8);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 107, 43, 0.08);
-}
-
-/* Gradient text */
-.gradient-text-ember {
-  background: linear-gradient(135deg, #ff6b2b 0%, #ff6b2b 50%, #ff6b2b 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-/* Neon border effect */
-.neon-border {
-  border: 1px solid rgba(255, 107, 43, 0.3);
-  box-shadow: 0 0 10px rgba(255, 107, 43, 0.1), inset 0 0 10px rgba(255, 107, 43, 0.03);
 }

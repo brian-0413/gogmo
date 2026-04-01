@@ -1,22 +1,23 @@
 import { cn } from "@/lib/utils"
 
 interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
-  variant?: "default" | "success" | "warning" | "danger" | "info"
+  variant?: "default" | "success" | "warning" | "danger" | "info" | "purple"
 }
 
 function Badge({ className = "", variant = "default", children, ...props }: BadgeProps) {
   const variants = {
-    default: "bg-[#141418] text-[#f0ebe3] border-[#1e1e26]",
-    success: "bg-[#10b981]/20 text-[#10b981] border-[#10b981]/30",
-    warning: "bg-[#eab308]/20 text-[#eab308] border-[#eab308]/30",
-    danger: "bg-[#ef4444]/20 text-[#ef4444] border-[#ef4444]/30",
-    info: "bg-[#3b82f6]/20 text-[#3b82f6] border-[#3b82f6]/30",
+    default: "bg-[#F7F7F7] text-[#717171] border border-[#DDDDDD]",
+    success: "bg-[#E8F5E8] text-[#008A05] border border-[#C8E6C8]",
+    warning: "bg-[#FFF3E0] text-[#B45309] border border-[#FFE0B2]",
+    danger: "bg-[#FCEBEB] text-[#A32D2D] border border-[#F5C6C6]",
+    info: "bg-[#E6F1FB] text-[#0C447C] border border-[#C2DBF5]",
+    purple: "bg-[#F3E8FF] text-[#6B21A8] border border-[#E9D5FF]",
   }
 
   return (
     <span
       className={cn(
-        "inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium border",
+        "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-normal border",
         variants[variant],
         className
       )}
@@ -27,19 +28,18 @@ function Badge({ className = "", variant = "default", children, ...props }: Badg
   )
 }
 
-// Order status badge
 interface OrderStatusBadgeProps {
   status: string
 }
 
 function OrderStatusBadge({ status }: OrderStatusBadgeProps) {
   const statusMap: Record<string, { label: string; variant: BadgeProps["variant"] }> = {
-    PENDING: { label: "待接單", variant: "warning" },
-    PUBLISHED: { label: "待接單", variant: "success" },
-    ASSIGNED: { label: "已指派", variant: "info" },
-    ACCEPTED: { label: "已接單", variant: "info" },
+    PENDING: { label: "待接單", variant: "danger" },
+    PUBLISHED: { label: "待接單", variant: "danger" },
+    ASSIGNED: { label: "已指派", variant: "warning" },
+    ACCEPTED: { label: "已接單", variant: "warning" },
     ARRIVED: { label: "已抵達", variant: "info" },
-    IN_PROGRESS: { label: "進行中", variant: "success" },
+    IN_PROGRESS: { label: "進行中", variant: "info" },
     COMPLETED: { label: "已完成", variant: "success" },
     CANCELLED: { label: "已取消", variant: "danger" },
   }
@@ -49,7 +49,6 @@ function OrderStatusBadge({ status }: OrderStatusBadgeProps) {
   return <Badge variant={config.variant}>{config.label}</Badge>
 }
 
-// Driver status badge
 interface DriverStatusBadgeProps {
   status: string
 }

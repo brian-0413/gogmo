@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { format, parseISO } from 'date-fns'
-import { Search, Radio, Wifi, WifiOff, Coffee, Phone, MapPin, Clock, TrendingUp, Users } from 'lucide-react'
+import { format } from 'date-fns'
+import { Search, Wifi, WifiOff, Coffee, Phone, MapPin, Users } from 'lucide-react'
 
 interface Driver {
   id: string
@@ -21,40 +21,31 @@ const STATUS_CONFIG = {
   ONLINE: {
     label: '在線',
     icon: Wifi,
-    dot: '#22c55e',
-    glow: 'shadow-[0_0_12px_rgba(34,197,94,0.3)]',
-    border: 'border-[#22c55e]/25',
-    bg: 'bg-[#22c55e]/8',
-    text: 'text-[#22c55e]',
+    dot: '#008A05',
+    bg: 'bg-[#E8F5E8]',
+    text: 'text-[#008A05]',
+    border: 'border-[#DDDDDD]',
+    tagBg: 'bg-[#E8F5E8]',
   },
   OFFLINE: {
     label: '離線',
     icon: WifiOff,
-    dot: '#4a4a52',
-    glow: '',
-    border: 'border-[#1e1e26]',
-    bg: 'bg-[#141418]',
-    text: 'text-[#6b6560]',
+    dot: '#717171',
+    bg: 'bg-[#F7F7F7]',
+    text: 'text-[#717171]',
+    border: 'border-[#DDDDDD]',
+    tagBg: 'bg-[#F7F7F7]',
   },
   BUSY: {
     label: '忙碌中',
     icon: Coffee,
-    dot: '#f59e0b',
-    glow: 'shadow-[0_0_12px_rgba(245,158,11,0.3)]',
-    border: 'border-[#f59e0b]/25',
-    bg: 'bg-[#f59e0b]/8',
-    text: 'text-[#f59e0b]',
+    dot: '#B45309',
+    bg: 'bg-[#FFF3E0]',
+    text: 'text-[#B45309]',
+    border: 'border-[#DDDDDD]',
+    tagBg: 'bg-[#FFF3E0]',
   },
 } as const
-
-const VEHICLE_TYPE_ICONS: Record<string, string> = {
-  '小車': 'S',
-  '休旅': 'S',
-  '7人座': 'V',
-  '9人座': 'V',
-  'VAN': 'V',
-  'default': '?',
-}
 
 function getVehicleTag(carType: string): string {
   const t = carType?.toUpperCase() || ''
@@ -71,72 +62,21 @@ function FleetStats({ drivers }: { drivers: Driver[] }) {
   const total = drivers.length
 
   const stats = [
-    {
-      label: '在線司機',
-      value: online,
-      total,
-      color: '#22c55e',
-      bar: online / Math.max(total, 1),
-    },
-    {
-      label: '忙碌中',
-      value: busy,
-      total,
-      color: '#f59e0b',
-      bar: busy / Math.max(total, 1),
-    },
-    {
-      label: '離線司機',
-      value: offline,
-      total,
-      color: '#4a4a52',
-      bar: offline / Math.max(total, 1),
-    },
-    {
-      label: '車隊總計',
-      value: total,
-      color: '#ff6b2b',
-      bar: 1,
-    },
+    { label: '在線司機', value: online, color: '#008A05' },
+    { label: '忙碌中', value: busy, color: '#B45309' },
+    { label: '離線司機', value: offline, color: '#717171' },
+    { label: '車隊總計', value: total, color: '#222222' },
   ]
 
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
-      {stats.map((stat, i) => (
-        <div
-          key={stat.label}
-          className="relative overflow-hidden bg-[#0c0c10] border border-[#1e1e26] rounded-xl p-4 group hover:border-[#ff6b2b]/20 transition-colors duration-300"
-        >
-          {/* Top accent line */}
-          <div className="absolute top-0 left-0 right-0 h-px" style={{ background: `linear-gradient(90deg, transparent, ${stat.color}60, transparent)` }} />
-
-          {/* Background number */}
-          <div
-            className="absolute right-2 bottom-0 text-[56px] font-black leading-none opacity-[0.04] select-none font-mono-nums"
-            style={{ color: stat.color }}
-          >
+      {stats.map((stat) => (
+        <div key={stat.label} className="bg-[#F7F7F7] rounded-xl p-4">
+          <p className="text-[11px] text-[#717171] mb-1">{stat.label}</p>
+          <p className="text-[22px] font-medium text-[#222222] font-mono-nums leading-none">
             {stat.value}
-          </div>
-
-          <div className="relative">
-            <div className="flex items-center gap-1.5 mb-1.5">
-              <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: stat.color, boxShadow: `0 0 6px ${stat.color}80` }} />
-              <span className="text-[10px] font-medium uppercase tracking-widest" style={{ color: stat.color }}>
-                {stat.label}
-              </span>
-            </div>
-            <div className="text-3xl font-bold text-[#f0ebe3] font-mono-nums leading-none mb-2">
-              {stat.value}
-              <span className="text-sm font-normal text-[#6b6560] ml-1">/{total}</span>
-            </div>
-            {/* Progress bar */}
-            <div className="h-0.5 bg-[#141418] rounded-full overflow-hidden">
-              <div
-                className="h-full rounded-full transition-all duration-700"
-                style={{ width: `${stat.bar * 100}%`, backgroundColor: stat.color, boxShadow: `0 0 6px ${stat.color}40` }}
-              />
-            </div>
-          </div>
+            <span className="text-sm font-normal text-[#717171] ml-1">/{total}</span>
+          </p>
         </div>
       ))}
     </div>
@@ -149,69 +89,51 @@ function DriverCard({ driver }: { driver: Driver }) {
   const vehicleTag = getVehicleTag(driver.carType)
 
   return (
-    <div
-      className={`relative overflow-hidden bg-[#0c0c10] border rounded-xl p-4 transition-all duration-200 hover:border-[#ff6b2b]/20 group hover:bg-[#0c0c10]/80 ${config.border}`}
-    >
-      {/* Live status bar */}
-      <div className="absolute top-0 left-0 w-full h-0.5" style={{ backgroundColor: config.dot, boxShadow: `0 0 8px ${config.dot}` }} />
-
+    <div className={`bg-white border rounded-xl p-4 hover:shadow-[0_2px_12px_rgba(0,0,0,0.08)] transition-shadow duration-200 ${config.border}`}>
       {/* Header */}
       <div className="flex items-start justify-between mb-3">
-        {/* Driver identity */}
         <div className="flex items-center gap-3">
           <div
-            className="w-10 h-10 rounded-lg flex items-center justify-center text-xs font-black border text-[#f0ebe3] font-mono-nums"
-            style={{
-              backgroundColor: `${config.dot}12`,
-              borderColor: `${config.dot}30`,
-            }}
+            className="w-10 h-10 rounded-lg flex items-center justify-center text-xs font-medium text-[#222222] border border-[#DDDDDD] font-mono-nums"
+            style={{ backgroundColor: `${config.dot}10` }}
           >
             {vehicleTag}
           </div>
           <div>
-            <div className="flex items-center gap-1.5">
-              <h3 className="text-sm font-semibold text-[#f0ebe3]">{driver.user.name}</h3>
-              {(driver.status === 'ONLINE' || driver.status === 'BUSY') && (
-                <span className="relative flex h-1.5 w-1.5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ backgroundColor: config.dot }} />
-                  <span className="relative inline-flex rounded-full h-1.5 w-1.5" style={{ backgroundColor: config.dot }} />
-                </span>
-              )}
-            </div>
-            <p className="text-[10px] text-[#6b6560] font-mono-nums">{driver.user.phone}</p>
+            <h3 className="text-sm font-medium text-[#222222]">{driver.user.name}</h3>
+            <p className="text-[11px] text-[#717171] font-mono-nums">{driver.user.phone}</p>
           </div>
         </div>
 
-        {/* Status badge */}
-        <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-medium uppercase tracking-wider border ${config.bg} ${config.text} ${config.border}`}>
+        <div className={`flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-normal border ${config.tagBg} ${config.text} ${config.border}`}>
           <StatusIcon className="w-3 h-3" />
           {config.label}
         </div>
       </div>
 
       {/* Vehicle info */}
-      <div className="mb-3 p-2.5 bg-[#141418] rounded-lg border border-[#1e1e26]">
+      <div className="mb-3 p-2.5 bg-[#F7F7F7] rounded-lg border border-[#DDDDDD]">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-6 h-4 bg-[#ff6b2b]/10 border border-[#ff6b2b]/20 rounded text-[9px] font-black text-[#ff6b2b] flex items-center justify-center font-mono-nums">
-              {driver.licensePlate?.slice(-4) || '----'}
+            <div className="px-2 py-0.5 bg-[#F7F7F7] border border-[#DDDDDD] rounded text-[11px] font-medium text-[#222222] font-mono-nums">
+              {driver.licensePlate || '----'}
             </div>
-            <span className="text-xs text-[#6b6560]">{driver.carColor} {driver.carType}</span>
+            <span className="text-[13px] text-[#717171]">{driver.carColor} {driver.carType}</span>
           </div>
         </div>
       </div>
 
       {/* Quick actions */}
-      <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+      <div className="flex gap-2">
         <button
-          className="flex-1 flex items-center justify-center gap-1 py-1.5 text-[10px] font-medium bg-[#ff6b2b]/10 text-[#ff6b2b] rounded-lg border border-[#ff6b2b]/20 hover:bg-[#ff6b2b]/15 transition-colors"
+          className="flex-1 flex items-center justify-center gap-1 py-1.5 text-[12px] font-normal text-[#717171] bg-[#F7F7F7] rounded-lg border border-[#DDDDDD] hover:bg-[#EBEBEB] transition-colors"
           onClick={() => window.open(`tel:${driver.user.phone}`)}
         >
           <Phone className="w-3 h-3" />
           致電
         </button>
         <button
-          className="flex-1 flex items-center justify-center gap-1 py-1.5 text-[10px] font-medium bg-[#141418] text-[#6b6560] rounded-lg border border-[#1e1e26] hover:bg-[#1e1e26] transition-colors"
+          className="flex-1 flex items-center justify-center gap-1 py-1.5 text-[12px] font-normal text-[#717171] bg-[#F7F7F7] rounded-lg border border-[#DDDDDD] hover:bg-[#EBEBEB] transition-colors"
         >
           <MapPin className="w-3 h-3" />
           定位
@@ -237,33 +159,31 @@ function FilterBar({ drivers, filter, setFilter, search, setSearch }: {
 
   return (
     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-5">
-      {/* Status filters */}
-      <div className="flex items-center gap-1 p-1 bg-[#0c0c10] border border-[#1e1e26] rounded-lg">
+      <div className="flex items-center gap-1 p-1 bg-[#F7F7F7] border border-[#DDDDDD] rounded-lg">
         {filters.map(f => (
           <button
             key={f.key}
             onClick={() => setFilter(f.key)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+            className={`px-3 py-1.5 rounded-lg text-[13px] font-normal transition-colors ${
               filter === f.key
-                ? 'bg-[#ff6b2b] text-[#060608] font-semibold shadow-[0_0_12px_rgba(255,107,43,0.3)]'
-                : 'text-[#6b6560] hover:text-[#f0ebe3] hover:bg-[#141418]'
+                ? 'bg-[#222222] text-white'
+                : 'text-[#717171] hover:bg-[#EBEBEB]'
             }`}
           >
             {f.label}
-            <span className={`ml-1.5 text-[10px] font-mono-nums ${filter === f.key ? 'text-[#060608]/60' : 'text-[#4a4a52]'}`}>{f.count}</span>
+            <span className={`ml-1.5 text-[11px] font-mono-nums ${filter === f.key ? 'opacity-70' : 'text-[#B0B0B0]'}`}>{f.count}</span>
           </button>
         ))}
       </div>
 
-      {/* Search */}
       <div className="relative flex-1 max-w-xs">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#4a4a52]" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#717171]" />
         <input
           type="text"
           placeholder="搜尋車牌、司機名稱..."
           value={search}
           onChange={e => setSearch(e.target.value)}
-          className="w-full pl-9 pr-3 py-2 bg-[#0c0c10] border border-[#1e1e26] rounded-lg text-xs text-[#f0ebe3] placeholder:text-[#3a3a40] focus:outline-none focus:border-[#ff6b2b]/50 bg-[#0c0c10]/80 transition-all"
+          className="w-full pl-9 pr-3 py-2 bg-white border border-[#DDDDDD] rounded-lg text-[13px] text-[#222222] placeholder:text-[#B0B0B0] focus:outline-none focus:border-[#222222] font-mono-nums"
         />
       </div>
     </div>
@@ -289,29 +209,22 @@ export function FleetControl({ drivers }: FleetControlProps) {
   if (drivers.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-24">
-        <div className="w-16 h-16 rounded-2xl bg-[#0c0c10] border border-[#1e1e26] flex items-center justify-center mb-4 relative overflow-hidden">
-          <div className="absolute inset-0 dot-matrix opacity-30" />
-          <Users className="w-8 h-8 text-[#3a3a40] relative" />
-        </div>
-        <h3 className="text-lg font-semibold text-[#6b6560] mb-1">車隊尚無司機</h3>
-        <p className="text-sm text-[#3a3a40]">邀請司機加入後即可在此管理車隊</p>
+        <Users className="w-10 h-10 text-[#B0B0B0] mb-3" />
+        <h3 className="text-lg font-medium text-[#717171] mb-1">車隊尚無司機</h3>
+        <p className="text-sm text-[#B0B0B0]">邀請司機加入後即可在此管理車隊</p>
       </div>
     )
   }
 
   return (
     <div>
-      {/* Fleet Stats */}
       <FleetStats drivers={drivers} />
-
-      {/* Filters */}
       <FilterBar drivers={drivers} filter={filter} setFilter={setFilter} search={search} setSearch={setSearch} />
 
-      {/* Fleet Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         {filtered.length === 0 ? (
           <div className="col-span-full text-center py-12">
-            <p className="text-[#6b6560] text-sm">找不到符合條件的司機</p>
+            <p className="text-[#717171] text-sm">找不到符合條件的司機</p>
           </div>
         ) : (
           filtered.map(driver => (
@@ -320,8 +233,7 @@ export function FleetControl({ drivers }: FleetControlProps) {
         )}
       </div>
 
-      {/* Footer */}
-      <div className="mt-4 flex items-center justify-between text-[10px] text-[#4a4a52]">
+      <div className="mt-4 flex items-center justify-between text-[11px] text-[#B0B0B0]">
         <span className="font-mono-nums">顯示 {filtered.length} / {drivers.length} 位司機</span>
         <span className="font-mono-nums">行控中心 {format(new Date(), 'HH:mm')} 更新</span>
       </div>
