@@ -189,7 +189,7 @@ export default async function Home() {
                 <p className="text-[13px] text-[#717171]">筆可接訂單</p>
               </div>
 
-              <div className="bg-[#F7F7F7] rounded-xl p-5">
+              <div className="bg-white rounded-xl p-5 border border-[#DDDDDD]">
                 <div className="flex items-center gap-1.5 mb-2">
                   <TrendingUp className="w-4 h-4 text-[#008A05]" />
                   <span className="text-[11px] text-[#008A05]">一小時內</span>

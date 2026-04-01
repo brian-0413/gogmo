@@ -47,7 +47,7 @@ interface DispatcherOrderCardProps {
 const TYPE_TAG_STYLE: Record<string, string> = {
   pickup: 'bg-[#E6F1FB] text-[#0C447C]',
   dropoff: 'bg-[#FFF3E0] text-[#92400E]',
-  transfer: 'bg-[#F7F7F7] text-[#717171]',
+  transfer: 'bg-[#F4EFE9] text-[#717171]',
   charter: 'bg-[#F3E8FF] text-[#6B21A8]',
 }
 
@@ -73,8 +73,8 @@ export function DispatcherOrderCard({ order, onEdit, onDelete }: DispatcherOrder
     : null
 
   const isPending = order.status === 'PENDING' || order.status === 'PUBLISHED'
-  const typeTagStyle = order.type ? (TYPE_TAG_STYLE[order.type] || 'bg-[#F7F7F7] text-[#717171]') : 'bg-[#F7F7F7] text-[#717171]'
-  const statusTagStyle = STATUS_TAG_STYLE[order.status] || 'bg-[#F7F7F7] text-[#717171]'
+  const typeTagStyle = order.type ? (TYPE_TAG_STYLE[order.type] || 'bg-[#F4EFE9] text-[#717171]') : 'bg-[#F4EFE9] text-[#717171]'
+  const statusTagStyle = STATUS_TAG_STYLE[order.status] || 'bg-[#F4EFE9] text-[#717171]'
   const vehicleLabel = order.vehicle === 'small' ? '小車' : order.vehicle === 'suv' ? '休旅' : order.vehicle === 'van9' ? '9人座' : order.vehicle === 'any' ? '任意車' : ''
 
   return (
@@ -103,7 +103,7 @@ export function DispatcherOrderCard({ order, onEdit, onDelete }: DispatcherOrder
           {order.type === 'pickup' ? '接機' : order.type === 'dropoff' ? '送機' : order.type === 'transfer' ? '交通接駁' : order.type === 'charter' ? '套裝' : '待確認'}
         </span>
         {vehicleLabel && (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-normal bg-[#F7F7F7] text-[#717171]">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-normal bg-[#F4EFE9] text-[#717171]">
             {vehicleLabel}
           </span>
         )}

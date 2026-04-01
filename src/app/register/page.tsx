@@ -57,9 +57,9 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white text-[#222222]">
+    <div className="min-h-screen bg-[#FAF8F5] text-[#222222]">
       {/* Header */}
-      <nav className="px-6 py-4">
+      <nav className="px-6 py-4 bg-[#FAF8F5]">
         <Link href="/" className="flex items-center gap-2 w-fit">
           <div className="w-8 h-8 rounded-lg bg-[#FF385C] flex items-center justify-center">
             <Plane className="w-4 h-4 text-white" />
@@ -264,7 +264,7 @@ export default function RegisterPage() {
           </div>
 
           {/* Benefits */}
-          <div className="mt-3 bg-[#F7F7F7] border border-[#DDDDDD] rounded-xl p-4">
+          <div className="mt-3 bg-[#F4EFE9] border border-[#DDDDDD] rounded-xl p-4">
             <p className="text-[11px] text-[#717171] mb-2">加入優勢</p>
             <div className="space-y-1.5">
               <div className="flex items-center gap-2 text-xs text-[#717171]">

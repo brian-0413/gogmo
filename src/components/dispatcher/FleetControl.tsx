@@ -31,10 +31,10 @@ const STATUS_CONFIG = {
     label: '離線',
     icon: WifiOff,
     dot: '#717171',
-    bg: 'bg-[#F7F7F7]',
+    bg: 'bg-white',
     text: 'text-[#717171]',
     border: 'border-[#DDDDDD]',
-    tagBg: 'bg-[#F7F7F7]',
+    tagBg: 'bg-white',
   },
   BUSY: {
     label: '忙碌中',
@@ -71,7 +71,7 @@ function FleetStats({ drivers }: { drivers: Driver[] }) {
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
       {stats.map((stat) => (
-        <div key={stat.label} className="bg-[#F7F7F7] rounded-xl p-4">
+        <div key={stat.label} className="bg-white rounded-xl p-4 border border-[#DDDDDD]">
           <p className="text-[11px] text-[#717171] mb-1">{stat.label}</p>
           <p className="text-[22px] font-medium text-[#222222] font-mono-nums leading-none">
             {stat.value}
@@ -112,10 +112,10 @@ function DriverCard({ driver }: { driver: Driver }) {
       </div>
 
       {/* Vehicle info */}
-      <div className="mb-3 p-2.5 bg-[#F7F7F7] rounded-lg border border-[#DDDDDD]">
+      <div className="mb-3 p-2.5 bg-[#F4EFE9] rounded-lg border border-[#DDDDDD]">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="px-2 py-0.5 bg-[#F7F7F7] border border-[#DDDDDD] rounded text-[11px] font-medium text-[#222222] font-mono-nums">
+            <div className="px-2 py-0.5 bg-white border border-[#DDDDDD] rounded text-[11px] font-medium text-[#222222] font-mono-nums">
               {driver.licensePlate || '----'}
             </div>
             <span className="text-[13px] text-[#717171]">{driver.carColor} {driver.carType}</span>
@@ -126,14 +126,14 @@ function DriverCard({ driver }: { driver: Driver }) {
       {/* Quick actions */}
       <div className="flex gap-2">
         <button
-          className="flex-1 flex items-center justify-center gap-1 py-1.5 text-[12px] font-normal text-[#717171] bg-[#F7F7F7] rounded-lg border border-[#DDDDDD] hover:bg-[#EBEBEB] transition-colors"
+          className="flex-1 flex items-center justify-center gap-1 py-1.5 text-[12px] font-normal text-[#717171] bg-[#F4EFE9] rounded-lg border border-[#DDDDDD] hover:bg-[#EBEBEB] transition-colors"
           onClick={() => window.open(`tel:${driver.user.phone}`)}
         >
           <Phone className="w-3 h-3" />
           致電
         </button>
         <button
-          className="flex-1 flex items-center justify-center gap-1 py-1.5 text-[12px] font-normal text-[#717171] bg-[#F7F7F7] rounded-lg border border-[#DDDDDD] hover:bg-[#EBEBEB] transition-colors"
+          className="flex-1 flex items-center justify-center gap-1 py-1.5 text-[12px] font-normal text-[#717171] bg-[#F4EFE9] rounded-lg border border-[#DDDDDD] hover:bg-[#EBEBEB] transition-colors"
         >
           <MapPin className="w-3 h-3" />
           定位
@@ -159,7 +159,7 @@ function FilterBar({ drivers, filter, setFilter, search, setSearch }: {
 
   return (
     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-5">
-      <div className="flex items-center gap-1 p-1 bg-[#F7F7F7] border border-[#DDDDDD] rounded-lg">
+      <div className="flex items-center gap-1 p-1 bg-white border border-[#DDDDDD] rounded-lg">
         {filters.map(f => (
           <button
             key={f.key}

@@ -278,11 +278,11 @@ function SettlementTab({ token }: { token: string | null }) {
         <>
           {/* Stats */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            <div className="bg-[#F7F7F7] rounded-xl p-4">
+            <div className="bg-white rounded-xl p-4">
               <p className="text-[11px] text-[#717171] mb-1">總派出單數</p>
               <p className="text-[22px] font-medium text-[#222222] font-mono-nums">{settlementData.allOrdersCount}</p>
             </div>
-            <div className="bg-[#F7F7F7] rounded-xl p-4">
+            <div className="bg-white rounded-xl p-4">
               <p className="text-[11px] text-[#717171] mb-1">待轉帳筆數</p>
               <p className="text-[22px] font-medium text-[#222222] font-mono-nums">{settlementData.pendingTransferCount}</p>
             </div>
@@ -628,7 +628,7 @@ export default function DispatcherDashboard() {
 
   if (isLoading || !user) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen bg-[#FAF8F5] flex items-center justify-center">
         <div className="text-center">
           <div className="w-10 h-10 border-2 border-[#FF385C] border-t-transparent rounded-full animate-spin mx-auto" />
           <p className="mt-4 text-[#717171] text-sm">載入中...</p>
@@ -647,9 +647,9 @@ export default function DispatcherDashboard() {
   const onlineDrivers = drivers.filter(d => d.status === 'ONLINE').length
 
   return (
-    <div className="min-h-screen bg-white text-[#222222]">
+    <div className="min-h-screen bg-[#FAF8F5] text-[#222222]">
       {/* Header */}
-      <header className="bg-white border-b border-[#DDDDDD] sticky top-0 z-20">
+      <header className="bg-[#FAF8F5] border-b border-[#DDDDDD] sticky top-0 z-20">
         <div className="max-w-6xl mx-auto px-6">
           <div className="flex items-center justify-between h-14">
             {/* Title + driver count */}
@@ -678,7 +678,7 @@ export default function DispatcherDashboard() {
       </header>
 
       {/* Navigation — pill buttons */}
-      <div className="bg-white border-b border-[#DDDDDD]">
+      <div className="bg-[#FAF8F5] border-b border-[#DDDDDD]">
         <div className="max-w-6xl mx-auto px-6">
           <div className="flex gap-2 py-3">
             {([
@@ -724,21 +724,21 @@ export default function DispatcherDashboard() {
         {/* ===== ORDERS TAB ===== */}
         {activeTab === 'orders' && (
           <>
-            {/* Stats — 4 in a row, bg #F7F7F7, 12px radius */}
+            {/* Stats — 4 in a row, white bg to contrast with cream page */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-              <div className="bg-[#F7F7F7] rounded-xl p-4">
+              <div className="bg-white rounded-xl p-4">
                 <p className="text-[11px] text-[#717171] mb-1">接機</p>
                 <p className="text-[22px] font-medium text-[#222222] font-mono-nums">{statusCounts.PICKUP}</p>
               </div>
-              <div className="bg-[#F7F7F7] rounded-xl p-4">
+              <div className="bg-white rounded-xl p-4">
                 <p className="text-[11px] text-[#717171] mb-1">送機</p>
                 <p className="text-[22px] font-medium text-[#222222] font-mono-nums">{statusCounts.DROPOFF}</p>
               </div>
-              <div className="bg-[#F7F7F7] rounded-xl p-4">
+              <div className="bg-white rounded-xl p-4">
                 <p className="text-[11px] text-[#E24B4A] mb-1">待接單</p>
                 <p className="text-[22px] font-medium text-[#E24B4A] font-mono-nums">{statusCounts.PENDING}</p>
               </div>
-              <div className="bg-[#F7F7F7] rounded-xl p-4">
+              <div className="bg-white rounded-xl p-4">
                 <p className="text-[11px] text-[#008A05] mb-1">已接單</p>
                 <p className="text-[22px] font-medium text-[#222222] font-mono-nums">{statusCounts.ACCEPTED}</p>
               </div>
@@ -814,7 +814,7 @@ export default function DispatcherDashboard() {
                 <div className="w-8 h-8 border-2 border-[#FF385C] border-t-transparent rounded-full animate-spin mx-auto" />
               </div>
             ) : orders.length === 0 ? (
-              <div className="text-center py-24 border border-[#DDDDDD] rounded-xl bg-[#F7F7F7]">
+              <div className="text-center py-24 border border-[#DDDDDD] rounded-xl bg-[#F4EFE9]">
                 <ClipboardList className="w-10 h-10 text-[#B0B0B0] mx-auto mb-3" />
                 <p className="text-[#717171] mb-1 text-lg font-medium">目前沒有訂單</p>
                 <p className="text-[#B0B0B0] text-sm mb-6">建立第一筆訂單來開始派車</p>
@@ -971,7 +971,7 @@ export default function DispatcherDashboard() {
                 ) : (
                   <div className="space-y-3">
                     {reviewItems.map((item, idx) => (
-                      <div key={item.reviewId} className="bg-[#F7F7F7] border border-[#DDDDDD] rounded-xl p-4">
+                      <div key={item.reviewId} className="bg-white border border-[#DDDDDD] rounded-xl p-4">
                         {editingId === item.reviewId ? (
                           <div className="space-y-3">
                             <div className="flex items-center justify-between">
@@ -1012,13 +1012,13 @@ export default function DispatcherDashboard() {
                                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-normal ${
                                   item.type === 'pickup' ? 'bg-[#E6F1FB] text-[#0C447C]'
                                   : item.type === 'dropoff' ? 'bg-[#FFF3E0] text-[#92400E]'
-                                  : item.type === 'transfer' ? 'bg-[#F7F7F7] text-[#717171]'
+                                  : item.type === 'transfer' ? 'bg-[#F4EFE9] text-[#717171]'
                                   : item.type === 'charter' ? 'bg-[#F3E8FF] text-[#6B21A8]'
-                                  : 'bg-[#F7F7F7] text-[#717171]'
+                                  : 'bg-[#F4EFE9] text-[#717171]'
                                 }`}>
                                   {TYPE_LABELS[item.type] || '待確認'}
                                 </span>
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-normal bg-[#F7F7F7] text-[#717171]">
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-normal bg-[#F4EFE9] text-[#717171]">
                                   {item.editedVehicle || '待確認'}
                                 </span>
                                 {(item as any).editedKenichi && (
@@ -1102,7 +1102,7 @@ export default function DispatcherDashboard() {
               {publishResult.failed === 0 ? '司機已可在接單牆看到這些行程' : '請查看失敗原因，修正後重新發布'}
             </p>
             {publishResult.failed > 0 && publishResult.errors.length > 0 && (
-              <div className="bg-[#F7F7F7] border border-[#DDDDDD] rounded-xl p-4 mb-6 text-left max-h-40 overflow-y-auto text-sm text-[#717171]">
+              <div className="bg-[#F4EFE9] border border-[#DDDDDD] rounded-xl p-4 mb-6 text-left max-h-40 overflow-y-auto text-sm text-[#717171]">
                 {publishResult.errors.map((err, i) => (
                   <div key={i} className="mb-2 last:mb-0">
                     <span className="font-mono-nums text-[11px] text-[#717171]">{err.rawText}</span>

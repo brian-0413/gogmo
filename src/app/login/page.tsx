@@ -27,9 +27,9 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white text-[#222222]">
+    <div className="min-h-screen bg-[#FAF8F5] text-[#222222]">
       {/* Header */}
-      <nav className="px-8 py-6">
+      <nav className="px-8 py-6 bg-[#FAF8F5]">
         <Link href="/" className="flex items-center gap-2 w-fit">
           <div className="w-8 h-8 rounded-lg bg-[#FF385C] flex items-center justify-center">
             <Plane className="w-4 h-4 text-white" />
