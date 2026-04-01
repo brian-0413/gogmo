@@ -2,7 +2,7 @@
 
 import { format, parseISO } from 'date-fns'
 import { zhTW } from 'date-fns/locale'
-import { Pencil, Trash2, User } from 'lucide-react'
+import { Pencil, Trash2, User, Clock } from 'lucide-react'
 import { formatOrderNo } from '@/lib/utils'
 import type { OrderStatus } from '@/types'
 
@@ -70,14 +70,20 @@ export function DispatcherOrderCard({ order, onEdit, onDelete }: DispatcherOrder
     ? parseISO(order.scheduledTime)
     : order.scheduledTime
   const hasDriver = !!order.driver
-  const driverInfo = hasDriver
-    ? `${order.driver!.user.name} / ${order.driver!.licensePlate} / ${order.driver!.carColor} / ${order.driver!.carType}`
-    : null
 
   const isPending = order.status === 'PENDING' || order.status === 'PUBLISHED'
   const typeTagStyle = order.type ? (TYPE_TAG_STYLE[order.type] || 'bg-[#F4EFE9] text-[#717171]') : 'bg-[#F4EFE9] text-[#717171]'
   const statusTagStyle = STATUS_TAG_STYLE[order.status] || 'bg-[#F4EFE9] text-[#717171]'
   const vehicleLabel = order.vehicle === 'small' ? '小車' : order.vehicle === 'suv' ? '休旅' : order.vehicle === 'van9' ? '9人座' : order.vehicle === 'any' ? '任意車' : ''
+
+  const typeLabel = order.type === 'pickup' ? '接機' : order.type === 'dropoff' ? '送機' : order.type === 'pickup_boat' ? '接船' : order.type === 'dropoff_boat' ? '送船' : order.type === 'transfer' ? '交通接駁' : order.type === 'charter' ? '套裝' : '待確認'
+  const statusLabel = order.status === 'PENDING' || order.status === 'PUBLISHED' ? '待接單' :
+           order.status === 'ASSIGNED' ? '已指派' :
+           order.status === 'ACCEPTED' ? '已接單' :
+           order.status === 'ARRIVED' ? '已抵達' :
+           order.status === 'IN_PROGRESS' ? '進行中' :
+           order.status === 'COMPLETED' ? '已完成' :
+           order.status === 'CANCELLED' ? '已取消' : order.status
 
   return (
     <div
@@ -85,64 +91,61 @@ export function DispatcherOrderCard({ order, onEdit, onDelete }: DispatcherOrder
         isPending ? 'border-[2px] border-solid border-[#E24B4A]' : 'border-[#DDDDDD]'
       }`}
     >
-      {/* Row 1: Status tag + order no */}
-      <div className="flex items-center justify-between mb-3">
-        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-normal border ${statusTagStyle} border-[inherit]`}>
-          {order.status === 'PENDING' || order.status === 'PUBLISHED' ? '待接單' :
-           order.status === 'ASSIGNED' ? '已指派' :
-           order.status === 'ACCEPTED' ? '已接單' :
-           order.status === 'ARRIVED' ? '已抵達' :
-           order.status === 'IN_PROGRESS' ? '進行中' :
-           order.status === 'COMPLETED' ? '已完成' :
-           order.status === 'CANCELLED' ? '已取消' : order.status}
+      {/* Top row: Status badge + time (always visible) */}
+      <div className="flex items-center justify-between mb-2">
+        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border ${statusTagStyle}`}>
+          {statusLabel}
         </span>
-        <span className="text-xs text-[#717171] font-mono-nums">{orderNo}</span>
+        <div className="flex items-center gap-1.5 text-[13px] font-bold text-[#717171] font-mono-nums">
+          <Clock className="w-3.5 h-3.5" />
+          {format(scheduledDate, 'MM/dd')}&nbsp;
+          <span className="text-[#222222]">{format(scheduledDate, 'HH:mm')}</span>
+        </div>
       </div>
 
-      {/* Row 2: Type tag + vehicle tag + kenichi tag */}
-      <div className="flex items-center gap-2 mb-3 flex-wrap">
-        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-normal ${typeTagStyle}`}>
-          {order.type === 'pickup' ? '接機' : order.type === 'dropoff' ? '送機' : order.type === 'pickup_boat' ? '接船' : order.type === 'dropoff_boat' ? '送船' : order.type === 'transfer' ? '交通接駁' : order.type === 'charter' ? '套裝' : '待確認'}
+      {/* Route — largest, most prominent */}
+      <div className="mb-3">
+        <p className="text-[18px] font-bold text-[#222222] leading-snug tracking-tight">
+          {order.pickupLocation} → {order.dropoffLocation}
+        </p>
+      </div>
+
+      {/* Tags row: type + vehicle + kenichi */}
+      <div className="flex items-center gap-1.5 mb-3 flex-wrap">
+        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${typeTagStyle}`}>
+          {typeLabel}
         </span>
         {vehicleLabel && (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-normal bg-[#F4EFE9] text-[#717171]">
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-[#F4EFE9] text-[#717171]">
             {vehicleLabel}
           </span>
         )}
         {order.kenichiRequired && (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-normal bg-[#F3E8FF] text-[#6B21A8]">
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-[#F3E8FF] text-[#6B21A8]">
             肯驛
           </span>
         )}
+        <span className="text-[12px] text-[#717171] font-mono-nums ml-auto">{orderNo}</span>
       </div>
 
-      {/* Row 3: Route — most prominent, 15px bold */}
-      <div className="mb-2">
-        <p className="text-[15px] font-bold text-[#222222] leading-snug">
-          {order.pickupLocation} &rarr; {order.dropoffLocation}
-        </p>
-      </div>
-
-      {/* Row 4: Date/time */}
-      <div className="mb-3">
-        <p className="text-[14px] text-[#717171] font-medium">
-          {format(scheduledDate, 'M/dd (E)', { locale: zhTW })}&nbsp;
-          {format(scheduledDate, 'HH:mm')}
-        </p>
-      </div>
-
-      {/* Divider */}
-      <div className="border-t border-[#DDDDDD] opacity-50 mb-3" />
-
-      {/* Row 5: Price (22px bold) + driver */}
-      <div className="flex items-center justify-between">
-        <span className="text-[22px] font-bold text-[#FF385C] font-mono-nums">
+      {/* Bottom row: Price (large) + Driver info (always visible) */}
+      <div className="border-t border-[#DDDDDD] pt-3 flex items-center justify-between">
+        <span className="text-[26px] font-bold text-[#FF385C] font-mono-nums">
           NT${order.price.toLocaleString()}
         </span>
         {hasDriver ? (
-          <span className="text-[13px] text-[#717171] truncate max-w-[200px] font-mono-nums">{driverInfo}</span>
+          <div className="text-right">
+            <div className="flex items-center gap-1">
+              <User className="w-3.5 h-3.5 text-[#717171]" />
+              <span className="text-[14px] font-bold text-[#222222]">{order.driver!.user.name}</span>
+            </div>
+            <div className="flex items-center gap-2 mt-0.5">
+              <span className="text-[12px] font-bold px-1.5 py-0.5 bg-[#F4EFE9] text-[#717171] rounded font-mono-nums">{order.driver!.licensePlate}</span>
+              <span className="text-[12px] text-[#717171]">{order.driver!.carColor} {order.driver!.carType}</span>
+            </div>
+          </div>
         ) : (
-          <span className="text-[13px] text-[#E24B4A]">等待司機接單</span>
+          <span className="text-[14px] font-bold text-[#E24B4A]">等待司機接單</span>
         )}
       </div>
 
