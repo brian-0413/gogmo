@@ -5,7 +5,7 @@
 //   - 接機：起點=○機（外層決定），終點=訊息中的地點
 //   - 送機：起點=訊息中的地點，終點=○機（外層決定）
 
-export type OrderType = 'pickup' | 'dropoff' | 'transfer' | 'charter' | 'pending'
+export type OrderType = 'pickup' | 'dropoff' | 'pickup_boat' | 'dropoff_boat' | 'transfer' | 'charter' | 'pending'
 export type VehicleType = 'small' | 'suv' | 'van9' | 'any' | 'any_r' | 'pending'
 export type PlateType = 'R' | 'T' | 'any'
 export type ParseStatus = 'ok' | 'incomplete' | 'rejected'
@@ -127,13 +127,29 @@ function extractVehicle(line: string): { vehicle: VehicleType; plateType: PlateT
 
 // ============ 種類解析 ============
 // 規則（有明確優先順序）：
-// 種類判斷（有優先順序）：
-// 1. 有「接」→ 接機（pickup）
-// 2. 有「送」→ 送機（dropoff）
-// 3. 「○機-地點」→ 送機（例：桃機-中正）
-// 4. 「○機到X」→ 接機（例：桃機到台中南屯）
-// 5. 「X到○機」→ 送機（例：台中南屯到桃機）
+// 1. 基隆港→地點 或 基隆港-地點 → 接船（pickup_boat）
+// 2. 地點→基隆港 → 送船（dropoff_boat）
+// 3. 有「接」→ 接機（pickup）
+// 4. 有「送」→ 送機（dropoff）
+// 5. 「○機-地點」→ 送機（例：桃機-中正）
+// 6. 「○機到X」→ 接機（例：桃機到台中南屯）
+// 7. 「X到○機」→ 送機（例：台中南屯到桃機）
 function extractType(line: string): OrderType {
+  // 基隆港偵測（優先於機場）
+  const hasKeelung = line.includes('基隆港')
+  if (hasKeelung) {
+    // 基隆港→地點 或 基隆港-地點 → 接船
+    if (line.includes('→') || line.includes('-') || line.includes('接')) {
+      return 'pickup_boat'
+    }
+    // 地點→基隆港 → 送船
+    if (line.includes('到') || line.includes('送')) {
+      return 'dropoff_boat'
+    }
+    // 基隆港存在，預設接船
+    return 'pickup_boat'
+  }
+
   // 「接」→ 接機
   if (line.includes('接')) {
     const after = line.split('接').slice(1).join('接').trim()
@@ -264,6 +280,33 @@ export function parseBatchOrders(
         if (before) pickupLocation = before
         dropoffLocation = airportInLine.airport
       }
+    } else if (type === 'pickup_boat') {
+      // 接船：起點=基隆港，終點=訊息地點
+      pickupLocation = '基隆港'
+      // 從「接」或「→」或「-」之後提取地點
+      const afterMatch = line.match(/基隆港[→-](.+)/)
+        || line.match(/接(.+)/)
+        || line.match(/→(.+)/)
+      if (afterMatch) {
+        const after = afterMatch[1].trim()
+          .replace(/^\d{4}/, '').replace(/[$💲]\d+/, '').replace(/\d{3,}$/, '').replace(/[\[\]【】()（）]/g, '').replace(/\s+/g, ' ').trim()
+        dropoffLocation = after || undefined
+      }
+    } else if (type === 'dropoff_boat') {
+      // 送船：起點=訊息地點，終點=基隆港
+      dropoffLocation = '基隆港'
+      // 從「送」之前或「到基隆港」之前提取地點
+      if (line.includes('送')) {
+        const sendIdx = line.indexOf('送')
+        const before = line.substring(0, sendIdx).trim()
+          .replace(/^\d{4}/, '').replace(/[$💲]\d+/, '').replace(/\d{3,}$/, '').replace(/[\[\]【】]/g, '').replace(/\s+/g, ' ').trim()
+        pickupLocation = before || undefined
+      } else if (line.includes('到')) {
+        const parts = line.split('到')
+        const before = parts[0].trim()
+          .replace(/^\d{4}/, '').replace(/[$💲]\d+/, '').replace(/\d{3,}$/, '').replace(/[\[\]【】]/g, '').replace(/\s+/g, ' ').trim()
+        pickupLocation = before || undefined
+      }
     } else if (type === 'transfer') {
       // 交通接駁
       const upMatch = line.match(/上[_-](.+)/)
@@ -304,7 +347,7 @@ const SYSTEM_PROMPT = `你是台灣機場接送平台的訂單解析專家。負
   "rawText": "原始行文字",
   "date": "日期（YYYY-MM-DD 格式，使用預設日期）",
   "time": "時間 HH:MM，落地則填 \"落地\"",
-  "type": "pickup | dropoff | transfer | charter | pending",
+  "type": "pickup | dropoff | pickup_boat | dropoff_boat | transfer | charter | pending",
   "vehicle": "small | suv | van9 | any | pending（只能填這五個值之一，中文車型名稱不可填入此欄）",
   "price": 數字或null",
   "pickupLocation": "起點（如為桃園則填 \"桃園國際機場\"）",
@@ -322,8 +365,8 @@ const SYSTEM_PROMPT = `你是台灣機場接送平台的訂單解析專家。負
 - ○機-一般地點或區域（如「桃機-北投」「桃機-中正」「桃機-萬華」「桃機-松山」「桃機-大安」）→ pickup（接機，起點=該機場，終點=訊息中的地點或區域）
 - ○機-另一個機場（如「桃機-小港」「桃機-清泉」）→ dropoff（送機，起點=桃園國際機場，終點=另一個機場）
 - 地點-○機（如「中正-桃機」「士林-桃機」「三重-桃機」）→ dropoff（送機，起點=訊息中的地點，終點=桃園國際機場）
-- 【接送船】「基隆港→地點」（含「基隆港-」）→ pickup（接送船，起點=基隆港，終點=訊息中的地點）
-- 含「基隆港」且有接送 → 接送船（比照接送機處理，起點=基隆港，終點=訊息中的地點）
+- 【接船】「基隆港→地點」或「基隆港-地點」或「接」+基隆港 → pickup_boat（接船，起點=基隆港，終點=訊息中的地點）
+- 【送船】「地點→基隆港」或「送」+基隆港 → dropoff_boat（送船，起點=訊息中的地點，終點=基隆港）
 
 【重要】送機時，松山/小港/清泉 = 對應的機場；接機時，松山/小港/清泉 = 對應的市區（松山區/小港區/清水區）。
 
@@ -610,6 +653,8 @@ export const VEHICLE_LABELS: Record<VehicleType, string> = {
 export const TYPE_LABELS: Record<OrderType, string> = {
   pickup: '接機',
   dropoff: '送機',
+  pickup_boat: '接船',
+  dropoff_boat: '送船',
   transfer: '接駁',
   charter: '包車',
   pending: '待確認',

@@ -47,6 +47,8 @@ interface DispatcherOrderCardProps {
 const TYPE_TAG_STYLE: Record<string, string> = {
   pickup: 'bg-[#E6F1FB] text-[#0C447C]',
   dropoff: 'bg-[#FFF3E0] text-[#92400E]',
+  pickup_boat: 'bg-[#E0F7FA] text-[#006064]',
+  dropoff_boat: 'bg-[#E0F7FA] text-[#006064]',
   transfer: 'bg-[#F4EFE9] text-[#717171]',
   charter: 'bg-[#F3E8FF] text-[#6B21A8]',
 }
@@ -100,7 +102,7 @@ export function DispatcherOrderCard({ order, onEdit, onDelete }: DispatcherOrder
       {/* Row 2: Type tag + vehicle tag + kenichi tag */}
       <div className="flex items-center gap-2 mb-3 flex-wrap">
         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-normal ${typeTagStyle}`}>
-          {order.type === 'pickup' ? '接機' : order.type === 'dropoff' ? '送機' : order.type === 'transfer' ? '交通接駁' : order.type === 'charter' ? '套裝' : '待確認'}
+          {order.type === 'pickup' ? '接機' : order.type === 'dropoff' ? '送機' : order.type === 'pickup_boat' ? '接船' : order.type === 'dropoff_boat' ? '送船' : order.type === 'transfer' ? '交通接駁' : order.type === 'charter' ? '套裝' : '待確認'}
         </span>
         {vehicleLabel && (
           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-normal bg-[#F4EFE9] text-[#717171]">

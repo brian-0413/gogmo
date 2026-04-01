@@ -37,7 +37,7 @@ export interface Dispatcher {
   user?: User
 }
 
-export type OrderType = 'pickup' | 'dropoff' | 'transfer' | 'charter' | 'pending'
+export type OrderType = 'pickup' | 'dropoff' | 'pickup_boat' | 'dropoff_boat' | 'transfer' | 'charter' | 'pending'
 export type VehicleType = 'small' | 'suv' | 'van9' | 'any' | 'any_r' | 'pending'
 export type PlateType = 'R' | 'T' | 'any'
 

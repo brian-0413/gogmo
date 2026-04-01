@@ -78,7 +78,43 @@ export async function GET(request: NextRequest) {
         timestamp: new Date().toISOString(),
       })
 
-      // Poll every 15 seconds for new orders
+      // Immediately send all currently available PUBLISHED orders (that haven't been accepted yet)
+      // This ensures the driver sees all existing orders on connect, not just new ones
+      try {
+        const currentOrders = await prisma.order.findMany({
+          where: {
+            status: 'PUBLISHED',
+            driverId: null,
+          },
+          include: {
+            dispatcher: { include: { user: true } },
+          },
+          orderBy: { createdAt: 'desc' },
+        })
+
+        for (const order of currentOrders) {
+          sendEvent({
+            type: 'NEW_ORDER',
+            order: {
+              ...order,
+              scheduledTime: order.scheduledTime.toISOString(),
+              createdAt: order.createdAt.toISOString(),
+              updatedAt: order.updatedAt.toISOString(),
+              dispatcher: order.dispatcher
+                ? {
+                    ...order.dispatcher,
+                    createdAt: order.dispatcher.createdAt.toISOString(),
+                    updatedAt: order.dispatcher.updatedAt.toISOString(),
+                  }
+                : undefined,
+            },
+          })
+        }
+      } catch (error) {
+        console.error('SSE initial orders fetch error:', error)
+      }
+
+      // Poll every 3 seconds for new orders
       const intervalId = setInterval(async () => {
         if (isClosed) {
           clearInterval(intervalId)
@@ -141,7 +177,7 @@ export async function GET(request: NextRequest) {
             timestamp: new Date().toISOString(),
           })
         }
-      }, 15000) // 15 seconds
+      }, 3000) // 3 seconds
 
       // Handle client disconnect
       request.signal.addEventListener('abort', () => {

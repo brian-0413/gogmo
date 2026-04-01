@@ -15,6 +15,8 @@ export type { Order } from '@/types'
 const TYPE_COLORS: Record<OrderType, { bg: string; text: string }> = {
   pickup: { bg: '#E6F1FB', text: '#0C447C' },
   dropoff: { bg: '#FFF3E0', text: '#92400E' },
+  pickup_boat: { bg: '#E0F7FA', text: '#006064' },
+  dropoff_boat: { bg: '#E0F7FA', text: '#006064' },
   transfer: { bg: '#F4EFE9', text: '#717171' },
   charter: { bg: '#F3E8FF', text: '#6B21A8' },
   pending: { bg: '#F4EFE9', text: '#717171' },
@@ -50,6 +52,8 @@ const VEHICLE_LABELS: Record<VehicleType, string> = {
 const TYPE_LABELS: Record<OrderType, string> = {
   pickup: '接機',
   dropoff: '送機',
+  pickup_boat: '接船',
+  dropoff_boat: '送船',
   transfer: '接駁',
   charter: '包車',
   pending: '待確認',
@@ -76,8 +80,9 @@ function OrderCard({ order, onAccept, onView, showActions = true, compact = fals
   const vehicleBadgeColor = VEHICLE_COLORS[vehicle]
 
   const isPickup = orderType === 'pickup'
-  const pickupLabel = isPickup ? '桃園機場' : '上車'
-  const dropoffLabel = isPickup ? '目的地' : '桃園機場'
+  const isBoat = orderType === 'pickup_boat' || orderType === 'dropoff_boat'
+  const pickupLabel = isBoat ? '出發港' : isPickup ? '桃園機場' : '上車'
+  const dropoffLabel = isBoat ? '目的地港' : isPickup ? '目的地' : '桃園機場'
 
   useEffect(() => {
     if (urgency === "urgent" || urgency === "soon") {
