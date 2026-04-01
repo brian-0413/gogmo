@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/Input'
 import { Badge } from '@/components/ui/Badge'
 import { parseBatchOrders, ParsedOrder, BatchOrderDefaults, TYPE_LABELS } from '@/lib/ai'
 import { DispatcherOrderCard } from '@/components/dispatcher/OrderCard'
+import { FleetControl } from '@/components/dispatcher/FleetControl'
 import { format, parseISO } from 'date-fns'
 import { zhTW } from 'date-fns/locale'
 import * as XLSX from 'xlsx'
@@ -17,7 +18,6 @@ import {
   Search,
   Wallet,
   FileText,
-  Car,
   Building2,
   User,
   Phone,
@@ -1566,37 +1566,9 @@ export default function DispatcherDashboard() {
               </div>
             )}
 
-            {/* Drivers Tab - removed, redirect to orders */}
+            {/* Drivers Tab */}
             {activeTab === 'drivers' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {drivers.length === 0 ? (
-                  <div className="col-span-full text-center py-24 border border-white/10 rounded-3xl bg-white/5 backdrop-blur-sm">
-                    <p className="text-[#a0a0a0] mb-2 text-lg">目前沒有司機資料</p>
-                  </div>
-                ) : (
-                  drivers.map(driver => (
-                    <div key={driver.id} className="bg-[#1a1a1a] border border-white/10 rounded-xl p-5 hover:border-white/20 transition-all">
-                      <div className="flex items-start justify-between mb-4">
-                        <div>
-                          <p className="font-medium text-white">{driver.user.name}</p>
-                          <p className="text-sm text-[#666]">{driver.user.phone}</p>
-                        </div>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          driver.status === 'ONLINE'
-                            ? 'bg-[#22c55e]/20 text-[#22c55e] border border-[#22c55e]/30'
-                            : 'bg-white/10 text-[#666] border border-white/10'
-                        }`}>
-                          {driver.status === 'ONLINE' ? '在線' : driver.status}
-                        </span>
-                      </div>
-                      <div className="text-sm text-[#a0a0a0] space-y-1">
-                        <p className="flex items-center gap-2"><Car className="w-4 h-4 text-[#ff8c42]" /> {driver.licensePlate}</p>
-                        <p>{driver.carType} / {driver.carColor}</p>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
+              <FleetControl drivers={drivers} />
             )}
 
             {/* Settlement Tab */}
