@@ -1034,18 +1034,18 @@ export default function DispatcherDashboard() {
                             <div className="grid grid-cols-3 gap-3 mb-2">
                               <div>
                                 <p className="text-[11px] text-[#717171]">時間</p>
-                                <p className="font-mono-nums font-normal text-[#222222] text-sm">{item.editedTime || item.time || '-'}</p>
+                                <p className="font-mono-nums font-medium text-[#222222] text-[14px]">{item.editedTime || item.time || '-'}</p>
                               </div>
                               <div>
                                 <p className="text-[11px] text-[#717171]">費用</p>
-                                <p className="font-medium text-[#222222] font-mono-nums text-sm">NT${item.editedPrice ?? item.price ?? 800}</p>
+                                <p className="font-bold text-[#FF385C] font-mono-nums text-[15px]">NT${item.editedPrice ?? item.price ?? 800}</p>
                               </div>
                               <div>
                                 <p className="text-[11px] text-[#717171]">車型</p>
-                                <p className="font-normal text-[#222222] text-sm">{item.editedVehicle || '待確認'}</p>
+                                <p className="font-medium text-[#222222] text-[14px]">{item.editedVehicle || '待確認'}</p>
                               </div>
                             </div>
-                            <div className="text-sm text-[#222222]">
+                            <div className="text-[15px] font-bold text-[#222222]">
                               {item.editedPickup || item.pickupLocation || '-'} &rarr; {item.editedDropoff || item.dropoffLocation || '-'}
                             </div>
                             {(item.editedNotes || item.notes) && (
