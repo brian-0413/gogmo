@@ -114,16 +114,16 @@ export function DispatcherOrderCard({ order, onEdit, onDelete }: DispatcherOrder
         )}
       </div>
 
-      {/* Row 3: Route — most prominent, 15px 500 */}
+      {/* Row 3: Route — most prominent, 15px bold */}
       <div className="mb-2">
-        <p className="text-[15px] font-medium text-[#222222] leading-snug">
+        <p className="text-[15px] font-bold text-[#222222] leading-snug">
           {order.pickupLocation} &rarr; {order.dropoffLocation}
         </p>
       </div>
 
-      {/* Row 4: Date/time 13px gray */}
+      {/* Row 4: Date/time */}
       <div className="mb-3">
-        <p className="text-[13px] text-[#717171]">
+        <p className="text-[14px] text-[#717171] font-medium">
           {format(scheduledDate, 'M/dd (E)', { locale: zhTW })}&nbsp;
           {format(scheduledDate, 'HH:mm')}
         </p>
@@ -132,15 +132,15 @@ export function DispatcherOrderCard({ order, onEdit, onDelete }: DispatcherOrder
       {/* Divider */}
       <div className="border-t border-[#DDDDDD] opacity-50 mb-3" />
 
-      {/* Row 5: Price (18px 500) + driver (12px gray) */}
+      {/* Row 5: Price (22px bold) + driver */}
       <div className="flex items-center justify-between">
-        <span className="text-[18px] font-medium text-[#222222] font-mono-nums">
+        <span className="text-[22px] font-bold text-[#FF385C] font-mono-nums">
           NT${order.price.toLocaleString()}
         </span>
         {hasDriver ? (
-          <span className="text-[12px] text-[#717171] truncate max-w-[200px] font-mono-nums">{driverInfo}</span>
+          <span className="text-[13px] text-[#717171] truncate max-w-[200px] font-mono-nums">{driverInfo}</span>
         ) : (
-          <span className="text-[12px] text-[#E24B4A]">等待司機接單</span>
+          <span className="text-[13px] text-[#E24B4A]">等待司機接單</span>
         )}
       </div>
 
