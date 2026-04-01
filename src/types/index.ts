@@ -2,7 +2,7 @@
 
 export type UserRole = 'DRIVER' | 'DISPATCHER' | 'ADMIN'
 export type DriverStatus = 'ONLINE' | 'OFFLINE' | 'BUSY'
-export type OrderStatus = 'PENDING' | 'ASSIGNED' | 'ACCEPTED' | 'ARRIVED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED'
+export type OrderStatus = 'PENDING' | 'PUBLISHED' | 'ASSIGNED' | 'ACCEPTED' | 'ARRIVED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED'
 export type TransactionType = 'RIDE_FARE' | 'PLATFORM_FEE' | 'RECHARGE' | 'WITHDRAW'
 export type TransactionStatus = 'PENDING' | 'SETTLED'
 
@@ -59,7 +59,7 @@ export interface Order {
   dropoffLng?: number
   passengerCount: number
   luggageCount: number
-  scheduledTime: Date
+  scheduledTime: Date | string
   price: number
   type: OrderType
   vehicle: VehicleType
@@ -72,6 +72,7 @@ export interface Order {
   completedAt?: Date
   dispatcher?: Dispatcher
   driver?: Driver
+  kenichiRequired?: boolean
 }
 
 export interface Transaction {
@@ -134,7 +135,6 @@ export interface CreateOrderRequest {
   rawText?: string
   kenichiRequired?: boolean
 }
-
 export interface ParseOrderRequest {
   text: string
 }

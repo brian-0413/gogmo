@@ -6,33 +6,29 @@ import { format, parseISO, differenceInMinutes } from 'date-fns'
 import { zhTW } from 'date-fns/locale'
 import { User, Package, FileText, Zap, Clock, Car } from 'lucide-react'
 import { useState, useEffect } from 'react'
+import { formatOrderNo } from '@/lib/utils'
+import type { OrderType, VehicleType, Order } from '@/types'
 
-type OrderType = 'pickup' | 'dropoff' | 'transfer' | 'charter' | 'pending'
-type VehicleType = 'small' | 'suv' | 'van9' | 'any' | 'any_r' | 'pending'
+// Re-export Order for consumers
+export type { Order } from '@/types'
 
-interface Order {
-  id: string
-  status: string
-  passengerName: string
-  passengerPhone: string
-  flightNumber: string
-  pickupLocation: string
-  pickupAddress: string
-  dropoffLocation: string
-  dropoffAddress: string
-  passengerCount: number
-  luggageCount: number
-  scheduledTime: string | Date
-  price: number
-  type?: OrderType
-  vehicle?: VehicleType
-  plateType?: string
-  notes?: string | null
-  note?: string | null
-  rawText?: string | null
-  dispatcher?: {
-    companyName: string
-  }
+// 種類 Badge 顏色
+const TYPE_COLORS: Record<OrderType, { bg: string; text: string }> = {
+  pickup: { bg: '#22c55e', text: 'white' },
+  dropoff: { bg: '#3b82f6', text: 'white' },
+  transfer: { bg: '#a855f7', text: 'white' },
+  charter: { bg: '#f59e0b', text: 'black' },
+  pending: { bg: '#444', text: '#a0a0a0' },
+}
+
+// 車型 Badge 顏色
+const VEHICLE_COLORS: Record<VehicleType, { bg: string; text: string }> = {
+  van9: { bg: '#ef4444', text: 'white' },
+  suv: { bg: '#f59e0b', text: 'black' },
+  small: { bg: '#666', text: 'white' },
+  any_r: { bg: '#3b82f6', text: 'white' },
+  any: { bg: '#444', text: '#a0a0a0' },
+  pending: { bg: '#444', text: '#a0a0a0' },
 }
 
 interface OrderCardProps {
@@ -78,14 +74,7 @@ function OrderCard({ order, onAccept, onView, showActions = true, compact = fals
   const [countdown, setCountdown] = useState<string>('')
   const notes = order.notes || order.note || order.rawText
 
-  // 單號
-  const orderNo = (() => {
-    let dateStr = format(new Date(), 'yyyyMMdd')
-    try {
-      dateStr = format(scheduledDate, 'yyyyMMdd')
-    } catch { /* use today */ }
-    return `${dateStr}-${order.id.slice(-4)}`
-  })()
+  const orderNo = formatOrderNo(scheduledDate, order.id)
 
   useEffect(() => {
     if (urgency === "urgent" || urgency === "soon") {
@@ -105,19 +94,8 @@ function OrderCard({ order, onAccept, onView, showActions = true, compact = fals
     }
   }, [order.scheduledTime, urgency])
 
-  // 種類 Badge 顏色
-  const typeBadgeColor = orderType === 'pickup' ? { bg: '#22c55e', text: 'white' }
-    : orderType === 'dropoff' ? { bg: '#3b82f6', text: 'white' }
-    : orderType === 'transfer' ? { bg: '#a855f7', text: 'white' }
-    : orderType === 'charter' ? { bg: '#f59e0b', text: 'black' }
-    : { bg: '#444', text: '#a0a0a0' }
-
-  // 車型 Badge 顏色
-  const vehicleBadgeColor = vehicle === 'van9' ? { bg: '#ef4444', text: 'white' }
-    : vehicle === 'suv' ? { bg: '#f59e0b', text: 'black' }
-    : vehicle === 'small' ? { bg: '#666', text: 'white' }
-    : vehicle === 'any_r' ? { bg: '#3b82f6', text: 'white' }
-    : { bg: '#444', text: '#a0a0a0' }
+  const typeBadgeColor = TYPE_COLORS[orderType]
+  const vehicleBadgeColor = VEHICLE_COLORS[vehicle]
 
   // 接送地點標題
   const isPickup = orderType === 'pickup'
@@ -154,9 +132,11 @@ function OrderCard({ order, onAccept, onView, showActions = true, compact = fals
           </span>
         </div>
         {/* 起迄點 */}
-        <div className="flex items-center gap-1.5 text-xs text-[#a0a0a0] mb-2">
+        <div className="flex items-start gap-1.5 text-xs text-[#a0a0a0] mb-2">
+          <div className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ backgroundColor: typeBadgeColor.bg }} />
           <span className="truncate">{order.pickupLocation}</span>
           <span className="text-[#666] flex-shrink-0">→</span>
+          <div className="w-1.5 h-1.5 rounded-full bg-[#666] mt-1.5 flex-shrink-0" />
           <span className="truncate">{order.dropoffLocation}</span>
         </div>
         {/* 備註 (compact版淡化) */}
@@ -241,6 +221,11 @@ function OrderCard({ order, onAccept, onView, showActions = true, compact = fals
 
         {/* 車型 Badge */}
         <div className="flex items-center gap-2 mb-3">
+          {order.kenichiRequired && (
+            <span className="px-2 py-1 rounded text-[10px] font-bold bg-[#a855f7]/20 text-[#a855f7] border border-[#a855f7]/30">
+              肯驛
+            </span>
+          )}
           <span
             className="text-[10px] font-bold px-2 py-1 rounded"
             style={{ backgroundColor: vehicleBadgeColor.bg, color: vehicleBadgeColor.text }}
@@ -295,4 +280,3 @@ function OrderCard({ order, onAccept, onView, showActions = true, compact = fals
 }
 
 export { OrderCard }
-export type { Order }

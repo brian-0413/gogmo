@@ -34,8 +34,8 @@ interface OrderStatusBadgeProps {
 
 function OrderStatusBadge({ status }: OrderStatusBadgeProps) {
   const statusMap: Record<string, { label: string; variant: BadgeProps["variant"] }> = {
-    PENDING: { label: "待審核", variant: "warning" },
-    PUBLISHED: { label: "已發布", variant: "success" },
+    PENDING: { label: "待接單", variant: "warning" },
+    PUBLISHED: { label: "待接單", variant: "success" },
     ASSIGNED: { label: "已指派", variant: "info" },
     ACCEPTED: { label: "已接單", variant: "info" },
     ARRIVED: { label: "已抵達", variant: "info" },

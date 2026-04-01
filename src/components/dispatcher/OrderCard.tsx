@@ -1,16 +1,19 @@
 'use client'
 
 import { format, parseISO } from 'date-fns'
+import { zhTW } from 'date-fns/locale'
 import { Pencil, Trash2, User, Car } from 'lucide-react'
+import { formatOrderNo } from '@/lib/utils'
+import type { OrderStatus } from '@/types'
 
-type OrderStatus = 'PENDING' | 'PUBLISHED' | 'ASSIGNED' | 'ACCEPTED' | 'ARRIVED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED'
-
-interface Order {
+// Local Order interface (extends minimal fields needed by this component)
+interface DispatcherOrder {
   id: string
   status: OrderStatus
   type?: string
   vehicle?: string
   plateType?: string
+  kenichiRequired?: boolean
   passengerName: string
   passengerPhone: string
   flightNumber: string
@@ -20,7 +23,7 @@ interface Order {
   dropoffAddress: string
   passengerCount: number
   luggageCount: number
-  scheduledTime: string | Date
+  scheduledTime: Date | string
   price: number
   note?: string | null
   notes?: string | null
@@ -34,16 +37,11 @@ interface Order {
   createdAt: string
 }
 
-// 產生格式化的單號：日期-流水號
-function formatOrderNo(scheduledTime: string | Date, id: string): string {
-  let dateStr = format(new Date(), 'yyyyMMdd')
-  try {
-    const d = typeof scheduledTime === 'string' ? parseISO(scheduledTime) : scheduledTime
-    dateStr = format(d, 'yyyyMMdd')
-  } catch { /* use today */ }
-  // 取 id 的後 4 碼當流水號
-  const seq = id.slice(-4)
-  return `${dateStr}-${seq}`
+interface DispatcherOrderCardProps {
+  order: DispatcherOrder
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  onEdit: (order: any) => void
+  onDelete: (orderId: string) => void
 }
 
 // 行程狀態顯示
@@ -56,12 +54,6 @@ const STATUS_CONFIG: Record<string, { label: string; bg: string; text: string }>
   IN_PROGRESS: { label: '進行中', bg: 'bg-[#22c55e]/20', text: 'text-[#22c55e]' },
   COMPLETED: { label: '已完成', bg: 'bg-white/10', text: 'text-[#666]' },
   CANCELLED: { label: '已取消', bg: 'bg-[#ef4444]/20', text: 'text-[#ef4444]' },
-}
-
-interface DispatcherOrderCardProps {
-  order: any
-  onEdit: (order: any) => void
-  onDelete: (orderId: string) => void
 }
 
 export function DispatcherOrderCard({ order, onEdit, onDelete }: DispatcherOrderCardProps) {
@@ -106,7 +98,7 @@ export function DispatcherOrderCard({ order, onEdit, onDelete }: DispatcherOrder
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-[#e0e0e0]">
-            {format(scheduledDate, 'M/dd (E)', { locale: require('date-fns/locale/zh-TW').default })}
+            {format(scheduledDate, 'M/dd (E)', { locale: zhTW })}
           </span>
           <span className="text-base font-mono font-bold text-white">
             {format(scheduledDate, 'HH:mm')}
