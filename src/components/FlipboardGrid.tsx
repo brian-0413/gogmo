@@ -87,7 +87,7 @@ function OrderCard({ order }: { order: Order }) {
 
       {/* Price */}
       <div className="mb-3">
-        <span className="text-[22px] font-medium text-[#FF385C] font-mono-nums">
+        <span className="text-[28px] font-bold text-[#FF385C] font-mono-nums">
           NT${order.price.toLocaleString()}
         </span>
       </div>
@@ -96,7 +96,7 @@ function OrderCard({ order }: { order: Order }) {
       <div className="space-y-2 mb-3">
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 rounded-full bg-[#FF385C] flex-shrink-0" />
-          <span className="text-[13px] text-[#222222] truncate">{fromLocation}</span>
+          <span className="text-[15px] font-semibold text-[#222222] truncate">{fromLocation}</span>
         </div>
         <div className="flex items-center gap-2 pl-0.5">
           <div className="w-0.5 h-3 bg-[#DDDDDD]" />
@@ -104,7 +104,7 @@ function OrderCard({ order }: { order: Order }) {
         </div>
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 rounded-full bg-[#DDDDDD] flex-shrink-0" />
-          <span className="text-[13px] text-[#222222] truncate">{toLocation}</span>
+          <span className="text-[15px] font-semibold text-[#222222] truncate">{toLocation}</span>
         </div>
       </div>
 

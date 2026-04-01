@@ -191,15 +191,15 @@ export default function DriverDashboard() {
             </Link>
             <div className="flex items-center gap-6">
               {/* Balance */}
-              <div className="hidden md:flex items-center gap-3 px-4 py-2 bg-white border border-[#E7E5E4] rounded-lg shadow-sm">
+              <div className="hidden md:flex items-center gap-3 px-4 py-2 bg-white border border-[#DDDDDD] rounded-lg shadow-sm">
                 <div className="text-right">
-                  <p className="text-[10px] text-[#78716C] uppercase tracking-wider">帳戶餘額</p>
-                  <p className="text-lg font-bold text-[#F59E0B] font-mono-nums">{user.driver?.balance ?? 0}</p>
+                  <p className="text-[10px] text-[#717171] uppercase tracking-wider">帳戶餘額</p>
+                  <p className="text-lg font-bold text-[#FF385C] font-mono-nums">{user.driver?.balance ?? 0}</p>
                 </div>
-                <div className="w-px h-8 bg-[#E7E5E4]" />
+                <div className="w-px h-8 bg-[#DDDDDD]" />
                 <div className="text-right">
-                  <p className="text-[10px] text-[#78716C] uppercase tracking-wider">今日成交</p>
-                  <p className="text-lg font-bold text-[#22C55E] font-mono-nums">{balanceStats.todayOrders}</p>
+                  <p className="text-[10px] text-[#717171] uppercase tracking-wider">今日成交</p>
+                  <p className="text-lg font-bold text-[#008A05] font-mono-nums">{balanceStats.todayOrders}</p>
                 </div>
               </div>
               <div className="flex items-center gap-4">
@@ -207,7 +207,7 @@ export default function DriverDashboard() {
                   <p className="text-sm font-medium text-[#1C1917]">{user.name}</p>
                   <p className="text-xs text-[#78716C]">{driverProfile?.licensePlate || '未設定車牌'}</p>
                 </div>
-                <Button variant="outline" size="sm" onClick={logout} className="border-[#E7E5E4] text-[#78716C] hover:border-[#F59E0B]/30 hover:text-[#F59E0B] hover:bg-[#F59E0B]/5">
+                <Button variant="outline" size="sm" onClick={logout} className="border-[#DDDDDD] text-[#717171] hover:border-[#FF385C]/30 hover:text-[#FF385C] hover:bg-[#FFF3E0]">
                   <LogOut className="w-4 h-4" />
                 </Button>
               </div>
@@ -270,7 +270,7 @@ export default function DriverDashboard() {
             >
               <FileText className="w-4 h-4" />
               我的行程
-              <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-mono-nums bg-[#F5F4F0] text-[#78716C] border border-[#E7E5E4]">
+              <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-mono-nums bg-[#F5F4F0] text-[#78716C] border border-[#DDDDDD]">
                 {myOrders.length}
               </span>
               {activeTab === 'myorders' && (
@@ -306,10 +306,10 @@ export default function DriverDashboard() {
                 <div className="w-10 h-10 border-2 border-[#F59E0B] border-t-transparent rounded-full animate-spin mx-auto" />
               </div>
             ) : availableOrders.length === 0 ? (
-              <div className="text-center py-32 border border-[#E7E5E4] rounded-2xl bg-white/50 relative overflow-hidden shadow-sm">
+              <div className="text-center py-32 border border-[#DDDDDD] rounded-2xl bg-white/50 relative overflow-hidden shadow-sm">
                 <div className="absolute inset-0 dot-matrix opacity-30" />
                 <div className="relative">
-                  <div className="w-16 h-16 rounded-2xl bg-[#F5F4F0] border border-[#E7E5E4] flex items-center justify-center mx-auto mb-4">
+                  <div className="w-16 h-16 rounded-2xl bg-[#F5F4F0] border border-[#DDDDDD] flex items-center justify-center mx-auto mb-4">
                     <Inbox className="w-8 h-8 text-[#D6D3D1]" />
                   </div>
                   <p className="text-[#78716C] mb-1 text-lg font-medium">目前沒有可接的訂單</p>
@@ -332,10 +332,10 @@ export default function DriverDashboard() {
         {activeTab === 'myorders' && (
           <>
             {myOrders.length === 0 ? (
-              <div className="text-center py-32 border border-[#E7E5E4] rounded-2xl bg-white/50 relative overflow-hidden shadow-sm">
+              <div className="text-center py-32 border border-[#DDDDDD] rounded-2xl bg-white/50 relative overflow-hidden shadow-sm">
                 <div className="absolute inset-0 dot-matrix opacity-30" />
                 <div className="relative">
-                  <div className="w-16 h-16 rounded-2xl bg-[#F5F4F0] border border-[#E7E5E4] flex items-center justify-center mx-auto mb-4">
+                  <div className="w-16 h-16 rounded-2xl bg-[#F5F4F0] border border-[#DDDDDD] flex items-center justify-center mx-auto mb-4">
                     <FileText className="w-8 h-8 text-[#D6D3D1]" />
                   </div>
                   <p className="text-[#78716C] mb-1 text-lg font-medium">還沒有行程</p>
@@ -358,7 +358,7 @@ export default function DriverDashboard() {
             {/* Earnings cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               {/* Today */}
-              <div className="bg-white border border-[#E7E5E4] rounded-xl p-5 relative overflow-hidden shadow-sm">
+              <div className="bg-white border border-[#DDDDDD] rounded-xl p-5 relative overflow-hidden shadow-sm">
                 <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#22C55E]/50 to-transparent" />
                 <div className="flex items-center gap-2 mb-3">
                   <div className="w-1.5 h-1.5 rounded-full bg-[#22C55E] animate-pulse" />
@@ -391,7 +391,7 @@ export default function DriverDashboard() {
               </div>
 
               {/* This Week */}
-              <div className="bg-white border border-[#E7E5E4] rounded-xl p-5 relative overflow-hidden shadow-sm">
+              <div className="bg-white border border-[#DDDDDD] rounded-xl p-5 relative overflow-hidden shadow-sm">
                 <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#3B82F6]/50 to-transparent" />
                 <div className="flex items-center gap-2 mb-3">
                   <TrendingUp className="w-3.5 h-3.5 text-[#3B82F6]" />
@@ -412,7 +412,7 @@ export default function DriverDashboard() {
               </div>
 
               {/* All Time */}
-              <div className="bg-white border border-[#E7E5E4] rounded-xl p-5 relative overflow-hidden shadow-sm">
+              <div className="bg-white border border-[#DDDDDD] rounded-xl p-5 relative overflow-hidden shadow-sm">
                 <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#A855F7]/50 to-transparent" />
                 <div className="flex items-center gap-2 mb-3">
                   <Zap className="w-3.5 h-3.5 text-[#A855F7]" />
@@ -436,7 +436,7 @@ export default function DriverDashboard() {
 
             {/* Stats row */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <div className="bg-white border border-[#E7E5E4] rounded-xl p-4 shadow-sm">
+              <div className="bg-white border border-[#DDDDDD] rounded-xl p-4 shadow-sm">
                 <div className="flex items-center gap-2 mb-2">
                   <Wallet className="w-3.5 h-3.5 text-[#F59E0B]" />
                   <span className="text-[10px] text-[#F59E0B] uppercase tracking-widest">帳戶餘額</span>
@@ -444,7 +444,7 @@ export default function DriverDashboard() {
                 <p className="text-2xl font-bold text-[#1C1917] font-mono-nums">{balance.balance.toLocaleString()}</p>
                 <p className="text-xs text-[#78716C] mt-0.5">點</p>
               </div>
-              <div className="bg-white border border-[#E7E5E4] rounded-xl p-4 shadow-sm">
+              <div className="bg-white border border-[#DDDDDD] rounded-xl p-4 shadow-sm">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-1.5 h-1.5 rounded-full bg-[#F59E0B]" />
                   <span className="text-[10px] text-[#F59E0B] uppercase tracking-widest">待結算</span>
@@ -454,7 +454,7 @@ export default function DriverDashboard() {
                 </p>
                 <p className="text-xs text-[#78716C] mt-0.5">筆</p>
               </div>
-              <div className="bg-white border border-[#E7E5E4] rounded-xl p-4 shadow-sm">
+              <div className="bg-white border border-[#DDDDDD] rounded-xl p-4 shadow-sm">
                 <div className="flex items-center gap-2 mb-2">
                   <TrendingUp className="w-3.5 h-3.5 text-[#3B82F6]" />
                   <span className="text-[10px] text-[#3B82F6] uppercase tracking-widest">總行程</span>
@@ -464,7 +464,7 @@ export default function DriverDashboard() {
                 </p>
                 <p className="text-xs text-[#78716C] mt-0.5">單</p>
               </div>
-              <div className="bg-white border border-[#E7E5E4] rounded-xl p-4 shadow-sm">
+              <div className="bg-white border border-[#DDDDDD] rounded-xl p-4 shadow-sm">
                 <div className="flex items-center gap-2 mb-2">
                   <Zap className="w-3.5 h-3.5 text-[#A855F7]" />
                   <span className="text-[10px] text-[#A855F7] uppercase tracking-widest">平台費率</span>
@@ -475,8 +475,8 @@ export default function DriverDashboard() {
             </div>
 
             {/* Transactions */}
-            <div className="bg-white border border-[#E7E5E4] rounded-xl overflow-hidden shadow-sm">
-              <div className="px-5 py-4 border-b border-[#E7E5E4]">
+            <div className="bg-white border border-[#DDDDDD] rounded-xl overflow-hidden shadow-sm">
+              <div className="px-5 py-4 border-b border-[#DDDDDD]">
                 <h3 className="text-sm font-semibold text-[#1C1917]">最近交易</h3>
               </div>
               <div className="p-5">
@@ -488,7 +488,7 @@ export default function DriverDashboard() {
                       const transaction = tx as { id: string; amount: number; type: string; status: string; description?: string; createdAt: string | Date }
                       const displayAmount = transaction.type === 'RIDE_FARE' ? Math.floor(transaction.amount * 0.95) : transaction.amount
                       return (
-                        <div key={transaction.id} className="flex items-center justify-between py-3 border-b border-[#E7E5E4]/50 last:border-0">
+                        <div key={transaction.id} className="flex items-center justify-between py-3 border-b border-[#DDDDDD]/50 last:border-0">
                           <div>
                             <p className="text-sm font-medium text-[#1C1917]">{transaction.description || transaction.type}</p>
                             <p className="text-xs text-[#78716C] font-mono-nums">
