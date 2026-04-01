@@ -34,7 +34,7 @@ export function DriverStatusCarousel() {
   const isPickup = current.route.includes('接')
 
   return (
-    <div className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-sm">
+    <div className="bg-[#0c0c10] border border-[#1e1e26] rounded-2xl p-6 backdrop-blur-sm">
       <div className="flex items-center gap-2 mb-4">
         <span className="relative flex h-2 w-2">
           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#22c55e] opacity-75"></span>
@@ -57,8 +57,8 @@ export function DriverStatusCarousel() {
             >
               {current.plate}
             </span>
-            <span className="text-[#666]">{current.route}</span>
-            <span className="text-[#ff8c42] font-bold">NT${current.price}</span>
+            <span className="text-[#6b6560]">{current.route}</span>
+            <span className="text-[#ff6b2b] font-bold">NT${current.price}</span>
           </div>
         </div>
       </div>
@@ -69,7 +69,7 @@ export function DriverStatusCarousel() {
           <div
             key={idx}
             className={`h-1 rounded-full transition-all duration-300 ${
-              idx === currentIndex ? 'w-4 bg-[#22c55e]' : 'w-1 bg-white/20'
+              idx === currentIndex ? 'w-4 bg-[#22c55e]' : 'w-1 bg-[#4a4a52]'
             }`}
           />
         ))}

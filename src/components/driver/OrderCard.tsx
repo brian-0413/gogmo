@@ -4,31 +4,28 @@ import { Badge, OrderStatusBadge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { format, parseISO, differenceInMinutes } from 'date-fns'
 import { zhTW } from 'date-fns/locale'
-import { User, Package, FileText, Zap, Clock, Car } from 'lucide-react'
+import { User, Package, FileText, Zap, Clock } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { formatOrderNo } from '@/lib/utils'
 import type { OrderType, VehicleType, Order } from '@/types'
 
-// Re-export Order for consumers
 export type { Order } from '@/types'
 
-// 種類 Badge 顏色
 const TYPE_COLORS: Record<OrderType, { bg: string; text: string }> = {
-  pickup: { bg: '#22c55e', text: 'white' },
-  dropoff: { bg: '#3b82f6', text: 'white' },
-  transfer: { bg: '#a855f7', text: 'white' },
-  charter: { bg: '#f59e0b', text: 'black' },
-  pending: { bg: '#444', text: '#a0a0a0' },
+  pickup: { bg: '#22c55e', text: '#060608' },
+  dropoff: { bg: '#3b82f6', text: '#ffffff' },
+  transfer: { bg: '#a855f7', text: '#ffffff' },
+  charter: { bg: '#f59e0b', text: '#060608' },
+  pending: { bg: '#3a3a40', text: '#6b6560' },
 }
 
-// 車型 Badge 顏色
 const VEHICLE_COLORS: Record<VehicleType, { bg: string; text: string }> = {
-  van9: { bg: '#ef4444', text: 'white' },
-  suv: { bg: '#f59e0b', text: 'black' },
-  small: { bg: '#666', text: 'white' },
-  any_r: { bg: '#3b82f6', text: 'white' },
-  any: { bg: '#444', text: '#a0a0a0' },
-  pending: { bg: '#444', text: '#a0a0a0' },
+  van9: { bg: '#ef4444', text: '#ffffff' },
+  suv: { bg: '#f59e0b', text: '#060608' },
+  small: { bg: '#4a4a52', text: '#f0ebe3' },
+  any_r: { bg: '#3b82f6', text: '#ffffff' },
+  any: { bg: '#3a3a40', text: '#6b6560' },
+  pending: { bg: '#3a3a40', text: '#6b6560' },
 }
 
 interface OrderCardProps {
@@ -73,15 +70,20 @@ function OrderCard({ order, onAccept, onView, showActions = true, compact = fals
   const urgency = getTimeUrgency(order.scheduledTime)
   const [countdown, setCountdown] = useState<string>('')
   const notes = order.notes || order.note || order.rawText
-
   const orderNo = formatOrderNo(scheduledDate, order.id)
+  const typeBadgeColor = TYPE_COLORS[orderType]
+  const vehicleBadgeColor = VEHICLE_COLORS[vehicle]
+
+  const isPickup = orderType === 'pickup'
+  const pickupLabel = isPickup ? '桃園機場' : '上車'
+  const dropoffLabel = isPickup ? '目的地' : '桃園機場'
 
   useEffect(() => {
     if (urgency === "urgent" || urgency === "soon") {
       const updateCountdown = () => {
         const now = new Date()
         const time = typeof order.scheduledTime === 'string' ? parseISO(order.scheduledTime) : new Date(order.scheduledTime)
-        const seconds = differenceInMinutes(time, now) * 60 - (now.getSeconds())
+        const seconds = differenceInMinutes(time, now) * 60 - now.getSeconds()
         if (seconds > 0) {
           const mins = Math.floor(seconds / 60)
           const secs = seconds % 60
@@ -94,54 +96,38 @@ function OrderCard({ order, onAccept, onView, showActions = true, compact = fals
     }
   }, [order.scheduledTime, urgency])
 
-  const typeBadgeColor = TYPE_COLORS[orderType]
-  const vehicleBadgeColor = VEHICLE_COLORS[vehicle]
-
-  // 接送地點標題
-  const isPickup = orderType === 'pickup'
-  const pickupLabel = isPickup ? '桃園機場' : '上車'
-  const dropoffLabel = isPickup ? '目的地' : '桃園機場'
-
   if (compact) {
     return (
-      <div className="bg-[#1a1a1a] border border-white/10 rounded-xl p-3 hover:border-white/20 transition-all">
-        {/* 第一列：單號 + 狀態 */}
+      <div className="bg-[#0c0c10] border border-[#1e1e26] rounded-xl p-3 hover:border-[#3b82f6]/20 transition-all duration-200">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-xs font-mono text-[#666]">{orderNo}</span>
+          <span className="text-xs font-mono-nums text-[#4a4a52]">{orderNo}</span>
           <OrderStatusBadge status={order.status} />
         </div>
-        {/* 第二列：日期時間 */}
         <div className="flex items-center gap-2 mb-2">
-          <span className="text-sm font-medium text-[#e0e0e0]">
+          <span className="text-sm font-medium text-[#f0ebe3]">
             {format(scheduledDate, 'M/dd (E)', { locale: zhTW })}
           </span>
-          <span className="text-sm font-mono font-bold text-white">
+          <span className="text-sm font-bold font-mono-nums text-[#f0ebe3]">
             {format(scheduledDate, 'HH:mm')}
           </span>
         </div>
-        {/* 第三列：金額 (compact版略小) */}
         <div className="flex items-center gap-2 mb-2">
-          <span className="text-lg font-bold" style={{ color: '#ff8c42' }}>
+          <span className="text-lg font-bold font-mono-nums" style={{ color: '#ff6b2b' }}>
             NT${order.price}
           </span>
-          <span
-            className="text-[10px] font-bold px-1.5 py-0.5 rounded"
-            style={{ backgroundColor: typeBadgeColor.bg, color: typeBadgeColor.text }}
-          >
+          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ backgroundColor: typeBadgeColor.bg, color: typeBadgeColor.text }}>
             {TYPE_LABELS[orderType]}
           </span>
         </div>
-        {/* 起迄點 */}
-        <div className="flex items-start gap-1.5 text-xs text-[#a0a0a0] mb-2">
+        <div className="flex items-start gap-1.5 text-xs text-[#6b6560] mb-2">
           <div className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ backgroundColor: typeBadgeColor.bg }} />
           <span className="truncate">{order.pickupLocation}</span>
-          <span className="text-[#666] flex-shrink-0">→</span>
-          <div className="w-1.5 h-1.5 rounded-full bg-[#666] mt-1.5 flex-shrink-0" />
+          <span className="text-[#3a3a40] flex-shrink-0">→</span>
+          <div className="w-1.5 h-1.5 rounded-full bg-[#4a4a52] mt-1.5 flex-shrink-0" />
           <span className="truncate">{order.dropoffLocation}</span>
         </div>
-        {/* 備註 (compact版淡化) */}
         {notes && (
-          <div className="text-xs text-[#666] italic bg-white/5 p-1.5 rounded truncate">
+          <div className="text-xs text-[#6b6560] italic bg-[#141418] p-1.5 rounded truncate">
             {notes}
           </div>
         )}
@@ -150,16 +136,21 @@ function OrderCard({ order, onAccept, onView, showActions = true, compact = fals
   }
 
   return (
-    <div className={`bg-[#1a1a1a] border border-white/10 rounded-xl overflow-hidden transition-all hover:border-white/20 ${isNew ? 'animate-cardEntry' : ''}`}>
+    <div className={`bg-[#0c0c10] border border-[#1e1e26] rounded-xl overflow-hidden transition-all duration-200 hover:border-[#ff6b2b]/20 ${isNew ? 'animate-cardEntry' : ''}`}>
+      {/* Top accent for new orders */}
+      {isNew && (
+        <div className="h-0.5 bg-gradient-to-r from-[#3b82f6] via-[#ff6b2b] to-[#3b82f6]" />
+      )}
+
       <div className="p-4">
-        {/* 第一列：單號 + 即時狀態 */}
+        {/* Order no + status */}
         <div className="flex items-center justify-between mb-1">
-          <span className="text-xs font-mono text-[#666]">{orderNo}</span>
+          <span className="text-xs font-mono-nums text-[#4a4a52]">{orderNo}</span>
           <div className="flex items-center gap-1.5">
             {urgency !== "normal" && (
-              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5" style={{
-                backgroundColor: urgency === "urgent" ? '#ef4444' : '#ff8c42',
-                color: urgency === "urgent" ? 'white' : 'black'
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5 font-mono-nums" style={{
+                backgroundColor: urgency === "urgent" ? '#ef4444' : '#ff6b2b',
+                color: urgency === "urgent" ? '#ffffff' : '#060608'
               }}>
                 {urgency === "urgent" ? <Zap className="w-2.5 h-2.5" /> : <Clock className="w-2.5 h-2.5" />}
                 {countdown || '00:00'}
@@ -169,9 +160,9 @@ function OrderCard({ order, onAccept, onView, showActions = true, compact = fals
           </div>
         </div>
 
-        {/* 第二列：金額 (特別顯眼) */}
+        {/* Price + type */}
         <div className="flex items-center gap-2 mb-2">
-          <span className="text-2xl font-bold" style={{ color: '#ff8c42' }}>
+          <span className="text-2xl font-bold font-mono-nums" style={{ color: '#ff6b2b' }}>
             NT${order.price.toLocaleString()}
           </span>
           <span
@@ -182,47 +173,43 @@ function OrderCard({ order, onAccept, onView, showActions = true, compact = fals
           </span>
         </div>
 
-        {/* 第三列：日期時間 */}
+        {/* Date + time + flight */}
         <div className="flex items-center gap-2 mb-2">
-          <span className="text-sm font-medium text-[#e0e0e0]">
+          <span className="text-sm font-medium text-[#f0ebe3]">
             {format(scheduledDate, 'M/dd (E)', { locale: zhTW })}
           </span>
-          <span className="text-sm font-mono font-bold text-white">
+          <span className="text-sm font-bold font-mono-nums text-[#f0ebe3]">
             {format(scheduledDate, 'HH:mm')}
           </span>
           {order.flightNumber && (
-            <span className="bg-white/10 px-2 py-0.5 rounded font-mono text-xs text-[#e0e0e0]">
+            <span className="bg-[#141418] px-2 py-0.5 rounded font-mono-nums text-xs text-[#6b6560] border border-[#1e1e26]">
               {order.flightNumber}
             </span>
           )}
         </div>
 
-        {/* 起迄點 */}
+        {/* Pickup / Dropoff */}
         <div className="space-y-1.5 mb-3">
           <div className="flex items-start gap-2">
-            <div className="w-2 h-2 rounded-full mt-1.5" style={{ backgroundColor: typeBadgeColor.bg }} />
+            <div className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0" style={{ backgroundColor: typeBadgeColor.bg }} />
             <div className="flex-1 min-w-0">
-              <p className="text-xs text-[#a0a0a0] mb-0.5">{pickupLabel}</p>
-              <p className="text-sm font-medium text-[#e0e0e0] truncate">
-                {order.pickupLocation}
-              </p>
+              <p className="text-[10px] text-[#6b6560] uppercase tracking-wider mb-0.5">{pickupLabel}</p>
+              <p className="text-sm font-medium text-[#f0ebe3] truncate">{order.pickupLocation}</p>
             </div>
           </div>
           <div className="flex items-start gap-2">
-            <div className="w-2 h-2 rounded-full bg-[#666] mt-1.5" />
+            <div className="w-2 h-2 rounded-full bg-[#4a4a52] mt-1.5 flex-shrink-0" />
             <div className="flex-1 min-w-0">
-              <p className="text-xs text-[#a0a0a0] mb-0.5">{dropoffLabel}</p>
-              <p className="text-sm font-medium text-[#e0e0e0] truncate">
-                {order.dropoffLocation}
-              </p>
+              <p className="text-[10px] text-[#6b6560] uppercase tracking-wider mb-0.5">{dropoffLabel}</p>
+              <p className="text-sm font-medium text-[#f0ebe3] truncate">{order.dropoffLocation}</p>
             </div>
           </div>
         </div>
 
-        {/* 車型 Badge */}
+        {/* Badges */}
         <div className="flex items-center gap-2 mb-3">
           {order.kenichiRequired && (
-            <span className="px-2 py-1 rounded text-[10px] font-bold bg-[#a855f7]/20 text-[#a855f7] border border-[#a855f7]/30">
+            <span className="px-2 py-1 rounded text-[10px] font-bold bg-[#a855f7]/10 text-[#a855f7] border border-[#a855f7]/20">
               肯驛
             </span>
           )}
@@ -235,40 +222,32 @@ function OrderCard({ order, onAccept, onView, showActions = true, compact = fals
           </span>
         </div>
 
-        {/* 乘客資訊 */}
-        <div className="flex items-center gap-3 text-xs text-[#666] mb-3 pt-2 border-t border-white/5">
+        {/* Passenger info */}
+        <div className="flex items-center gap-3 text-xs text-[#6b6560] mb-3 pt-2 border-t border-[#1e1e26]">
           <span className="flex items-center gap-1"><User className="w-3 h-3" /> {order.passengerName}</span>
           <span className="flex items-center gap-1"><Package className="w-3 h-3" /> {order.passengerCount}人 / {order.luggageCount}行李</span>
         </div>
 
-        {/* 備註 (原文備註 - 特別顯眼) */}
+        {/* Notes */}
         {notes && (
-          <div className="text-xs text-[#a0a0a0] bg-[#ff8c42]/5 border border-[#ff8c42]/20 p-2.5 rounded-lg mb-3 flex items-start gap-1.5">
-            <FileText className="w-3 h-3 mt-0.5 flex-shrink-0 text-[#ff8c42]" />
+          <div className="text-xs text-[#6b6560] bg-[#ff6b2b]/5 border border-[#ff6b2b]/15 p-2.5 rounded-lg mb-3 flex items-start gap-1.5">
+            <FileText className="w-3 h-3 mt-0.5 flex-shrink-0 text-[#ff6b2b]" />
             <span className="leading-relaxed">{notes}</span>
           </div>
         )}
 
         {/* Actions */}
         {showActions && (
-          <div className="flex gap-2 pt-2 border-t border-white/5">
+          <div className="flex gap-2 pt-2 border-t border-[#1e1e26]">
             {onView && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onView(order.id)}
-                className="flex-1 border-white/20 text-[#a0a0a0] hover:bg-white/10 hover:text-white"
-              >
+              <Button variant="outline" size="sm" onClick={() => onView(order.id)}
+                className="flex-1 border-[#1e1e26] text-[#6b6560] hover:border-[#3b82f6]/30 hover:text-[#3b82f6] hover:bg-[#3b82f6]/5">
                 查看詳情
               </Button>
             )}
             {onAccept && order.status === 'PENDING' && (
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={() => onAccept(order.id)}
-                className="flex-1 bg-[#ff8c42] hover:bg-[#ff9d5c] text-black font-semibold"
-              >
+              <Button variant="primary" size="sm" onClick={() => onAccept(order.id)}
+                className="flex-1 bg-[#ff6b2b] hover:bg-[#e85a1a] text-[#060608] font-semibold shadow-[0_0_12px_rgba(255,107,43,0.3)]">
                 立即接單
               </Button>
             )}

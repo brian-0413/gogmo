@@ -65,6 +65,13 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+
+  /* Ember accent - warm orange for this app */
+  --ember: #ff6b2b;
+  --ember-dark: #e85a1a;
+  --ember-light: #ff6b2b;
+  --ember-glow: rgba(255, 107, 43, 0.4);
+  --ember-glow-sm: rgba(255, 107, 43, 0.2);
 }
 
 @theme inline {
@@ -115,6 +122,11 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+
+  /* Ember theme vars */
+  --color-ember: var(--ember);
+  --color-ember-dark: var(--ember-dark);
+  --color-ember-light: var(--ember-light);
 }
 
 * {
@@ -122,14 +134,16 @@
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* Custom scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -138,7 +152,7 @@ body {
 
 ::-webkit-scrollbar-thumb {
   background: var(--border);
-  border-radius: 4px;
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -214,38 +228,38 @@ body {
 }
 
 .dark {
-  /* Black + Orange + White Theme */
-  --background: #000000;
-  --foreground: #ffffff;
-  --card: #1a1a1a;
-  --card-foreground: #ffffff;
-  --popover: #1a1a1a;
-  --popover-foreground: #ffffff;
-  --primary: #ff8c42;
-  --primary-foreground: #000000;
-  --secondary: #2a2a2a;
-  --secondary-foreground: #ffffff;
-  --muted: #1a1a1a;
-  --muted-foreground: #a0a0a0;
-  --accent: #ff8c42;
-  --accent-foreground: #000000;
+  /* Terminal Command Center - Ink & Ember Theme */
+  --background: #060608;
+  --foreground: #f0ebe3;
+  --card: #0c0c10;
+  --card-foreground: #f0ebe3;
+  --popover: #0c0c10;
+  --popover-foreground: #f0ebe3;
+  --primary: #ff6b2b;
+  --primary-foreground: #060608;
+  --secondary: #141418;
+  --secondary-foreground: #c8c2ba;
+  --muted: #141418;
+  --muted-foreground: #6b6560;
+  --accent: #ff6b2b;
+  --accent-foreground: #060608;
   --destructive: #ef4444;
-  --border: #2a2a2a;
-  --input: #1a1a1a;
-  --ring: #ff8c42;
-  --chart-1: #ff8c42;
+  --border: #1e1e26;
+  --input: #141418;
+  --ring: #ff6b2b;
+  --chart-1: #ff6b2b;
   --chart-2: #22c55e;
   --chart-3: #ef4444;
   --chart-4: #3b82f6;
   --chart-5: #a855f7;
-  --sidebar: #1a1a1a;
-  --sidebar-foreground: #ffffff;
-  --sidebar-primary: #ff8c42;
-  --sidebar-primary-foreground: #000000;
-  --sidebar-accent: #2a2a2a;
-  --sidebar-accent-foreground: #ffffff;
-  --sidebar-border: #2a2a2a;
-  --sidebar-ring: #ff8c42;
+  --sidebar: #0c0c10;
+  --sidebar-foreground: #f0ebe3;
+  --sidebar-primary: #ff6b2b;
+  --sidebar-primary-foreground: #060608;
+  --sidebar-accent: #141418;
+  --sidebar-accent-foreground: #f0ebe3;
+  --sidebar-border: #1e1e26;
+  --sidebar-ring: #ff6b2b;
 }
 
 @layer base {
@@ -259,6 +273,67 @@ body {
     @apply font-sans;
   }
 }
+
+/* =============================================
+   EMBER THEME - Terminal Command Center
+   ============================================= */
+
+/* Ember glow utilities */
+.ember-glow {
+  box-shadow: 0 0 20px rgba(255, 107, 43, 0.15), 0 0 40px rgba(255, 107, 43, 0.05);
+}
+
+.ember-glow-sm {
+  box-shadow: 0 0 10px rgba(255, 107, 43, 0.2);
+}
+
+.ember-glow-lg {
+  box-shadow: 0 0 30px rgba(255, 107, 43, 0.25), 0 0 60px rgba(255, 107, 43, 0.1);
+}
+
+/* Grid line background pattern */
+.grid-bg {
+  background-image:
+    linear-gradient(rgba(255, 107, 43, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 107, 43, 0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* Dot matrix background */
+.dot-matrix {
+  background-image: radial-gradient(circle, rgba(255, 107, 43, 0.08) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+/* Scan line effect */
+.scan-lines {
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.03) 2px,
+    rgba(0, 0, 0, 0.03) 4px
+  );
+  pointer-events: none;
+}
+
+/* Top accent line for cards */
+.card-accent-line {
+  position: relative;
+}
+.card-accent-line::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 107, 43, 0.5), transparent);
+}
+
+/* =============================================
+   ANIMATIONS
+   ============================================= */
 
 /* Order card fade in animation */
 @keyframes fadeIn {
@@ -443,4 +518,109 @@ body {
 
 .animate-badge-pulse {
   animation: badgePulse 2s ease-in-out infinite;
+}
+
+/* =============================================
+   EMBER THEME ANIMATIONS
+   ============================================= */
+
+/* Ember pulse glow */
+@keyframes emberPulse {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(255, 107, 43, 0.2), 0 0 30px rgba(255, 107, 43, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(255, 107, 43, 0.35), 0 0 50px rgba(255, 107, 43, 0.15);
+  }
+}
+
+.animate-ember-pulse {
+  animation: emberPulse 3s ease-in-out infinite;
+}
+
+/* Status indicator breathing */
+@keyframes statusBreath {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.animate-status-breath {
+  animation: statusBreath 2s ease-in-out infinite;
+}
+
+/* Shimmer loading effect */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 107, 43, 0.1) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+/* Float ambient */
+@keyframes floatAmbient {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+
+.animate-float {
+  animation: floatAmbient 4s ease-in-out infinite;
+}
+
+/* Number counter tick */
+@keyframes numberTick {
+  0% { transform: translateY(0); opacity: 1; }
+  50% { transform: translateY(-4px); opacity: 0.5; }
+  100% { transform: translateY(-8px); opacity: 0; }
+}
+
+.animate-number-tick {
+  animation: numberTick 0.3s ease-out;
+}
+
+/* Stagger delay utilities */
+.stagger-1 { animation-delay: 50ms; }
+.stagger-2 { animation-delay: 100ms; }
+.stagger-3 { animation-delay: 150ms; }
+.stagger-4 { animation-delay: 200ms; }
+.stagger-5 { animation-delay: 250ms; }
+.stagger-6 { animation-delay: 300ms; }
+.stagger-7 { animation-delay: 350ms; }
+.stagger-8 { animation-delay: 400ms; }
+
+/* Monospace numbers - for flight numbers, times, prices */
+.font-mono-nums {
+  font-family: "JetBrains Mono", "Fira Code", "Cascadia Code", monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+/* Glass morphism card */
+.glass-card {
+  background: rgba(12, 12, 16, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 107, 43, 0.08);
+}
+
+/* Gradient text */
+.gradient-text-ember {
+  background: linear-gradient(135deg, #ff6b2b 0%, #ff6b2b 50%, #ff6b2b 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Neon border effect */
+.neon-border {
+  border: 1px solid rgba(255, 107, 43, 0.3);
+  box-shadow: 0 0 10px rgba(255, 107, 43, 0.1), inset 0 0 10px rgba(255, 107, 43, 0.03);
 }

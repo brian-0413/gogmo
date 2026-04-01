@@ -25,16 +25,16 @@ export function LiveTicker({ todayCompleted: initialCount }: LiveTickerProps) {
 
   return (
     <div className="flex items-center gap-4 mb-8">
-      <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#ff8c42]/10 border border-[#ff8c42]/20">
+      <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#ff6b2b]/10 border border-[#ff6b2b]/20">
         <span className="relative flex h-2 w-2">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#ff8c42] opacity-75"></span>
-          <span className="relative inline-flex rounded-full h-2 w-2 bg-[#ff8c42]"></span>
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#ff6b2b] opacity-75"></span>
+          <span className="relative inline-flex rounded-full h-2 w-2 bg-[#ff6b2b]"></span>
         </span>
-        <span className="text-xs text-[#ff8c42] font-medium">
+        <span className="text-xs text-[#ff6b2b] font-medium">
           {newOrderAlert || '即時訂單動態'}
         </span>
       </div>
-      <div className="h-px flex-1 bg-gradient-to-r from-[#ff8c42]/20 to-transparent" />
+      <div className="h-px flex-1 bg-gradient-to-r from-[#ff6b2b]/20 to-transparent" />
       <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#22c55e]/10 border border-[#22c55e]/20">
         <span className="text-xs text-[#22c55e] font-medium">
           今日成交 <span className="font-bold">{count}</span> 單

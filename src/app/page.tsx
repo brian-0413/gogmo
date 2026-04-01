@@ -157,22 +157,22 @@ export default async function Home() {
   const stats = await getStats()
 
   return (
-    <div className="min-h-screen bg-black text-white selection:bg-[#ff8c42]/30">
+    <div className="min-h-screen bg-[#060608] text-[#f0ebe3] selection:bg-[#ff6b2b]/30">
       {/* Background Effects */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-[#ff8c42]/10 rounded-full blur-[150px]" />
-        <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-[#ff8c42]/5 rounded-full blur-[100px]" />
+        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-[#ff6b2b]/8 rounded-full blur-[150px]" />
+        <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-[#ff6b2b]/4 rounded-full blur-[100px]" />
       </div>
 
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-xl border-b border-white/5">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-[#060608]/80 backdrop-blur-xl border-b border-[#1e1e26]">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex items-center justify-between h-16">
             <Link href="/" className="flex items-center gap-2 group">
-              <div className="w-8 h-8 rounded-lg bg-[#ff8c42] flex items-center justify-center">
-                <Plane className="w-4 h-4 text-black" />
+              <div className="w-8 h-8 rounded-lg bg-[#ff6b2b] flex items-center justify-center">
+                <Plane className="w-4 h-4 text-[#060608]" />
               </div>
-              <span className="text-[#ff8c42] font-semibold tracking-tight">
+              <span className="text-[#ff6b2b] font-semibold tracking-tight">
                 機場接送派單平台
               </span>
             </Link>
@@ -187,13 +187,13 @@ export default async function Home() {
               </div>
               <Link
                 href="/login"
-                className="text-sm text-[#666] hover:text-white transition-colors"
+                className="text-sm text-[#6b6560] hover:text-[#f0ebe3] transition-colors"
               >
                 司機登入
               </Link>
               <Link
                 href="/login"
-                className="text-sm text-[#666] hover:text-white transition-colors"
+                className="text-sm text-[#6b6560] hover:text-[#f0ebe3] transition-colors"
               >
                 車頭登入
               </Link>
@@ -216,13 +216,13 @@ export default async function Home() {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Left Content */}
             <div>
-              <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-white tracking-tight mb-6 leading-[1.1]">
+              <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-[#f0ebe3] tracking-tight mb-6 leading-[1.1]">
                 機場接送
                 <br />
-                <span className="text-[#ff8c42]">派單平台</span>
+                <span className="text-[#ff6b2b]">派單平台</span>
               </h1>
 
-              <p className="text-xl text-[#a0a0a0] mb-8 max-w-lg">
+              <p className="text-xl text-[#6b6560] mb-8 max-w-lg">
                 為台灣接送產業而生的智能派單系統，讓司機快速掌握接單機會
               </p>
 
@@ -243,33 +243,33 @@ export default async function Home() {
 
             {/* Right Stats */}
             <div className="grid grid-cols-2 gap-4">
-              <div className="bg-gradient-to-br from-[#ff8c42]/20 to-[#ff8c42]/5 border border-[#ff8c42]/20 rounded-2xl p-6 backdrop-blur-sm">
+              <div className="bg-gradient-to-br from-[#ff6b2b]/20 to-[#ff6b2b]/5 border border-[#ff6b2b]/20 rounded-2xl p-6 backdrop-blur-sm">
                 <div className="flex items-center gap-2 mb-3">
-                  <Zap className="w-4 h-4 text-[#ff8c42]" />
-                  <span className="text-xs text-[#ff8c42] uppercase tracking-wider">最新訂單</span>
+                  <Zap className="w-4 h-4 text-[#ff6b2b]" />
+                  <span className="text-xs text-[#ff6b2b] uppercase tracking-wider">最新訂單</span>
                 </div>
-                <p className="text-3xl font-bold text-white mb-1">{stats.pickupCount + stats.dropoffCount}</p>
-                <p className="text-xs text-[#666]">筆可接訂單</p>
+                <p className="text-3xl font-bold text-[#f0ebe3] mb-1">{stats.pickupCount + stats.dropoffCount}</p>
+                <p className="text-xs text-[#6b6560]">筆可接訂單</p>
               </div>
 
-              <div className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-sm">
+              <div className="bg-[#0c0c10] border border-[#1e1e26] rounded-2xl p-6 backdrop-blur-sm">
                 <div className="flex items-center gap-2 mb-3">
                   <TrendingUp className="w-4 h-4 text-[#22c55e]" />
                   <span className="text-xs text-[#22c55e] uppercase tracking-wider">一小時內</span>
                 </div>
-                <p className="text-3xl font-bold text-white mb-1">{stats.recentCount}</p>
-                <p className="text-xs text-[#666]">筆新訂單</p>
+                <p className="text-3xl font-bold text-[#f0ebe3] mb-1">{stats.recentCount}</p>
+                <p className="text-xs text-[#6b6560]">筆新訂單</p>
               </div>
 
               <DriverStatusCarousel />
 
-              <div className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-sm">
+              <div className="bg-[#0c0c10] border border-[#1e1e26] rounded-2xl p-6 backdrop-blur-sm">
                 <div className="flex items-center gap-2 mb-3">
                   <Wallet className="w-4 h-4 text-[#a855f7]" />
                   <span className="text-xs text-[#a855f7] uppercase tracking-wider">案件總額</span>
                 </div>
-                <p className="text-3xl font-bold text-white mb-1">NT${stats.totalAmount.toLocaleString()}</p>
-                <p className="text-xs text-[#666]">元</p>
+                <p className="text-3xl font-bold text-[#f0ebe3] mb-1">NT${stats.totalAmount.toLocaleString()}</p>
+                <p className="text-xs text-[#6b6560]">元</p>
               </div>
             </div>
           </div>
@@ -283,10 +283,10 @@ export default async function Home() {
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
-                <h2 className="text-2xl font-bold text-white">
+                <h2 className="text-2xl font-bold text-[#f0ebe3]">
                   即刻可接行程
                 </h2>
-                <span className="px-3 py-1 rounded-full bg-[#ff8c42]/20 text-[#ff8c42] text-sm font-medium border border-[#ff8c42]/30">
+                <span className="px-3 py-1 rounded-full bg-[#ff6b2b]/20 text-[#ff6b2b] text-sm font-medium border border-[#ff6b2b]/30">
                   {orders.length} 筆
                 </span>
               </div>
@@ -300,7 +300,7 @@ export default async function Home() {
             </div>
             <Link
               href="/register"
-              className="flex items-center gap-2 text-sm text-[#ff8c42] hover:text-[#ff9d5c] transition-colors"
+              className="flex items-center gap-2 text-sm text-[#ff6b2b] hover:text-[#e85a1a] transition-colors"
             >
               查看完整清單
               <ArrowRight className="w-4 h-4" />
@@ -315,7 +315,7 @@ export default async function Home() {
             <div className="mt-8 text-center">
               <Link
                 href="/register"
-                className="inline-flex items-center gap-2 text-sm text-[#666] hover:text-[#ff8c42] transition-colors"
+                className="inline-flex items-center gap-2 text-sm text-[#6b6560] hover:text-[#ff6b2b] transition-colors"
               >
                 查看全部 {orders.length} 筆訂單
                 <ArrowRight className="w-4 h-4" />
@@ -328,10 +328,10 @@ export default async function Home() {
       {/* CTA Section */}
       <section className="py-20 px-6">
         <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-[#f0ebe3] mb-4">
             準備好加入了嗎？
           </h2>
-          <p className="text-[#666] mb-8 text-lg">
+          <p className="text-[#6b6560] mb-8 text-lg">
             成為我們的司機，享受快速派單、智能帳務的便利
           </p>
           <Link href="/register">
@@ -344,17 +344,17 @@ export default async function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="py-6 px-6 border-t border-white/5">
+      <footer className="py-6 px-6 border-t border-[#1e1e26]">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded bg-[#ff8c42] flex items-center justify-center">
+            <div className="w-6 h-6 rounded bg-[#ff6b2b] flex items-center justify-center">
               <Plane className="w-3 h-3 text-black" />
             </div>
-            <span className="text-sm text-[#666]">
+            <span className="text-sm text-[#6b6560]">
               機場接送派單平台
             </span>
           </div>
-          <p className="text-xs text-[#444]">
+          <p className="text-xs text-[#3a3a40]">
             2026 Airport Dispatch Platform. All rights reserved.
           </p>
         </div>

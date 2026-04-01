@@ -12,10 +12,10 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = "default", size = "default", loading, disabled, children, ...props }, ref) => {
     const variants = {
-      default: "bg-[#ff8c42] text-black hover:bg-[#ff9d5c] border-transparent",
-      primary: "bg-[#ff8c42] text-black hover:bg-[#ff9d5c] border-transparent",
-      outline: "border border-[#2a2a2a] bg-transparent hover:border-[#ff8c42] hover:text-white",
-      ghost: "bg-transparent hover:bg-[#1a1a1a] text-white",
+      default: "bg-[#ff6b2b] text-[#060608] hover:bg-[#e85a1a] border-transparent shadow-[0_0_12px_rgba(255,107,43,0.3)]",
+      primary: "bg-[#ff6b2b] text-[#060608] hover:bg-[#e85a1a] border-transparent shadow-[0_0_12px_rgba(255,107,43,0.3)]",
+      outline: "border border-[#1e1e26] bg-transparent hover:border-[#ff6b2b]/50 hover:text-[#ff6b2b]",
+      ghost: "bg-transparent hover:bg-[#141418] text-[#f0ebe3]",
       danger: "bg-[#ef4444] text-white hover:bg-[#dc2626] border-transparent",
     }
 
@@ -32,7 +32,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         disabled={disabled || loading}
         className={cn(
           "inline-flex items-center justify-center rounded-lg font-medium transition-all duration-200",
-          "focus:outline-none focus:ring-2 focus:ring-[#ff8c42] focus:ring-offset-2 focus:ring-offset-black",
+          "focus:outline-none focus:ring-2 focus:ring-[#ff6b2b] focus:ring-offset-2 focus:ring-offset-[#060608]",
           "disabled:opacity-50 disabled:pointer-events-none",
           variants[variant],
           sizes[size],

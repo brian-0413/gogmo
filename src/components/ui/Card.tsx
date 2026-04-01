@@ -13,9 +13,9 @@ function Card({
   ...props
 }: CardProps) {
   const variants = {
-    default: "bg-[#1a1a1a] border-[#2a2a2a]",
-    elevated: "bg-[#1a1a1a] border-[#2a2a2a] shadow-lg",
-    outline: "bg-transparent border-[#2a2a2a]",
+    default: "bg-[#0c0c10] border-[#1e1e26]",
+    elevated: "bg-[#0c0c10] border-[#1e1e26]",
+    outline: "bg-transparent border-[#1e1e26]",
   }
 
   return (
@@ -52,7 +52,7 @@ function CardTitle({ className, ...props }: React.HTMLAttributes<HTMLDivElement>
 function CardDescription({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn("text-sm text-[#a0a0a0]", className)}
+      className={cn("text-sm text-[#6b6560]", className)}
       {...props}
     />
   )

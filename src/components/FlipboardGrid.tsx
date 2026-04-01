@@ -71,7 +71,7 @@ function CardInner({ order, animationKey }: CardInnerProps) {
   return (
     <div
       key={animationKey}
-      className="absolute inset-0 bg-[#1a1a1a] rounded-lg p-3 animate-content-slide"
+      className="absolute inset-0 bg-[#0c0c10] rounded-lg p-3 animate-content-slide"
     >
       {/* Urgent Badge with countdown */}
       {urgency === "urgent" && (
@@ -81,7 +81,7 @@ function CardInner({ order, animationKey }: CardInnerProps) {
         </div>
       )}
       {urgency === "soon" && (
-        <div className="absolute -top-1 -right-1 px-2 py-0.5 rounded-full text-[8px] font-bold text-black flex items-center gap-1 z-20" style={{ backgroundColor: '#ff8c42' }}>
+        <div className="absolute -top-1 -right-1 px-2 py-0.5 rounded-full text-[8px] font-bold text-[#060608] flex items-center gap-1 z-20" style={{ backgroundColor: '#ff6b2b' }}>
           <Clock className="w-2.5 h-2.5" />
           <span>{countdown || '00:00'}</span>
         </div>
@@ -95,14 +95,14 @@ function CardInner({ order, animationKey }: CardInnerProps) {
         >
           {isPickup ? "接機" : "送機"}
         </span>
-        <span className="text-[9px] text-[#666] font-mono">
+        <span className="text-[9px] text-[#6b6560] font-mono">
           {formatTime(order.scheduledTime)}
         </span>
       </div>
 
       {/* Price */}
       <div className="mb-2">
-        <span className="text-2xl font-bold" style={{ color: '#ff8c42' }}>
+        <span className="text-2xl font-bold" style={{ color: '#ff6b2b' }}>
           NT${order.price}
         </span>
       </div>
@@ -111,20 +111,20 @@ function CardInner({ order, animationKey }: CardInnerProps) {
       <div className="space-y-1.5 mb-2">
         <div className="flex items-center gap-1.5">
           <div className="w-2 h-2 rounded-full" style={{ backgroundColor: badgeColor }} />
-          <span className="text-[11px] text-[#e0e0e0] truncate font-medium">
+          <span className="text-[11px] text-[#f0ebe3] truncate font-medium">
             {isPickup ? "桃園機場" : order.pickupLocation.replace("桃園機場", "").replace("國際機場", "").substring(0, 8)}
           </span>
         </div>
         <div className="flex items-center gap-1.5">
-          <div className="w-2 h-2 rounded-full bg-[#666]" />
-          <span className="text-[11px] text-[#e0e0e0] truncate font-medium">
+          <div className="w-2 h-2 rounded-full bg-[#4a4a52]" />
+          <span className="text-[11px] text-[#f0ebe3] truncate font-medium">
             {isPickup ? order.dropoffLocation.replace("桃園機場", "").replace("國際機場", "").substring(0, 8) : "桃園機場"}
           </span>
         </div>
       </div>
 
       {/* Meta */}
-      <div className="flex items-center gap-2 text-[9px] text-[#666] pt-1.5 border-t border-white/5">
+      <div className="flex items-center gap-2 text-[9px] text-[#6b6560] pt-1.5 border-t border-[#1e1e26]">
         <div className="flex items-center gap-1">
           <Car className="w-3 h-3" />
           <span>{order.note?.includes("休旅") ? "休旅" : "一般"}</span>
@@ -217,9 +217,9 @@ export function FlipboardGrid({ orders, gridSize = 20 }: FlipboardGridProps) {
 
   if (orders.length === 0) {
     return (
-      <div className="text-center py-24 border border-white/10 rounded-3xl bg-white/5 backdrop-blur-sm">
-        <p className="text-[#a0a0a0] mb-2 text-lg">目前沒有可接的行程</p>
-        <p className="text-[#666] text-sm">請稍後再回來查看，或聯繫車頭發布新行程</p>
+      <div className="text-center py-24 border border-[#1e1e26] rounded-3xl bg-[#0c0c10]/50 backdrop-blur-sm">
+        <p className="text-[#6b6560] mb-2 text-lg">目前沒有可接的行程</p>
+        <p className="text-[#4a4a52] text-sm">請稍後再回來查看，或聯繫車頭發布新行程</p>
       </div>
     )
   }
@@ -228,7 +228,7 @@ export function FlipboardGrid({ orders, gridSize = 20 }: FlipboardGridProps) {
     <div className="grid grid-cols-5 gap-2">
       {displayedOrders.slice(0, gridSize).map((order, index) => {
         if (!order) {
-          return <div key={`empty-${index}`} className="bg-[#1a1a1a]/30 rounded-lg min-h-[120px]" />
+          return <div key={`empty-${index}`} className="bg-[#0c0c10]/30 rounded-lg min-h-[120px]" />
         }
 
         return (
@@ -236,7 +236,7 @@ export function FlipboardGrid({ orders, gridSize = 20 }: FlipboardGridProps) {
             key={`${order.id}-${index}`}
             className="relative min-h-[120px] overflow-hidden rounded-lg"
           >
-            <div className="absolute inset-0 bg-[#1a1a1a] rounded-lg" />
+            <div className="absolute inset-0 bg-[#0c0c10] rounded-lg" />
             <CardInner
               order={order}
               animationKey={animationKeys[index] || `init-${index}`}
