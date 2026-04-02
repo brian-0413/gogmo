@@ -259,9 +259,11 @@ export default function DriverDashboard() {
 
   const handleCancelOrder = async (orderId: string) => {
     if (!token) return
-    const cancelFee = Math.floor(800 * 0.1) // 預估，實際以 API 回傳為準
+    const order = myOrders.find(o => o.id === orderId)
+    if (!order) return
+    const cancelFee = Math.floor(order.price * 0.1)
     const confirmed = window.confirm(
-      `確定要退單嗎？退單將扣除訂單金額的 10% 點數（約 ${cancelFee} 點）`
+      `確定要退單嗎？退單將扣除 NT$${order.price} 的 10%，共 ${cancelFee} 點`
     )
     if (!confirmed) return
 
@@ -275,7 +277,7 @@ export default function DriverDashboard() {
       if (data.success) {
         setMyOrders(prev => prev.filter(o => o.id !== orderId))
         await fetchBalance()
-        alert(data.data.message || '退單成功')
+        alert(`退單成功，已扣除 ${data.data.cancelFee} 點（NT$${order.price} × 10%）`)
       } else {
         alert(data.error || '退單失敗')
       }
