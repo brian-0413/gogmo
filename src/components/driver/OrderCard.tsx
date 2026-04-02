@@ -251,7 +251,7 @@ function OrderCard({ order, onAccept, onView, showActions = true, compact = fals
                 查看詳情
               </Button>
             )}
-            {onAccept && order.status === 'PENDING' && (
+            {onAccept && order.status === 'PUBLISHED' && (
               <Button variant="primary" size="sm" onClick={() => onAccept(order.id)}
                 className="flex-1">
                 立即接單

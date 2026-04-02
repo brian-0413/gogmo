@@ -90,7 +90,7 @@ export default function DriverDashboard() {
     if (!token) return
     try {
       const [availableRes, myRes] = await Promise.all([
-        fetch('/api/orders', { headers: { Authorization: `Bearer ${token}` } }),
+        fetch('/api/orders?status=PUBLISHED', { headers: { Authorization: `Bearer ${token}` } }),
         fetch('/api/orders?myOrders=true', { headers: { Authorization: `Bearer ${token}` } }),
       ])
       const availableData = await availableRes.json()
@@ -128,14 +128,34 @@ export default function DriverDashboard() {
 
   const handleAcceptOrder = async (orderId: string) => {
     if (!token) return
+    const order = availableOrders.find(o => o.id === orderId)
+    if (!order) return
     setActionLoading(orderId)
+
+    // 樂觀更新：立刻從大廳移除，加入我的行程
+    setAvailableOrders(prev => prev.filter(o => o.id !== orderId))
+    const acceptedOrder = { ...order, status: 'ACCEPTED' as const }
+    setMyOrders(prev => [acceptedOrder, ...prev])
+
     try {
       const res = await fetch(`/api/orders/${orderId}/accept`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } })
       const data = await res.json()
-      if (data.success) { await fetchOrders(); await fetchBalance() }
-      else alert(data.error || '接單失敗')
-    } catch { alert('網路錯誤，請稍後再試') }
-    finally { setActionLoading(null) }
+      if (data.success) {
+        // 接單成功，換到我的行程 tab
+        setActiveTab('myorders')
+        await fetchBalance()
+      } else {
+        // API 失敗，回滾樂觀更新
+        setAvailableOrders(prev => [order, ...prev])
+        setMyOrders(prev => prev.filter(o => o.id !== orderId))
+        alert(data.error || '接單失敗')
+      }
+    } catch {
+      // 網路錯誤，回滾樂觀更新
+      setAvailableOrders(prev => [order, ...prev])
+      setMyOrders(prev => prev.filter(o => o.id !== orderId))
+      alert('網路錯誤，請稍後再試')
+    } finally { setActionLoading(null) }
   }
 
   const handleStatusChange = async (orderId: string, status: string) => {
@@ -247,7 +267,7 @@ export default function DriverDashboard() {
               }`}
             >
               <ClipboardList className="w-4 h-4" />
-              可接訂單
+              接單大廳
               <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-mono-nums bg-[#F59E0B]/10 text-[#F59E0B] border border-[#F59E0B]/20">
                 {availableOrders.length}
               </span>
