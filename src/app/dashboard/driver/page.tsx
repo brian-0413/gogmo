@@ -276,6 +276,13 @@ export default function DriverDashboard() {
       const data = await res.json()
       if (data.success) {
         setMyOrders(prev => prev.filter(o => o.id !== orderId))
+        // 直接用 API 回傳的新餘額更新，避免 fetchBalance 取到舊資料
+        if (balance) {
+          setBalance({
+            ...balance,
+            balance: data.data.newBalance,
+          })
+        }
         await fetchBalance()
         alert(`退單成功，已扣除 ${data.data.cancelFee} 點（NT$${order.price} × 10%）`)
       } else {
