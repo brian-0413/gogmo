@@ -729,55 +729,37 @@ export default function DispatcherDashboard() {
         {/* ===== ORDERS TAB ===== */}
         {activeTab === 'orders' && (
           <>
-            {/* Stats — 6 in a row, compact design for at-a-glance info */}
+            {/* Stats — 6 in a row, no icons, large text */}
             <div className="grid grid-cols-3 lg:grid-cols-6 gap-2 mb-6">
               {/* 接機 */}
-              <div className="bg-white border border-[#DDDDDD] rounded-xl p-3 flex flex-col items-center gap-1">
-                <div className="w-7 h-7 rounded-lg bg-[#E6F1FB] border border-[#C2DBF5] flex items-center justify-center mb-0.5">
-                  <Plane className="w-4 h-4 text-[#0C447C]" />
-                </div>
-                <p className="text-[11px] text-[#717171] font-medium leading-tight">接機</p>
-                <p className="text-[28px] font-bold text-[#0C447C] font-mono-nums leading-none">{statusCounts.PICKUP}</p>
+              <div className="bg-white border border-[#DDDDDD] rounded-xl p-4 flex flex-col items-center justify-center gap-0.5">
+                <p className="text-[13px] text-[#0C447C] font-bold leading-tight">接機</p>
+                <p className="text-[36px] font-bold text-[#0C447C] font-mono-nums leading-none">{statusCounts.PICKUP}</p>
               </div>
               {/* 送機 */}
-              <div className="bg-white border border-[#DDDDDD] rounded-xl p-3 flex flex-col items-center gap-1">
-                <div className="w-7 h-7 rounded-lg bg-[#FFF3E0] border border-[#FFE0B2] flex items-center justify-center mb-0.5">
-                  <Plane className="w-4 h-4 text-[#B45309]" style={{ transform: 'rotate(180deg)' }} />
-                </div>
-                <p className="text-[11px] text-[#717171] font-medium leading-tight">送機</p>
-                <p className="text-[28px] font-bold text-[#B45309] font-mono-nums leading-none">{statusCounts.DROPOFF}</p>
+              <div className="bg-white border border-[#DDDDDD] rounded-xl p-4 flex flex-col items-center justify-center gap-0.5">
+                <p className="text-[13px] text-[#B45309] font-bold leading-tight">送機</p>
+                <p className="text-[36px] font-bold text-[#B45309] font-mono-nums leading-none">{statusCounts.DROPOFF}</p>
               </div>
               {/* 待接單 */}
-              <div className="bg-white border border-[#DDDDDD] rounded-xl p-3 flex flex-col items-center gap-1">
-                <div className="w-7 h-7 rounded-lg bg-[#FCEBEB] border border-[#F5C6C6] flex items-center justify-center mb-0.5">
-                  <Clock className="w-4 h-4 text-[#A32D2D]" />
-                </div>
-                <p className="text-[11px] text-[#717171] font-medium leading-tight">待接單</p>
-                <p className="text-[28px] font-bold text-[#A32D2D] font-mono-nums leading-none">{statusCounts.PENDING}</p>
+              <div className="bg-white border border-[#DDDDDD] rounded-xl p-4 flex flex-col items-center justify-center gap-0.5">
+                <p className="text-[13px] text-[#A32D2D] font-bold leading-tight">待接單</p>
+                <p className="text-[36px] font-bold text-[#A32D2D] font-mono-nums leading-none">{statusCounts.PENDING}</p>
               </div>
               {/* 已接單 */}
-              <div className="bg-white border border-[#DDDDDD] rounded-xl p-3 flex flex-col items-center gap-1">
-                <div className="w-7 h-7 rounded-lg bg-[#FFF3E0] border border-[#FFE0B2] flex items-center justify-center mb-0.5">
-                  <UserCheck className="w-4 h-4 text-[#B45309]" />
-                </div>
-                <p className="text-[11px] text-[#717171] font-medium leading-tight">已接單</p>
-                <p className="text-[28px] font-bold text-[#B45309] font-mono-nums leading-none">{statusCounts.ACCEPTED}</p>
+              <div className="bg-white border border-[#DDDDDD] rounded-xl p-4 flex flex-col items-center justify-center gap-0.5">
+                <p className="text-[13px] text-[#B45309] font-bold leading-tight">已接單</p>
+                <p className="text-[36px] font-bold text-[#B45309] font-mono-nums leading-none">{statusCounts.ACCEPTED}</p>
               </div>
               {/* 進行中 */}
-              <div className="bg-white border border-[#DDDDDD] rounded-xl p-3 flex flex-col items-center gap-1">
-                <div className="w-7 h-7 rounded-lg bg-[#E6F1FB] border border-[#C2DBF5] flex items-center justify-center mb-0.5">
-                  <Car className="w-4 h-4 text-[#0C447C]" />
-                </div>
-                <p className="text-[11px] text-[#717171] font-medium leading-tight">進行中</p>
-                <p className="text-[28px] font-bold text-[#0C447C] font-mono-nums leading-none">{statusCounts.IN_PROGRESS}</p>
+              <div className="bg-white border border-[#DDDDDD] rounded-xl p-4 flex flex-col items-center justify-center gap-0.5">
+                <p className="text-[13px] text-[#0C447C] font-bold leading-tight">進行中</p>
+                <p className="text-[36px] font-bold text-[#0C447C] font-mono-nums leading-none">{statusCounts.IN_PROGRESS}</p>
               </div>
               {/* 已完成 */}
-              <div className="bg-white border border-[#DDDDDD] rounded-xl p-3 flex flex-col items-center gap-1">
-                <div className="w-7 h-7 rounded-lg bg-[#E8F5E8] border border-[#C6E8C6] flex items-center justify-center mb-0.5">
-                  <CheckCircle className="w-4 h-4 text-[#008A05]" />
-                </div>
-                <p className="text-[11px] text-[#717171] font-medium leading-tight">已完成</p>
-                <p className="text-[28px] font-bold text-[#008A05] font-mono-nums leading-none">{statusCounts.COMPLETED}</p>
+              <div className="bg-white border border-[#DDDDDD] rounded-xl p-4 flex flex-col items-center justify-center gap-0.5">
+                <p className="text-[13px] text-[#008A05] font-bold leading-tight">已完成</p>
+                <p className="text-[36px] font-bold text-[#008A05] font-mono-nums leading-none">{statusCounts.COMPLETED}</p>
               </div>
             </div>
 
