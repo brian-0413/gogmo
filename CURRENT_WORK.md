@@ -9,9 +9,9 @@
 
 ### 最後 commit
 ```
-fd08bbe feat(driver): 實作多單銜接與排班預覽時間軸
+4ee04a9 fix(schedule): 修正 Prisma Date 序列化問題，轉換為 ISO 字串
 ```
-落後 origin/main 0 個 commits。
+落後 origin/main 1 個 commits。（上一個：`fd08bbe` 智慧排班系統完整實作）
 
 ---
 
@@ -164,6 +164,7 @@ fd08bbe feat(driver): 實作多單銜接與排班預覽時間軸
 
 | Commit | 問題 | 修復方式 |
 |--------|------|---------|
+| `4ee04a9` | Prisma Date 序列化導致前端 parseISO 崩潰 | `new Date(o.scheduledTime).toISOString()` 轉換所有日期欄位 |
 | `fd08bbe` | 司機無法看到銜接訂單推薦、無法一次接多單 | 智慧排班系統、情境一/二推薦邏輯、排班預覽時間軸 |
 | `c0573f7` | 智慧排班 UI 不完善 | 完整排班面板、銜接緊密度標籤、選單+總收入 |
 | `75d4ff4` | 無排班 API | 新增 /api/schedule/recommend + /api/schedule/confirm |
@@ -328,3 +329,5 @@ PENDING → PUBLISHED → ASSIGNED → ACCEPTED → ARRIVED → IN_PROGRESS → 
 - **API**：`/api/schedule/recommend` 回傳推薦清單+時間軸；`/api/schedule/confirm` 一次接多單（transaction 回滾）
 - **UI**：「智慧排班」面板含觸發行程、排班預覽時間軸、銜接緊密度標籤（完美銜接/需等候/時間較趕）、卡片點選加入排班
 - **多單銜接**：確認後可再次呼叫智慧排班，持續銜接（最多 6 單）
+- **QA 發現 bug**：Prisma Date 物件直接 JSON 序列化後，`parseISO()` 在前端崩潰（「此頁面無法載入」錯誤）
+- **修復**：`/api/schedule/recommend` 的 `toOrder()` 函式回傳 `any` 型別，明確將所有 Date 欄位轉為 ISO 字串
