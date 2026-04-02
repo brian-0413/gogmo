@@ -116,6 +116,8 @@ model Dispatcher {
 
 model Order {
   id              String      @id @default(uuid())
+  orderDate       String      @default("")   // YYYYMMDD format for daily sequence
+  orderSeq        Int         @default(0)   // Daily sequence 0001-9999
   dispatcherId     String
   dispatcher       Dispatcher  @relation(fields: [dispatcherId], references: [id])
 

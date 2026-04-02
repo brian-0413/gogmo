@@ -2,14 +2,15 @@
 
 import { useState } from 'react'
 import { format, parseISO } from 'date-fns'
-import { zhTW } from 'date-fns/locale'
 import { Pencil, Trash2, User, Clock, Check, X } from 'lucide-react'
-import { OrderNo } from '@/components/ui/OrderNo'
+import { formatOrderNo } from '@/lib/utils'
 import { Button } from '@/components/ui/Button'
 import type { OrderStatus } from '@/types'
 
 interface DispatcherOrder {
   id: string
+  orderSeq?: number
+  orderDate?: string
   status: OrderStatus
   type?: string
   vehicle?: string
@@ -100,6 +101,7 @@ export function DispatcherOrderCard({ order, token, onUpdate }: DispatcherOrderC
     ? parseISO(order.scheduledTime)
     : order.scheduledTime
 
+  const orderNo = formatOrderNo(scheduledDate, order.orderSeq)
   const hasDriver = !!order.driver
   const isPending = order.status === 'PENDING' || order.status === 'PUBLISHED'
   const isImmutable = ['ACCEPTED', 'ARRIVED', 'IN_PROGRESS', 'COMPLETED'].includes(order.status)
@@ -187,261 +189,242 @@ export function DispatcherOrderCard({ order, token, onUpdate }: DispatcherOrderC
 
   return (
     <div
-      className={`bg-white border rounded-xl overflow-hidden transition-shadow duration-200 hover:shadow-[0_2px_12px_rgba(0,0,0,0.08)] ${
+      className={`bg-white border rounded-xl p-4 transition-shadow duration-200 hover:shadow-[0_2px_12px_rgba(0,0,0,0.08)] ${
         isPending ? 'border-[2px] border-solid border-[#E24B4A]' : 'border-[#DDDDDD]'
       }`}
     >
-      {/* ===== SUPER PROMINENT ORDER NUMBER BANNER ===== */}
-      <div className={`relative px-4 py-3 ${isPending ? 'bg-[#E24B4A]' : 'bg-[#1C1917]'}`}>
-        {/* Background watermark */}
-        <div className="absolute inset-0 flex items-center justify-center opacity-[0.06] pointer-events-none select-none">
-          <span className="text-[64px] font-bold font-mono-nums text-white tracking-widest leading-none">
-            {format(scheduledDate, 'yyyyMMdd')}
+      {/* 顯眼單號標籤 + status */}
+      <div className="flex items-center justify-between mb-3">
+        <span className="inline-flex items-center px-3 py-1.5 bg-[#FF385C] text-white text-[15px] font-bold font-mono-nums rounded tracking-wider select-all">
+          #{orderNo}
+        </span>
+        <div className="flex items-center gap-2">
+          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border ${statusTagStyle}`}>
+            {statusLabel}
           </span>
-        </div>
-        <div className="relative flex items-center justify-between">
-          <OrderNo
-            scheduledTime={scheduledDate}
-            id={order.id}
-            className="text-white text-[22px] drop-shadow-sm"
-          />
-          <div className="flex items-center gap-2">
-            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${statusTagStyle.replace('border', 'border-0')}`}>
-              {statusLabel}
-            </span>
+          <div className="flex items-center gap-1">
+            <Clock className="w-3.5 h-3.5 text-[#717171]" />
+            <span className="text-[12px] text-[#717171] font-mono-nums">{format(scheduledDate, 'MM/dd')}</span>
+            <span className="text-[14px] font-bold text-[#222222] font-mono-nums">{format(scheduledDate, 'HH:mm')}</span>
           </div>
         </div>
       </div>
 
-      {/* ===== CARD BODY ===== */}
-      <div className="p-4">
-        {/* Date/Time row */}
-        <div className="flex items-center gap-2 mb-3">
-          <Clock className="w-4 h-4 text-[#78716C]" />
-          <span className="text-[14px] font-medium text-[#222222] font-mono-nums">
-            {format(scheduledDate, 'MM/dd (E)', { locale: zhTW })}
-          </span>
-          <span className="text-[16px] font-bold text-[#222222] font-mono-nums">
-            {format(scheduledDate, 'HH:mm')}
-          </span>
+      {/* Route — largest, most prominent */}
+      {isEditing ? (
+        <div className="mb-3 space-y-2">
+          <div className="space-y-1">
+            <label className="text-[11px] text-[#717171] font-medium">起點</label>
+            {order.type === 'pickup' ? (
+              <select
+                className={inputClass}
+                value={editForm.pickupLocation}
+                onChange={e => setEditForm(f => ({ ...f, pickupLocation: e.target.value }))}
+              >
+                {AIRPORT_OPTIONS.map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+            ) : (
+              <input
+                className={inputClass}
+                value={editForm.pickupLocation}
+                onChange={e => setEditForm(f => ({ ...f, pickupLocation: e.target.value }))}
+                placeholder="起點"
+              />
+            )}
+          </div>
+          <div className="space-y-1">
+            <label className="text-[11px] text-[#717171] font-medium">終點</label>
+            {order.type === 'dropoff' ? (
+              <select
+                className={inputClass}
+                value={editForm.dropoffLocation}
+                onChange={e => setEditForm(f => ({ ...f, dropoffLocation: e.target.value }))}
+              >
+                {AIRPORT_OPTIONS.map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+            ) : (
+              <input
+                className={inputClass}
+                value={editForm.dropoffLocation}
+                onChange={e => setEditForm(f => ({ ...f, dropoffLocation: e.target.value }))}
+                placeholder="終點"
+              />
+            )}
+          </div>
         </div>
+      ) : (
+        <div className="mb-3">
+          <p className="text-[18px] font-bold text-[#222222] leading-snug tracking-tight">
+            {order.pickupLocation} → {order.dropoffLocation}
+          </p>
+        </div>
+      )}
 
-        {/* Route — largest, most prominent */}
-        {isEditing ? (
-          <div className="mb-3 space-y-2">
-            <div className="space-y-1">
-              <label className="text-[11px] text-[#717171] font-medium">起點</label>
-              {order.type === 'pickup' ? (
-                <select
-                  className={inputClass}
-                  value={editForm.pickupLocation}
-                  onChange={e => setEditForm(f => ({ ...f, pickupLocation: e.target.value }))}
-                >
-                  {AIRPORT_OPTIONS.map(opt => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                  ))}
-                </select>
-              ) : (
-                <input
-                  className={inputClass}
-                  value={editForm.pickupLocation}
-                  onChange={e => setEditForm(f => ({ ...f, pickupLocation: e.target.value }))}
-                  placeholder="起點"
-                />
-              )}
-            </div>
-            <div className="space-y-1">
-              <label className="text-[11px] text-[#717171] font-medium">終點</label>
-              {order.type === 'dropoff' ? (
-                <select
-                  className={inputClass}
-                  value={editForm.dropoffLocation}
-                  onChange={e => setEditForm(f => ({ ...f, dropoffLocation: e.target.value }))}
-                >
-                  {AIRPORT_OPTIONS.map(opt => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                  ))}
-                </select>
-              ) : (
-                <input
-                  className={inputClass}
-                  value={editForm.dropoffLocation}
-                  onChange={e => setEditForm(f => ({ ...f, dropoffLocation: e.target.value }))}
-                  placeholder="終點"
-                />
-              )}
-            </div>
-          </div>
-        ) : (
-          <div className="mb-3">
-            <p className="text-[20px] font-black text-[#1C1917] leading-snug tracking-tight">
-              {order.pickupLocation} → {order.dropoffLocation}
-            </p>
-          </div>
+      {/* Tags */}
+      <div className="flex items-center gap-1.5 mb-3 flex-wrap">
+        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${typeTagStyle}`}>
+          {typeLabel}
+        </span>
+        {vehicleLabel && (
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-[#F4EFE9] text-[#717171]">
+            {vehicleLabel}
+          </span>
         )}
-
-        {/* Tags */}
-        <div className="flex items-center gap-1.5 mb-3 flex-wrap">
-          <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${typeTagStyle}`}>
-            {typeLabel}
+        {order.kenichiRequired && (
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-[#F3E8FF] text-[#6B21A8]">
+            肯驛
           </span>
-          {vehicleLabel && (
-            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-[#F4EFE9] text-[#717171]">
-              {vehicleLabel}
-            </span>
-          )}
-          {order.kenichiRequired && (
-            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-[#F3E8FF] text-[#6B21A8]">
-              肯驛
-            </span>
-          )}
-        </div>
+        )}
+      </div>
 
-        {/* Editable fields or display */}
-        {isEditing ? (
-          <div className="space-y-2 mb-3">
+      {/* Editable fields or display */}
+      {isEditing ? (
+        <div className="space-y-2 mb-3">
+          <div className="space-y-1">
+            <label className="text-[11px] text-[#717171] font-medium">時間</label>
+            <input
+              type="datetime-local"
+              className={inputClass}
+              value={editForm.scheduledTime}
+              onChange={e => setEditForm(f => ({ ...f, scheduledTime: e.target.value }))}
+            />
+          </div>
+          <div className="grid grid-cols-3 gap-2">
             <div className="space-y-1">
-              <label className="text-[11px] text-[#717171] font-medium">時間</label>
+              <label className="text-[11px] text-[#717171] font-medium">金額</label>
               <input
-                type="datetime-local"
+                type="number"
                 className={inputClass}
-                value={editForm.scheduledTime}
-                onChange={e => setEditForm(f => ({ ...f, scheduledTime: e.target.value }))}
+                value={editForm.price}
+                onChange={e => setEditForm(f => ({ ...f, price: e.target.value }))}
               />
             </div>
-            <div className="grid grid-cols-3 gap-2">
-              <div className="space-y-1">
-                <label className="text-[11px] text-[#717171] font-medium">金額</label>
-                <input
-                  type="number"
-                  className={inputClass}
-                  value={editForm.price}
-                  onChange={e => setEditForm(f => ({ ...f, price: e.target.value }))}
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-[11px] text-[#717171] font-medium">人數</label>
-                <input
-                  type="number"
-                  className={inputClass}
-                  value={editForm.passengerCount}
-                  onChange={e => setEditForm(f => ({ ...f, passengerCount: e.target.value }))}
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-[11px] text-[#717171] font-medium">行李</label>
-                <input
-                  type="number"
-                  className={inputClass}
-                  value={editForm.luggageCount}
-                  onChange={e => setEditForm(f => ({ ...f, luggageCount: e.target.value }))}
-                />
-              </div>
+            <div className="space-y-1">
+              <label className="text-[11px] text-[#717171] font-medium">人數</label>
+              <input
+                type="number"
+                className={inputClass}
+                value={editForm.passengerCount}
+                onChange={e => setEditForm(f => ({ ...f, passengerCount: e.target.value }))}
+              />
             </div>
             <div className="space-y-1">
-              <label className="text-[11px] text-[#717171] font-medium">備註</label>
+              <label className="text-[11px] text-[#717171] font-medium">行李</label>
               <input
-                type="text"
+                type="number"
                 className={inputClass}
-                value={editForm.note}
-                onChange={e => setEditForm(f => ({ ...f, note: e.target.value }))}
-                placeholder="填寫備註"
+                value={editForm.luggageCount}
+                onChange={e => setEditForm(f => ({ ...f, luggageCount: e.target.value }))}
               />
             </div>
           </div>
+          <div className="space-y-1">
+            <label className="text-[11px] text-[#717171] font-medium">備註</label>
+            <input
+              type="text"
+              className={inputClass}
+              value={editForm.note}
+              onChange={e => setEditForm(f => ({ ...f, note: e.target.value }))}
+              placeholder="填寫備註"
+            />
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className="flex items-center gap-4 mb-3 text-[14px] text-[#717171]">
+            <span className="font-medium">NT$<span className="text-[#FF385C] font-bold text-[20px]">{order.price.toLocaleString()}</span></span>
+            <span>{order.passengerCount}人</span>
+            <span>{order.luggageCount}行李</span>
+          </div>
+          {(order.note || order.notes) && (
+            <div className="mb-3 text-[13px] text-[#B0B0B0] italic leading-snug">
+              {order.note || order.notes}
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Bottom row: Price + Driver + Actions */}
+      <div className="border-t border-[#DDDDDD] pt-3 flex items-center justify-between">
+        {isImmutable && (
+          <span className="text-[11px] text-[#B0B0B0] italic">司機已接單，無法修改</span>
+        )}
+        {!isImmutable && (
+          <div />
+        )}
+        {hasDriver && !isEditing ? (
+          <div className="text-right">
+            <div className="flex items-center gap-1">
+              <User className="w-3.5 h-3.5 text-[#717171]" />
+              <span className="text-[14px] font-bold text-[#222222]">{order.driver!.user.name}</span>
+            </div>
+            <div className="flex items-center gap-2 mt-0.5">
+              <span className="text-[12px] font-bold px-1.5 py-0.5 bg-[#F4EFE9] text-[#717171] rounded font-mono-nums">{order.driver!.licensePlate}</span>
+              <span className="text-[12px] text-[#717171]">{order.driver!.carColor} {order.driver!.carType}</span>
+            </div>
+          </div>
+        ) : !isEditing ? (
+          <span className="text-[14px] font-bold text-[#E24B4A]">等待司機接單</span>
+        ) : (
+          <div />
+        )}
+      </div>
+
+      {/* Action buttons — always visible */}
+      <div className="flex gap-2 mt-3">
+        {isImmutable ? (
+          <>
+            <button
+              disabled
+              className="flex-1 py-2 rounded-lg text-[14px] font-bold bg-[#F4EFE9] text-[#B0B0B0] cursor-not-allowed flex items-center justify-center gap-1"
+            >
+              <Pencil className="w-3.5 h-3.5" /> 編輯
+            </button>
+            <button
+              disabled
+              className="flex-1 py-2 rounded-lg text-[14px] font-bold bg-[#F4EFE9] text-[#B0B0B0] cursor-not-allowed flex items-center justify-center gap-1"
+            >
+              <Trash2 className="w-3.5 h-3.5" /> 刪除
+            </button>
+          </>
+        ) : isEditing ? (
+          <>
+            <button
+              onClick={handleSave}
+              disabled={saveLoading}
+              className="flex-1 py-2 rounded-lg text-[14px] font-bold bg-[#008A05] text-white hover:bg-[#007000] transition-colors flex items-center justify-center gap-1 disabled:opacity-50"
+            >
+              <Check className="w-3.5 h-3.5" /> {saveLoading ? '儲存中...' : '儲存'}
+            </button>
+            <button
+              onClick={handleCancel}
+              disabled={saveLoading}
+              className="flex-1 py-2 rounded-lg text-[14px] font-bold bg-white border border-[#DDDDDD] text-[#717171] hover:bg-[#F7F7F7] transition-colors flex items-center justify-center gap-1"
+            >
+              <X className="w-3.5 h-3.5" /> 取消
+            </button>
+          </>
         ) : (
           <>
-            <div className="flex items-center gap-4 mb-3 text-[14px] text-[#717171]">
-              <span className="font-medium">NT$<span className="text-[#FF385C] font-bold text-[20px]">{order.price.toLocaleString()}</span></span>
-              <span>{order.passengerCount}人</span>
-              <span>{order.luggageCount}行李</span>
-            </div>
-            {(order.note || order.notes) && (
-              <div className="mb-3 text-[13px] text-[#B0B0B0] italic leading-snug">
-                {order.note || order.notes}
-              </div>
-            )}
+            <button
+              onClick={() => setIsEditing(true)}
+              className="flex-1 py-2 rounded-lg text-[14px] font-bold bg-[#E6F1FB] text-[#0C447C] hover:bg-[#C2DBF5] transition-colors flex items-center justify-center gap-1"
+            >
+              <Pencil className="w-3.5 h-3.5" /> 編輯
+            </button>
+            <button
+              onClick={handleDelete}
+              disabled={deleteLoading}
+              className="flex-1 py-2 rounded-lg text-[14px] font-bold bg-[#FCEBEB] text-[#A32D2D] hover:bg-[#F5C6C6] transition-colors flex items-center justify-center gap-1 disabled:opacity-50"
+            >
+              <Trash2 className="w-3.5 h-3.5" /> {deleteLoading ? '刪除中...' : '刪除'}
+            </button>
           </>
         )}
-
-        {/* Bottom row: Price + Driver + Actions */}
-        <div className="border-t border-[#DDDDDD] pt-3 flex items-center justify-between">
-          {isImmutable && (
-            <span className="text-[11px] text-[#B0B0B0] italic">司機已接單，無法修改</span>
-          )}
-          {!isImmutable && (
-            <div />
-          )}
-          {hasDriver && !isEditing ? (
-            <div className="text-right">
-              <div className="flex items-center gap-1">
-                <User className="w-3.5 h-3.5 text-[#717171]" />
-                <span className="text-[14px] font-bold text-[#222222]">{order.driver!.user.name}</span>
-              </div>
-              <div className="flex items-center gap-2 mt-0.5">
-                <span className="text-[12px] font-bold px-1.5 py-0.5 bg-[#F4EFE9] text-[#717171] rounded font-mono-nums">{order.driver!.licensePlate}</span>
-                <span className="text-[12px] text-[#717171]">{order.driver!.carColor} {order.driver!.carType}</span>
-              </div>
-            </div>
-          ) : !isEditing ? (
-            <span className="text-[14px] font-bold text-[#E24B4A]">等待司機接單</span>
-          ) : (
-            <div />
-          )}
-        </div>
-
-        {/* Action buttons */}
-        <div className="flex gap-2 mt-3">
-          {isImmutable ? (
-            <>
-              <button
-                disabled
-                className="flex-1 py-2 rounded-lg text-[14px] font-bold bg-[#F4EFE9] text-[#B0B0B0] cursor-not-allowed flex items-center justify-center gap-1"
-              >
-                <Pencil className="w-3.5 h-3.5" /> 編輯
-              </button>
-              <button
-                disabled
-                className="flex-1 py-2 rounded-lg text-[14px] font-bold bg-[#F4EFE9] text-[#B0B0B0] cursor-not-allowed flex items-center justify-center gap-1"
-              >
-                <Trash2 className="w-3.5 h-3.5" /> 刪除
-              </button>
-            </>
-          ) : isEditing ? (
-            <>
-              <button
-                onClick={handleSave}
-                disabled={saveLoading}
-                className="flex-1 py-2 rounded-lg text-[14px] font-bold bg-[#008A05] text-white hover:bg-[#007000] transition-colors flex items-center justify-center gap-1 disabled:opacity-50"
-              >
-                <Check className="w-3.5 h-3.5" /> {saveLoading ? '儲存中...' : '儲存'}
-              </button>
-              <button
-                onClick={handleCancel}
-                disabled={saveLoading}
-                className="flex-1 py-2 rounded-lg text-[14px] font-bold bg-white border border-[#DDDDDD] text-[#717171] hover:bg-[#F7F7F7] transition-colors flex items-center justify-center gap-1"
-              >
-                <X className="w-3.5 h-3.5" /> 取消
-              </button>
-            </>
-          ) : (
-            <>
-              <button
-                onClick={() => setIsEditing(true)}
-                className="flex-1 py-2 rounded-lg text-[14px] font-bold bg-[#E6F1FB] text-[#0C447C] hover:bg-[#C2DBF5] transition-colors flex items-center justify-center gap-1"
-              >
-                <Pencil className="w-3.5 h-3.5" /> 編輯
-              </button>
-              <button
-                onClick={handleDelete}
-                disabled={deleteLoading}
-                className="flex-1 py-2 rounded-lg text-[14px] font-bold bg-[#FCEBEB] text-[#A32D2D] hover:bg-[#F5C6C6] transition-colors flex items-center justify-center gap-1 disabled:opacity-50"
-              >
-                <Trash2 className="w-3.5 h-3.5" /> {deleteLoading ? '刪除中...' : '刪除'}
-              </button>
-            </>
-          )}
-        </div>
       </div>
     </div>
   )

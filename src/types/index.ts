@@ -43,6 +43,8 @@ export type PlateType = 'R' | 'T' | 'any'
 
 export interface Order {
   id: string
+  orderDate: string
+  orderSeq: number
   dispatcherId: string
   driverId?: string
   status: OrderStatus

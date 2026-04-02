@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { getUserFromToken } from '@/lib/auth'
 import { ApiResponse, CreateOrderRequest } from '@/types'
 import { checkRateLimit } from '@/lib/api-utils'
+import { format } from 'date-fns'
 
 // Helper to get user from request
 async function getUser(request: NextRequest) {
@@ -233,8 +234,25 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Calculate daily sequence number (YYYYMMDD-0001 format)
+    const todayStr = format(scheduledDate, 'yyyyMMdd')
+    const lastOrder = await prisma.order.findFirst({
+      where: { orderDate: todayStr, dispatcherId: user.dispatcher.id },
+      orderBy: { orderSeq: 'desc' },
+      select: { orderSeq: true },
+    })
+    const nextSeq = (lastOrder?.orderSeq ?? 0) + 1
+    if (nextSeq > 9999) {
+      return NextResponse.json<ApiResponse>(
+        { success: false, error: '當日訂單已達上限 9999 筆' },
+        { status: 400 }
+      )
+    }
+
     const order = await prisma.order.create({
       data: {
+        orderDate: todayStr,
+        orderSeq: nextSeq,
         dispatcherId: user.dispatcher.id,
         passengerName: body.passengerName,
         passengerPhone: body.passengerPhone,
