@@ -24,6 +24,14 @@ const VEHICLE_SCOPE: Record<string, string[]> = {
   any_r:  ['any_r', 'any'],
   any:    ['any'],
   pending: ['any'],
+  // 中文車型 → 英文 enum 對照（供顯示名稱查詢）
+  '小車': ['small', 'any'],
+  '轎車': ['small', 'any'],
+  '休旅': ['suv', 'small', 'any'],
+  'SUV':  ['suv', 'small', 'any'],
+  '7人座': ['van9', 'suv', 'small', 'any', 'any_r'],
+  '9人座': ['van9', 'suv', 'small', 'any', 'any_r'],
+  '福祉車': ['suv', 'small', 'any'],
 }
 
 const SORT_OPTIONS: { key: SortKey; label: string }[] = [
