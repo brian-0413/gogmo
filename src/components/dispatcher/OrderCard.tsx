@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { format, parseISO } from 'date-fns'
-import { Pencil, Trash2, User, Clock, Check, X } from 'lucide-react'
+import { Pencil, Trash2, User, Check, X } from 'lucide-react'
 import { formatOrderNo } from '@/lib/utils'
 import { Button } from '@/components/ui/Button'
 import type { OrderStatus } from '@/types'
@@ -193,20 +193,24 @@ export function DispatcherOrderCard({ order, token, onUpdate }: DispatcherOrderC
         isPending ? 'border-[2px] border-solid border-[#E24B4A]' : 'border-[#DDDDDD]'
       }`}
     >
-      {/* 顯眼單號標籤 + status */}
-      <div className="flex items-center justify-between mb-3">
-        <span className="inline-flex items-center px-3 py-1.5 bg-[#FF385C] text-white text-[15px] font-bold font-mono-nums rounded tracking-wider select-all">
-          #{orderNo}
-        </span>
-        <div className="flex items-center gap-2">
-          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border ${statusTagStyle}`}>
+      {/* 第一行：單號 + 狀態 + 日期時間 */}
+      <div className="flex items-center justify-between mb-2 gap-2 flex-wrap">
+        <div className="flex items-center gap-1.5">
+          <span className="inline-flex items-center px-3 py-1.5 bg-[#FF385C] text-white text-[15px] font-bold font-mono-nums rounded select-all">
+            #{orderNo}
+          </span>
+          <span className={`inline-flex items-center px-2.5 py-1 text-[15px] font-bold font-mono-nums rounded ${statusTagStyle}`}>
             {statusLabel}
           </span>
-          <div className="flex items-center gap-1">
-            <Clock className="w-3.5 h-3.5 text-[#717171]" />
-            <span className="text-[12px] text-[#717171] font-mono-nums">{format(scheduledDate, 'MM/dd')}</span>
-            <span className="text-[14px] font-bold text-[#222222] font-mono-nums">{format(scheduledDate, 'HH:mm')}</span>
-          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-[13px] text-[#717171] font-mono-nums">{format(scheduledDate, 'MM/dd')}</span>
+          <span className="text-[15px] font-bold text-[#222222] font-mono-nums">{format(scheduledDate, 'HH:mm')}</span>
+          {order.flightNumber && (
+            <span className="bg-[#F4EFE9] px-2 py-1 rounded font-mono-nums text-[13px] text-[#717171] font-bold">
+              {order.flightNumber}
+            </span>
+          )}
         </div>
       </div>
 
@@ -264,18 +268,18 @@ export function DispatcherOrderCard({ order, token, onUpdate }: DispatcherOrderC
         </div>
       )}
 
-      {/* Tags */}
+      {/* 第二行：種類 + 車型 + 肯驛標籤 */}
       <div className="flex items-center gap-1.5 mb-3 flex-wrap">
-        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${typeTagStyle}`}>
+        <span className={`inline-flex items-center px-3 py-1.5 text-[15px] font-bold font-mono-nums rounded ${typeTagStyle}`}>
           {typeLabel}
         </span>
         {vehicleLabel && (
-          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-[#F4EFE9] text-[#717171]">
+          <span className="inline-flex items-center px-3 py-1.5 text-[15px] font-bold font-mono-nums rounded bg-[#F4EFE9] text-[#717171]">
             {vehicleLabel}
           </span>
         )}
         {order.kenichiRequired && (
-          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-[#F3E8FF] text-[#6B21A8]">
+          <span className="inline-flex items-center px-3 py-1.5 text-[15px] font-bold font-mono-nums rounded bg-[#F3E8FF] text-[#6B21A8]">
             肯驛
           </span>
         )}
@@ -335,8 +339,20 @@ export function DispatcherOrderCard({ order, token, onUpdate }: DispatcherOrderC
         </div>
       ) : (
         <>
-          <div className="flex items-center gap-4 mb-3 text-[14px] text-[#717171]">
-            <span className="font-medium">NT$<span className="text-[#FF385C] font-bold text-[20px]">{order.price.toLocaleString()}</span></span>
+          {/* 金額 */}
+          <div className="mb-3">
+            <span className="text-[32px] font-bold font-mono-nums text-[#FF385C] leading-none">
+              NT${order.price.toLocaleString()}
+            </span>
+          </div>
+          {/* 起訖點 */}
+          <div className="flex items-center gap-3 mb-3">
+            <span className="text-[16px] font-bold text-[#222222]">{order.pickupLocation}</span>
+            <span className="text-[20px] font-bold text-[#DDDDDD]">→</span>
+            <span className="text-[16px] font-bold text-[#222222]">{order.dropoffLocation}</span>
+          </div>
+          {/* 人數行李 */}
+          <div className="flex items-center gap-3 text-[13px] text-[#717171] mb-3">
             <span>{order.passengerCount}人</span>
             <span>{order.luggageCount}行李</span>
           </div>

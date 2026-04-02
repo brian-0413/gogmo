@@ -144,11 +144,10 @@ function OrderCard({ order, onAccept, onView, showActions = true, compact = fals
       )}
 
       <div className="p-4">
-        {/* 單號 + 類型 + 車型 + urgency/status */}
+        {/* 第一行：單號 + 種類 + 車型 + 肯驛 | 倒數 + 狀態 */}
         <div className="flex items-center justify-between mb-2 gap-2 flex-wrap">
-          {/* 左側：單號 + 類型 + 車型 */}
-          <div className="flex items-center gap-1.5 flex-wrap gap-x-1.5 gap-y-1">
-            <span className="inline-flex items-center px-3 py-1.5 bg-[#FF385C] text-white text-[15px] font-bold font-mono-nums rounded tracking-wider select-all">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="inline-flex items-center px-3 py-1.5 bg-[#FF385C] text-white text-[15px] font-bold font-mono-nums rounded select-all">
               #{orderNo}
             </span>
             <span
@@ -157,9 +156,7 @@ function OrderCard({ order, onAccept, onView, showActions = true, compact = fals
             >
               {TYPE_LABELS[orderType]}
             </span>
-            <span
-              className="inline-flex items-center px-3 py-1.5 text-[15px] font-bold font-mono-nums rounded bg-[#F4EFE9] text-[#717171]"
-            >
+            <span className="inline-flex items-center px-3 py-1.5 text-[15px] font-bold font-mono-nums rounded bg-[#F4EFE9] text-[#717171]">
               {VEHICLE_LABELS[vehicle]}
               {order.plateType && order.plateType !== 'any' ? ` (${order.plateType}牌)` : ''}
             </span>
@@ -169,7 +166,6 @@ function OrderCard({ order, onAccept, onView, showActions = true, compact = fals
               </span>
             )}
           </div>
-          {/* 右側：倒數 + 狀態 */}
           <div className="flex items-center gap-1.5 flex-shrink-0">
             {urgency !== "normal" && (
               <span className="text-[11px] font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5 font-mono-nums" style={{
@@ -184,58 +180,59 @@ function OrderCard({ order, onAccept, onView, showActions = true, compact = fals
           </div>
         </div>
 
-        {/* Price */}
-        <div className="mb-2">
-          <span className="text-2xl font-bold font-mono-nums text-[#FF385C]">
+        {/* 第二行：日期 / 時間 / 航班 | 乘客 / 行李 */}
+        <div className="flex items-center justify-between gap-2 mb-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-base font-bold text-[#222222] font-mono-nums">
+              {format(scheduledDate, 'M/dd (E)', { locale: zhTW })}
+            </span>
+            <span className="text-[22px] font-bold font-mono-nums text-[#222222] leading-none">
+              {format(scheduledDate, 'HH:mm')}
+            </span>
+            {order.flightNumber && (
+              <span className="bg-[#F4EFE9] px-2 py-1 rounded font-mono-nums text-[13px] text-[#717171] font-bold">
+                {order.flightNumber}
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-3 text-[13px] text-[#717171] flex-shrink-0">
+            <span className="flex items-center gap-1 font-bold"><User className="w-3.5 h-3.5" /> {order.passengerName}</span>
+            <span className="flex items-center gap-1 font-bold"><Package className="w-3.5 h-3.5" /> {order.passengerCount}人 / {order.luggageCount}行李</span>
+          </div>
+        </div>
+
+        {/* 第三行：金額 */}
+        <div className="mb-3">
+          <span className="text-[32px] font-bold font-mono-nums text-[#FF385C] leading-none">
             NT${order.price.toLocaleString()}
           </span>
         </div>
 
-        {/* Date + time + flight */}
-        <div className="flex items-center gap-2 mb-2">
-          <span className="text-sm font-medium text-[#222222]">
-            {format(scheduledDate, 'M/dd (E)', { locale: zhTW })}
-          </span>
-          <span className="text-sm font-bold font-mono-nums text-[#222222]">
-            {format(scheduledDate, 'HH:mm')}
-          </span>
-          {order.flightNumber && (
-            <span className="bg-[#F4EFE9] px-2 py-0.5 rounded font-mono-nums text-xs text-[#717171] border border-[#DDDDDD]">
-              {order.flightNumber}
-            </span>
-          )}
-        </div>
-
-        {/* Pickup / Dropoff */}
-        <div className="space-y-1.5 mb-3">
-          <div className="flex items-start gap-2">
-            <div className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0" style={{ backgroundColor: typeBadgeColor.bg === '#F4EFE9' ? '#FF385C' : typeBadgeColor.bg === '#E6F1FB' ? '#0C447C' : typeBadgeColor.bg === '#FFF3E0' ? '#92400E' : typeBadgeColor.bg === '#F3E8FF' ? '#6B21A8' : '#717171' }} />
-            <div className="flex-1 min-w-0">
-              <p className="text-[10px] text-[#717171] uppercase tracking-wider mb-0.5">{pickupLabel}</p>
-              <p className="text-sm font-medium text-[#222222] truncate">{order.pickupLocation}</p>
+        {/* 第四行：起點 → 終點 */}
+        <div className="flex items-start gap-3 mb-3">
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full flex-shrink-0 mt-0.5" style={{ backgroundColor: typeBadgeColor.bg === '#F4EFE9' ? '#FF385C' : typeBadgeColor.bg === '#E6F1FB' ? '#0C447C' : typeBadgeColor.bg === '#FFF3E0' ? '#92400E' : typeBadgeColor.bg === '#F3E8FF' ? '#6B21A8' : '#717171' }} />
+            <div>
+              <p className="text-[11px] text-[#717171] uppercase tracking-wider">{pickupLabel}</p>
+              <p className="text-[16px] font-bold text-[#222222]">{order.pickupLocation}</p>
             </div>
           </div>
-          <div className="flex items-start gap-2">
-            <div className="w-2 h-2 rounded-full bg-[#DDDDDD] mt-1.5 flex-shrink-0" />
-            <div className="flex-1 min-w-0">
-              <p className="text-[10px] text-[#717171] uppercase tracking-wider mb-0.5">{dropoffLabel}</p>
-              <p className="text-sm font-medium text-[#222222] truncate">{order.dropoffLocation}</p>
+          <span className="text-[20px] font-bold text-[#DDDDDD] mt-1 flex-shrink-0">→</span>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full bg-[#DDDDDD] flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-[11px] text-[#717171] uppercase tracking-wider">{dropoffLabel}</p>
+              <p className="text-[16px] font-bold text-[#222222]">{order.dropoffLocation}</p>
             </div>
           </div>
         </div>
 
-        {/* Passenger info */}
-        <div className="flex items-center gap-3 text-xs text-[#717171] mb-3 pt-2 border-t border-[#EBEBEB]">
-          <span className="flex items-center gap-1"><User className="w-3 h-3" /> {order.passengerName}</span>
-          <span className="flex items-center gap-1"><Package className="w-3 h-3" /> {order.passengerCount}人 / {order.luggageCount}行李</span>
-        </div>
-
-        {/* Notes — expandable */}
+        {/* 備註 — 可折疊 */}
         {notes && (
           <div className="mb-3">
             {notesExpanded ? (
-              <div className="text-xs text-[#717171] bg-[#FFF3E0] border border-[#FFE0B2] p-2.5 rounded-lg flex items-start gap-1.5">
-                <FileText className="w-3 h-3 mt-0.5 flex-shrink-0 text-[#B45309]" />
+              <div className="text-[13px] text-[#717171] bg-[#FFF3E0] border border-[#FFE0B2] p-2.5 rounded-lg flex items-start gap-1.5">
+                <FileText className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-[#B45309]" />
                 <span className="leading-relaxed flex-1">{notes}</span>
                 <button
                   onClick={() => setNotesExpanded(false)}
@@ -248,7 +245,7 @@ function OrderCard({ order, onAccept, onView, showActions = true, compact = fals
             ) : (
               <button
                 onClick={() => setNotesExpanded(true)}
-                className="flex items-center gap-1.5 text-xs text-[#B45309] hover:text-[#92400E] transition-colors font-medium"
+                className="flex items-center gap-1.5 text-[13px] text-[#B45309] hover:text-[#92400E] transition-colors font-medium"
               >
                 <FileText className="w-3.5 h-3.5" />
                 <span>查看備註</span>
