@@ -45,8 +45,9 @@ export async function GET(request: NextRequest) {
       orderBy: { scheduledTime: 'asc' },
     })
 
-    // 轉換為前端 Order 型別
-    const toOrder = (o: typeof currentOrders[0]): Order => ({
+    // 轉換為前端 Order 型別（Date 欄位轉為 ISO 字串供 JSON 傳輸）
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const toOrder = (o: typeof currentOrders[0]): any => ({
       id: o.id,
       orderDate: o.orderDate,
       orderSeq: o.orderSeq,
@@ -62,7 +63,7 @@ export async function GET(request: NextRequest) {
       dropoffAddress: o.dropoffAddress,
       passengerCount: o.passengerCount,
       luggageCount: o.luggageCount,
-      scheduledTime: o.scheduledTime,
+      scheduledTime: new Date(o.scheduledTime).toISOString(),
       price: o.price,
       type: o.type as OrderType,
       vehicle: o.vehicle as Order['vehicle'],
@@ -70,16 +71,16 @@ export async function GET(request: NextRequest) {
       notes: o.notes ?? undefined,
       note: o.note ?? undefined,
       rawText: o.rawText ?? undefined,
-      createdAt: o.createdAt,
-      updatedAt: o.updatedAt,
-      completedAt: o.completedAt ?? undefined,
+      createdAt: new Date(o.createdAt).toISOString(),
+      updatedAt: new Date(o.updatedAt).toISOString(),
+      completedAt: o.completedAt ? new Date(o.completedAt).toISOString() : undefined,
       kenichiRequired: o.kenichiRequired ?? undefined,
       dispatcher: undefined,
       driver: undefined,
     })
 
-    const orders: Order[] = currentOrders.map(toOrder)
-    const available: Order[] = availableOrders.map(toOrder)
+    const orders = currentOrders.map(toOrder)
+    const available = availableOrders.map(toOrder)
 
     // 如果司機沒有進行中的行程
     if (orders.length === 0) {
