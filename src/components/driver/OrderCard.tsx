@@ -4,9 +4,9 @@ import { Badge, OrderStatusBadge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { format, parseISO, differenceInMinutes } from 'date-fns'
 import { zhTW } from 'date-fns/locale'
-import { User, Package, FileText, Clock, Plane } from 'lucide-react'
+import { User, Package, FileText, Clock } from 'lucide-react'
 import { useState, useEffect } from 'react'
-import { formatOrderNo } from '@/lib/utils'
+import { OrderNo } from '@/components/ui/OrderNo'
 import type { OrderType, VehicleType, Order } from '@/types'
 
 export type { Order } from '@/types'
@@ -75,7 +75,6 @@ function OrderCard({ order, onAccept, onView, showActions = true, compact = fals
   const urgency = getTimeUrgency(order.scheduledTime)
   const [countdown, setCountdown] = useState<string>('')
   const notes = order.notes || order.note || order.rawText
-  const orderNo = formatOrderNo(scheduledDate, order.id)
   const typeBadgeColor = TYPE_COLORS[orderType]
   const vehicleBadgeColor = VEHICLE_COLORS[vehicle]
 
@@ -104,39 +103,48 @@ function OrderCard({ order, onAccept, onView, showActions = true, compact = fals
 
   if (compact) {
     return (
-      <div className="bg-white border border-[#DDDDDD] rounded-xl p-3 hover:shadow-[0_2px_12px_rgba(0,0,0,0.08)] transition-all duration-200">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-[11px] font-mono-nums text-[#B0B0B0]">{orderNo}</span>
-          <OrderStatusBadge status={order.status} />
-        </div>
-        <div className="flex items-center gap-2 mb-2">
-          <span className="text-sm font-medium text-[#222222]">
-            {format(scheduledDate, 'M/dd (E)', { locale: zhTW })}
-          </span>
-          <span className="text-sm font-bold font-mono-nums text-[#222222]">
-            {format(scheduledDate, 'HH:mm')}
-          </span>
-        </div>
-        <div className="flex items-center gap-2 mb-2">
-          <span className="text-lg font-bold font-mono-nums text-[#FF385C]">
-            NT${order.price}
-          </span>
-          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ backgroundColor: typeBadgeColor.bg, color: typeBadgeColor.text }}>
-            {TYPE_LABELS[orderType]}
-          </span>
-        </div>
-        <div className="flex items-start gap-1.5 text-xs text-[#717171] mb-2">
-          <div className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ backgroundColor: typeBadgeColor.bg === '#F4EFE9' ? '#DDDDDD' : typeBadgeColor.bg }} />
-          <span className="truncate">{order.pickupLocation}</span>
-          <span className="text-[#B0B0B0] flex-shrink-0">→</span>
-          <div className="w-1.5 h-1.5 rounded-full bg-[#DDDDDD] mt-1.5 flex-shrink-0" />
-          <span className="truncate">{order.dropoffLocation}</span>
-        </div>
-        {notes && (
-          <div className="text-xs text-[#717171] italic bg-[#F4EFE9] p-1.5 rounded truncate">
-            {notes}
+      <div className="bg-white border border-[#DDDDDD] rounded-xl overflow-hidden hover:shadow-[0_2px_12px_rgba(0,0,0,0.08)] transition-all duration-200">
+        {/* Compact order no banner */}
+        <div className="bg-[#1C1917] px-3 py-1.5">
+          <div className="flex items-center justify-between">
+            <OrderNo
+              scheduledTime={scheduledDate}
+              id={order.id}
+              className="text-white text-[14px]"
+            />
+            <OrderStatusBadge status={order.status} />
           </div>
-        )}
+        </div>
+        <div className="p-3">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-sm font-medium text-[#222222]">
+              {format(scheduledDate, 'M/dd (E)', { locale: zhTW })}
+            </span>
+            <span className="text-sm font-bold font-mono-nums text-[#222222]">
+              {format(scheduledDate, 'HH:mm')}
+            </span>
+          </div>
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-lg font-bold font-mono-nums text-[#FF385C]">
+              NT${order.price.toLocaleString()}
+            </span>
+            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ backgroundColor: typeBadgeColor.bg, color: typeBadgeColor.text }}>
+              {TYPE_LABELS[orderType]}
+            </span>
+          </div>
+          <div className="flex items-start gap-1.5 text-xs text-[#717171] mb-2">
+            <div className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ backgroundColor: typeBadgeColor.bg === '#F4EFE9' ? '#DDDDDD' : typeBadgeColor.bg }} />
+            <span className="truncate">{order.pickupLocation}</span>
+            <span className="text-[#B0B0B0] flex-shrink-0">→</span>
+            <div className="w-1.5 h-1.5 rounded-full bg-[#DDDDDD] mt-1.5 flex-shrink-0" />
+            <span className="truncate">{order.dropoffLocation}</span>
+          </div>
+          {notes && (
+            <div className="text-xs text-[#717171] italic bg-[#F4EFE9] p-1.5 rounded truncate">
+              {notes}
+            </div>
+          )}
+        </div>
       </div>
     )
   }
@@ -148,10 +156,14 @@ function OrderCard({ order, onAccept, onView, showActions = true, compact = fals
         <div className="h-0.5 bg-gradient-to-r from-[#FF385C] via-[#FF385C]/50 to-[#FF385C]" />
       )}
 
-      <div className="p-4">
-        {/* Order no + status + urgency */}
-        <div className="flex items-center justify-between mb-1">
-          <span className="text-[11px] font-mono-nums text-[#B0B0B0]">{orderNo}</span>
+      {/* ===== SUPER PROMINENT ORDER NUMBER BANNER ===== */}
+      <div className="bg-[#1C1917] px-4 py-2">
+        <div className="flex items-center justify-between">
+          <OrderNo
+            scheduledTime={scheduledDate}
+            id={order.id}
+            className="text-white text-[18px] drop-shadow-sm"
+          />
           <div className="flex items-center gap-1.5">
             {urgency !== "normal" && (
               <span className="text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5 font-mono-nums" style={{
