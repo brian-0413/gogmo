@@ -837,119 +837,160 @@ export default function DispatcherDashboard() {
 
         {/* ===== REVIEW TAB ===== */}
         {activeTab === 'review' && (
-          <div className="space-y-5">
-            <div className="bg-white border border-[#DDDDDD] rounded-xl overflow-hidden">
-              <div className="px-5 py-4 border-b border-[#DDDDDD] flex items-center justify-between">
-                <div>
-                  <h3 className="text-[18px] font-medium text-[#222222]">審核清單</h3>
-                  <p className="text-[13px] text-[#717171]">{reviewItems.length} 筆待確認</p>
-                </div>
+          <div className="space-y-4">
+            {/* Header */}
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-[20px] font-bold text-[#222222]">審核清單</h2>
+                <p className="text-[14px] text-[#717171]">{reviewItems.length} 筆待確認</p>
               </div>
-              <div className="p-5">
-                {reviewItems.length === 0 ? (
-                  <p className="text-center text-[#717171] py-8 text-sm">暫無待審核的訂單</p>
-                ) : (
-                  <div className="space-y-3">
-                    {reviewItems.map((item, idx) => (
-                      <div key={item.reviewId} className="bg-white border border-[#DDDDDD] rounded-xl p-4">
-                        {editingId === item.reviewId ? (
-                          <div className="space-y-3">
-                            <div className="flex items-center justify-between">
-                              <p className="text-sm font-medium text-[#222222]">編輯 #{idx + 1}</p>
-                            </div>
-                            <div className="grid grid-cols-2 gap-3">
-                              <div className="space-y-1">
-                                <label className="text-[11px] text-[#717171]">時間</label>
-                                <input type="text" value={editForm.scheduledTime || ''} onChange={(e) => setEditForm(prev => ({ ...prev, scheduledTime: e.target.value }))} className="w-full bg-white border border-[#DDDDDD] rounded-lg px-3 py-2 text-[#222222] text-sm font-mono-nums focus:outline-none focus:border-[#222222]" />
-                              </div>
-                              <div className="space-y-1">
-                                <label className="text-[11px] text-[#717171]">價格</label>
-                                <select value={editForm.price || ''} onChange={(e) => setEditForm(prev => ({ ...prev, price: parseInt(e.target.value) }))} className="w-full bg-white border border-[#DDDDDD] rounded-lg px-3 py-2 text-[#222222] text-sm font-mono-nums focus:outline-none focus:border-[#222222]">
-                                  {PRICE_OPTIONS.filter(p => p.value > 0).map(opt => (
-                                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                                  ))}
-                                </select>
-                              </div>
-                            </div>
-                            <div className="space-y-1">
-                              <label className="text-[11px] text-[#717171]">上車地點</label>
-                              <input type="text" value={editForm.pickupLocation || ''} onChange={(e) => setEditForm(prev => ({ ...prev, pickupLocation: e.target.value }))} className="w-full bg-white border border-[#DDDDDD] rounded-lg px-3 py-2 text-[#222222] text-sm focus:outline-none focus:border-[#222222]" />
-                            </div>
-                            <div className="space-y-1">
-                              <label className="text-[11px] text-[#717171]">下地點</label>
-                              <input type="text" value={editForm.dropoffLocation || ''} onChange={(e) => setEditForm(prev => ({ ...prev, dropoffLocation: e.target.value }))} className="w-full bg-white border border-[#DDDDDD] rounded-lg px-3 py-2 text-[#222222] text-sm focus:outline-none focus:border-[#222222]" />
-                            </div>
-                            <div className="flex gap-2">
-                              <Button onClick={() => handleSaveEdit(item.reviewId)} size="sm" className="text-[13px]">儲存</Button>
-                              <Button variant="outline" onClick={() => setEditingId(null)} size="sm" className="text-[13px]">取消</Button>
-                            </div>
+              {reviewItems.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setReviewItems(prev => prev.map(item => ({ ...item })))}
+                    className="text-[14px]"
+                  >
+                    全選
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setReviewItems([])}
+                    className="text-[14px] text-[#E24B4A] hover:bg-[#FCEBEB]"
+                  >
+                    清除全部
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            {reviewItems.length === 0 ? (
+              <div className="text-center py-24 border border-[#DDDDDD] rounded-xl bg-white">
+                <ClipboardList className="w-12 h-12 text-[#B0B0B0] mx-auto mb-4" />
+                <p className="text-[#717171] text-[16px] font-medium mb-1">暫無待審核的訂單</p>
+                <p className="text-[#B0B0B0] text-[14px] mb-6">回到派單中心新增訂單</p>
+                <Button onClick={() => setActiveTab('create')} className="text-[14px]">前往派單中心</Button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {reviewItems.map((item, idx) => (
+                  <div key={item.reviewId} className="bg-white border border-[#DDDDDD] rounded-xl overflow-hidden hover:shadow-[0_2px_12px_rgba(0,0,0,0.06)] transition-shadow">
+                    {editingId === item.reviewId ? (
+                      <div className="p-5 space-y-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="inline-flex items-center px-3 py-1 bg-[#FF385C] text-white text-[15px] font-bold font-mono-nums rounded select-all">
+                              #{idx + 1}
+                            </span>
+                            <span className="text-[14px] font-medium text-[#222222]">編輯訂單</span>
                           </div>
-                        ) : (
-                          <div>
-                            <div className="flex items-start justify-between mb-3">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <span className="text-[11px] font-mono-nums text-[#717171]">#{idx + 1}</span>
-                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-normal ${
-                                  item.type === 'pickup' ? 'bg-[#E6F1FB] text-[#0C447C]'
-                                  : item.type === 'dropoff' ? 'bg-[#FFF3E0] text-[#92400E]'
-                                  : item.type === 'transfer' ? 'bg-[#F4EFE9] text-[#717171]'
-                                  : item.type === 'charter' ? 'bg-[#F3E8FF] text-[#6B21A8]'
-                                  : 'bg-[#F4EFE9] text-[#717171]'
-                                }`}>
-                                  {TYPE_LABELS[item.type] || '待確認'}
-                                </span>
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-normal bg-[#F4EFE9] text-[#717171]">
-                                  {item.editedVehicle || '待確認'}
-                                </span>
-                                {(item as any).editedKenichi && (
-                                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-normal bg-[#F3E8FF] text-[#6B21A8]">肯驛</span>
-                                )}
-                                <span className="text-[11px] text-[#B0B0B0] font-mono-nums">{item.rawText}</span>
-                              </div>
-                              <div className="flex gap-1.5">
-                                <Button variant="outline" size="sm" onClick={() => handleEditItem(item)} className="text-[13px] py-1 px-2">編輯</Button>
-                                <Button variant="outline" size="sm" onClick={() => handleDeleteItem(item.reviewId)} className="text-[#E24B4A] text-[13px] py-1 px-2">刪除</Button>
-                              </div>
-                            </div>
-                            <div className="grid grid-cols-3 gap-3 mb-2">
-                              <div>
-                                <p className="text-[11px] text-[#717171]">時間</p>
-                                <p className="font-mono-nums font-medium text-[#222222] text-[14px]">{item.editedTime || item.time || '-'}</p>
-                              </div>
-                              <div>
-                                <p className="text-[11px] text-[#717171]">費用</p>
-                                <p className="font-bold text-[#FF385C] font-mono-nums text-[15px]">NT${item.editedPrice ?? item.price ?? 800}</p>
-                              </div>
-                              <div>
-                                <p className="text-[11px] text-[#717171]">車型</p>
-                                <p className="font-medium text-[#222222] text-[14px]">{item.editedVehicle || '待確認'}</p>
-                              </div>
-                            </div>
-                            <div className="text-[15px] font-bold text-[#222222]">
-                              {item.editedPickup || item.pickupLocation || '-'} &rarr; {item.editedDropoff || item.dropoffLocation || '-'}
-                            </div>
-                            {(item.editedNotes || item.notes) && (
-                              <p className="text-[11px] text-[#717171] mt-2">{item.editedNotes || item.notes}</p>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <label className="text-[13px] text-[#717171] font-medium">時間</label>
+                            <input type="text" value={editForm.scheduledTime || ''} onChange={(e) => setEditForm(prev => ({ ...prev, scheduledTime: e.target.value }))} className="w-full bg-white border border-[#DDDDDD] rounded-lg px-4 py-3 text-[#222222] text-[15px] font-mono-nums focus:outline-none focus:border-[#222222]" />
+                          </div>
+                          <div className="space-y-2">
+                            <label className="text-[13px] text-[#717171] font-medium">費用</label>
+                            <select value={editForm.price || ''} onChange={(e) => setEditForm(prev => ({ ...prev, price: parseInt(e.target.value) }))} className="w-full bg-white border border-[#DDDDDD] rounded-lg px-4 py-3 text-[#222222] text-[15px] font-mono-nums focus:outline-none focus:border-[#222222]">
+                              {PRICE_OPTIONS.filter(p => p.value > 0).map(opt => (
+                                <option key={opt.value} value={opt.value}>{opt.label}</option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[13px] text-[#717171] font-medium">上車地點</label>
+                          <input type="text" value={editForm.pickupLocation || ''} onChange={(e) => setEditForm(prev => ({ ...prev, pickupLocation: e.target.value }))} className="w-full bg-white border border-[#DDDDDD] rounded-lg px-4 py-3 text-[#222222] text-[15px] focus:outline-none focus:border-[#222222]" />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[13px] text-[#717171] font-medium">下地點</label>
+                          <input type="text" value={editForm.dropoffLocation || ''} onChange={(e) => setEditForm(prev => ({ ...prev, dropoffLocation: e.target.value }))} className="w-full bg-white border border-[#DDDDDD] rounded-lg px-4 py-3 text-[#222222] text-[15px] focus:outline-none focus:border-[#222222]" />
+                        </div>
+                        <div className="flex gap-3 pt-2">
+                          <Button onClick={() => handleSaveEdit(item.reviewId)} className="text-[14px] px-6">儲存</Button>
+                          <Button variant="outline" onClick={() => setEditingId(null)} className="text-[14px] px-6">取消</Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="p-5">
+                        {/* 第一行：編號 + 種類 + 車型 + 肯驛 | 金額 | 編輯/刪除 */}
+                        <div className="flex items-start justify-between gap-3 mb-4">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="inline-flex items-center px-3 py-1.5 bg-[#FF385C] text-white text-[15px] font-bold font-mono-nums rounded select-all">
+                              #{idx + 1}
+                            </span>
+                            <span className={`inline-flex items-center px-3 py-1.5 text-[15px] font-bold font-mono-nums rounded ${
+                              item.type === 'pickup' ? 'bg-[#E6F1FB] text-[#0C447C]'
+                              : item.type === 'dropoff' ? 'bg-[#FFF3E0] text-[#92400E]'
+                              : item.type === 'transfer' ? 'bg-[#F4EFE9] text-[#717171]'
+                              : item.type === 'charter' ? 'bg-[#F3E8FF] text-[#6B21A8]'
+                              : item.type === 'pickup_boat' ? 'bg-[#E0F7FA] text-[#006064]'
+                              : item.type === 'dropoff_boat' ? 'bg-[#E0F7FA] text-[#006064]'
+                              : 'bg-[#F4EFE9] text-[#717171]'
+                            }`}>
+                              {TYPE_LABELS[item.type] || '待確認'}
+                            </span>
+                            <span className="inline-flex items-center px-3 py-1.5 text-[15px] font-bold font-mono-nums rounded bg-[#F4EFE9] text-[#717171]">
+                              {item.editedVehicle || '待確認'}
+                            </span>
+                            {(item as any).editedKenichi && (
+                              <span className="inline-flex items-center px-3 py-1.5 text-[15px] font-bold font-mono-nums rounded bg-[#F3E8FF] text-[#6B21A8]">肯驛</span>
                             )}
                           </div>
-                        )}
-                      </div>
-                    ))}
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            <span className="text-[28px] font-bold font-mono-nums text-[#FF385C] leading-none">
+                              NT${item.editedPrice ?? item.price ?? 800}
+                            </span>
+                            <div className="flex gap-1.5">
+                              <Button variant="outline" size="sm" onClick={() => handleEditItem(item)} className="text-[14px] py-1.5 px-3">編輯</Button>
+                              <Button variant="outline" size="sm" onClick={() => handleDeleteItem(item.reviewId)} className="text-[#E24B4A] hover:bg-[#FCEBEB] text-[14px] py-1.5 px-3">刪除</Button>
+                            </div>
+                          </div>
+                        </div>
 
-                    {reviewItems.length > 0 && (
-                      <div className="flex gap-3 pt-4 border-t border-[#DDDDDD]">
-                        <Button onClick={handlePublishOrders} loading={createLoading} className="flex-1 text-[14px]">
-                          發布 {reviewItems.length} 筆訂單
-                        </Button>
-                        <Button variant="outline" onClick={() => setActiveTab('create')} className="text-[13px]">
-                          繼續新增
-                        </Button>
+                        {/* 第二行：時間 + 起訖點 */}
+                        <div className="flex items-center gap-4 mb-3">
+                          <div className="flex items-center gap-2">
+                            <Clock className="w-4 h-4 text-[#717171]" />
+                            <span className="text-[15px] font-bold font-mono-nums text-[#222222]">{item.editedTime || item.time || '-'}</span>
+                          </div>
+                          <span className="text-[16px] font-bold text-[#222222]">
+                            {item.editedPickup || item.pickupLocation || '-'}
+                          </span>
+                          <span className="text-[18px] font-bold text-[#DDDDDD]">→</span>
+                          <span className="text-[16px] font-bold text-[#222222]">
+                            {item.editedDropoff || item.dropoffLocation || '-'}
+                          </span>
+                        </div>
+
+                        {/* 第三行：原始文字 */}
+                        {item.rawText && (
+                          <div className="text-[13px] text-[#B0B0B0] italic font-mono-nums bg-[#F9F9F9] px-3 py-2 rounded-lg border border-[#EBEBEB]">
+                            {item.rawText}
+                          </div>
+                        )}
+                        {(item.editedNotes || item.notes) && (
+                          <p className="text-[13px] text-[#717171] mt-2">{item.editedNotes || item.notes}</p>
+                        )}
                       </div>
                     )}
                   </div>
+                ))}
+
+                {/* 底部發布區 */}
+                {reviewItems.length > 0 && (
+                  <div className="flex gap-3 pt-4 border-t border-[#DDDDDD] sticky bottom-3 bg-[#FAF8F5] py-3">
+                    <Button onClick={handlePublishOrders} loading={createLoading} className="flex-1 text-[15px] py-3">
+                      發布 {reviewItems.length} 筆訂單
+                    </Button>
+                    <Button variant="outline" onClick={() => setActiveTab('create')} className="text-[14px] px-6">
+                      繼續新增
+                    </Button>
+                  </div>
                 )}
               </div>
-            </div>
+            )}
           </div>
         )}
 
