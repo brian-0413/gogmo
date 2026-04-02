@@ -9,9 +9,9 @@
 
 ### 最後 commit
 ```
-599de9f feat(driver): 我的行程新增月曆功能
+f60f23f fix(driver): 完成駕駛端行程卡片單號標註
 ```
-落後 origin/main 17 個 commits，尚未 push。
+落後 origin/main 0 個 commits。
 
 ---
 
@@ -23,7 +23,18 @@
 
 ## 近期進度
 
-### [進行中] 司機端接單流程（最新）
+### [完成] 單號超顯眼標註（最新）
+- 建立 `src/components/ui/OrderNo.tsx` 共用元件
+  - `formatOrderNo(scheduledTime, id)` → `YYYYMMDD-XXXX`（日期+ID末4碼大寫）
+  - `<OrderNo>` 元件：黑體白字、`font-mono-nums`、`select-all`
+- **派單方卡片**：全寬 `#1C1917` 黑底橫幅，`#`+`YYYYMMDD-XXXX` 22px 白字，背景浮水印日期
+  - 待接單改 `#E24B4A` 紅色背景，單號置中偏左、狀態徽章右側
+- **駕駛端卡片**：
+  - 精簡模式（我的行程列表）：14px 白色單號 + 狀態徽章黑底橫幅
+  - 完整模式（接單大廳）：18px 白色單號 + 緊急倒數計時 + 狀態徽章
+- 派單方 `DispatcherOrderCard.tsx` 重構：修復 JSX 結構錯誤（ROOT div 未關閉）
+
+### [完成] 司機端接單流程（最新）
 - 接單大廳 tab（改名）：只顯示 `status=PUBLISHED` 訂單
 - 「立即接單」按鈕：修復條件 `PUBLISHED`（之前錯寫成 `PENDING`）
 - 樂觀更新：接單後立即從大廳移除並加入「我的行程」
