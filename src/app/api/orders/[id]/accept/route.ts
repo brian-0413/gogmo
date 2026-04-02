@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { getUserFromToken } from '@/lib/auth'
 import { ApiResponse } from '@/types'
 
-// ─── 衝突檢查工具 ────────────────────────────────────────
+// ─── 衝突檢查 ─────────────────────────────────────────
 
 function isPickupType(type: string): boolean {
   return type === 'pickup' || type === 'pickup_boat'
@@ -14,45 +14,23 @@ function isDropoffType(type: string): boolean {
 
 /**
  * 檢查新訂單是否與司機現有行程衝突
- * 回傳 { blocked: boolean, warning: boolean, reason: string }
- * - blocked: 同類型時間重疊，需阻擋
- * - warning: 不同類型但時間接近，需提醒
+ * 回傳衝突原因（字串）或 null（無衝突）
  */
 function checkConflict(
   newOrderTime: Date,
   newOrderType: string,
   activeOrders: Array<{ scheduledTime: Date; type: string }>
-): { blocked: boolean; warning: boolean; reason: string } {
+): string | null {
   for (const existing of activeOrders) {
     const existingTime = new Date(existing.scheduledTime)
     const diffMs = Math.abs(newOrderTime.getTime() - existingTime.getTime())
     const diffMins = diffMs / (1000 * 60)
 
-    // 同類型（接送）60 分鐘內 → 阻擋
-    if (
-      (isPickupType(newOrderType) && isPickupType(existing.type)) ||
-      (isDropoffType(newOrderType) && isDropoffType(existing.type))
-    ) {
-      if (diffMins < 60) {
-        return {
-          blocked: true,
-          warning: false,
-          reason: `此單 ${formatTime(newOrderTime)} 與您 ${formatTime(existingTime)} 的 ${getTypeLabel(existing.type)} 行程時間太近（不足 60 分鐘），接送同類型行程需間隔至少 60 分鐘`,
-        }
-      }
-    }
-
-    // 不同類型但 60 分鐘內 → 提醒
     if (diffMins < 60) {
-      return {
-        blocked: false,
-        warning: true,
-        reason: `⚠️ 此單 ${formatTime(newOrderTime)} 與您 ${formatTime(existingTime)} 的 ${getTypeLabel(existing.type)} 行程時間接近，請確認是否來得及`,
-      }
+      return `⚠️ 此單 ${formatTime(newOrderTime)} 與您 ${formatTime(existingTime)} 的 ${getTypeLabel(existing.type)} 行程時間接近，請確認是否來得及`
     }
   }
-
-  return { blocked: false, warning: false, reason: '' }
+  return null
 }
 
 function formatTime(d: Date): string {
@@ -67,6 +45,14 @@ function getTypeLabel(type: string): string {
   return type
 }
 
+function buildWarning(conflictMsg: string | null): string {
+  const lines = []
+  if (conflictMsg) lines.push(conflictMsg)
+  lines.push('1. 提醒您，接單之後退單，將收取訂單 10% 的手續費。')
+  lines.push('2. 請勿強接太緊繃的配趟，為了行車和荷包的安全，請謹慎接單。')
+  return lines.join('\n')
+}
+
 // ─── POST /api/orders/[id]/accept ───────────────────────
 
 export async function POST(
@@ -75,9 +61,9 @@ export async function POST(
 ) {
   try {
     const { id } = await params
-    let body: { confirmed?: boolean } = {}
+    let body: { skipWarning?: boolean } = {}
     try { body = await request.json() } catch {}
-    const confirmed = body.confirmed === true
+    const skipWarning = body.skipWarning === true
     const token = request.headers.get('Authorization')?.replace('Bearer ', '')
     if (!token) {
       return NextResponse.json<ApiResponse>(
@@ -127,70 +113,9 @@ export async function POST(
     const driverId = user.driver.id
     const newOrderTime = new Date(order.scheduledTime)
 
-    // ─── 衝突檢查（在 transaction 外先做一次） ───────────
-    const activeOrders = await prisma.order.findMany({
-      where: {
-        driverId,
-        status: { in: ['ACCEPTED', 'ARRIVED', 'IN_PROGRESS'] },
-      },
-      select: { scheduledTime: true, type: true },
-    })
-
-    if (activeOrders.length > 0 && !confirmed) {
-      const conflict = checkConflict(newOrderTime, order.type, activeOrders)
-
-      if (conflict.blocked) {
-        return NextResponse.json<ApiResponse>(
-          {
-            success: false,
-            error: conflict.reason,
-          },
-          { status: 400 }
-        )
-      }
-
-      // ─── 不同類型但時間接近 → 提醒後仍可接 ───────────
-      if (conflict.warning) {
-        const warningMsg = `${conflict.reason}\n\n接單後退單，系統會扣該單金額的 10% 點數，接單前請務必確認接送日期和時間和已有行程是否衝突哦！`
-
-        // 先檢查餘額，夠的話才回 warning
-        const driver = await prisma.driver.findUnique({ where: { id: driverId } })
-        const platformFee = Math.floor(order.price * 0.05)
-
-        if (!driver) {
-          return NextResponse.json<ApiResponse>(
-            { success: false, error: '找不到司機資料' },
-            { status: 400 }
-          )
-        }
-
-        if (driver.balance < platformFee) {
-          return NextResponse.json<ApiResponse>(
-            { success: false, error: `點數不足，需要 ${platformFee} 點` },
-            { status: 400 }
-          )
-        }
-
-        // 回傳 warning，讓前端顯示提醒，使用者確認後再接
-        return NextResponse.json<ApiResponse>({
-          success: true,
-          data: {
-            order,
-            warning: warningMsg,
-            proceed: true,
-          },
-        })
-      }
-    }
-
-    // ─── Transaction ───────────────────────────────────
-    const updated = await prisma.$transaction(async (tx) => {
-      const driver = await tx.driver.findUnique({ where: { id: driverId } })
-
-      if (!driver) throw new Error('找不到司機資料')
-
-      // transaction 內再次檢查衝突（race condition guard）
-      const activeOrdersInTx = await tx.order.findMany({
+    // ─── 衝突檢查 ──────────────────────────────────────
+    if (!skipWarning) {
+      const activeOrders = await prisma.order.findMany({
         where: {
           driverId,
           status: { in: ['ACCEPTED', 'ARRIVED', 'IN_PROGRESS'] },
@@ -198,10 +123,41 @@ export async function POST(
         select: { scheduledTime: true, type: true },
       })
 
-      if (activeOrdersInTx.length > 0 && !confirmed) {
-        const conflict = checkConflict(newOrderTime, order.type, activeOrdersInTx)
-        if (conflict.blocked) throw new Error('BLOCKED')
+      if (activeOrders.length > 0) {
+        const conflictMsg = checkConflict(newOrderTime, order.type, activeOrders)
+        if (conflictMsg) {
+          const driver = await prisma.driver.findUnique({ where: { id: driverId } })
+          const platformFee = Math.floor(order.price * 0.05)
+
+          if (!driver) {
+            return NextResponse.json<ApiResponse>(
+              { success: false, error: '找不到司機資料' },
+              { status: 400 }
+            )
+          }
+
+          if (driver.balance < platformFee) {
+            return NextResponse.json<ApiResponse>(
+              { success: false, error: `點數不足，需要 ${platformFee} 點` },
+              { status: 400 }
+            )
+          }
+
+          return NextResponse.json<ApiResponse>({
+            success: true,
+            data: {
+              order,
+              warning: buildWarning(conflictMsg),
+            },
+          })
+        }
       }
+    }
+
+    // ─── Transaction ───────────────────────────────────
+    const updated = await prisma.$transaction(async (tx) => {
+      const driver = await tx.driver.findUnique({ where: { id: driverId } })
+      if (!driver) throw new Error('找不到司機資料')
 
       const platformFee = Math.floor(order.price * 0.05)
 
@@ -245,14 +201,13 @@ export async function POST(
         order: updated,
         platformFee,
         newBalance: updated.driver?.balance,
-        warning: null,
       },
     })
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
-    if (message === 'BLOCKED') {
+    if (message.startsWith('點數不足')) {
       return NextResponse.json<ApiResponse>(
-        { success: false, error: '時間衝突：接送同類型行程需間隔至少 60 分鐘，請稍後再試' },
+        { success: false, error: message },
         { status: 400 }
       )
     }

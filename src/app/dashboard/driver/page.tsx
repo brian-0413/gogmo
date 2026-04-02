@@ -194,7 +194,7 @@ export default function DriverDashboard() {
     if (token) { fetchOrders(); fetchBalance(); fetchDriverProfile() }
   }, [token, fetchOrders, fetchBalance, fetchDriverProfile])
 
-  const handleAcceptOrder = async (orderId: string, confirmed = false) => {
+  const handleAcceptOrder = async (orderId: string, skipWarning = false) => {
     if (!token) return
     const order = availableOrders.find(o => o.id === orderId)
     if (!order) return
@@ -212,13 +212,13 @@ export default function DriverDashboard() {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ confirmed }),
+        body: JSON.stringify({ skipWarning }),
       })
       const data = await res.json()
 
       if (data.success) {
         // 有警告訊息時，先顯示提醒再確認
-        if (data.data?.warning && !confirmed) {
+        if (data.data?.warning && !skipWarning) {
           const confirmed = window.confirm(data.data.warning)
           if (confirmed) {
             setActionLoading(null)
