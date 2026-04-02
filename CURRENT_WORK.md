@@ -9,9 +9,9 @@
 
 ### 最後 commit
 ```
-b9a1cdc feat(driver): 修復接單流程並改名稱為接單大廳
+599de9f feat(driver): 我的行程新增月曆功能
 ```
-落後 origin/main 16 個 commits，尚未 push。
+落後 origin/main 17 個 commits，尚未 push。
 
 ---
 
@@ -29,6 +29,7 @@ b9a1cdc feat(driver): 修復接單流程並改名稱為接單大廳
 - 樂觀更新：接單後立即從大廳移除並加入「我的行程」
 - 接單成功後自動切換至「我的行程」分頁
 - API `/api/orders/[id]/accept`：交易鎖定，扣 5% 平台費
+- **我的行程月曆**：`OrderCalendar` 元件，月份導航 + 日期狀態 dot + 點擊過濾當日行程
 
 ### [完成] 行程卡片編輯/刪除功能（最新）
 - `DispatcherOrderCard` 支援內嵌編輯（無需 modal）
@@ -222,3 +223,4 @@ PENDING → PUBLISHED → ASSIGNED → ACCEPTED → ARRIVED → IN_PROGRESS → 
 - 編輯時新增「備註」欄位
 - 接機單起點改為**下拉選單**（桃園/松山/清泉崗/小港），送機單終點改為**下拉選單**
 - 司機端接單大廳：修復「立即接單」按鈕條件、樂觀更新、接完自動切換分頁
+- 司機端「我的行程」新增月曆，點擊日期過濾當日行程
