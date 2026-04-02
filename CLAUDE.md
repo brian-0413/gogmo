@@ -79,3 +79,5 @@
 - 司機：driver1@test.com
 - 派單方：dispatcher1@test.com
 
+## 智慧排單功能
+智慧排班單能規格見 docs/smart-scheduling.md
