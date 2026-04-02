@@ -445,6 +445,16 @@ export default function DispatcherDashboard() {
     if (token) { fetchOrders(); fetchDrivers() }
   }, [token, fetchOrders, fetchDrivers])
 
+  // 每 10 秒自動刷新訂單和司機列表
+  useEffect(() => {
+    if (!token) return
+    const interval = setInterval(() => {
+      fetchOrders()
+      fetchDrivers()
+    }, 10000)
+    return () => clearInterval(interval)
+  }, [token, fetchOrders, fetchDrivers])
+
   const handleParseBatch = async () => {
     if (!rawText.trim()) return
     if (!defaults.date) { alert('請選擇日期'); return }
