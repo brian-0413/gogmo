@@ -1,10 +1,10 @@
 'use client'
 
-import { Badge, OrderStatusBadge } from '@/components/ui/Badge'
+import { OrderStatusBadge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { format, parseISO, differenceInMinutes } from 'date-fns'
 import { zhTW } from 'date-fns/locale'
-import { User, Package, FileText, Clock, Plane } from 'lucide-react'
+import { User, Package, FileText, Clock, ChevronDown, ChevronUp } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { formatOrderNo } from '@/lib/utils'
 import type { OrderType, VehicleType, Order } from '@/types'
@@ -66,6 +66,7 @@ function OrderCard({ order, onAccept, onView, showActions = true, compact = fals
   const vehicle: VehicleType = order.vehicle || 'any'
   const urgency = getTimeUrgency(order.scheduledTime)
   const [countdown, setCountdown] = useState<string>('')
+  const [notesExpanded, setNotesExpanded] = useState(false)
   const notes = order.notes || order.note || order.rawText
   const orderNo = formatOrderNo(scheduledDate, order.orderSeq)
   const typeBadgeColor = TYPE_COLORS[orderType]
@@ -151,20 +152,19 @@ function OrderCard({ order, onAccept, onView, showActions = true, compact = fals
               #{orderNo}
             </span>
             <span
-              className="inline-flex items-center px-2.5 py-1 text-[13px] font-bold rounded"
+              className="inline-flex items-center px-3 py-1.5 text-[15px] font-bold font-mono-nums rounded"
               style={{ backgroundColor: typeBadgeColor.bg, color: typeBadgeColor.text }}
             >
               {TYPE_LABELS[orderType]}
             </span>
             <span
-              className="inline-flex items-center px-2.5 py-1 text-[13px] font-bold rounded"
-              style={{ backgroundColor: '#F4EFE9', color: '#717171' }}
+              className="inline-flex items-center px-3 py-1.5 text-[15px] font-bold font-mono-nums rounded bg-[#F4EFE9] text-[#717171]"
             >
               {VEHICLE_LABELS[vehicle]}
               {order.plateType && order.plateType !== 'any' ? ` (${order.plateType}牌)` : ''}
             </span>
             {order.kenichiRequired && (
-              <span className="inline-flex items-center px-2.5 py-1 text-[13px] font-bold rounded bg-[#F3E8FF] text-[#6B21A8]">
+              <span className="inline-flex items-center px-3 py-1.5 text-[15px] font-bold font-mono-nums rounded bg-[#F3E8FF] text-[#6B21A8]">
                 肯驛
               </span>
             )}
@@ -230,11 +230,31 @@ function OrderCard({ order, onAccept, onView, showActions = true, compact = fals
           <span className="flex items-center gap-1"><Package className="w-3 h-3" /> {order.passengerCount}人 / {order.luggageCount}行李</span>
         </div>
 
-        {/* Notes */}
+        {/* Notes — expandable */}
         {notes && (
-          <div className="text-xs text-[#717171] bg-[#FFF3E0] border border-[#FFE0B2] p-2.5 rounded-lg mb-3 flex items-start gap-1.5">
-            <FileText className="w-3 h-3 mt-0.5 flex-shrink-0 text-[#B45309]" />
-            <span className="leading-relaxed">{notes}</span>
+          <div className="mb-3">
+            {notesExpanded ? (
+              <div className="text-xs text-[#717171] bg-[#FFF3E0] border border-[#FFE0B2] p-2.5 rounded-lg flex items-start gap-1.5">
+                <FileText className="w-3 h-3 mt-0.5 flex-shrink-0 text-[#B45309]" />
+                <span className="leading-relaxed flex-1">{notes}</span>
+                <button
+                  onClick={() => setNotesExpanded(false)}
+                  className="flex-shrink-0 p-0.5 text-[#B45309] hover:text-[#92400E] transition-colors"
+                  aria-label="收合備註"
+                >
+                  <ChevronUp className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setNotesExpanded(true)}
+                className="flex items-center gap-1.5 text-xs text-[#B45309] hover:text-[#92400E] transition-colors font-medium"
+              >
+                <FileText className="w-3.5 h-3.5" />
+                <span>查看備註</span>
+                <ChevronDown className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
         )}
 
