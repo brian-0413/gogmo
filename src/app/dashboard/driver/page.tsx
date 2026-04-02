@@ -9,10 +9,32 @@ import { OrderCard, Order } from '@/components/driver/OrderCard'
 import { OrderCalendar } from '@/components/driver/OrderCalendar'
 import { format, parseISO, startOfDay, startOfWeek, isSameDay } from 'date-fns'
 import { zhTW } from 'date-fns/locale'
-import { ClipboardList, FileText, Wallet, LogOut, Plane, Zap, TrendingUp, Radio, Inbox, Clock, ChevronLeft, ChevronRight } from 'lucide-react'
+import { ClipboardList, FileText, Wallet, LogOut, Plane, Zap, TrendingUp, Radio, Inbox, Clock, ArrowUpDown, ArrowUp, ArrowDown, Car, Star } from 'lucide-react'
 import Link from 'next/link'
 
 type Tab = 'available' | 'myorders' | 'balance'
+type SortKey = 'scheduledTime' | 'price' | 'type'
+type SortDir = 'asc' | 'desc'
+
+// 司機能看到哪些車型訂單（車型越大能看的越多）
+const VEHICLE_SCOPE: Record<string, string[]> = {
+  small:  ['small', 'any'],
+  suv:    ['suv', 'small', 'any'],
+  van9:   ['van9', 'suv', 'small', 'any', 'any_r'],
+  any_r:  ['any_r', 'any'],
+  any:    ['any'],
+  pending: ['any'],
+}
+
+const SORT_OPTIONS: { key: SortKey; label: string }[] = [
+  { key: 'scheduledTime', label: '日期/時間' },
+  { key: 'price', label: '金額' },
+  { key: 'type', label: '種類' },
+]
+
+const TYPE_SORT_ORDER: Record<string, number> = {
+  pickup: 1, dropoff: 2, pickup_boat: 3, dropoff_boat: 4, transfer: 5, charter: 6, pending: 7,
+}
 
 export default function DriverDashboard() {
   const { user, token, isLoading, logout } = useAuth()
@@ -38,6 +60,8 @@ export default function DriverDashboard() {
     licensePlate: string; carType: string; carColor: string
   } | null>(null)
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
+  const [sortKey, setSortKey] = useState<SortKey>('scheduledTime')
+  const [sortDir, setSortDir] = useState<SortDir>('asc')
 
   const calculateStats = useCallback((transactions: unknown[]) => {
     const now = new Date()
@@ -64,6 +88,31 @@ export default function DriverDashboard() {
       return isSameDay(d, selectedDate)
     })
   }, [myOrders, selectedDate])
+
+  // 車型過濾範圍（根據司機註冊車型）
+  const driverCarType = driverProfile?.carType || 'pending'
+  const vehicleScope = VEHICLE_SCOPE[driverCarType] || ['any']
+
+  const filteredAvailableOrders = useMemo(() => {
+    // 車型過濾
+    let orders = availableOrders.filter(o => vehicleScope.includes(o.vehicle || 'pending'))
+    // 排序
+    orders = [...orders].sort((a, b) => {
+      if (sortKey === 'price') {
+        return sortDir === 'asc' ? a.price - b.price : b.price - a.price
+      }
+      if (sortKey === 'type') {
+        const aVal = TYPE_SORT_ORDER[a.type || 'pending'] ?? 99
+        const bVal = TYPE_SORT_ORDER[b.type || 'pending'] ?? 99
+        return sortDir === 'asc' ? aVal - bVal : bVal - aVal
+      }
+      // scheduledTime (default)
+      const aTime = new Date(a.scheduledTime).getTime()
+      const bTime = new Date(b.scheduledTime).getTime()
+      return sortDir === 'asc' ? aTime - bTime : bTime - aTime
+    })
+    return orders
+  }, [availableOrders, vehicleScope, sortKey, sortDir])
 
   useEffect(() => {
     if (!isLoading && (!user || user.role !== 'DRIVER')) router.push('/login')
@@ -281,7 +330,7 @@ export default function DriverDashboard() {
               <ClipboardList className="w-4 h-4" />
               接單大廳
               <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-mono-nums bg-[#F59E0B]/10 text-[#F59E0B] border border-[#F59E0B]/20">
-                {availableOrders.length}
+                {filteredAvailableOrders.length}
               </span>
               {newOrderCount > 0 && activeTab !== 'available' && (
                 <span className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-[#EF4444] rounded-full text-[10px] font-bold flex items-center justify-center animate-pulse text-white">
@@ -337,25 +386,77 @@ export default function DriverDashboard() {
               <div className="text-center py-12">
                 <div className="w-10 h-10 border-2 border-[#F59E0B] border-t-transparent rounded-full animate-spin mx-auto" />
               </div>
-            ) : availableOrders.length === 0 ? (
-              <div className="text-center py-32 border border-[#DDDDDD] rounded-2xl bg-white/50 relative overflow-hidden shadow-sm">
-                <div className="absolute inset-0 dot-matrix opacity-30" />
-                <div className="relative">
-                  <div className="w-16 h-16 rounded-2xl bg-[#F5F4F0] border border-[#DDDDDD] flex items-center justify-center mx-auto mb-4">
-                    <Inbox className="w-8 h-8 text-[#D6D3D1]" />
-                  </div>
-                  <p className="text-[#78716C] mb-1 text-lg font-medium">目前沒有可接的訂單</p>
-                  <p className="text-[#A8A29E] text-sm">系統會自動推送新訂單通知</p>
-                </div>
-              </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-                {availableOrders.map((order, index) => (
-                  <div key={order.id} className="animate-cardEntry" style={{ animationDelay: `${Math.min(index * 40, 400)}ms` }}>
-                    <OrderCard order={order} onAccept={handleAcceptOrder} showActions={true} isNew={true} />
+              <>
+                {/* 排序工具列 */}
+                <div className="flex items-center justify-between mb-4 gap-3">
+                  {/* 車型範圍提示 */}
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5 px-3 py-1.5 bg-[#F5F4F0] border border-[#DDDDDD] rounded-lg">
+                      <Car className="w-3.5 h-3.5 text-[#717171]" />
+                      <span className="text-[12px] text-[#717171]">
+                        您的車型：<span className="font-bold text-[#222222]">{driverProfile?.carType || '未設定'}</span>
+                      </span>
+                      <span className="text-[11px] text-[#A8A29E]">
+                        （顯示 {filteredAvailableOrders.length} / {availableOrders.length} 單）
+                      </span>
+                    </div>
                   </div>
-                ))}
-              </div>
+                  {/* 排序按鈕 */}
+                  <div className="flex items-center gap-1">
+                    <ArrowUpDown className="w-3.5 h-3.5 text-[#717171] flex-shrink-0" />
+                    <span className="text-[11px] text-[#717171] mr-1">排序：</span>
+                    {SORT_OPTIONS.map(opt => (
+                      <button
+                        key={opt.key}
+                        onClick={() => {
+                          if (sortKey === opt.key) {
+                            setSortDir(d => d === 'asc' ? 'desc' : 'asc')
+                          } else {
+                            setSortKey(opt.key)
+                            setSortDir('asc')
+                          }
+                        }}
+                        className={`flex items-center gap-0.5 px-2 py-1 rounded text-[12px] font-medium transition-colors ${
+                          sortKey === opt.key
+                            ? 'bg-[#F59E0B]/10 text-[#B45309] border border-[#F59E0B]/20'
+                            : 'text-[#717171] hover:bg-[#F5F4F0] border border-transparent'
+                        }`}
+                      >
+                        {opt.label}
+                        {sortKey === opt.key && (
+                          sortDir === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {filteredAvailableOrders.length === 0 ? (
+                  <div className="text-center py-32 border border-[#DDDDDD] rounded-2xl bg-white/50 relative overflow-hidden shadow-sm">
+                    <div className="absolute inset-0 dot-matrix opacity-30" />
+                    <div className="relative">
+                      <div className="w-16 h-16 rounded-2xl bg-[#F5F4F0] border border-[#DDDDDD] flex items-center justify-center mx-auto mb-4">
+                        <Inbox className="w-8 h-8 text-[#D6D3D1]" />
+                      </div>
+                      <p className="text-[#78716C] mb-1 text-lg font-medium">
+                        {availableOrders.length === 0 ? '目前沒有可接的訂單' : '沒有符合您車型的訂單'}
+                      </p>
+                      <p className="text-[#A8A29E] text-sm">
+                        {availableOrders.length === 0 ? '系統會自動推送新訂單通知' : '等待派單方發布符合您車型的訂單'}
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+                    {filteredAvailableOrders.map((order, index) => (
+                      <div key={order.id} className="animate-cardEntry" style={{ animationDelay: `${Math.min(index * 40, 400)}ms` }}>
+                        <OrderCard order={order} onAccept={handleAcceptOrder} showActions={true} isNew={true} />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
             )}
           </>
         )}

@@ -193,13 +193,13 @@ export function DispatcherOrderCard({ order, token, onUpdate }: DispatcherOrderC
         isPending ? 'border-[2px] border-solid border-[#E24B4A]' : 'border-[#DDDDDD]'
       }`}
     >
-      {/* 第一行：單號 + 狀態 + 日期時間 */}
+      {/* 第一行：單號 + 狀態（派單方最重視） */}
       <div className="flex items-center justify-between mb-2 gap-2 flex-wrap">
         <div className="flex items-center gap-1.5">
           <span className="inline-flex items-center px-3 py-1.5 bg-[#FF385C] text-white text-[15px] font-bold font-mono-nums rounded select-all">
             #{orderNo}
           </span>
-          <span className={`inline-flex items-center px-2.5 py-1 text-[15px] font-bold font-mono-nums rounded ${statusTagStyle}`}>
+          <span className={`inline-flex items-center px-3 py-1.5 text-[15px] font-bold font-mono-nums rounded ${statusTagStyle}`}>
             {statusLabel}
           </span>
         </div>
@@ -214,79 +214,122 @@ export function DispatcherOrderCard({ order, token, onUpdate }: DispatcherOrderC
         </div>
       </div>
 
-      {/* Route — largest, most prominent */}
+      {/* 司機資訊區塊（派單方第二重視） */}
+      {hasDriver && !isEditing ? (
+        <div className="bg-[#F4EFE9] border border-[#E5DDD3] rounded-xl p-3 mb-3">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <User className="w-4 h-4 text-[#717171]" />
+              <span className="text-[15px] font-bold text-[#222222]">{order.driver!.user.name}</span>
+            </div>
+            <div className="h-4 w-px bg-[#DDDDDD]" />
+            <div className="flex items-center gap-2">
+              <span className="text-[14px] font-bold px-2 py-0.5 bg-[#222222] text-white rounded font-mono-nums">{order.driver!.licensePlate}</span>
+              <span className="text-[13px] text-[#717171]">{order.driver!.carColor} {order.driver!.carType}</span>
+            </div>
+          </div>
+        </div>
+      ) : !isEditing ? (
+        <div className="mb-3 px-3 py-2 bg-[#FCEBEB] border border-[#F5C6C6] rounded-xl">
+          <span className="text-[13px] font-bold text-[#E24B4A]">等待司機接單</span>
+        </div>
+      ) : null}
+
+      {/* 起訖點 */}
       {isEditing ? (
         <div className="mb-3 space-y-2">
           <div className="space-y-1">
             <label className="text-[11px] text-[#717171] font-medium">起點</label>
             {order.type === 'pickup' ? (
-              <select
-                className={inputClass}
-                value={editForm.pickupLocation}
-                onChange={e => setEditForm(f => ({ ...f, pickupLocation: e.target.value }))}
-              >
+              <select className={inputClass} value={editForm.pickupLocation} onChange={e => setEditForm(f => ({ ...f, pickupLocation: e.target.value }))}>
                 {AIRPORT_OPTIONS.map(opt => (
                   <option key={opt.value} value={opt.value}>{opt.label}</option>
                 ))}
               </select>
             ) : (
-              <input
-                className={inputClass}
-                value={editForm.pickupLocation}
-                onChange={e => setEditForm(f => ({ ...f, pickupLocation: e.target.value }))}
-                placeholder="起點"
-              />
+              <input className={inputClass} value={editForm.pickupLocation} onChange={e => setEditForm(f => ({ ...f, pickupLocation: e.target.value }))} placeholder="起點" />
             )}
           </div>
           <div className="space-y-1">
             <label className="text-[11px] text-[#717171] font-medium">終點</label>
             {order.type === 'dropoff' ? (
-              <select
-                className={inputClass}
-                value={editForm.dropoffLocation}
-                onChange={e => setEditForm(f => ({ ...f, dropoffLocation: e.target.value }))}
-              >
+              <select className={inputClass} value={editForm.dropoffLocation} onChange={e => setEditForm(f => ({ ...f, dropoffLocation: e.target.value }))}>
                 {AIRPORT_OPTIONS.map(opt => (
                   <option key={opt.value} value={opt.value}>{opt.label}</option>
                 ))}
               </select>
             ) : (
-              <input
-                className={inputClass}
-                value={editForm.dropoffLocation}
-                onChange={e => setEditForm(f => ({ ...f, dropoffLocation: e.target.value }))}
-                placeholder="終點"
-              />
+              <input className={inputClass} value={editForm.dropoffLocation} onChange={e => setEditForm(f => ({ ...f, dropoffLocation: e.target.value }))} placeholder="終點" />
             )}
           </div>
         </div>
       ) : (
         <div className="mb-3">
-          <p className="text-[18px] font-bold text-[#222222] leading-snug tracking-tight">
-            {order.pickupLocation} → {order.dropoffLocation}
-          </p>
+          <p className="text-[15px] font-bold text-[#717171]">{order.pickupLocation} → {order.dropoffLocation}</p>
         </div>
       )}
 
-      {/* 第二行：種類 + 車型 + 肯驛標籤 */}
-      <div className="flex items-center gap-1.5 mb-3 flex-wrap">
-        <span className={`inline-flex items-center px-3 py-1.5 text-[15px] font-bold font-mono-nums rounded ${typeTagStyle}`}>
-          {typeLabel}
+      {/* 第三行：種類 + 車型 + 肯驛 + 金額 */}
+      <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span className={`inline-flex items-center px-3 py-1.5 text-[15px] font-bold font-mono-nums rounded ${typeTagStyle}`}>
+            {typeLabel}
+          </span>
+          {vehicleLabel && (
+            <span className="inline-flex items-center px-3 py-1.5 text-[15px] font-bold font-mono-nums rounded bg-[#F4EFE9] text-[#717171]">
+              {vehicleLabel}
+            </span>
+          )}
+          {order.kenichiRequired && (
+            <span className="inline-flex items-center px-3 py-1.5 text-[15px] font-bold font-mono-nums rounded bg-[#F3E8FF] text-[#6B21A8]">
+              肯驛
+            </span>
+          )}
+        </div>
+        <span className="text-[18px] font-bold font-mono-nums text-[#FF385C]">
+          NT${order.price.toLocaleString()}
         </span>
-        {vehicleLabel && (
-          <span className="inline-flex items-center px-3 py-1.5 text-[15px] font-bold font-mono-nums rounded bg-[#F4EFE9] text-[#717171]">
-            {vehicleLabel}
-          </span>
-        )}
-        {order.kenichiRequired && (
-          <span className="inline-flex items-center px-3 py-1.5 text-[15px] font-bold font-mono-nums rounded bg-[#F3E8FF] text-[#6B21A8]">
-            肯驛
-          </span>
-        )}
       </div>
 
-      {/* Editable fields or display */}
+      {/* 人數行李（附屬） */}
       {isEditing ? (
+        <div className="space-y-2 mb-3">
+          <div className="space-y-1">
+            <label className="text-[11px] text-[#717171] font-medium">時間</label>
+            <input type="datetime-local" className={inputClass} value={editForm.scheduledTime} onChange={e => setEditForm(f => ({ ...f, scheduledTime: e.target.value }))} />
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            <div className="space-y-1">
+              <label className="text-[11px] text-[#717171] font-medium">金額</label>
+              <input type="number" className={inputClass} value={editForm.price} onChange={e => setEditForm(f => ({ ...f, price: e.target.value }))} />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[11px] text-[#717171] font-medium">人數</label>
+              <input type="number" className={inputClass} value={editForm.passengerCount} onChange={e => setEditForm(f => ({ ...f, passengerCount: e.target.value }))} />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[11px] text-[#717171] font-medium">行李</label>
+              <input type="number" className={inputClass} value={editForm.luggageCount} onChange={e => setEditForm(f => ({ ...f, luggageCount: e.target.value }))} />
+            </div>
+          </div>
+          <div className="space-y-1">
+            <label className="text-[11px] text-[#717171] font-medium">備註</label>
+            <input type="text" className={inputClass} value={editForm.note} onChange={e => setEditForm(f => ({ ...f, note: e.target.value }))} placeholder="填寫備註" />
+          </div>
+        </div>
+      ) : (
+        <div className="text-[13px] text-[#717171] mb-3">
+          <span className="font-medium">{order.passengerCount}人</span>
+          <span className="mx-2">/</span>
+          <span className="font-medium">{order.luggageCount}行李</span>
+          {(order.note || order.notes) && (
+            <span className="ml-2 italic">備註：{order.note || order.notes}</span>
+          )}
+        </div>
+      )}
+
+      {/* Editable fields */}
+      {isEditing && (
         <div className="space-y-2 mb-3">
           <div className="space-y-1">
             <label className="text-[11px] text-[#717171] font-medium">時間</label>
@@ -337,58 +380,12 @@ export function DispatcherOrderCard({ order, token, onUpdate }: DispatcherOrderC
             />
           </div>
         </div>
-      ) : (
-        <>
-          {/* 金額 */}
-          <div className="mb-3">
-            <span className="text-[32px] font-bold font-mono-nums text-[#FF385C] leading-none">
-              NT${order.price.toLocaleString()}
-            </span>
-          </div>
-          {/* 起訖點 */}
-          <div className="flex items-center gap-3 mb-3">
-            <span className="text-[16px] font-bold text-[#222222]">{order.pickupLocation}</span>
-            <span className="text-[20px] font-bold text-[#DDDDDD]">→</span>
-            <span className="text-[16px] font-bold text-[#222222]">{order.dropoffLocation}</span>
-          </div>
-          {/* 人數行李 */}
-          <div className="flex items-center gap-3 text-[13px] text-[#717171] mb-3">
-            <span>{order.passengerCount}人</span>
-            <span>{order.luggageCount}行李</span>
-          </div>
-          {(order.note || order.notes) && (
-            <div className="mb-3 text-[13px] text-[#B0B0B0] italic leading-snug">
-              {order.note || order.notes}
-            </div>
-          )}
-        </>
       )}
 
-      {/* Bottom row: Price + Driver + Actions */}
-      <div className="border-t border-[#DDDDDD] pt-3 flex items-center justify-between">
-        {isImmutable && (
-          <span className="text-[11px] text-[#B0B0B0] italic">司機已接單，無法修改</span>
-        )}
-        {!isImmutable && (
-          <div />
-        )}
-        {hasDriver && !isEditing ? (
-          <div className="text-right">
-            <div className="flex items-center gap-1">
-              <User className="w-3.5 h-3.5 text-[#717171]" />
-              <span className="text-[14px] font-bold text-[#222222]">{order.driver!.user.name}</span>
-            </div>
-            <div className="flex items-center gap-2 mt-0.5">
-              <span className="text-[12px] font-bold px-1.5 py-0.5 bg-[#F4EFE9] text-[#717171] rounded font-mono-nums">{order.driver!.licensePlate}</span>
-              <span className="text-[12px] text-[#717171]">{order.driver!.carColor} {order.driver!.carType}</span>
-            </div>
-          </div>
-        ) : !isEditing ? (
-          <span className="text-[14px] font-bold text-[#E24B4A]">等待司機接單</span>
-        ) : (
-          <div />
-        )}
-      </div>
+      {/* 附屬資訊：司機已接單時顯示鎖定提示 */}
+      {isImmutable && (
+        <div className="text-[11px] text-[#B0B0B0] italic mb-3">司機已接單，無法修改</div>
+      )}
 
       {/* Action buttons — always visible */}
       <div className="flex gap-2 mt-3">

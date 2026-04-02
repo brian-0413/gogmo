@@ -180,25 +180,19 @@ function OrderCard({ order, onAccept, onView, showActions = true, compact = fals
           </div>
         </div>
 
-        {/* 第二行：日期 / 時間 / 航班 | 乘客 / 行李 */}
-        <div className="flex items-center justify-between gap-2 mb-2">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-base font-bold text-[#222222] font-mono-nums">
-              {format(scheduledDate, 'M/dd (E)', { locale: zhTW })}
+        {/* 第二行：日期 / 時間 / 航班 */}
+        <div className="flex items-center gap-2 mb-2 flex-wrap">
+          <span className="text-base font-bold text-[#222222] font-mono-nums">
+            {format(scheduledDate, 'M/dd (E)', { locale: zhTW })}
+          </span>
+          <span className="text-[22px] font-bold font-mono-nums text-[#222222] leading-none">
+            {format(scheduledDate, 'HH:mm')}
+          </span>
+          {order.flightNumber && (
+            <span className="bg-[#F4EFE9] px-2 py-1 rounded font-mono-nums text-[13px] text-[#717171] font-bold">
+              {order.flightNumber}
             </span>
-            <span className="text-[22px] font-bold font-mono-nums text-[#222222] leading-none">
-              {format(scheduledDate, 'HH:mm')}
-            </span>
-            {order.flightNumber && (
-              <span className="bg-[#F4EFE9] px-2 py-1 rounded font-mono-nums text-[13px] text-[#717171] font-bold">
-                {order.flightNumber}
-              </span>
-            )}
-          </div>
-          <div className="flex items-center gap-3 text-[13px] text-[#717171] flex-shrink-0">
-            <span className="flex items-center gap-1 font-bold"><User className="w-3.5 h-3.5" /> {order.passengerName}</span>
-            <span className="flex items-center gap-1 font-bold"><Package className="w-3.5 h-3.5" /> {order.passengerCount}人 / {order.luggageCount}行李</span>
-          </div>
+          )}
         </div>
 
         {/* 第三行：金額 */}
@@ -254,6 +248,12 @@ function OrderCard({ order, onAccept, onView, showActions = true, compact = fals
             )}
           </div>
         )}
+
+        {/* 乘客附屬資訊 */}
+        <div className="flex items-center gap-4 text-[13px] text-[#717171] mb-3">
+          <span className="flex items-center gap-1"><User className="w-3.5 h-3.5" /> {order.passengerName}</span>
+          <span className="flex items-center gap-1"><Package className="w-3.5 h-3.5" /> {order.passengerCount}人 / {order.luggageCount}行李</span>
+        </div>
 
         {/* Actions */}
         {showActions && (
