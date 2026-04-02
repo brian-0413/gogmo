@@ -79,10 +79,20 @@ export default function DriverDashboard() {
 
   // 智慧排班結果狀態
   const [scheduleResult, setScheduleResult] = useState<{
-    currentOrders: Array<{ id: string; scheduledTime: string; type: string; status: string; pickupLocation: string; dropoffLocation: string; price: number; freeTime: string; flightNumber?: string }>
-    driverFreeTime: string
-    recommendations: Array<{ id: string; orderDate: string; orderSeq: number; type: string; vehicle: string; scheduledTime: string; price: number; pickupLocation: string; dropoffLocation: string; passengerName: string; passengerCount: number; luggageCount: number; flightNumber: string; kenichiRequired: boolean; minutesFromFree: number; reason: string }>
-    summary: { currentOrdersCount: number; recommendationsCount: number }
+    currentOrders: Array<{ id: string; scheduledTime: string; type: string; status: string; pickupLocation: string; dropoffLocation: string; price: number }>
+    currentOrder: { id: string; scheduledTime: string; type: string; pickupLocation: string; dropoffLocation: string; price: number } | null
+    availableCount: number
+    recommendations: Array<{
+      id: string; orderDate: string; orderSeq: number
+      type: string; vehicle: string; scheduledTime: string; price: number
+      pickupLocation: string; dropoffLocation: string; passengerName: string
+      passengerCount: number; luggageCount: number; flightNumber: string
+      kenichiRequired: boolean; reason: string
+      tightnessLabel: string; tightnessLevel: string
+      recommendType: 'pickup' | 'dropoff'
+    }>
+    timeline: Array<{ time: string; label: string; orderId?: string; price?: number; isTrigger?: boolean }>
+    totalIncome: number
   } | null>(null)
   const [scheduleLoading, setScheduleLoading] = useState(false)
   // 選中的排班訂單（用於一次確認多單）
@@ -688,7 +698,7 @@ export default function DriverDashboard() {
                 {(scheduleResult || matchResults) && (
                   <span className="text-[13px] text-[#78716C]">
                     <span className="font-bold font-mono-nums text-[#222222]">
-                      {scheduleResult?.summary?.recommendationsCount ?? matchResults?.recommendations.length ?? 0}
+                      {scheduleResult?.recommendations?.length ?? matchResults?.recommendations.length ?? 0}
                     </span> 筆推薦
                   </span>
                 )}
@@ -711,37 +721,70 @@ export default function DriverDashboard() {
                   <div className="flex items-center gap-2 mb-1">
                     <Sparkles className="w-4 h-4 text-[#B45309]" />
                     <h3 className="text-[15px] font-semibold text-[#222222]">智慧排班推薦</h3>
+                    <span className="text-[11px] px-2 py-0.5 rounded-full bg-[#F59E0B]/10 text-[#B45309] font-medium">
+                      最多 6 單
+                    </span>
                   </div>
                   <p className="text-[12px] text-[#78716C]">
-                    依您目前的行程，推薦可銜接的訂單組合
+                    {scheduleResult.currentOrder
+                      ? `依您 ${format(parseISO(scheduleResult.currentOrder.scheduledTime), 'M/dd HH:mm', { locale: zhTW })} 的行程推薦`
+                      : '依您目前的行程，推薦可銜接的訂單組合'}
                   </p>
                 </div>
 
                 <div className="p-5 space-y-5">
-                  {/* 當前行程概覽 */}
-                  {scheduleResult.currentOrders.length > 0 && (
+                  {/* 當前行程 */}
+                  {scheduleResult.currentOrder && (
                     <div>
-                      <p className="text-[11px] text-[#78716C] uppercase tracking-wider mb-3 font-medium">目前的行程</p>
+                      <p className="text-[11px] text-[#78716C] uppercase tracking-wider mb-2 font-medium">觸發行程</p>
                       <div className="bg-[#FAFAFA] rounded-xl p-4 border border-[#EBEBEB]">
-                        {scheduleResult.currentOrders.map(order => (
-                          <div key={order.id} className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold font-mono-nums" style={{
-                                backgroundColor: order.type === 'pickup' || order.type === 'pickup_boat' ? '#E6F1FB' : '#FFF3E0',
-                                color: order.type === 'pickup' || order.type === 'pickup_boat' ? '#0C447C' : '#92400E'
-                              }}>
-                                {order.type === 'pickup' || order.type === 'pickup_boat' ? '接機' : order.type === 'dropoff' || order.type === 'dropoff_boat' ? '送機' : '其他'}
-                              </span>
-                              <span className="text-[13px] font-medium text-[#222222]">
-                                {order.pickupLocation} → {order.dropoffLocation}
-                              </span>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold font-mono-nums" style={{
+                              backgroundColor: scheduleResult.currentOrder.type === 'pickup' || scheduleResult.currentOrder.type === 'pickup_boat' ? '#E6F1FB' : '#FFF3E0',
+                              color: scheduleResult.currentOrder.type === 'pickup' || scheduleResult.currentOrder.type === 'pickup_boat' ? '#0C447C' : '#92400E'
+                            }}>
+                              {scheduleResult.currentOrder.type === 'pickup' || scheduleResult.currentOrder.type === 'pickup_boat' ? '接機' : '送機'}
+                            </span>
+                            <span className="text-[13px] font-medium text-[#222222]">
+                              {scheduleResult.currentOrder.pickupLocation} → {scheduleResult.currentOrder.dropoffLocation}
+                            </span>
+                          </div>
+                          <span className="text-[13px] font-bold font-mono-nums text-[#FF385C]">NT${scheduleResult.currentOrder.price.toLocaleString()}</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 排班時間軸預覽 */}
+                  {scheduleResult.timeline.length > 0 && (
+                    <div>
+                      <p className="text-[11px] text-[#78716C] uppercase tracking-wider mb-2 font-medium">排班預覽</p>
+                      <div className="bg-[#FAFAFA] rounded-xl p-4 border border-[#EBEBEB] space-y-2">
+                        {scheduleResult.timeline.map((node, idx) => (
+                          <div key={idx} className="flex items-center gap-2">
+                            {idx > 0 && (
+                              <div className="absolute left-[18px] top-0 bottom-0 w-px bg-[#DDDDDD]" />
+                            )}
+                            <div className={`w-3 h-3 rounded-full flex-shrink-0 mt-0.5 ${
+                              node.isTrigger ? 'bg-[#F59E0B]' : 'bg-[#0C447C]'
+                            }`} />
+                            <div className="flex-1 min-w-0">
+                              <p className={`text-[13px] font-medium truncate ${node.isTrigger ? 'text-[#222222]' : 'text-[#717171]'}`}>
+                                {node.label}
+                              </p>
+                              <p className="text-[11px] text-[#A8A29E] font-mono-nums">
+                                {format(parseISO(node.time), 'M/dd HH:mm', { locale: zhTW })}
+                              </p>
                             </div>
-                            <div className="text-right">
-                              <span className="text-[13px] font-bold font-mono-nums text-[#FF385C]">NT${order.price.toLocaleString()}</span>
-                              <span className="block text-[10px] text-[#78716C] mt-0.5">
-                                {new Date(order.scheduledTime).toLocaleString('zh-TW', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                            {node.price && (
+                              <span className="text-[12px] font-bold font-mono-nums text-[#FF385C] flex-shrink-0">
+                                NT${node.price.toLocaleString()}
                               </span>
-                            </div>
+                            )}
+                            {idx < scheduleResult.timeline.length - 1 && (
+                              <ChevronRight className="w-3 h-3 text-[#DDDDDD] flex-shrink-0" />
+                            )}
                           </div>
                         ))}
                       </div>
@@ -780,18 +823,32 @@ export default function DriverDashboard() {
                         <Sparkles className="w-6 h-6 text-[#D6D3D1]" />
                       </div>
                       <p className="text-[14px] text-[#78716C] font-medium">目前沒有合適的配單</p>
-                      <p className="text-[12px] text-[#A8A29E] mt-1">符合您行程的大廳訂單會在此顯示</p>
+                      <p className="text-[12px] text-[#A8A29E] mt-1">
+                        {scheduleResult.availableCount > 0
+                          ? `接單大廳有 ${scheduleResult.availableCount} 單，但時間無法銜接`
+                          : '接單大廳目前沒有訂單'}
+                      </p>
                     </div>
                   ) : (
                     <div className="space-y-2">
-                      <p className="text-[11px] text-[#78716C] uppercase tracking-wider font-medium">
-                        推薦配單（{scheduleResult.recommendations.length} 筆）
-                      </p>
-                      {scheduleResult.recommendations.map((rec, idx) => {
+                      <div className="flex items-center justify-between">
+                        <p className="text-[11px] text-[#78716C] uppercase tracking-wider font-medium">
+                          推薦配單（{scheduleResult.recommendations.length} 筆）
+                        </p>
+                        <p className="text-[11px] text-[#A8A29E]">
+                          點選加入排班，最多選 6 單
+                        </p>
+                      </div>
+                      {scheduleResult.recommendations.map((rec) => {
                         const isSelected = selectedScheduleOrders.includes(rec.id)
-                        const typeColor = rec.type === 'pickup' || rec.type === 'pickup_boat'
+                        const typeColor = rec.recommendType === 'pickup'
                           ? { bg: '#E6F1FB', text: '#0C447C', label: '接機' }
                           : { bg: '#FFF3E0', text: '#92400E', label: '送機' }
+                        const tightnessColor = rec.tightnessLevel === 'perfect'
+                          ? { bg: 'bg-green-50', text: 'text-green-700', border: 'border-green-200' }
+                          : rec.tightnessLevel === 'reasonable'
+                          ? { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' }
+                          : { bg: 'bg-red-50', text: 'text-red-700', border: 'border-red-200' }
                         return (
                           <div
                             key={rec.id}
@@ -805,7 +862,7 @@ export default function DriverDashboard() {
                             <div className="flex items-start justify-between mb-2">
                               <div className="flex items-center gap-2">
                                 {/* 勾選框 */}
-                                <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
+                                <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all flex-shrink-0 ${
                                   isSelected ? 'bg-[#F59E0B] border-[#F59E0B]' : 'border-[#DDDDDD]'
                                 }`}>
                                   {isSelected && <CheckCircle className="w-3.5 h-3.5 text-white" />}
@@ -857,9 +914,14 @@ export default function DriverDashboard() {
                               <span className="font-medium text-[#222222] truncate">{rec.dropoffLocation}</span>
                             </div>
 
-                            {/* 銜接說明 */}
+                            {/* 銜接標籤 + 說明 */}
                             <div className="flex items-center justify-between">
-                              <p className="text-[12px] text-[#B45309] italic">{rec.reason}</p>
+                              <div className="flex items-center gap-2">
+                                <span className={`inline-flex items-center px-2 py-0.5 text-[11px] font-bold rounded ${tightnessColor.bg} ${tightnessColor.text} border ${tightnessColor.border}`}>
+                                  {rec.tightnessLabel}
+                                </span>
+                                <p className="text-[12px] text-[#B45309] italic">{rec.reason}</p>
+                              </div>
                               {isSelected && (
                                 <span className="text-[12px] font-bold text-[#B45309]">
                                   已選擇
@@ -885,16 +947,16 @@ export default function DriverDashboard() {
                         <div className="text-right">
                           <p className="text-[12px] text-[#717171]">總收入預估</p>
                           <p className="text-[22px] font-bold font-mono-nums text-[#008A05]">
-                            NT${scheduleResult.recommendations
+                            NT${((scheduleResult.currentOrder?.price ?? 0) + scheduleResult.recommendations
                               .filter(r => selectedScheduleOrders.includes(r.id))
                               .reduce((sum, r) => sum + r.price, 0)
-                              .toLocaleString()}
+                            ).toLocaleString()}
                           </p>
                         </div>
                       </div>
                       <div className="text-[11px] text-[#78716C] space-y-0.5 mb-3">
                         <p>每單扣除 5% 平台費</p>
-                        <p>點選卡片即可選擇要加入排班的訂單</p>
+                        <p>接單成功後，可再次點「智慧排班」繼續推薦銜接訂單（最多 6 單）</p>
                       </div>
                       <button
                         onClick={handleConfirmSchedule}
