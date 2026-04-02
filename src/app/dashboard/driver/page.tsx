@@ -1,14 +1,15 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { OrderCard, Order } from '@/components/driver/OrderCard'
-import { format, parseISO, startOfDay, startOfWeek } from 'date-fns'
+import { OrderCalendar } from '@/components/driver/OrderCalendar'
+import { format, parseISO, startOfDay, startOfWeek, isSameDay } from 'date-fns'
 import { zhTW } from 'date-fns/locale'
-import { ClipboardList, FileText, Wallet, LogOut, Plane, Zap, TrendingUp, Radio, Inbox, Clock } from 'lucide-react'
+import { ClipboardList, FileText, Wallet, LogOut, Plane, Zap, TrendingUp, Radio, Inbox, Clock, ChevronLeft, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 
 type Tab = 'available' | 'myorders' | 'balance'
@@ -36,6 +37,7 @@ export default function DriverDashboard() {
   const [driverProfile, setDriverProfile] = useState<{
     licensePlate: string; carType: string; carColor: string
   } | null>(null)
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null)
 
   const calculateStats = useCallback((transactions: unknown[]) => {
     const now = new Date()
@@ -52,6 +54,16 @@ export default function DriverDashboard() {
     }
     setBalanceStats({ today, thisWeek, allTime, todayOrders, weekOrders, allOrders })
   }, [])
+
+  const filteredOrders = useMemo(() => {
+    if (!selectedDate) return myOrders
+    return myOrders.filter(order => {
+      const d = typeof order.scheduledTime === 'string'
+        ? new Date(order.scheduledTime)
+        : order.scheduledTime
+      return isSameDay(d, selectedDate)
+    })
+  }, [myOrders, selectedDate])
 
   useEffect(() => {
     if (!isLoading && (!user || user.role !== 'DRIVER')) router.push('/login')
@@ -351,20 +363,52 @@ export default function DriverDashboard() {
         {/* ===== MY ORDERS ===== */}
         {activeTab === 'myorders' && (
           <>
-            {myOrders.length === 0 ? (
-              <div className="text-center py-32 border border-[#DDDDDD] rounded-2xl bg-white/50 relative overflow-hidden shadow-sm">
+            {/* Calendar */}
+            <OrderCalendar
+              orders={myOrders}
+              selectedDate={selectedDate}
+              onSelectDate={setSelectedDate}
+            />
+
+            {/* Filter header */}
+            {selectedDate && (
+              <div className="flex items-center justify-between px-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-[13px] text-[#78716C]">
+                    {format(selectedDate, 'M 月 d 日', { locale: zhTW })} 的行程
+                  </span>
+                  <span className="text-[12px] px-2 py-0.5 rounded-full bg-[#F59E0B]/10 text-[#B45309] font-medium">
+                    {filteredOrders.length} 筆
+                  </span>
+                </div>
+                <button
+                  onClick={() => setSelectedDate(null)}
+                  className="text-[12px] text-[#78716C] hover:text-[#222222] underline"
+                >
+                  清除篩選
+                </button>
+              </div>
+            )}
+
+            {/* Orders grid */}
+            {filteredOrders.length === 0 ? (
+              <div className="text-center py-20 border border-[#DDDDDD] rounded-2xl bg-white/50 relative overflow-hidden shadow-sm">
                 <div className="absolute inset-0 dot-matrix opacity-30" />
                 <div className="relative">
                   <div className="w-16 h-16 rounded-2xl bg-[#F5F4F0] border border-[#DDDDDD] flex items-center justify-center mx-auto mb-4">
                     <FileText className="w-8 h-8 text-[#D6D3D1]" />
                   </div>
-                  <p className="text-[#78716C] mb-1 text-lg font-medium">還沒有行程</p>
-                  <p className="text-[#A8A29E] text-sm">快去接單吧！</p>
+                  <p className="text-[#78716C] mb-1 text-lg font-medium">
+                    {selectedDate ? '這天沒有行程' : '還沒有行程'}
+                  </p>
+                  <p className="text-[#A8A29E] text-sm">
+                    {selectedDate ? '選擇其他日期試試' : '快去接單吧！'}
+                  </p>
                 </div>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-                {myOrders.map(order => (
+                {filteredOrders.map(order => (
                   <OrderCard key={order.id} order={order} showActions={true} compact={true} />
                 ))}
               </div>
