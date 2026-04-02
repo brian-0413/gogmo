@@ -12,18 +12,14 @@ import { zhTW } from 'date-fns/locale'
 import * as XLSX from 'xlsx'
 import {
   ClipboardList,
-  Plus,
   Search,
-  Wallet,
   FileText,
   Plane,
   LogOut,
   TrendingUp,
   Clock,
   Download,
-  X,
   Calendar,
-  Users,
   Car,
   CheckCircle,
   UserCheck,
@@ -415,14 +411,6 @@ export default function DispatcherDashboard() {
   const [createLoading, setCreateLoading] = useState(false)
   const [publishResult, setPublishResult] = useState<{ success: number; failed: number; errors: Array<{ rawText: string; error: string }> } | null>(null)
 
-  const [editingOrder, setEditingOrder] = useState<Order | null>(null)
-  const [editOrderForm, setEditOrderForm] = useState({
-    passengerName: '', passengerPhone: '', flightNumber: '',
-    pickupLocation: '', dropoffLocation: '',
-    passengerCount: 1, luggageCount: 0, scheduledTime: '', price: 0, note: '',
-  })
-  const [editSaving, setEditSaving] = useState(false)
-
   useEffect(() => {
     if (!isLoading && (!user || user.role !== 'DISPATCHER')) {
       router.push('/login')
@@ -456,69 +444,6 @@ export default function DispatcherDashboard() {
   useEffect(() => {
     if (token) { fetchOrders(); fetchDrivers() }
   }, [token, fetchOrders, fetchDrivers])
-
-  const openEditModal = (order: Order) => {
-    const scheduled = order.scheduledTime ? parseISO(order.scheduledTime) : null
-    setEditingOrder(order)
-    setEditOrderForm({
-      passengerName: order.passengerName || '',
-      passengerPhone: order.passengerPhone || '',
-      flightNumber: order.flightNumber || '',
-      pickupLocation: order.pickupLocation || '',
-      dropoffLocation: order.dropoffLocation || '',
-      passengerCount: order.passengerCount || 1,
-      luggageCount: order.luggageCount || 0,
-      scheduledTime: scheduled ? format(scheduled, "yyyy-MM-dd'T'HH:mm") : '',
-      price: order.price || 0,
-      note: order.note || order.notes || '',
-    })
-  }
-
-  const closeEditModal = () => {
-    setEditingOrder(null)
-    setEditOrderForm({ passengerName: '', passengerPhone: '', flightNumber: '', pickupLocation: '', dropoffLocation: '', passengerCount: 1, luggageCount: 0, scheduledTime: '', price: 0, note: '' })
-  }
-
-  const handleSaveOrderEdit = async () => {
-    if (!token || !editingOrder) return
-    setEditSaving(true)
-    try {
-      const res = await fetch(`/api/orders/${editingOrder.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({
-          passengerName: editOrderForm.passengerName,
-          passengerPhone: editOrderForm.passengerPhone,
-          flightNumber: editOrderForm.flightNumber,
-          pickupLocation: editOrderForm.pickupLocation,
-          dropoffLocation: editOrderForm.dropoffLocation,
-          passengerCount: editOrderForm.passengerCount,
-          luggageCount: editOrderForm.luggageCount,
-          scheduledTime: editOrderForm.scheduledTime,
-          price: editOrderForm.price,
-          note: editOrderForm.note,
-        }),
-      })
-      const data = await res.json()
-      if (data.success) { closeEditModal(); fetchOrders() }
-      else { alert(data.error || '更新失敗') }
-    } catch { alert('網路錯誤') } finally { setEditSaving(false) }
-  }
-
-  const handleDeleteOrder = async (orderId: string) => {
-    if (!token) return
-    if (!confirm('確定要刪除這筆行程嗎？')) return
-    try {
-      const res = await fetch(`/api/orders/${orderId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ _action: 'delete' }),
-      })
-      const data = await res.json()
-      if (data.success) fetchOrders()
-      else alert(data.error || '刪除失敗')
-    } catch { alert('網路錯誤') }
-  }
 
   const handleParseBatch = async () => {
     if (!rawText.trim()) return
@@ -763,70 +688,6 @@ export default function DispatcherDashboard() {
               </div>
             </div>
 
-            {/* Edit Modal */}
-            {editingOrder && (
-              <dialog open className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" onClick={(e) => { if (e.target === e.currentTarget) closeEditModal() }}>
-                <div className="bg-white border border-[#DDDDDD] rounded-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-                  <div className="flex items-center justify-between px-5 py-4 border-b border-[#DDDDDD]">
-                    <h3 className="text-[18px] font-medium text-[#222222]">
-                      #{editingOrder.id.slice(0, 8)}
-                    </h3>
-                    <button onClick={closeEditModal} className="text-[#717171] hover:text-[#222222]">
-                      <X className="w-5 h-5" />
-                    </button>
-                  </div>
-                  <div className="p-5 space-y-4">
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-1">
-                        <label className="text-[11px] text-[#717171]">乘客姓名</label>
-                        <input type="text" value={editOrderForm.passengerName} onChange={(e) => setEditOrderForm(prev => ({ ...prev, passengerName: e.target.value }))} className="w-full bg-white border border-[#DDDDDD] rounded-lg px-3 py-2.5 text-[#222222] text-sm focus:outline-none focus:border-[#222222]" />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-[11px] text-[#717171]">乘客電話</label>
-                        <input type="text" value={editOrderForm.passengerPhone} onChange={(e) => setEditOrderForm(prev => ({ ...prev, passengerPhone: e.target.value }))} className="w-full bg-white border border-[#DDDDDD] rounded-lg px-3 py-2.5 text-[#222222] text-sm focus:outline-none focus:border-[#222222]" />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-1">
-                        <label className="text-[11px] text-[#717171]">上車地點</label>
-                        <input type="text" value={editOrderForm.pickupLocation} onChange={(e) => setEditOrderForm(prev => ({ ...prev, pickupLocation: e.target.value }))} className="w-full bg-white border border-[#DDDDDD] rounded-lg px-3 py-2.5 text-[#222222] text-sm focus:outline-none focus:border-[#222222]" />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-[11px] text-[#717171]">下地點</label>
-                        <input type="text" value={editOrderForm.dropoffLocation} onChange={(e) => setEditOrderForm(prev => ({ ...prev, dropoffLocation: e.target.value }))} className="w-full bg-white border border-[#DDDDDD] rounded-lg px-3 py-2.5 text-[#222222] text-sm focus:outline-none focus:border-[#222222]" />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-3 gap-3">
-                      <div className="space-y-1">
-                        <label className="text-[11px] text-[#717171]">人數</label>
-                        <input type="number" min="1" value={editOrderForm.passengerCount} onChange={(e) => setEditOrderForm(prev => ({ ...prev, passengerCount: parseInt(e.target.value) || 1 }))} className="w-full bg-white border border-[#DDDDDD] rounded-lg px-3 py-2.5 text-[#222222] text-sm font-mono-nums focus:outline-none focus:border-[#222222]" />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-[11px] text-[#717171]">行李</label>
-                        <input type="number" min="0" value={editOrderForm.luggageCount} onChange={(e) => setEditOrderForm(prev => ({ ...prev, luggageCount: parseInt(e.target.value) || 0 }))} className="w-full bg-white border border-[#DDDDDD] rounded-lg px-3 py-2.5 text-[#222222] text-sm font-mono-nums focus:outline-none focus:border-[#222222]" />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-[11px] text-[#717171]">金額</label>
-                        <input type="number" min="0" value={editOrderForm.price} onChange={(e) => setEditOrderForm(prev => ({ ...prev, price: parseInt(e.target.value) || 0 }))} className="w-full bg-white border border-[#DDDDDD] rounded-lg px-3 py-2.5 text-[#222222] text-sm font-mono-nums focus:outline-none focus:border-[#222222]" />
-                      </div>
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-[11px] text-[#717171]">預定時間</label>
-                      <input type="datetime-local" value={editOrderForm.scheduledTime} onChange={(e) => setEditOrderForm(prev => ({ ...prev, scheduledTime: e.target.value }))} className="w-full bg-white border border-[#DDDDDD] rounded-lg px-3 py-2.5 text-[#222222] text-sm font-mono-nums focus:outline-none focus:border-[#222222]" />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-[11px] text-[#717171]">備註</label>
-                      <input type="text" value={editOrderForm.note} onChange={(e) => setEditOrderForm(prev => ({ ...prev, note: e.target.value }))} className="w-full bg-white border border-[#DDDDDD] rounded-lg px-3 py-2.5 text-[#222222] text-sm focus:outline-none focus:border-[#222222]" />
-                    </div>
-                    <div className="flex gap-3 pt-2">
-                      <Button onClick={handleSaveOrderEdit} loading={editSaving} className="flex-1 text-[13px]">儲存變更</Button>
-                      <Button variant="outline" onClick={closeEditModal} className="flex-1 text-[13px]">取消</Button>
-                    </div>
-                  </div>
-                </div>
-              </dialog>
-            )}
-
             {/* Orders grid — 2 cols */}
             {loading ? (
               <div className="text-center py-12">
@@ -842,7 +703,7 @@ export default function DispatcherDashboard() {
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
                 {orders.map((order) => (
-                  <DispatcherOrderCard key={order.id} order={order} onEdit={openEditModal} onDelete={handleDeleteOrder} />
+                  <DispatcherOrderCard key={order.id} order={order} token={token} onUpdate={fetchOrders} />
                 ))}
               </div>
             )}

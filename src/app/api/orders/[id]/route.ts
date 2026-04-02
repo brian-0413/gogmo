@@ -110,11 +110,12 @@ export async function PATCH(
       )
     }
 
-    // Delete order (only if PUBLISHED and by dispatcher)
+    // Delete order (only if not yet accepted/completed by dispatcher)
     if (body._action === 'delete') {
-      if (order.status !== 'PUBLISHED') {
+      const immutableStatuses = ['ACCEPTED', 'ARRIVED', 'IN_PROGRESS', 'COMPLETED']
+      if (immutableStatuses.includes(order.status)) {
         return NextResponse.json<ApiResponse>(
-          { success: false, error: '只能刪除已發布的訂單' },
+          { success: false, error: '司機已接單，無法刪除' },
           { status: 400 }
         )
       }
@@ -244,8 +245,15 @@ export async function PATCH(
       }
     }
 
-    // General update (dispatcher only)
+    // General update (dispatcher only, not after driver accepted)
     if (user.role === 'DISPATCHER') {
+      const editableStatuses = ['PENDING', 'PUBLISHED']
+      if (!editableStatuses.includes(order.status)) {
+        return NextResponse.json<ApiResponse>(
+          { success: false, error: '司機已接單，無法修改' },
+          { status: 400 }
+        )
+      }
       const allowedFields = [
         'passengerName', 'passengerPhone', 'flightNumber',
         'pickupLocation', 'pickupAddress', 'dropoffLocation', 'dropoffAddress',
