@@ -43,6 +43,18 @@ export async function POST(
       )
     }
 
+    // 行程時間 5 小時內不可退單
+    const now = new Date()
+    const scheduledTime = new Date(order.scheduledTime)
+    const hoursUntil = (scheduledTime.getTime() - now.getTime()) / (1000 * 60 * 60)
+    if (hoursUntil > 0 && hoursUntil <= 5) {
+      const hoursLeft = Math.round(hoursUntil * 10) / 10
+      return NextResponse.json<ApiResponse>(
+        { success: false, error: `此訂單行程時間在 ${hoursLeft} 小時內，無法退單（需行程時間 5 小時前才可退單）` },
+        { status: 400 }
+      )
+    }
+
     // 司機只能退自己接的單
     if (order.driverId !== user.driver.id) {
       return NextResponse.json<ApiResponse>(

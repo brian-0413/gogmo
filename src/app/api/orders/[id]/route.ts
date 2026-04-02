@@ -115,7 +115,7 @@ export async function PATCH(
       const immutableStatuses = ['ACCEPTED', 'ARRIVED', 'IN_PROGRESS', 'COMPLETED']
       if (immutableStatuses.includes(order.status)) {
         return NextResponse.json<ApiResponse>(
-          { success: false, error: '司機已接單，無法刪除' },
+          { success: false, error: '司機已接單，行程時間 5 小時前才可由司機退單後重新發布' },
           { status: 400 }
         )
       }
