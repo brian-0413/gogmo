@@ -5,7 +5,7 @@ import { ApiResponse } from '@/types'
 // Rate limit configs for different endpoints
 export const rateLimitConfigs = {
   // Strict: auth endpoints (login, register)
-  auth: { windowMs: 15 * 60 * 1000, maxRequests: 30 }, // 30 requests per 15 minutes
+  auth: { windowMs: 15 * 60 * 1000, maxRequests: 100 }, // 100 requests per 15 minutes
 
   // Medium: order operations
   orders: { windowMs: 60 * 1000, maxRequests: 60 }, // 60 requests per minute
