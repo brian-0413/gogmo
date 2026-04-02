@@ -148,7 +148,7 @@ export async function POST(request: NextRequest) {
 
     if (user.role !== 'DISPATCHER' || !user.dispatcher) {
       return NextResponse.json<ApiResponse>(
-        { success: false, error: '只有車頭可以建立訂單' },
+        { success: false, error: '只有派單方可以建立訂單' },
         { status: 403 }
       )
     }

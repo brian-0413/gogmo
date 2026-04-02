@@ -115,7 +115,7 @@ export default function RegisterPage() {
                     }`}
                   >
                     <Building2 className="w-5 h-5" />
-                    車頭
+                    派單方
                   </button>
                 </div>
               </div>

@@ -137,7 +137,7 @@ export function FlipboardGrid({ orders, gridSize = 20 }: FlipboardGridProps) {
       <div className="text-center py-24 border border-[#DDDDDD] rounded-xl bg-[#F4EFE9]">
         <MapPin className="w-10 h-10 text-[#B0B0B0] mx-auto mb-3" />
         <p className="text-[#717171] mb-1 text-lg font-medium">目前沒有可接的行程</p>
-        <p className="text-[#B0B0B0] text-sm">請稍後再回來查看，或聯繫車頭發布新行程</p>
+        <p className="text-[#B0B0B0] text-sm">請稍後再回來查看，或聯繫派單方發布新行程</p>
       </div>
     )
   }

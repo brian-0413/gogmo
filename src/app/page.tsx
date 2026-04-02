@@ -135,7 +135,7 @@ export default async function Home() {
                 {stats.driverCount} 司機在線
               </div>
               <Link href="/login" className="text-sm text-[#717171] hover:text-[#222222] transition-colors">司機登入</Link>
-              <Link href="/login" className="text-sm text-[#717171] hover:text-[#222222] transition-colors">車頭登入</Link>
+              <Link href="/login" className="text-sm text-[#717171] hover:text-[#222222] transition-colors">派單方登入</Link>
               <Link href="/register">
                 <Button size="sm" className="text-[13px]">立即註冊</Button>
               </Link>

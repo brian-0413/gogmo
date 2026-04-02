@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
     const user = await getUserFromToken(token)
     if (!user || user.role !== 'DISPATCHER' || !user.dispatcher) {
       return NextResponse.json<ApiResponse>(
-        { success: false, error: '找不到車頭資料' },
+        { success: false, error: '找不到派單方資料' },
         { status: 404 }
       )
     }

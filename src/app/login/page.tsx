@@ -7,7 +7,7 @@ import { Plane, Car, Building2, ArrowRight, Loader2 } from 'lucide-react'
 
 const TEST_ACCOUNTS = {
   DRIVER: { email: 'driver1@test.com', password: 'test123', role: '司機' },
-  DISPATCHER: { email: 'dispatcher1@test.com', password: 'test123', role: '車頭' },
+  DISPATCHER: { email: 'dispatcher1@test.com', password: 'test123', role: '派單方' },
 } as const
 
 export default function LoginPage() {
@@ -87,7 +87,7 @@ export default function LoginPage() {
               </div>
               <div className="flex-1 text-left">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-[#222222]">車頭端</span>
+                  <span className="text-sm font-medium text-[#222222]">派單方端</span>
                   <span className="px-1.5 py-0.5 rounded text-[10px] font-normal bg-[#FFF3E0] text-[#B45309] border border-[#FFE0B2]">DISPATCHER</span>
                 </div>
                 <div className="font-mono-nums text-[13px] text-[#717171] mt-0.5">{TEST_ACCOUNTS.DISPATCHER.email}</div>

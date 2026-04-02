@@ -19,7 +19,7 @@ async function main() {
   // Hash password for test users
   const hashedPassword = await bcrypt.hash('test123', 12)
 
-  // ========== Create Dispatchers (車頭) ==========
+  // ========== Create Dispatchers (派單方) ==========
   const dispatcherUsers = await Promise.all([
     prisma.user.create({
       data: {
@@ -455,7 +455,7 @@ async function main() {
   console.log('========================================')
   console.log('\n📋 Test Accounts:')
   console.log('----------------------------------------')
-  console.log('【車頭 (Dispatchers)】')
+  console.log('【派單方 (Dispatchers)】')
   dispatcherUsers.forEach((u, i) => {
     console.log(`  ${i + 1}. ${u.email} / test123 (${u.name})`)
   })

@@ -663,7 +663,7 @@ export default function DispatcherDashboard() {
                 <div className="w-8 h-8 rounded-lg bg-[#FF385C] flex items-center justify-center">
                   <Plane className="w-4 h-4 text-white" />
                 </div>
-                <span className="text-[22px] font-medium text-[#222222]">{user.dispatcher?.companyName || '車頭專區'}</span>
+                <span className="text-[22px] font-medium text-[#222222]">{user.dispatcher?.companyName || '派單方專區'}</span>
               </Link>
               <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#E8F5E8] text-[#008A05] text-[13px]">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#008A05]" />

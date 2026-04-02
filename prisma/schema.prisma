@@ -164,7 +164,7 @@ model Order {
   rawText         String?     // 完整原始訊息
   parsedData      Json?       // AI解析後的結構化資料
 
-  note            String?      // 車頭自填備註
+  note            String?      // 派單方自填備註
 
   // 肯驛系統
   kenichiRequired Boolean     @default(false) // 是否需要肯驛系統

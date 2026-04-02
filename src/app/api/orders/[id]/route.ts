@@ -350,7 +350,7 @@ export async function DELETE(
     const user = await getUserFromToken(token)
     if (!user || user.role !== 'DISPATCHER') {
       return NextResponse.json<ApiResponse>(
-        { success: false, error: '只有車頭可以刪除訂單' },
+        { success: false, error: '只有派單方可以刪除訂單' },
         { status: 403 }
       )
     }

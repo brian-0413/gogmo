@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
     const user = await getUserFromToken(token)
     if (!user || user.role !== 'DISPATCHER') {
       return NextResponse.json<ApiResponse>(
-        { success: false, error: '只有車頭可以查看對帳表' },
+        { success: false, error: '只有派單方可以查看對帳表' },
         { status: 403 }
       )
     }

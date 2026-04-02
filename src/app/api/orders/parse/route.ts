@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
 
     if (user.role !== 'DISPATCHER') {
       return NextResponse.json<ApiResponse>(
-        { success: false, error: '只有車頭可以使用此功能' },
+        { success: false, error: '只有派單方可以使用此功能' },
         { status: 403 }
       )
     }

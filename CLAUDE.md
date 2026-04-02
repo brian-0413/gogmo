@@ -10,12 +10,12 @@
 ## 專案結構
 - src/app/api/ — API routes
 - src/app/dashboard/driver/ — 司機端
-- src/app/dashboard/dispatcher/ — 車頭端
+- src/app/dashboard/dispatcher/ — 派單方端
 - prisma/schema.prisma — 資料庫 schema
 
 ## 商業邏輯
 - 司機預充值點數，每接一單扣 5% 媒合費
-- 車頭端上傳訂單，初期免費，後期收 2-3%
+- 派單方端上傳訂單，初期免費，後期收 2-3%
 - 訂單狀態流程：待指派 → 已接單 → 進行中 → 已完成
 
 ## 訂單解析規則
@@ -24,8 +24,8 @@
 測試案例見 docs/order-parsing-test-cases.md
 
 核心重點：
-- 車頭貼單三步驟：設定預設值 → 貼單解析 → 確認編輯上架
-- 預設值（日期、種類、車型、車牌）由車頭在 UI 上手動選擇，必選欄位沒填完鎖定文字框
+- 派單方貼單三步驟：設定預設值 → 貼單解析 → 確認編輯上架
+- 預設值（日期、種類、車型、車牌）由派單方在 UI 上手動選擇，必選欄位沒填完鎖定文字框
 - 種類整批統一，一次只能選一種（接機/送機/交通接駁/包車）
 - 解析器只需從每行提取：時間、地點（上下車點）、金額覆蓋，其餘全當備註
 - 接機：pickup = 機場，dropoff = 從文字提取；送機：pickup = 從文字提取，dropoff = 機場
@@ -61,5 +61,5 @@
 
 ## 測試帳號
 - 司機：driver1@test.com
-- 車頭：dispatcher1@test.com
+- 派單方：dispatcher1@test.com
 
