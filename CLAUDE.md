@@ -1,11 +1,19 @@
 # 機場接送派單平台
 
 ## 技術棧
-- Next.js 14 App Router
+- Next.js 14 App Router + TypeScript
 - Prisma ORM + PostgreSQL (Supabase, Transaction Pooler port 6543)
-- NextAuth.js 認證
-- Tailwind CSS + shadcn/ui
-- 部署：Zeabur
+- 自定義 JWT 認證（無 NextAuth.js）
+- Tailwind CSS + 自定義元件（shadcn/ui 改造）
+- 部署：Vercel
+
+## 三模型同步工作流
+本專案使用 3 個 Claude Code 對話（Haiku/Sonnet/Opus）分擔不同複雜度的問題。
+**CURRENT_WORK.md** 是進度同步的核心檔案：
+- 每次主要功能完成後，在主要 Claude Code session 更新此檔案
+- 每次 commit 順便更新 CURRENT_WORK.md 並 push GitHub
+- 其他模型新對話開始時，優先閱讀 CURRENT_WORK.md 掌握最新進度
+- CLAUDE.md 是長期穩定的技術/商業脈絡；CURRENT_WORK.md 是動態進度日誌
 
 ## 專案結構
 - src/app/api/ — API routes
@@ -40,6 +48,13 @@
 ## API 統一回傳格式
 { success: boolean, data: any, error?: string }
 
+## 重要實作細節
+- 派單方行控中心 Stats 區塊：6 格（接機/送機/待接單/已接單/進行中/已完成），無 icon，數字 `text-[36px]` 粗體
+- `DispatcherOrderCard` 元件：支援內嵌編輯（無需 modal），司機已接單後（ACCEPTED/ARRIVED/IN_PROGRESS/COMPLETED）鎖定編輯/刪除
+- SSE `/api/drivers/events`：polling 3 秒，連線時廣播所有 PUBLISHED 訂單
+- 設計系統：暖米白背景（#FAF7F2）、黑體數字（`font-mono-nums`）、單號黑體黑字（20px）
+- AI 訂單解析：用 Claude Haiku API，偵測機場（TPE/TSA/KHH/RMQ）和基隆港接送船
+
 ## 開發規範
 - 所有 UI 文字使用繁體中文
 - commit message 用中文
@@ -53,6 +68,7 @@
 4. 全部做完跑一次完整 build 確認沒有錯誤
 5. git commit 存檔
 6. 如果同一個問題修了兩次還沒好，停下來完整回報問題原因
+7. 功能完成後：更新 CURRENT_WORK.md → git add + commit → git push
 
 ## 禁止事項
 - 不要在沒有讀規則文件的情況下開始實作
