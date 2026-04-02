@@ -202,7 +202,7 @@ export default function DriverDashboard() {
     if (token) { fetchOrders(); fetchBalance(); fetchDriverProfile() }
   }, [token, fetchOrders, fetchBalance, fetchDriverProfile])
 
-  const handleAcceptOrder = async (orderId: string) => {
+  const handleAcceptOrder = async (orderId: string, confirmed = false) => {
     if (!token) return
     const order = availableOrders.find(o => o.id === orderId)
     if (!order) return
@@ -214,10 +214,33 @@ export default function DriverDashboard() {
     setMyOrders(prev => [acceptedOrder, ...prev])
 
     try {
-      const res = await fetch(`/api/orders/${orderId}/accept`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } })
+      const res = await fetch(`/api/orders/${orderId}/accept`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ confirmed }),
+      })
       const data = await res.json()
+
       if (data.success) {
-        // 接單成功，換到我的行程 tab
+        // 有警告訊息時，先顯示提醒再確認
+        if (data.data?.warning && !confirmed) {
+          const confirmed = window.confirm(data.data.warning)
+          if (confirmed) {
+            setActionLoading(null)
+            await handleAcceptOrder(orderId, true)
+            return
+          } else {
+            // 使用者取消，回滾
+            setAvailableOrders(prev => [order, ...prev])
+            setMyOrders(prev => prev.filter(o => o.id !== orderId))
+            setActionLoading(null)
+            return
+          }
+        }
+        // 接單成功
         setActiveTab('myorders')
         await fetchBalance()
       } else {
@@ -230,6 +253,33 @@ export default function DriverDashboard() {
       // 網路錯誤，回滾樂觀更新
       setAvailableOrders(prev => [order, ...prev])
       setMyOrders(prev => prev.filter(o => o.id !== orderId))
+      alert('網路錯誤，請稍後再試')
+    } finally { setActionLoading(null) }
+  }
+
+  const handleCancelOrder = async (orderId: string) => {
+    if (!token) return
+    const cancelFee = Math.floor(800 * 0.1) // 預估，實際以 API 回傳為準
+    const confirmed = window.confirm(
+      `確定要退單嗎？退單將扣除訂單金額的 10% 點數（約 ${cancelFee} 點）`
+    )
+    if (!confirmed) return
+
+    setActionLoading(orderId)
+    try {
+      const res = await fetch(`/api/orders/${orderId}/cancel`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      const data = await res.json()
+      if (data.success) {
+        setMyOrders(prev => prev.filter(o => o.id !== orderId))
+        await fetchBalance()
+        alert(data.data.message || '退單成功')
+      } else {
+        alert(data.error || '退單失敗')
+      }
+    } catch {
       alert('網路錯誤，請稍後再試')
     } finally { setActionLoading(null) }
   }
@@ -698,7 +748,18 @@ export default function DriverDashboard() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
                 {filteredOrders.map(order => (
-                  <OrderCard key={order.id} order={order} showActions={true} compact={true} />
+                  <div key={order.id} className="relative">
+                    <OrderCard order={order} showActions={true} compact={true} />
+                    {order.status === 'ACCEPTED' && (
+                      <button
+                        onClick={() => handleCancelOrder(order.id)}
+                        disabled={actionLoading === order.id}
+                        className="mt-2 w-full py-2 px-4 bg-white border border-[#E24B4A] text-[#E24B4A] text-[13px] font-bold rounded-lg hover:bg-[#FCEBEB] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                      >
+                        {actionLoading === order.id ? '處理中...' : '退單'}
+                      </button>
+                    )}
+                  </div>
                 ))}
               </div>
             )}
