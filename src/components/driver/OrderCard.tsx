@@ -22,14 +22,6 @@ const TYPE_COLORS: Record<OrderType, { bg: string; text: string }> = {
   pending: { bg: '#F4EFE9', text: '#717171' },
 }
 
-const VEHICLE_COLORS: Record<VehicleType, { bg: string; text: string }> = {
-  van9: { bg: '#FFF3E0', text: '#92400E' },
-  suv: { bg: '#FFF3E0', text: '#92400E' },
-  small: { bg: '#F4EFE9', text: '#717171' },
-  any_r: { bg: '#E6F1FB', text: '#0C447C' },
-  any: { bg: '#F4EFE9', text: '#717171' },
-  pending: { bg: '#F4EFE9', text: '#717171' },
-}
 
 interface OrderCardProps {
   order: Order
@@ -77,7 +69,6 @@ function OrderCard({ order, onAccept, onView, showActions = true, compact = fals
   const notes = order.notes || order.note || order.rawText
   const orderNo = formatOrderNo(scheduledDate, order.orderSeq)
   const typeBadgeColor = TYPE_COLORS[orderType]
-  const vehicleBadgeColor = VEHICLE_COLORS[vehicle]
 
   const isPickup = orderType === 'pickup'
   const isBoat = orderType === 'pickup_boat' || orderType === 'dropoff_boat'
@@ -152,18 +143,40 @@ function OrderCard({ order, onAccept, onView, showActions = true, compact = fals
       )}
 
       <div className="p-4">
-        {/* 顯眼單號標籤 + status + urgency */}
-        <div className="flex items-center justify-between mb-2">
-          <span className="inline-flex items-center px-3 py-1.5 bg-[#FF385C] text-white text-[15px] font-bold font-mono-nums rounded tracking-wider select-all">
-            #{orderNo}
-          </span>
-          <div className="flex items-center gap-1.5">
+        {/* 單號 + 類型 + 車型 + urgency/status */}
+        <div className="flex items-center justify-between mb-2 gap-2 flex-wrap">
+          {/* 左側：單號 + 類型 + 車型 */}
+          <div className="flex items-center gap-1.5 flex-wrap gap-x-1.5 gap-y-1">
+            <span className="inline-flex items-center px-3 py-1.5 bg-[#FF385C] text-white text-[15px] font-bold font-mono-nums rounded tracking-wider select-all">
+              #{orderNo}
+            </span>
+            <span
+              className="inline-flex items-center px-2.5 py-1 text-[13px] font-bold rounded"
+              style={{ backgroundColor: typeBadgeColor.bg, color: typeBadgeColor.text }}
+            >
+              {TYPE_LABELS[orderType]}
+            </span>
+            <span
+              className="inline-flex items-center px-2.5 py-1 text-[13px] font-bold rounded"
+              style={{ backgroundColor: '#F4EFE9', color: '#717171' }}
+            >
+              {VEHICLE_LABELS[vehicle]}
+              {order.plateType && order.plateType !== 'any' ? ` (${order.plateType}牌)` : ''}
+            </span>
+            {order.kenichiRequired && (
+              <span className="inline-flex items-center px-2.5 py-1 text-[13px] font-bold rounded bg-[#F3E8FF] text-[#6B21A8]">
+                肯驛
+              </span>
+            )}
+          </div>
+          {/* 右側：倒數 + 狀態 */}
+          <div className="flex items-center gap-1.5 flex-shrink-0">
             {urgency !== "normal" && (
-              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5 font-mono-nums" style={{
+              <span className="text-[11px] font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5 font-mono-nums" style={{
                 backgroundColor: urgency === "urgent" ? '#FCEBEB' : '#FFF3E0',
                 color: urgency === "urgent" ? '#A32D2D' : '#B45309'
               }}>
-                <Clock className="w-2.5 h-2.5" />
+                <Clock className="w-3 h-3" />
                 {countdown || '00:00'}
               </span>
             )}
@@ -171,16 +184,10 @@ function OrderCard({ order, onAccept, onView, showActions = true, compact = fals
           </div>
         </div>
 
-        {/* Price + type */}
-        <div className="flex items-center gap-2 mb-2">
+        {/* Price */}
+        <div className="mb-2">
           <span className="text-2xl font-bold font-mono-nums text-[#FF385C]">
             NT${order.price.toLocaleString()}
-          </span>
-          <span
-            className="text-[10px] font-bold px-2 py-1 rounded"
-            style={{ backgroundColor: typeBadgeColor.bg, color: typeBadgeColor.text }}
-          >
-            {TYPE_LABELS[orderType]}
           </span>
         </div>
 
@@ -215,22 +222,6 @@ function OrderCard({ order, onAccept, onView, showActions = true, compact = fals
               <p className="text-sm font-medium text-[#222222] truncate">{order.dropoffLocation}</p>
             </div>
           </div>
-        </div>
-
-        {/* Badges */}
-        <div className="flex items-center gap-2 mb-3">
-          {order.kenichiRequired && (
-            <span className="px-2 py-1 rounded text-[10px] font-bold bg-[#F3E8FF] text-[#6B21A8] border border-[#E9D5FF]">
-              肯驛
-            </span>
-          )}
-          <span
-            className="text-[10px] font-bold px-2 py-1 rounded"
-            style={{ backgroundColor: vehicleBadgeColor.bg, color: vehicleBadgeColor.text }}
-          >
-            {VEHICLE_LABELS[vehicle]}
-            {order.plateType && order.plateType !== 'any' ? ` (${order.plateType}牌)` : ''}
-          </span>
         </div>
 
         {/* Passenger info */}
