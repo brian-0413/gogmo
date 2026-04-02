@@ -9,19 +9,26 @@
 
 ### 最後 commit
 ```
-5abf76d feat: 編輯模式新增備註欄位與機場下拉選單
+b9a1cdc feat(driver): 修復接單流程並改名稱為接單大廳
 ```
-落後 origin/main 15 個 commits，尚未 push。
+落後 origin/main 16 個 commits，尚未 push。
 
 ---
 
-## 目前開發階段：第二階段 UI/UX 優化
+## 目前開發階段：第三階段 - 司機端 MVP
 
-正在全面重新設計平台介面，以「派單方行控中心」為核心向外擴展。
+派單方行控中心已完成（第一、二階段）。現正處理司機端接單流程。
 
 ---
 
 ## 近期進度
+
+### [進行中] 司機端接單流程（最新）
+- 接單大廳 tab（改名）：只顯示 `status=PUBLISHED` 訂單
+- 「立即接單」按鈕：修復條件 `PUBLISHED`（之前錯寫成 `PENDING`）
+- 樂觀更新：接單後立即從大廳移除並加入「我的行程」
+- 接單成功後自動切換至「我的行程」分頁
+- API `/api/orders/[id]/accept`：交易鎖定，扣 5% 平台費
 
 ### [完成] 行程卡片編輯/刪除功能（最新）
 - `DispatcherOrderCard` 支援內嵌編輯（無需 modal）
@@ -195,6 +202,7 @@ PENDING → PUBLISHED → ASSIGNED → ACCEPTED → ARRIVED → IN_PROGRESS → 
 
 ## 待辦（可能的下一步）
 
+- [ ] 司機「我的行程」狀態更新（抵達/開始/完成）
 - [ ] 派單方帳務中心
 - [ ] 司機端即時位置追蹤
 - [ ] 通知系統（push / in-app）
@@ -213,3 +221,4 @@ PENDING → PUBLISHED → ASSIGNED → ACCEPTED → ARRIVED → IN_PROGRESS → 
 - 三模型同步策略：建立 `CURRENT_WORK.md`，每次 commit 後更新並 push GitHub
 - 編輯時新增「備註」欄位
 - 接機單起點改為**下拉選單**（桃園/松山/清泉崗/小港），送機單終點改為**下拉選單**
+- 司機端接單大廳：修復「立即接單」按鈕條件、樂觀更新、接完自動切換分頁
