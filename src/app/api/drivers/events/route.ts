@@ -50,9 +50,11 @@ export async function GET(request: NextRequest) {
   const driverId = user.driver.id
 
   // Initialize last check time for this driver
+  // Use 24 hours ago as fallback to catch orders created during server restart
   const now = new Date()
+  const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000)
   if (!driverLastCheckMap.has(driverId)) {
-    driverLastCheckMap.set(driverId, now)
+    driverLastCheckMap.set(driverId, twentyFourHoursAgo)
   }
 
   // Create a readable stream for SSE
@@ -89,7 +91,7 @@ export async function GET(request: NextRequest) {
           include: {
             dispatcher: { include: { user: true } },
           },
-          orderBy: { createdAt: 'desc' },
+          orderBy: { updatedAt: 'desc' },
         })
 
         for (const order of currentOrders) {
@@ -125,12 +127,13 @@ export async function GET(request: NextRequest) {
           // Get last check time for this driver
           const lastCheck = driverLastCheckMap.get(driverId) || now
 
-          // Query for PUBLISHED orders created since last check
-          // Only show orders the driver hasn't already accepted
+          // Query for PUBLISHED orders updated since last check
+          // Using updatedAt instead of createdAt so orders published after server restart are also caught
+          // lastCheck defaults to 24h ago on fresh connection (see above)
           const newOrders = await prisma.order.findMany({
             where: {
               status: 'PUBLISHED',
-              createdAt: {
+              updatedAt: {
                 gt: lastCheck,
               },
               driverId: null,
@@ -138,7 +141,7 @@ export async function GET(request: NextRequest) {
             include: {
               dispatcher: { include: { user: true } },
             },
-            orderBy: { createdAt: 'desc' },
+            orderBy: { updatedAt: 'desc' },
           })
 
           // Update last check time
