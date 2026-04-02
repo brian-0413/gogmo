@@ -9,7 +9,7 @@
 
 ### 最後 commit
 ```
-f60f23f fix(driver): 完成駕駛端行程卡片單號標註
+ab22508 fix: 修正單號順序與司機卡片標籤樣式
 ```
 落後 origin/main 0 個 commits。
 
@@ -23,15 +23,19 @@ f60f23f fix(driver): 完成駕駛端行程卡片單號標註
 
 ## 近期進度
 
-### [完成] 單號超顯眼標註（最新）
-- 建立 `src/components/ui/OrderNo.tsx` 共用元件
-  - `formatOrderNo(scheduledTime, id)` → `YYYYMMDD-XXXX`（日期+ID末4碼大寫）
-  - `<OrderNo>` 元件：黑體白字、`font-mono-nums`、`select-all`
-- **派單方卡片**：全寬 `#1C1917` 黑底橫幅，`#`+`YYYYMMDD-XXXX` 22px 白字，背景浮水印日期
+### [完成] 單號順序修復 + 司機卡片樣式修正（最新）
+- `DispatcherOrder` 介面補上 `orderSeq` / `orderDate` 欄位，修復 TypeScript build 錯誤
+- 司機端行程卡片（非精簡模式）單號標籤背景：黑色 `#1C1917` → **紅色 `#FF385C`**
+- 資料庫舊訂單（51筆）填補 `orderDate`（以 createdAt 計算）和 `orderSeq`（流水號 1-51）
+- Prisma schema 同步至 Supabase 資料庫
+
+### [完成] 單號超顯眼標註
+- `src/lib/utils.ts`：`formatOrderNo(scheduledTime, orderSeq)` → `YYYYMMDD-XXXX`（日期+流水號）
+- **派單方卡片**：全寬 `#1C1917` 黑底橫幅，`#`+`YYYYMMDD-XXXX` 22px 白字
   - 待接單改 `#E24B4A` 紅色背景，單號置中偏左、狀態徽章右側
 - **駕駛端卡片**：
-  - 精簡模式（我的行程列表）：14px 白色單號 + 狀態徽章黑底橫幅
-  - 完整模式（接單大廳）：18px 白色單號 + 緊急倒數計時 + 狀態徽章
+  - 精簡模式（我的行程列表）：14px 白色單號 + 狀態徽章
+  - 完整模式（接單大廳）：15px **紅色**單號背景 + 緊急倒數計時 + 狀態徽章
 - 派單方 `DispatcherOrderCard.tsx` 重構：修復 JSX 結構錯誤（ROOT div 未關閉）
 
 ### [完成] 司機端接單流程（最新）
@@ -90,6 +94,7 @@ f60f23f fix(driver): 完成駕駛端行程卡片單號標註
 
 | Commit | 問題 | 修復方式 |
 |--------|------|---------|
+| `ab22508` | 舊訂單 orderSeq=0、司機卡片單號標籤為黑色 | 填補舊資料 orderSeq+orderDate、司機卡片改紅色背景 |
 | `5abf76d` | 編輯模式缺備註欄位、起點/終點為純文字輸入 | 新增備註 + 接機起點/送機終點改為機場下拉選單 |
 | `3e863b8` | 行程卡片無編輯/刪除功能 | 改為內嵌編輯模式 |
 | `6289afa` | 發布訂單後司機接單大廳看不到 | SSE 縮短輪詢+連線時廣播 |
