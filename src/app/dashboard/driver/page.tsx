@@ -58,7 +58,6 @@ export default function DriverDashboard() {
   } | null>(null)
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
-  const [newOrderCount, setNewOrderCount] = useState(0)
   const eventSourceRef = useRef<EventSource | null>(null)
   const [balanceStats, setBalanceStats] = useState<{
     today: number; thisWeek: number; allTime: number
@@ -145,13 +144,6 @@ export default function DriverDashboard() {
             if (prev.some((o) => o.id === order.id)) return prev
             return [order, ...prev]
           })
-          setNewOrderCount((c) => c + 1)
-          if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-            new Notification('新訂單通知', { body: `新訂單：NT$${order.price} - ${order.pickupLocation} → ${order.dropoffLocation}`, tag: order.id })
-          } else if (typeof Notification !== 'undefined' && Notification.permission !== 'denied') {
-            Notification.requestPermission()
-          }
-          if (activeTab === 'available') setTimeout(() => setNewOrderCount(0), 3000)
         } else if (data.type === 'ORDER_CANCELLED') {
           setAvailableOrders((prev) => prev.filter((o) => o.id !== data.orderId))
         }
@@ -428,7 +420,7 @@ export default function DriverDashboard() {
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex gap-0">
             <button
-              onClick={() => { setActiveTab('available'); setNewOrderCount(0) }}
+              onClick={() => setActiveTab('available')}
               className={`flex items-center gap-2 px-5 py-3.5 text-sm font-medium border-b-2 transition-all duration-200 relative ${
                 activeTab === 'available'
                   ? 'border-[#F59E0B] text-[#F59E0B]'
@@ -440,11 +432,6 @@ export default function DriverDashboard() {
               <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-mono-nums bg-[#F59E0B]/10 text-[#F59E0B] border border-[#F59E0B]/20">
                 {filteredAvailableOrders.length}
               </span>
-              {newOrderCount > 0 && activeTab !== 'available' && (
-                <span className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-[#EF4444] rounded-full text-[10px] font-bold flex items-center justify-center animate-pulse text-white">
-                  {newOrderCount}
-                </span>
-              )}
               {activeTab === 'available' && (
                 <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#F59E0B]" style={{ boxShadow: '0 0 8px rgba(245,158,11,0.4)' }} />
               )}
@@ -551,7 +538,7 @@ export default function DriverDashboard() {
                         {availableOrders.length === 0 ? '目前沒有可接的訂單' : '沒有符合您車型的訂單'}
                       </p>
                       <p className="text-[#A8A29E] text-sm">
-                        {availableOrders.length === 0 ? '系統會自動推送新訂單通知' : '等待派單方發布符合您車型的訂單'}
+                        等待派單方發布符合您車型的訂單
                       </p>
                     </div>
                   </div>
