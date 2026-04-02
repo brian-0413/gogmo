@@ -77,6 +77,13 @@ const VEHICLE_LABELS: Record<string, string> = {
   small: '小車', suv: '休旅', van9: '9人座', any: '任意車',
 }
 
+const AIRPORT_OPTIONS = [
+  { value: '桃園機場', label: '桃園機場' },
+  { value: '松山機場', label: '松山機場' },
+  { value: '清泉崗機場', label: '清泉崗機場' },
+  { value: '小港機場', label: '小港機場' },
+]
+
 interface EditForm {
   pickupLocation: string
   dropoffLocation: string
@@ -84,6 +91,7 @@ interface EditForm {
   price: string
   passengerCount: string
   luggageCount: string
+  note: string
 }
 
 export function DispatcherOrderCard({ order, token, onUpdate }: DispatcherOrderCardProps) {
@@ -110,6 +118,7 @@ export function DispatcherOrderCard({ order, token, onUpdate }: DispatcherOrderC
     price: String(order.price),
     passengerCount: String(order.passengerCount),
     luggageCount: String(order.luggageCount),
+    note: order.note || order.notes || '',
   })
   const [saveLoading, setSaveLoading] = useState(false)
   const [deleteLoading, setDeleteLoading] = useState(false)
@@ -130,6 +139,7 @@ export function DispatcherOrderCard({ order, token, onUpdate }: DispatcherOrderC
           price: Number(editForm.price),
           passengerCount: Number(editForm.passengerCount),
           luggageCount: Number(editForm.luggageCount),
+          note: editForm.note,
         }),
       })
       const data = await res.json()
@@ -168,6 +178,7 @@ export function DispatcherOrderCard({ order, token, onUpdate }: DispatcherOrderC
       price: String(order.price),
       passengerCount: String(order.passengerCount),
       luggageCount: String(order.luggageCount),
+      note: order.note || order.notes || '',
     })
     setIsEditing(false)
   }
@@ -197,21 +208,45 @@ export function DispatcherOrderCard({ order, token, onUpdate }: DispatcherOrderC
         <div className="mb-3 space-y-2">
           <div className="space-y-1">
             <label className="text-[11px] text-[#717171] font-medium">起點</label>
-            <input
-              className={inputClass}
-              value={editForm.pickupLocation}
-              onChange={e => setEditForm(f => ({ ...f, pickupLocation: e.target.value }))}
-              placeholder="起點"
-            />
+            {order.type === 'pickup' ? (
+              <select
+                className={inputClass}
+                value={editForm.pickupLocation}
+                onChange={e => setEditForm(f => ({ ...f, pickupLocation: e.target.value }))}
+              >
+                {AIRPORT_OPTIONS.map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+            ) : (
+              <input
+                className={inputClass}
+                value={editForm.pickupLocation}
+                onChange={e => setEditForm(f => ({ ...f, pickupLocation: e.target.value }))}
+                placeholder="起點"
+              />
+            )}
           </div>
           <div className="space-y-1">
             <label className="text-[11px] text-[#717171] font-medium">終點</label>
-            <input
-              className={inputClass}
-              value={editForm.dropoffLocation}
-              onChange={e => setEditForm(f => ({ ...f, dropoffLocation: e.target.value }))}
-              placeholder="終點"
-            />
+            {order.type === 'dropoff' ? (
+              <select
+                className={inputClass}
+                value={editForm.dropoffLocation}
+                onChange={e => setEditForm(f => ({ ...f, dropoffLocation: e.target.value }))}
+              >
+                {AIRPORT_OPTIONS.map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+            ) : (
+              <input
+                className={inputClass}
+                value={editForm.dropoffLocation}
+                onChange={e => setEditForm(f => ({ ...f, dropoffLocation: e.target.value }))}
+                placeholder="終點"
+              />
+            )}
           </div>
         </div>
       ) : (
@@ -281,13 +316,30 @@ export function DispatcherOrderCard({ order, token, onUpdate }: DispatcherOrderC
               />
             </div>
           </div>
+          <div className="space-y-1">
+            <label className="text-[11px] text-[#717171] font-medium">備註</label>
+            <input
+              type="text"
+              className={inputClass}
+              value={editForm.note}
+              onChange={e => setEditForm(f => ({ ...f, note: e.target.value }))}
+              placeholder="填寫備註"
+            />
+          </div>
         </div>
       ) : (
-        <div className="flex items-center gap-4 mb-3 text-[14px] text-[#717171]">
-          <span className="font-medium">NT$<span className="text-[#FF385C] font-bold text-[20px]">{order.price.toLocaleString()}</span></span>
-          <span>{order.passengerCount}人</span>
-          <span>{order.luggageCount}行李</span>
-        </div>
+        <>
+          <div className="flex items-center gap-4 mb-3 text-[14px] text-[#717171]">
+            <span className="font-medium">NT$<span className="text-[#FF385C] font-bold text-[20px]">{order.price.toLocaleString()}</span></span>
+            <span>{order.passengerCount}人</span>
+            <span>{order.luggageCount}行李</span>
+          </div>
+          {(order.note || order.notes) && (
+            <div className="mb-3 text-[13px] text-[#B0B0B0] italic leading-snug">
+              {order.note || order.notes}
+            </div>
+          )}
+        </>
       )}
 
       {/* Bottom row: Price + Driver + Actions */}
