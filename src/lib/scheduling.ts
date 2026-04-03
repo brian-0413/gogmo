@@ -53,6 +53,92 @@ export function getTravelMinutes(from: string, to: string, departTime: Date): nu
   return isPeakHour(departTime) ? times.peak : times.offPeak
 }
 
+// ─── 行政區座標資料 ─────────────────────────────────────
+
+interface District {
+  city: string
+  dist: string
+  lat: number
+  lng: number
+}
+
+const DISTRICTS: District[] = [
+  // 台北市
+  { city: '台北市', dist: '中正區', lat: 25.0324, lng: 121.5190 },
+  { city: '台北市', dist: '大同區', lat: 25.0631, lng: 121.5131 },
+  { city: '台北市', dist: '中山區', lat: 25.0685, lng: 121.5333 },
+  { city: '台北市', dist: '萬華區', lat: 25.0354, lng: 121.4997 },
+  { city: '台北市', dist: '大安區', lat: 25.0263, lng: 121.5434 },
+  { city: '台北市', dist: '松山區', lat: 25.0599, lng: 121.5571 },
+  { city: '台北市', dist: '信義區', lat: 25.0287, lng: 121.5705 },
+  { city: '台北市', dist: '士林區', lat: 25.0922, lng: 121.5245 },
+  { city: '台北市', dist: '北投區', lat: 25.1321, lng: 121.4987 },
+  { city: '台北市', dist: '內湖區', lat: 25.0835, lng: 121.5894 },
+  { city: '台北市', dist: '南港區', lat: 25.0546, lng: 121.6071 },
+  { city: '台北市', dist: '文山區', lat: 24.9897, lng: 121.5586 },
+  // 新北市
+  { city: '新北市', dist: '板橋區', lat: 25.0113, lng: 121.4618 },
+  { city: '新北市', dist: '三重區', lat: 25.0615, lng: 121.4912 },
+  { city: '新北市', dist: '中和區', lat: 24.9963, lng: 121.4966 },
+  { city: '新北市', dist: '永和區', lat: 25.0076, lng: 121.5143 },
+  { city: '新北市', dist: '新莊區', lat: 25.0360, lng: 121.4504 },
+  { city: '新北市', dist: '新店區', lat: 24.9675, lng: 121.5411 },
+  { city: '新北市', dist: '土城區', lat: 24.9725, lng: 121.4441 },
+  { city: '新北市', dist: '蘆洲區', lat: 25.0849, lng: 121.4731 },
+  { city: '新北市', dist: '汐止區', lat: 25.0614, lng: 121.6548 },
+  { city: '新北市', dist: '樹林區', lat: 24.9907, lng: 121.4243 },
+  { city: '新北市', dist: '鶯歌區', lat: 24.9545, lng: 121.3544 },
+  { city: '新北市', dist: '三峽區', lat: 24.9352, lng: 121.3735 },
+  { city: '新北市', dist: '淡水區', lat: 25.1762, lng: 121.4421 },
+  { city: '新北市', dist: '五股區', lat: 25.0844, lng: 121.4376 },
+  { city: '新北市', dist: '泰山區', lat: 25.0583, lng: 121.4312 },
+  { city: '新北市', dist: '林口區', lat: 25.0775, lng: 121.3916 },
+  { city: '新北市', dist: '深坑區', lat: 25.0026, lng: 121.6151 },
+  { city: '新北市', dist: '石碇區', lat: 24.9917, lng: 121.6641 },
+  { city: '新北市', dist: '坪林區', lat: 24.9372, lng: 121.7114 },
+  { city: '新北市', dist: '三芝區', lat: 25.2584, lng: 121.5003 },
+  { city: '新北市', dist: '石門區', lat: 25.2904, lng: 121.5684 },
+  { city: '新北市', dist: '金山區', lat: 25.2219, lng: 121.6378 },
+  { city: '新北市', dist: '萬里區', lat: 25.1748, lng: 121.6888 },
+  { city: '新北市', dist: '平溪區', lat: 25.0331, lng: 121.7389 },
+  { city: '新北市', dist: '雙溪區', lat: 25.0232, lng: 121.8617 },
+  { city: '新北市', dist: '貢寮區', lat: 25.0224, lng: 121.9442 },
+  { city: '新北市', dist: '瑞芳區', lat: 25.1088, lng: 121.8058 },
+  { city: '新北市', dist: '烏來區', lat: 24.8652, lng: 121.5504 },
+  { city: '新北市', dist: '八里區', lat: 25.1466, lng: 121.3995 },
+]
+
+/**
+ * 從地點字串比對行政區座標
+ * 回傳找到的第一個行政區座標，沒找到回傳 null
+ */
+function getDistrictCoords(location: string): { lat: number; lng: number } | null {
+  const loc = location.toUpperCase()
+  for (const d of DISTRICTS) {
+    const dist = d.dist.toUpperCase()
+    // 匹配：「新店」、「新店區」、「新店XX」等
+    if (loc.includes(dist) || dist.includes(loc.replace(/區$/, ''))) {
+      return { lat: d.lat, lng: d.lng }
+    }
+  }
+  return null
+}
+
+/**
+ * Haversine 公式計算兩點直線距離（公里）
+ */
+function getDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371
+  const dLat = (lat2 - lat1) * Math.PI / 180
+  const dLon = (lon2 - lon1) * Math.PI / 180
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2)
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+  return R * c
+}
+
 // ─── 機場識別 ─────────────────────────────────────────────
 
 /**
@@ -164,6 +250,8 @@ export interface PickupRecommendation {
   tightness: TightnessInfo
   /** 預計等候分鐘數（從落地到司機到機場） */
   waitMinutes: number
+  /** 直線距離（公里）- 觸發目的地到推薦接機目的地 */
+  distanceKm: number
   /** 解說文字 */
   explanation: string
 }
@@ -174,6 +262,7 @@ export interface PickupRecommendation {
  * 邏輯：
  * 1. 計算司機送完客後到達機場時間 = 送機出發時間 + 行車時間
  * 2. 接機單落地時間需滿足：司機到機場時間 - 20分 <= 落地時間 <= 司機到機場時間 + 40分
+ * 3. 按（觸發目的地到推薦目的地）的直線距離排序，近的優先
  */
 export function recommendPickupAfterDropoff(
   dropoffOrder: Order,
@@ -188,6 +277,9 @@ export function recommendPickupAfterDropoff(
 
   const minLanding = addMinutes(arriveAtAirport, -20)
   const maxLanding = addMinutes(arriveAtAirport, 40)
+
+  // 觸發目的地（送機的終點，通常是市區）
+  const triggerCoords = getDistrictCoords(dropoffOrder.dropoffLocation)
 
   const recommendations: PickupRecommendation[] = []
 
@@ -208,6 +300,18 @@ export function recommendPickupAfterDropoff(
       const waitMins = Math.round(waitMs / (1000 * 60))
       const tightness = calcTightnessPickup(arriveAtAirport, landingTime)
 
+      // 計算直線距離：觸發目的地 → 推薦目的地
+      let distanceKm = 999 // 預設大距離
+      if (triggerCoords) {
+        const destCoords = getDistrictCoords(order.dropoffLocation)
+        if (destCoords) {
+          distanceKm = getDistance(
+            triggerCoords.lat, triggerCoords.lng,
+            destCoords.lat, destCoords.lng
+          )
+        }
+      }
+
       // 客人出關時間估算：落地 + 45 分鐘
       const exitTime = addMinutes(landingTime, 45)
       const explanation = `客人預計 ${formatHHMM(exitTime)}-${formatHHMM(addMinutes(exitTime, 30))} 出關`
@@ -218,13 +322,21 @@ export function recommendPickupAfterDropoff(
         landingTime,
         tightness,
         waitMinutes: Math.abs(waitMins),
+        distanceKm,
         explanation,
       })
     }
   }
 
-  // 按等候分鐘數排序（等候時間最短的排前面）
-  recommendations.sort((a, b) => a.waitMinutes - b.waitMinutes)
+  // 排序：地理距離優先（近的排前面）
+  recommendations.sort((a, b) => {
+    if (Math.abs(a.distanceKm - b.distanceKm) > 1) {
+      return a.distanceKm - b.distanceKm
+    }
+    // 距離差距 < 1km 時，以等候時間排序
+    return a.waitMinutes - b.waitMinutes
+  })
+
   return recommendations
 }
 
@@ -240,6 +352,8 @@ export interface DropoffRecommendation {
   tightness: TightnessInfo
   /** 緩衝分鐘數 */
   bufferMinutes: number
+  /** 直線距離（公里）- 觸發目的地到送機起點 */
+  distanceKm: number
   /** 解說文字 */
   explanation: string
 }
@@ -251,6 +365,7 @@ export interface DropoffRecommendation {
  * 1. 計算客人上車時間 = 落地時間 + 45 分鐘
  * 2. 計算送完客人後到達目的地時間 = 上車時間 + 行車時間
  * 3. 送機出發時間需滿足：最早出發 = 到達時間 + 75分（緩衝），最晚 = 到達時間 + 135分
+ * 4. 按（觸發目的地到送機起點）的直線距離排序，近的優先
  */
 export function recommendDropoffAfterPickup(
   pickupOrder: Order,
@@ -270,6 +385,9 @@ export function recommendDropoffAfterPickup(
   const earliestSend = addMinutes(arriveAtDest, 75)
   const latestSend = addMinutes(arriveAtDest, 135)
 
+  // 觸發目的地（接機的終點，司機送客人的地點）
+  const triggerCoords = getDistrictCoords(pickupOrder.dropoffLocation)
+
   const recommendations: DropoffRecommendation[] = []
 
   for (const order of availableOrders) {
@@ -288,6 +406,18 @@ export function recommendDropoffAfterPickup(
       const bufferMins = Math.round(bufferMs / (1000 * 60))
       const tightness = calcTightnessDropoff(arriveAtDest, sendTime)
 
+      // 計算直線距離：觸發目的地 → 送機起點
+      let distanceKm = 999 // 預設大距離
+      if (triggerCoords) {
+        const pickupCoords = getDistrictCoords(order.pickupLocation)
+        if (pickupCoords) {
+          distanceKm = getDistance(
+            triggerCoords.lat, triggerCoords.lng,
+            pickupCoords.lat, pickupCoords.lng
+          )
+        }
+      }
+
       const explanation = `預計 ${formatHHMM(arriveAtDest)} 到達起點，緩衝約 ${bufferMins} 分鐘`
 
       recommendations.push({
@@ -296,13 +426,21 @@ export function recommendDropoffAfterPickup(
         sendTime,
         tightness,
         bufferMinutes: bufferMins,
+        distanceKm,
         explanation,
       })
     }
   }
 
-  // 按緩衝分鐘數排序（緩衝最少的排前面）
-  recommendations.sort((a, b) => a.bufferMinutes - b.bufferMinutes)
+  // 排序：地理距離優先（近的排前面）
+  recommendations.sort((a, b) => {
+    if (Math.abs(a.distanceKm - b.distanceKm) > 1) {
+      return a.distanceKm - b.distanceKm
+    }
+    // 距離差距 < 1km 時，以緩衝時間排序
+    return a.bufferMinutes - b.bufferMinutes
+  })
+
   return recommendations
 }
 
