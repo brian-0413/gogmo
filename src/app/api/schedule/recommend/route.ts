@@ -28,16 +28,23 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    const { searchParams } = new URL(request.url)
+    const triggerOrderId = searchParams.get('orderId')
     const driverId = user.driver.id
 
     // 抓司機已接的訂單（未完成）
-    const currentOrders = await prisma.order.findMany({
+    let currentOrders = await prisma.order.findMany({
       where: {
         driverId,
         status: { in: ['ASSIGNED', 'ACCEPTED', 'ARRIVED', 'IN_PROGRESS'] },
       },
       orderBy: { scheduledTime: 'asc' },
     })
+
+    // 如果有指定 orderId，只取那一張當觸發
+    if (triggerOrderId) {
+      currentOrders = currentOrders.filter(o => o.id === triggerOrderId)
+    }
 
     // 抓接單大廳所有 PUBLISHED 訂單
     const availableOrders = await prisma.order.findMany({
