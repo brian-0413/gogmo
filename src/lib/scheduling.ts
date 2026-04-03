@@ -1,10 +1,9 @@
 /**
  * 智慧排班系統 - 時間參數與計算函數
  *
- * 規格參考：docs/smart-scheduling.md
- *
- * 尖峰時段：06:30-09:00 / 16:00-19:00
- * 行車時間表：雙北 <-> 桃園機場 / 松山機場
+ * 規格：
+ * - 尖峰時段：06:30-09:30 / 16:00-19:00
+ * - 行政區行車時間表：docs/雙北次生活圈通勤預估時間.pdf
  */
 
 import type { Order } from '@/types'
@@ -13,7 +12,7 @@ import type { Order } from '@/types'
 
 /**
  * 判斷指定時間是否為尖峰時段
- * 早上尖峰：06:30 - 09:00
+ * 早上尖峰：06:30 - 09:30
  * 下午尖峰：16:00 - 19:00
  */
 export function isPeakHour(time: Date): boolean {
@@ -21,35 +20,161 @@ export function isPeakHour(time: Date): boolean {
   const minute = time.getMinutes()
   const totalMinutes = hour * 60 + minute
 
-  // 早上尖峰 06:30 - 09:00
-  if (totalMinutes >= 6 * 60 + 30 && totalMinutes <= 9 * 60) return true
+  // 早上尖峰 06:30 - 09:30
+  if (totalMinutes >= 6 * 60 + 30 && totalMinutes <= 9 * 60 + 30) return true
   // 下午尖峰 16:00 - 19:00
   if (totalMinutes >= 16 * 60 && totalMinutes <= 19 * 60) return true
 
   return false
 }
 
-// ─── 行車時間表 ───────────────────────────────────────────
+// ─── 次生活圈定義 ─────────────────────────────────────────
+// 參考：docs/雙北次生活圈劃分.pdf
 
-interface TravelTime {
-  offPeak: number  // 分鐘
-  peak: number     // 分鐘
+type SubCircle =
+  | 'slinbeitou' | 'neihunangang' | 'xinyisongshan' | 'daanzhongzheng'
+  | 'wanhuazhongshan' | 'zhongheyonghe' | 'banqiaoxinzhuang' | 'sanzhongyanzhou'
+  | 'xizxidian' | 'shulinyingtao' | 'danshuisanyuan'
+
+const SUB_CIRCLE_OF: Record<string, SubCircle> = {
+  // 士林北投
+  '士林區': 'slinbeitou', '北投區': 'slinbeitou',
+  // 內湖南港
+  '內湖區': 'neihunangang', '南港區': 'neihunangang',
+  // 信義松山
+  '信義區': 'xinyisongshan', '松山區': 'xinyisongshan',
+  // 大安中正
+  '大安區': 'daanzhongzheng', '中正區': 'daanzhongzheng',
+  // 萬華大同
+  '萬華區': 'wanhuazhongshan', '大同區': 'wanhuazhongshan',
+  // 板橋新莊
+  '板橋區': 'banqiaoxinzhuang', '新莊區': 'banqiaoxinzhuang',
+  // 三重蘆洲
+  '三重區': 'sanzhongyanzhou', '蘆洲區': 'sanzhongyanzhou',
+  // 汐止新店
+  '汐止區': 'xizxidian', '新店區': 'xizxidian',
+  '深坑區': 'xizxidian', '石碇區': 'xizxidian', '坪林區': 'xizxidian', '烏來區': 'xizxidian',
+  // 樹林鶯桃
+  '樹林區': 'shulinyingtao', '鶯歌區': 'shulinyingtao',
+  '三峽區': 'shulinyingtao', // 歸入樹林鶯桃（地理相近）
+  '土城區': 'banqiaoxinzhuang', // 歸入板橋新莊（地理相近）
+  // 中和永和
+  '中和區': 'zhongheyonghe', '永和區': 'zhongheyonghe',
+  // 淡水三元（無 t4 數據，以板橋新莊估）
+  '淡水區': 'danshuisanyuan', '三芝區': 'danshuisanyuan', '石門區': 'danshuisanyuan',
+  // 泰山林口（無 t4 數據，以三重蘆洲估）
+  '泰山區': 'sanzhongyanzhou', '林口區': 'sanzhongyanzhou',
+  // 北海岸（無 t4 數據，以淡水三元估）
+  '八里區': 'danshuisanyuan',
+  '金山區': 'danshuisanyuan', '萬里區': 'danshuisanyuan',
+  '平溪區': 'xizxidian', '雙溪區': 'xizxidian', '瑞芳區': 'xizxidian',
 }
 
-const TRAVEL_TIMES: Record<string, TravelTime> = {
-  'taipei-TPE':  { offPeak: 50, peak: 75 },  // 雙北 → 桃園機場
-  'TPE-taipei':  { offPeak: 50, peak: 75 },  // 桃園機場 → 雙北
-  'taipei-TSA':  { offPeak: 30, peak: 50 },  // 雙北 → 松山機場
-  'TSA-taipei':  { offPeak: 30, peak: 50 },  // 松山機場 → 雙北
+/**
+ * 從行政區名稱取得次生活圈代碼
+ */
+export function getSubCircle(districtName: string): SubCircle {
+  const d = districtName.includes('區') ? districtName : districtName + '區'
+  return SUB_CIRCLE_OF[d] || 'banqiaoxinzhuang'
+}
+
+// ─── 次生活圈 t4 行車時間表 ───────────────────────────────
+// 資料來源：docs/雙北次生活圈通勤預估時間.pdf
+// 格式：{ 'src-dest': { peak, offPeak } }
+
+interface SubCircleTimes {
+  peak: number
+  offPeak: number
+}
+
+const T4_TIMES: Record<string, SubCircleTimes> = {
+  'slinbeitou-neihunangang':     { peak: 35, offPeak: 25 },
+  'slinbeitou-xinyisongshan':    { peak: 30, offPeak: 20 },
+  'slinbeitou-daanzhongzheng':    { peak: 35, offPeak: 25 },
+  'slinbeitou-wanhuazhongshan':  { peak: 35, offPeak: 25 },
+  'slinbeitou-zhongheyonghe':    { peak: 45, offPeak: 35 },
+  'slinbeitou-banqiaoxinzhuang': { peak: 60, offPeak: 45 },
+  'slinbeitou-sanzhongyanzhou':   { peak: 60, offPeak: 45 },
+  'slinbeitou-xizxidian':        { peak: 50, offPeak: 40 },
+  'slinbeitou-shulinyingtao':    { peak: 70, offPeak: 55 },
+  'neihunangang-xinyisongshan':  { peak: 25, offPeak: 20 },
+  'neihunangang-daanzhongzheng':  { peak: 30, offPeak: 25 },
+  'neihunangang-wanhuazhongshan':{ peak: 40, offPeak: 30 },
+  'neihunangang-zhongheyonghe':  { peak: 40, offPeak: 30 },
+  'neihunangang-banqiaoxinzhuang':{ peak: 60, offPeak: 45 },
+  'neihunangang-sanzhongyanzhou': { peak: 60, offPeak: 45 },
+  'neihunangang-xizxidian':      { peak: 35, offPeak: 30 },
+  'neihunangang-shulinyingtao':  { peak: 65, offPeak: 50 },
+  'xinyisongshan-daanzhongzheng': { peak: 20, offPeak: 15 },
+  'xinyisongshan-wanhuazhongshan':{ peak: 30, offPeak: 20 },
+  'xinyisongshan-zhongheyonghe':  { peak: 30, offPeak: 20 },
+  'xinyisongshan-banqiaoxinzhuang':{ peak: 50, offPeak: 40 },
+  'xinyisongshan-sanzhongyanzhou':{ peak: 50, offPeak: 40 },
+  'xinyisongshan-xizxidian':     { peak: 40, offPeak: 30 },
+  'xinyisongshan-shulinyingtao':  { peak: 60, offPeak: 45 },
+  'daanzhongzheng-wanhuazhongshan':{ peak: 25, offPeak: 15 },
+  'daanzhongzheng-zhongheyonghe':  { peak: 25, offPeak: 20 },
+  'daanzhongzheng-banqiaoxinzhuang':{ peak: 45, offPeak: 35 },
+  'daanzhongzheng-sanzhongyanzhou':{ peak: 45, offPeak: 35 },
+  'daanzhongzheng-xizxidian':    { peak: 35, offPeak: 30 },
+  'daanzhongzheng-shulinyingtao': { peak: 55, offPeak: 40 },
+  'wanhuazhongshan-zhongheyonghe':  { peak: 30, offPeak: 20 },
+  'wanhuazhongshan-banqiaoxinzhuang':{ peak: 40, offPeak: 30 },
+  'wanhuazhongshan-sanzhongyanzhou':{ peak: 40, offPeak: 30 },
+  'wanhuazhongshan-xizxidian':    { peak: 40, offPeak: 30 },
+  'wanhuazhongshan-shulinyingtao': { peak: 50, offPeak: 40 },
+  'zhongheyonghe-banqiaoxinzhuang': { peak: 30, offPeak: 20 },
+  'zhongheyonghe-sanzhongyanzhou': { peak: 30, offPeak: 20 },
+  'zhongheyonghe-xizxidian':     { peak: 30, offPeak: 25 },
+  'zhongheyonghe-shulinyingtao': { peak: 40, offPeak: 30 },
+  'banqiaoxinzhuang-sanzhongyanzhou': { peak: 35, offPeak: 25 },
+  'banqiaoxinzhuang-xizxidian':  { peak: 40, offPeak: 30 },
+  'banqiaoxinzhuang-shulinyingtao':{ peak: 30, offPeak: 25 },
+  'sanzhongyanzhou-xizxidian':   { peak: 45, offPeak: 35 },
+  'sanzhongyanzhou-shulinyingtao':{ peak: 35, offPeak: 25 },
+  'xizxidian-shulinyingtao':      { peak: 50, offPeak: 40 },
+}
+
+/**
+ * 兩行政區之間的行車分鐘數（t4）
+ * @param from 起始行政區
+ * @param to 目的地行政區
+ * @param departTime 出發時間（用來判斷尖峰/離峰）
+ */
+export function getInterDistrictTravelMinutes(
+  from: string,
+  to: string,
+  departTime: Date
+): number {
+  const a = getSubCircle(from)
+  const b = getSubCircle(to)
+  if (a === b) return 15 // 同區域，預估 15 分鐘
+
+  const times1 = T4_TIMES[`${a}-${b}`]
+  const times2 = T4_TIMES[`${b}-${a}`]
+  const times = times1 || times2
+  if (!times) return 40 // 無數據時預設 40 分鐘
+
+  return isPeakHour(departTime) ? times.peak : times.offPeak
+}
+
+// ─── 機場行車時間表 ────────────────────────────────────────
+
+const AIRPORT_TRAVEL_TIMES: Record<string, SubCircleTimes> = {
+  'taipei-TPE':  { peak: 75, offPeak: 50 },
+  'TPE-taipei':  { peak: 75, offPeak: 50 },
+  'taipei-TSA':  { peak: 50, offPeak: 30 },
+  'TSA-taipei':  { peak: 50, offPeak: 30 },
 }
 
 /**
  * 根據出發時間的尖峰/離峰狀態，回傳行車分鐘數
+ * 用於：雙北 ↔ 桃園/松山機場
  */
 export function getTravelMinutes(from: string, to: string, departTime: Date): number {
   const key = `${from}-${to}`
-  const times = TRAVEL_TIMES[key]
-  if (!times) return 60 // 預設 60 分鐘
+  const times = AIRPORT_TRAVEL_TIMES[key]
+  if (!times) return isPeakHour(departTime) ? 75 : 60
   return isPeakHour(departTime) ? times.peak : times.offPeak
 }
 
@@ -344,31 +469,41 @@ export interface DropoffRecommendation {
 }
 
 /**
- * 情境二：司機有一張接機單（司機要去接送機的地點，目的地行政區未知）
+ * 情境二：接機後推薦送機單（司機目的地未知）
  *
- * 邏輯：
- * 1. 落地時間 T1 = scheduledTime
- * 2. 候選送機單：scheduledTime > T1 + 120 分鐘（60行李+60行車 = 固定門檻）
- * 3. 排序：地理距離為主（從接機目的地行政區到送機上車行政區）、緩衝時間為次
+ * 接機單執行時間鏈：
+ * - t1 = 落地時間（scheduledTime）
+ * - t2 = 客人出關緩衝（固定 60 分鐘）
+ * - t3 = 機場 → 目的地行車時間（尖峰 75 分 / 離峰 60 分，根據 t1 判斷）
+ * - t4 = 目的地行政區 → 送機上車行政區行車時間（查表）
+ *
+ * 篩選原則：
+ * - 原則一（時間）：t1 + t2 + t3 + t4 之後才可出發 → 但 t4 取決於候選單地點，
+ *   所以先以 t1 + t2 + t3 為基準，過濾 t1 + 3 小時內的所有送機單
+ * - 原則二（地理）：地理距離（接機目的地 → 送機上車地點）最近的優先
+ * - 原則三（種類）：只推薦送機單
+ * - 上限：取 3 張
  */
 export function recommendDropoffAfterPickup(
   pickupOrder: Order,
   availableOrders: Order[]
 ): DropoffRecommendation[] {
-  const landingTime = new Date(pickupOrder.scheduledTime)
+  const t1 = new Date(pickupOrder.scheduledTime)
   const airport = detectAirport(pickupOrder.pickupLocation) || 'TPE'
 
-  // 客人出關上車時間 = 落地 + 45 分鐘
-  const pickupTime = addMinutes(landingTime, 45)
+  // t2：客人出關緩衝（固定 60 分鐘）
+  const T2 = 60
 
-  // 到達目的地時間（目的地是客人要去的地方）
-  const travelMin = getTravelMinutes(airport, 'taipei', pickupTime)
-  const arriveAtDest = addMinutes(pickupTime, travelMin)
+  // t3：機場 → 目的地行車時間（根據落地時間 t1 的尖峰/離峰）
+  const t3Travel = getTravelMinutes(airport, 'taipei', t1)
 
-  // 固定門檻：T1落地 + 120 分鐘（60行李+60行車）
-  const earliestSend = addMinutes(landingTime, 120)
+  // 到達目的地時間（司機送完客人的時間）
+  const arriveAtDest = addMinutes(addMinutes(t1, T2), t3Travel)
 
-  // 觸發目的地（接機的終點，司機送客人的地點）
+  // 篩選範圍：落地時間 t1 起，3 小時內的所有送機單
+  const maxSendTime = addMinutes(t1, 3 * 60)
+
+  // 觸發目的地座標（用於 Haversine 地理距離計算）
   const triggerCoords = getDistrictCoords(pickupOrder.dropoffLocation)
 
   const recommendations: DropoffRecommendation[] = []
@@ -384,48 +519,63 @@ export function recommendDropoffAfterPickup(
 
     const sendTime = new Date(order.scheduledTime)
 
-    // 固定門檻：scheduledTime > T1落地 + 120分鐘
-    if (sendTime > earliestSend) {
-      const bufferMs = sendTime.getTime() - arriveAtDest.getTime()
-      const bufferMins = Math.round(bufferMs / (1000 * 60))
-      const tightness = calcTightnessDropoff(arriveAtDest, sendTime)
+    // 原則一：送機單時間必須在 3 小時內（t1 + 3小時）
+    if (sendTime > maxSendTime) continue
 
-      // 計算直線距離：接機目的地 → 送機上車地點
-      let distanceKm = 999 // 預設大距離
-      if (triggerCoords) {
-        const pickupCoords = getDistrictCoords(order.pickupLocation)
-        if (pickupCoords) {
-          distanceKm = getDistance(
-            triggerCoords.lat, triggerCoords.lng,
-            pickupCoords.lat, pickupCoords.lng
-          )
-        }
+    // 原則一（動態 t4）：計算這張候選單的 t4，並驗證是否來得及
+    const orderT4 = getInterDistrictTravelMinutes(
+      pickupOrder.dropoffLocation,
+      order.pickupLocation,
+      arriveAtDest
+    )
+    const orderEarliestSend = addMinutes(arriveAtDest, orderT4)
+
+    // 候選單的 scheduledTime 必須 > 司機實際可出發時間（t1+t2+t3+t4）
+    if (sendTime < orderEarliestSend) continue
+
+    // 計算緩衝時間
+    const bufferMs = sendTime.getTime() - arriveAtDest.getTime()
+    const bufferMins = Math.round(bufferMs / (1000 * 60))
+    const tightness = calcTightnessDropoff(arriveAtDest, sendTime)
+
+    // 原則二：地理距離（接機目的地 → 送機上車行政區）
+    let distanceKm = 999
+    if (triggerCoords) {
+      const pickupCoords = getDistrictCoords(order.pickupLocation)
+      if (pickupCoords) {
+        distanceKm = getDistance(
+          triggerCoords.lat, triggerCoords.lng,
+          pickupCoords.lat, pickupCoords.lng
+        )
       }
-
-      const explanation = `落地 +${120}分，預計 ${formatHHMM(arriveAtDest)} 到達起點，緩衝 ${bufferMins} 分鐘`
-
-      recommendations.push({
-        order,
-        arriveAtDest,
-        sendTime,
-        tightness,
-        bufferMinutes: bufferMins,
-        distanceKm,
-        explanation,
-      })
     }
+
+    // 解說文字
+    const explanation =
+      `落地 ${formatHHMM(t1)} + ${T2}分(出關) + ${t3Travel}分(行車) + ${orderT4}分(行政區) ` +
+      `= ${formatHHMM(orderEarliestSend)} 後可出發，` +
+      `預計 ${formatHHMM(arriveAtDest)} 到達「${pickupOrder.dropoffLocation}」，緩衝 ${bufferMins} 分鐘`
+
+    recommendations.push({
+      order,
+      arriveAtDest,
+      sendTime,
+      tightness,
+      bufferMinutes: bufferMins,
+      distanceKm,
+      explanation,
+    })
   }
 
-  // 排序：地理距離優先（近的排前面）
+  // 原則二：地理距離優先排序，取最近的 3 張
   recommendations.sort((a, b) => {
     if (Math.abs(a.distanceKm - b.distanceKm) > 1) {
       return a.distanceKm - b.distanceKm
     }
-    // 距離差距 < 1km 時，以緩衝時間排序
     return a.bufferMinutes - b.bufferMinutes
   })
 
-  return recommendations
+  return recommendations.slice(0, 3)
 }
 
 // ─── 推薦結果 ─────────────────────────────────────────────
