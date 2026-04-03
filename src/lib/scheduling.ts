@@ -257,12 +257,12 @@ export interface PickupRecommendation {
 }
 
 /**
- * 情境一：司機有一張送機單，推薦可銜接的接機單
+ * 情境一：司機有一張送機單（司機確定在桃園機場）
  *
  * 邏輯：
  * 1. 計算司機送完客後到達機場時間 = 送機出發時間 + 行車時間
- * 2. 接機單落地時間需滿足：司機到機場時間 - 20分 <= 落地時間 <= 司機到機場時間 + 40分
- * 3. 按（觸發目的地到推薦目的地）的直線距離排序，近的優先
+ * 2. 候選接機單：落地時間需 >= 司機到機場時間（司機已在機場等）
+ * 3. 排序：以落地時間排序（最早的航班最推薦）—— 司機已在機場，地理距離無關
  */
 export function recommendPickupAfterDropoff(
   dropoffOrder: Order,
@@ -275,11 +275,9 @@ export function recommendPickupAfterDropoff(
   const travelMin = getTravelMinutes('taipei', airport, departTime)
   const arriveAtAirport = addMinutes(departTime, travelMin)
 
-  const minLanding = addMinutes(arriveAtAirport, -20)
-  const maxLanding = addMinutes(arriveAtAirport, 40)
-
-  // 觸發目的地（送機的終點，通常是市區）
-  const triggerCoords = getDistrictCoords(dropoffOrder.dropoffLocation)
+  // 候選範圍：落地時間 >= 司機到機場時間，上限 +120 分鐘（避免等過久）
+  const minLanding = arriveAtAirport
+  const maxLanding = addMinutes(arriveAtAirport, 120)
 
   const recommendations: PickupRecommendation[] = []
 
@@ -294,23 +292,14 @@ export function recommendPickupAfterDropoff(
 
     const landingTime = new Date(order.scheduledTime)
 
-    // 在允許範圍內
+    // 在允許範圍內（落地時間 >= 司機到機場時間）
     if (landingTime >= minLanding && landingTime <= maxLanding) {
       const waitMs = arriveAtAirport.getTime() - landingTime.getTime()
       const waitMins = Math.round(waitMs / (1000 * 60))
       const tightness = calcTightnessPickup(arriveAtAirport, landingTime)
 
-      // 計算直線距離：觸發目的地 → 推薦目的地
-      let distanceKm = 999 // 預設大距離
-      if (triggerCoords) {
-        const destCoords = getDistrictCoords(order.dropoffLocation)
-        if (destCoords) {
-          distanceKm = getDistance(
-            triggerCoords.lat, triggerCoords.lng,
-            destCoords.lat, destCoords.lng
-          )
-        }
-      }
+      // 司機已在機場，地理距離設為 0（不影響排序）
+      const distanceKm = 0
 
       // 客人出關時間估算：落地 + 45 分鐘
       const exitTime = addMinutes(landingTime, 45)
@@ -328,13 +317,9 @@ export function recommendPickupAfterDropoff(
     }
   }
 
-  // 排序：地理距離優先（近的排前面）
+  // 排序：落地時間優先（最早的航班最推薦）
   recommendations.sort((a, b) => {
-    if (Math.abs(a.distanceKm - b.distanceKm) > 1) {
-      return a.distanceKm - b.distanceKm
-    }
-    // 距離差距 < 1km 時，以等候時間排序
-    return a.waitMinutes - b.waitMinutes
+    return a.landingTime.getTime() - b.landingTime.getTime()
   })
 
   return recommendations
@@ -359,13 +344,12 @@ export interface DropoffRecommendation {
 }
 
 /**
- * 情境二：司機有一張接機單，推薦可銜接的送機單
+ * 情境二：司機有一張接機單（司機要去接送機的地點，目的地行政區未知）
  *
  * 邏輯：
- * 1. 計算客人上車時間 = 落地時間 + 45 分鐘
- * 2. 計算送完客人後到達目的地時間 = 上車時間 + 行車時間
- * 3. 送機出發時間需滿足：最早出發 = 到達時間 + 75分（緩衝），最晚 = 到達時間 + 135分
- * 4. 按（觸發目的地到送機起點）的直線距離排序，近的優先
+ * 1. 落地時間 T1 = scheduledTime
+ * 2. 候選送機單：scheduledTime > T1 + 120 分鐘（60行李+60行車 = 固定門檻）
+ * 3. 排序：地理距離為主（從接機目的地行政區到送機上車行政區）、緩衝時間為次
  */
 export function recommendDropoffAfterPickup(
   pickupOrder: Order,
@@ -381,9 +365,8 @@ export function recommendDropoffAfterPickup(
   const travelMin = getTravelMinutes(airport, 'taipei', pickupTime)
   const arriveAtDest = addMinutes(pickupTime, travelMin)
 
-  // 送機緩衝：75-135 分鐘
-  const earliestSend = addMinutes(arriveAtDest, 75)
-  const latestSend = addMinutes(arriveAtDest, 135)
+  // 固定門檻：T1落地 + 120 分鐘（60行李+60行車）
+  const earliestSend = addMinutes(landingTime, 120)
 
   // 觸發目的地（接機的終點，司機送客人的地點）
   const triggerCoords = getDistrictCoords(pickupOrder.dropoffLocation)
@@ -401,12 +384,13 @@ export function recommendDropoffAfterPickup(
 
     const sendTime = new Date(order.scheduledTime)
 
-    if (sendTime >= earliestSend && sendTime <= latestSend) {
+    // 固定門檻：scheduledTime > T1落地 + 120分鐘
+    if (sendTime > earliestSend) {
       const bufferMs = sendTime.getTime() - arriveAtDest.getTime()
       const bufferMins = Math.round(bufferMs / (1000 * 60))
       const tightness = calcTightnessDropoff(arriveAtDest, sendTime)
 
-      // 計算直線距離：觸發目的地 → 送機起點
+      // 計算直線距離：接機目的地 → 送機上車地點
       let distanceKm = 999 // 預設大距離
       if (triggerCoords) {
         const pickupCoords = getDistrictCoords(order.pickupLocation)
@@ -418,7 +402,7 @@ export function recommendDropoffAfterPickup(
         }
       }
 
-      const explanation = `預計 ${formatHHMM(arriveAtDest)} 到達起點，緩衝約 ${bufferMins} 分鐘`
+      const explanation = `落地 +${120}分，預計 ${formatHHMM(arriveAtDest)} 到達起點，緩衝 ${bufferMins} 分鐘`
 
       recommendations.push({
         order,
