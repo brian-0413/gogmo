@@ -100,6 +100,18 @@ export default function DriverDashboard() {
   // 排班確認中
   const [scheduleConfirming, setScheduleConfirming] = useState(false)
 
+  // 根據觸發類型過濾推薦（送機觸發→只看接機；接機觸發→只看送機）
+  const filteredScheduleRecs = useMemo(() => {
+    if (!scheduleResult?.currentOrder) return { recs: [], label: '', sortHint: '' }
+    const isPickup = scheduleResult.currentOrder.type === 'pickup' || scheduleResult.currentOrder.type === 'pickup_boat'
+    const recs = scheduleResult.recommendations.filter(r => r.recommendType === (isPickup ? 'dropoff' : 'pickup'))
+    return {
+      recs,
+      label: isPickup ? '推薦送機' : '推薦接機',
+      sortHint: isPickup ? '地理距離' : '落地時間',
+    }
+  }, [scheduleResult])
+
   const calculateStats = useCallback((transactions: unknown[]) => {
     const now = new Date()
     const todayStart = startOfDay(now)
@@ -840,15 +852,15 @@ export default function DriverDashboard() {
                   </div>
 
                   {/* 推薦清單 */}
-                  {scheduleResult.recommendations.length === 0 ? (
+                  {filteredScheduleRecs.recs.length === 0 ? (
                     <div className="text-center py-8">
                       <div className="w-12 h-12 rounded-xl bg-[#F5F4F0] border border-[#DDDDDD] flex items-center justify-center mx-auto mb-3">
                         <Sparkles className="w-6 h-6 text-[#D6D3D1]" />
                       </div>
-                      <p className="text-[14px] text-[#78716C] font-medium">目前沒有合適的配單</p>
+                      <p className="text-[14px] text-[#78716C] font-medium">目前沒有合適的{filteredScheduleRecs.label}</p>
                       <p className="text-[12px] text-[#A8A29E] mt-1">
                         {scheduleResult.availableCount > 0
-                          ? `接單大廳有 ${scheduleResult.availableCount} 單，但時間無法銜接`
+                          ? `接單大廳有 ${scheduleResult.availableCount} 單，但${filteredScheduleRecs.label.replace('推薦', '')}時間無法銜接`
                           : '接單大廳目前沒有訂單'}
                       </p>
                     </div>
@@ -856,13 +868,13 @@ export default function DriverDashboard() {
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
                         <p className="text-[11px] text-[#78716C] uppercase tracking-wider font-medium">
-                          推薦配單（{scheduleResult.recommendations.length} 筆）
+                          {filteredScheduleRecs.label}（{filteredScheduleRecs.recs.length} 筆）— 按{filteredScheduleRecs.sortHint}排序
                         </p>
                         <p className="text-[11px] text-[#A8A29E]">
                           點選加入排班，最多選 6 單
                         </p>
                       </div>
-                      {scheduleResult.recommendations.map((rec) => {
+                      {filteredScheduleRecs.recs.map((rec) => {
                         const isSelected = selectedScheduleOrders.includes(rec.id)
                         const typeColor = rec.recommendType === 'pickup'
                           ? { bg: '#E6F1FB', text: '#0C447C', label: '接機' }
@@ -958,7 +970,7 @@ export default function DriverDashboard() {
                   )}
 
                   {/* 總收入預估 + 確認按鈕 */}
-                  {scheduleResult.recommendations.length > 0 && (
+                  {filteredScheduleRecs.recs.length > 0 && (
                     <div className="bg-[#FAFAFA] border border-[#EBEBEB] rounded-xl p-4">
                       <div className="flex items-center justify-between mb-3">
                         <div>
@@ -970,7 +982,7 @@ export default function DriverDashboard() {
                         <div className="text-right">
                           <p className="text-[12px] text-[#717171]">總收入預估</p>
                           <p className="text-[22px] font-bold font-mono-nums text-[#008A05]">
-                            NT${((scheduleResult.currentOrder?.price ?? 0) + scheduleResult.recommendations
+                            NT${((scheduleResult.currentOrder?.price ?? 0) + filteredScheduleRecs.recs
                               .filter(r => selectedScheduleOrders.includes(r.id))
                               .reduce((sum, r) => sum + r.price, 0)
                             ).toLocaleString()}
