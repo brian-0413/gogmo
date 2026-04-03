@@ -9,9 +9,9 @@
 
 ### 最後 commit
 ```
-23f1e8c feat(driver): 行程卡片支援單一訂單智慧排單
+6d121aa feat(scheduling): 以地理距離取代時間，作為智慧排單推薦排序主鍵
 ```
-落後 origin/main 0 個 commits。（上一個：`4ee04a9` Date 序列化修復）
+落後 origin/main 0 個 commits。（上一個：`23f1e8c` 單一訂單智慧排單）
 
 ---
 
@@ -22,6 +22,20 @@
 ---
 
 ## 近期進度
+
+### [完成] 智慧排單以地理距離取代時間為排序主鍵
+- **問題**：舊邏輯只看時間，導致推薦和新莊接機的銜接行程可能是新店接機（地理距離遠）
+- **實作**：
+  - 加入 41 個台北市+新北市行政區座標（DISTRICTS array）
+  - `getDistrictCoords(location)`：從地點字串對應行政區座標（如「北投」→ lat:25.1252, lng:121.4996）
+  - `getDistance()`：Haversine 公式計算兩點直線距離（公里）
+  - `recommendPickupAfterDropoff`：以觸發行程終點（dropoffLocation）為圓心，依地理距離排序推薦
+  - `recommendDropoffAfterPickup`：以觸發行程終點為圓心，依地理距離排序推薦
+  - `distanceKm` 欄位加入 `PickupRecommendation` 和 `DropoffRecommendation`
+  - **排序邏輯**：地理距離差 > 1km 以距離優先，否則以等待時間/緩衝時間排序
+- **驗證**：
+  - 觸發 機場→新莊：第1推薦 新店接機、第2推薦 板橋→機場（新莊和板橋近）✓
+  - 觸發 汐止→機場：第1推薦 板橋接機（司機到機場後往板橋方向）✓
 
 ### [完成] 行程卡片支援單一訂單智慧排單
 - **按鈕**：行程卡片下方「退單」旁新增「智慧排單」按鈕（藍色，`bg-[#0C447C]`）
@@ -152,6 +166,7 @@
 
 | Commit | 問題 | 修復方式 |
 |--------|------|---------|
+| `6d121aa` | 智慧排班推薦只看時間，新莊接機後最佳推薦可能是遠地的新店接機 | 以地理距離（Haversine 公式）為排序主鍵，緩衝時間為次排序 |
 | `23f1e8c` | 智慧排班只能針對全部行程，無法定針對單一訂單推薦 | 行程卡片新增「智慧排單」按鈕，API 支援 `?orderId=` 參數 |
 | `4ee04a9` | Prisma Date 序列化導致前端 parseISO 崩潰 | `new Date(o.scheduledTime).toISOString()` 轉換所有日期欄位 |
 | `fd08bbe` | 司機無法看到銜接訂單推薦、無法一次接多單 | 智慧排班系統、情境一/二推薦邏輯、排班預覽時間軸 |
@@ -321,3 +336,4 @@ PENDING → PUBLISHED → ASSIGNED → ACCEPTED → ARRIVED → IN_PROGRESS → 
 - **QA 發現 bug**：Prisma Date 物件直接 JSON 序列化後，`parseISO()` 在前端崩潰（「此頁面無法載入」錯誤）
 - **修復**：`/api/schedule/recommend` 的 `toOrder()` 函式回傳 `any` 型別，明確將所有 Date 欄位轉為 ISO 字串
 - **單一訂單排單**：行程卡片下方新增「智慧排單」按鈕，點擊後只傳該張訂單至 API 做推薦，範圍精準到單筆
+- **地理距離排序**：以 Haversine 公式計算行政區座標直線距離，取代舊的時間唯一排序。新增 41 個台北+新北行政區座標、`getDistrictCoords()`、`getDistance()`、`distanceKm` 欄位。排序優先：地理距離差 > 1km 以距離，否則以等待/緩衝時間。
