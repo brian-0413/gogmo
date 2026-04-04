@@ -8,7 +8,7 @@ const dispatcherLastCheckMap = new Map<string, Date>()
 
 type SSEEvent =
   | { type: 'HEARTBEAT'; timestamp: string }
-  | { type: 'ORDER_STATUS_CHANGE'; orderId: string; status: string; driverName: string; startedAt?: string; arrivedAt?: string; pickedUpAt?: string; completedAt?: string }
+  | { type: 'ORDER_STATUS_CHANGE'; orderId: string; status: string; driverName: string; startedAt?: string; arrivedAt?: string; pickedUpAt?: string; completedAt?: string; transferStatus?: string }
 
 // GET /api/dispatchers/events - SSE endpoint for dispatcher real-time updates
 export async function GET(request: NextRequest) {
@@ -88,6 +88,7 @@ export async function GET(request: NextRequest) {
               arrivedAt: order.arrivedAt?.toISOString(),
               pickedUpAt: order.pickedUpAt?.toISOString(),
               completedAt: order.completedAt?.toISOString(),
+              transferStatus: order.transferStatus ?? undefined,
             })
           }
 
