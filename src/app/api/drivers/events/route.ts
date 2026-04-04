@@ -12,6 +12,7 @@ type SSEEvent =
   | { type: 'NEW_ORDER'; order: unknown }
   | { type: 'HEARTBEAT'; timestamp: string }
   | { type: 'ORDER_CANCELLED'; orderId: string }
+  | { type: 'TRANSFER_STATUS_CHANGE'; orderId: string; transferStatus: string }
 
 // GET /api/drivers/events - SSE endpoint for real-time order notifications
 export async function GET(request: NextRequest) {
@@ -166,6 +167,27 @@ export async function GET(request: NextRequest) {
                     }
                   : undefined,
               },
+            })
+          }
+
+          // Check for transfer status changes on completed orders
+          const changedTransfers = await prisma.order.findMany({
+            where: {
+              driverId,
+              status: 'COMPLETED',
+              updatedAt: { gt: lastCheck },
+            },
+            select: {
+              id: true,
+              transferStatus: true,
+            },
+          })
+
+          for (const order of changedTransfers) {
+            sendEvent({
+              type: 'TRANSFER_STATUS_CHANGE',
+              orderId: order.id,
+              transferStatus: order.transferStatus,
             })
           }
 
