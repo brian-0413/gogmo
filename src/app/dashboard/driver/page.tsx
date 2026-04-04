@@ -173,6 +173,21 @@ export default function DriverDashboard() {
     if (!isLoading && (!user || user.role !== 'DRIVER')) router.push('/login')
   }, [user, isLoading, router])
 
+  const fetchCompletedOrders = useCallback(async () => {
+    if (!token) return
+    setCompletedLoading(true)
+    try {
+      const res = await fetch('/api/drivers/completed-orders', {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      const data = await res.json()
+      if (data.success) setCompletedOrders(data.data.orders || [])
+    } finally {
+      setCompletedLoading(false)
+    }
+  }, [token])
+
+  // 合併的 SSE：單一連線處理所有事件
   useEffect(() => {
     if (!token) return
     const es = new EventSource('/api/drivers/events')
@@ -187,47 +202,29 @@ export default function DriverDashboard() {
           })
         } else if (data.type === 'ORDER_CANCELLED') {
           setAvailableOrders((prev) => prev.filter((o) => o.id !== data.orderId))
+        } else if (data.type === 'TRANSFER_STATUS_CHANGE') {
+          // 只在 balance tab 才監聽轉帳狀態，且確保已完成列表已載入
+          if (activeTab === 'balance') {
+            setCompletedOrders(prev => {
+              const exists = prev.find(o => o.id === data.orderId)
+              if (!exists) {
+                // 新完成的訂單出現，刷新列表
+                fetchCompletedOrders()
+              }
+              return prev.map(order =>
+                order.id === data.orderId
+                  ? { ...order, transferStatus: data.transferStatus }
+                  : order
+              )
+            })
+          }
         }
       } catch {}
     }
     es.onerror = () => es.close()
     eventSourceRef.current = es
     return () => { es.close(); eventSourceRef.current = null }
-  }, [token, activeTab])
-
-  // SSE for balance tab (transfer status updates)
-  useEffect(() => {
-    if (!token || user?.role !== 'DRIVER' || activeTab !== 'balance') return
-    const es = new EventSource('/api/drivers/events')
-    es.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data)
-        if (data.type === 'TRANSFER_STATUS_CHANGE') {
-          setCompletedOrders(prev => prev.map(order =>
-            order.id === data.orderId
-              ? { ...order, transferStatus: data.transferStatus }
-              : order
-          ))
-        }
-      } catch {}
-    }
-    es.onerror = () => es.close()
-    return () => es.close()
-  }, [token, user?.role, activeTab])
-
-  const fetchCompletedOrders = useCallback(async () => {
-    if (!token) return
-    setCompletedLoading(true)
-    try {
-      const res = await fetch('/api/drivers/completed-orders', {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      const data = await res.json()
-      if (data.success) setCompletedOrders(data.data.orders || [])
-    } finally {
-      setCompletedLoading(false)
-    }
-  }, [token])
+  }, [token, activeTab, fetchCompletedOrders])
 
   const fetchOrders = useCallback(async () => {
     if (!token) return
