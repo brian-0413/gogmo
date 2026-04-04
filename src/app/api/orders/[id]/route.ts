@@ -177,9 +177,10 @@ export async function PATCH(
     if (body._action === 'status') {
       const { status } = body
       const validTransitions: Record<string, string[]> = {
-        ACCEPTED: ['ARRIVED'],
-        ARRIVED: ['IN_PROGRESS'],
-        IN_PROGRESS: ['COMPLETED'],
+        ACCEPTED: ['IN_PROGRESS'],
+        IN_PROGRESS: ['ARRIVED'],
+        ARRIVED: ['PICKED_UP'],
+        PICKED_UP: ['COMPLETED'],
         COMPLETED: [],
       }
 
@@ -193,9 +194,12 @@ export async function PATCH(
         }
 
         const updateData: Record<string, unknown> = { status }
-        if (status === 'COMPLETED') {
-          updateData.completedAt = new Date()
-        }
+
+        // 時間戳記寫入
+        if (status === 'IN_PROGRESS') updateData.startedAt = new Date()
+        if (status === 'ARRIVED')    updateData.arrivedAt = new Date()
+        if (status === 'PICKED_UP')  updateData.pickedUpAt = new Date()
+        if (status === 'COMPLETED')   updateData.completedAt = new Date()
 
         const updated = await prisma.order.update({
           where: { id },
@@ -235,6 +239,14 @@ export async function PATCH(
           await prisma.driver.update({
             where: { id: user.driver.id },
             data: { status: 'ONLINE' }, // Set back to online after completion
+          })
+        }
+
+        // 司機出發，改為忙碌
+        if (status === 'IN_PROGRESS' && user.driver) {
+          await prisma.driver.update({
+            where: { id: user.driver.id },
+            data: { status: 'BUSY' },
           })
         }
 
