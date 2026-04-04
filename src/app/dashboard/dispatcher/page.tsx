@@ -575,13 +575,18 @@ export default function DispatcherDashboard() {
     )
   }
 
+  const now = new Date()
   const statusCounts = {
-    PICKUP: orders.filter(o => o.type === 'pickup').length,
-    DROPOFF: orders.filter(o => o.type === 'dropoff').length,
-    PENDING: orders.filter(o => ['PENDING', 'PUBLISHED'].includes(o.status)).length,
+    // 統計所有狀態的接機/送機訂單總數
+    PICKUP: orders.filter(o => o.type === 'pickup' || o.type === 'pickup_boat').length,
+    DROPOFF: orders.filter(o => o.type === 'dropoff' || o.type === 'dropoff_boat').length,
+    // 待接單：PENDING 狀態
+    PENDING: orders.filter(o => o.status === 'PENDING').length,
     ACCEPTED: orders.filter(o => ['ASSIGNED', 'ACCEPTED'].includes(o.status)).length,
     IN_PROGRESS: orders.filter(o => ['ARRIVED', 'IN_PROGRESS'].includes(o.status)).length,
     COMPLETED: orders.filter(o => o.status === 'COMPLETED').length,
+    // 未派出：PUBLISHED 但已過期（過了 scheduledTime 仍未被司機接走）
+    UNASSIGNED: orders.filter(o => o.status === 'PUBLISHED' && new Date(o.scheduledTime) < now).length,
   }
 
   const onlineDrivers = drivers.filter(d => d.status === 'ONLINE').length
@@ -664,17 +669,16 @@ export default function DispatcherDashboard() {
         {/* ===== ORDERS TAB ===== */}
         {activeTab === 'orders' && (
           <>
-            {/* Stats — 6 in a row, no icons, large text */}
+            {/* Stats — 6 in a row: 接(x)/送(x) / 待接單 / 已接單 / 進行中 / 已完成 / 未派出 */}
             <div className="grid grid-cols-3 lg:grid-cols-6 gap-2 mb-6">
-              {/* 接機 */}
+              {/* 接(x)/送(x) */}
               <div className="bg-white border border-[#DDDDDD] rounded-xl p-4 flex flex-col items-center justify-center gap-0.5">
-                <p className="text-[13px] text-[#0C447C] font-bold leading-tight">接機</p>
-                <p className="text-[36px] font-bold text-[#0C447C] font-mono-nums leading-none">{statusCounts.PICKUP}</p>
-              </div>
-              {/* 送機 */}
-              <div className="bg-white border border-[#DDDDDD] rounded-xl p-4 flex flex-col items-center justify-center gap-0.5">
-                <p className="text-[13px] text-[#B45309] font-bold leading-tight">送機</p>
-                <p className="text-[36px] font-bold text-[#B45309] font-mono-nums leading-none">{statusCounts.DROPOFF}</p>
+                <p className="text-[13px] text-[#717171] font-bold leading-tight">接機</p>
+                <div className="flex items-baseline gap-0.5 leading-none">
+                  <p className="text-[28px] font-bold text-[#0C447C] font-mono-nums">{statusCounts.PICKUP}</p>
+                  <p className="text-[16px] text-[#717171] font-mono-nums">/</p>
+                  <p className="text-[28px] font-bold text-[#B45309] font-mono-nums">{statusCounts.DROPOFF}</p>
+                </div>
               </div>
               {/* 待接單 */}
               <div className="bg-white border border-[#DDDDDD] rounded-xl p-4 flex flex-col items-center justify-center gap-0.5">
@@ -695,6 +699,11 @@ export default function DispatcherDashboard() {
               <div className="bg-white border border-[#DDDDDD] rounded-xl p-4 flex flex-col items-center justify-center gap-0.5">
                 <p className="text-[13px] text-[#008A05] font-bold leading-tight">已完成</p>
                 <p className="text-[36px] font-bold text-[#008A05] font-mono-nums leading-none">{statusCounts.COMPLETED}</p>
+              </div>
+              {/* 未派出 */}
+              <div className="bg-white border border-[#DDDDDD] rounded-xl p-4 flex flex-col items-center justify-center gap-0.5">
+                <p className="text-[13px] text-[#717171] font-bold leading-tight">未派出</p>
+                <p className="text-[36px] font-bold text-[#717171] font-mono-nums leading-none">{statusCounts.UNASSIGNED}</p>
               </div>
             </div>
 

@@ -65,7 +65,17 @@ export async function GET(request: NextRequest) {
     // Returns orders sorted by a score based on urgency + price
     if (recommended && user.role === 'DRIVER' && user.driver) {
       where.status = 'PUBLISHED' // Only recommend published orders
-      where.scheduledTime = { gte: new Date() } // 排除已過期的行程
+    }
+
+    // 司機查詢 PUBLISHED 時，一律排除已過期的行程
+    if (user.role === 'DRIVER' && user.driver && where.OR) {
+      // 在 OR 條件中加入時間過濾，確保 PUBLISHED 分支也排除過期訂單
+      where.OR = (where.OR as Array<Record<string, unknown>>).map(condition => {
+        if (condition.status === 'PUBLISHED') {
+          return { ...condition, scheduledTime: { gte: new Date() } }
+        }
+        return condition
+      })
     }
 
     // Fetch orders - for recommended, fetch more to sort in memory
