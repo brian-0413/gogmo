@@ -43,9 +43,9 @@ export type PlateType = 'R' | 'T' | 'any'
 
 export interface Order {
   id: string
-  orderDate: string
-  orderSeq: number
-  dispatcherId: string
+  orderDate?: string
+  orderSeq?: number
+  dispatcherId?: string
   driverId?: string
   status: OrderStatus
   passengerName: string
@@ -66,15 +66,20 @@ export interface Order {
   type: OrderType
   vehicle: VehicleType
   plateType: PlateType
-  notes?: string
-  note?: string
-  rawText?: string
-  createdAt: Date
-  updatedAt: Date
-  completedAt?: Date
+  notes?: string | null
+  note?: string | null
+  rawText?: string | null
+  createdAt: string
+  updatedAt?: string
+  startedAt?: string | null
+  arrivedAt?: string | null
+  pickedUpAt?: string | null
+  completedAt?: string | null
+  transferStatus?: string
   dispatcher?: Dispatcher
   driver?: Driver
   kenichiRequired?: boolean
+  parsedData?: unknown
 }
 
 export interface Transaction {

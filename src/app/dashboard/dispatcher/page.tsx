@@ -10,6 +10,7 @@ import { FleetControl } from '@/components/dispatcher/FleetControl'
 import { format, parseISO } from 'date-fns'
 import { zhTW } from 'date-fns/locale'
 import * as XLSX from 'xlsx'
+import type { Order } from '@/types'
 import {
   ClipboardList,
   Search,
@@ -27,36 +28,6 @@ import {
 import Link from 'next/link'
 
 type Tab = 'orders' | 'create' | 'review' | 'drivers' | 'settlement'
-type OrderStatus = 'PENDING' | 'PUBLISHED' | 'ASSIGNED' | 'ACCEPTED' | 'IN_PROGRESS' | 'ARRIVED' | 'PICKED_UP' | 'COMPLETED' | 'CANCELLED'
-
-interface Order {
-  id: string
-  status: OrderStatus
-  type: string
-  vehicle: string
-  plateType: string
-  passengerName: string
-  passengerPhone: string
-  flightNumber: string
-  pickupLocation: string
-  pickupAddress: string
-  dropoffLocation: string
-  dropoffAddress: string
-  passengerCount: number
-  luggageCount: number
-  scheduledTime: string
-  price: number
-  note?: string
-  notes?: string
-  rawText?: string
-  kenichiRequired?: boolean
-  driver?: { user: { name: string }; licensePlate: string; carType: string; carColor: string } | null
-  createdAt: string
-  startedAt?: string
-  arrivedAt?: string
-  pickedUpAt?: string
-  completedAt?: string
-}
 
 interface Driver {
   id: string

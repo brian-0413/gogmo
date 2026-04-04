@@ -6,46 +6,10 @@ import { Pencil, Trash2, User, Check, X } from 'lucide-react'
 import { formatOrderNo } from '@/lib/utils'
 import { ProgressBar } from '@/components/driver/ProgressBar'
 import { TYPE_TAG_STYLE, STATUS_TAG_STYLE, TYPE_LABELS, STATUS_LABELS, VEHICLE_LABELS } from '@/lib/constants'
-import type { OrderStatus, OrderType, VehicleType } from '@/types'
-
-interface DispatcherOrder {
-  id: string
-  orderSeq?: number
-  orderDate?: string
-  status: OrderStatus
-  type?: string
-  vehicle?: string
-  plateType?: string
-  kenichiRequired?: boolean
-  passengerName: string
-  passengerPhone: string
-  flightNumber: string
-  pickupLocation: string
-  pickupAddress: string
-  dropoffLocation: string
-  dropoffAddress: string
-  passengerCount: number
-  luggageCount: number
-  scheduledTime: Date | string
-  price: number
-  note?: string | null
-  notes?: string | null
-  rawText?: string | null
-  driver?: {
-    user: { name: string }
-    licensePlate: string
-    carType: string
-    carColor: string
-  } | null
-  createdAt: string
-  startedAt?: string
-  arrivedAt?: string
-  pickedUpAt?: string
-  completedAt?: string
-}
+import type { Order, OrderStatus, OrderType, VehicleType } from '@/types'
 
 interface DispatcherOrderCardProps {
-  order: DispatcherOrder
+  order: Order
   token: string | null
   onUpdate: () => void
 }
@@ -191,12 +155,12 @@ export function DispatcherOrderCard({ order, token, onUpdate }: DispatcherOrderC
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
               <User className="w-4 h-4 text-[#717171]" />
-              <span className="text-[15px] font-bold text-[#222222]">{order.driver!.user.name}</span>
+              <span className="text-[15px] font-bold text-[#222222]">{order.driver?.user?.name}</span>
             </div>
             <div className="h-4 w-px bg-[#DDDDDD]" />
             <div className="flex items-center gap-2">
-              <span className="text-[14px] font-bold px-2 py-0.5 bg-[#222222] text-white rounded font-mono-nums">{order.driver!.licensePlate}</span>
-              <span className="text-[13px] text-[#717171]">{order.driver!.carColor} {order.driver!.carType}</span>
+              <span className="text-[14px] font-bold px-2 py-0.5 bg-[#222222] text-white rounded font-mono-nums">{order.driver?.licensePlate}</span>
+              <span className="text-[13px] text-[#717171]">{order.driver?.carColor} {order.driver?.carType}</span>
             </div>
           </div>
         </div>
@@ -211,7 +175,7 @@ export function DispatcherOrderCard({ order, token, onUpdate }: DispatcherOrderC
         <div className="px-4 pb-3 -mt-1">
           <ProgressBar status={order.status} size="sm" showLabel={true} animateNext={true} />
           <p className="text-[11px] text-[#717171] mt-1 text-center">
-            司機：{order.driver.user.name}
+            司機：{order.driver?.user?.name}
           </p>
         </div>
       )}

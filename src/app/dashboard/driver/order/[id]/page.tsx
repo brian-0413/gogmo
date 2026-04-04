@@ -11,32 +11,7 @@ import { zhTW } from 'date-fns/locale'
 import { ArrowLeft, Phone, Clock, MapPin, User, Package } from 'lucide-react'
 import { formatOrderNo } from '@/lib/utils'
 import { TYPE_LABELS, TYPE_COLORS, VEHICLE_LABELS } from '@/lib/constants'
-import type { OrderType, VehicleType } from '@/types'
-
-interface OrderDetail {
-  id: string
-  orderSeq: number
-  scheduledTime: string
-  status: string
-  type: string
-  vehicle: string
-  plateType: string
-  kenichiRequired: boolean
-  pickupLocation: string
-  dropoffLocation: string
-  passengerName: string
-  passengerPhone: string
-  flightNumber: string
-  passengerCount: number
-  luggageCount: number
-  price: number
-  note?: string
-  startedAt?: string
-  arrivedAt?: string
-  pickedUpAt?: string
-  completedAt?: string
-  dispatcher?: { user?: { name?: string } }
-}
+import type { Order, OrderType, VehicleType } from '@/types'
 
 export default function OrderDetailPage() {
   const { user, token, isLoading } = useAuth()
@@ -44,7 +19,7 @@ export default function OrderDetailPage() {
   const params = useParams()
   const orderId = params.id as string
 
-  const [order, setOrder] = useState<OrderDetail | null>(null)
+  const [order, setOrder] = useState<Order | null>(null)
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState(false)
   const [showCompleteHint, setShowCompleteHint] = useState(false)
