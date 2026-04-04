@@ -4,9 +4,14 @@ import { getUserFromToken } from '@/lib/auth'
 import { ApiResponse } from '@/types'
 
 // GET /api/drivers/completed-orders - Get completed orders for current driver
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
-    const token = request.headers.get('Authorization')?.replace('Bearer ', '')
+    const { searchParams } = new URL(_request.url)
+    const page = parseInt(searchParams.get('page') || '1', 10)
+    const limit = parseInt(searchParams.get('limit') || '50', 10)
+    const skip = (page - 1) * limit
+
+    const token = _request.headers.get('Authorization')?.replace('Bearer ', '')
     if (!token) {
       return NextResponse.json<ApiResponse>(
         { success: false, error: '未授權' },
@@ -22,18 +27,28 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const orders = await prisma.order.findMany({
-      where: {
-        driverId: user.driver.id,
-        status: 'COMPLETED',
-      },
-      include: {
-        dispatcher: {
-          select: { companyName: true },
+    const [orders, total] = await Promise.all([
+      prisma.order.findMany({
+        where: {
+          driverId: user.driver.id,
+          status: 'COMPLETED',
         },
-      },
-      orderBy: { completedAt: 'desc' },
-    })
+        include: {
+          dispatcher: {
+            select: { companyName: true },
+          },
+        },
+        orderBy: { completedAt: 'desc' },
+        take: limit,
+        skip,
+      }),
+      prisma.order.count({
+        where: {
+          driverId: user.driver.id,
+          status: 'COMPLETED',
+        },
+      }),
+    ])
 
     const data = orders.map(order => ({
       id: order.id,
@@ -47,7 +62,7 @@ export async function GET(request: NextRequest) {
       transferStatus: order.transferStatus,
     }))
 
-    return NextResponse.json<ApiResponse>({ success: true, data })
+    return NextResponse.json<ApiResponse>({ success: true, data: { orders: data, page, limit, total } })
   } catch (error) {
     console.error('Get completed orders error:', error)
     return NextResponse.json<ApiResponse>(
