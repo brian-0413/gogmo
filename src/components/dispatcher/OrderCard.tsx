@@ -5,7 +5,8 @@ import { format, parseISO } from 'date-fns'
 import { Pencil, Trash2, User, Check, X } from 'lucide-react'
 import { formatOrderNo } from '@/lib/utils'
 import { ProgressBar } from '@/components/driver/ProgressBar'
-import type { OrderStatus } from '@/types'
+import { TYPE_TAG_STYLE, STATUS_TAG_STYLE, TYPE_LABELS, STATUS_LABELS, VEHICLE_LABELS } from '@/lib/constants'
+import type { OrderStatus, OrderType, VehicleType } from '@/types'
 
 interface DispatcherOrder {
   id: string
@@ -49,40 +50,6 @@ interface DispatcherOrderCardProps {
   onUpdate: () => void
 }
 
-const TYPE_TAG_STYLE: Record<string, string> = {
-  pickup: 'bg-[#E6F1FB] text-[#0C447C]',
-  dropoff: 'bg-[#FFF3E0] text-[#92400E]',
-  pickup_boat: 'bg-[#E0F7FA] text-[#006064]',
-  dropoff_boat: 'bg-[#E0F7FA] text-[#006064]',
-  transfer: 'bg-[#F4EFE9] text-[#717171]',
-  charter: 'bg-[#F3E8FF] text-[#6B21A8]',
-}
-
-const STATUS_TAG_STYLE: Record<string, string> = {
-  PENDING: 'bg-[#FCEBEB] text-[#A32D2D]',
-  PUBLISHED: 'bg-[#FCEBEB] text-[#A32D2D]',
-  ASSIGNED: 'bg-[#FFF3E0] text-[#B45309]',
-  ACCEPTED: 'bg-[#FFF3E0] text-[#B45309]',
-  ARRIVED: 'bg-[#E6F1FB] text-[#0C447C]',
-  IN_PROGRESS: 'bg-[#E6F1FB] text-[#0C447C]',
-  COMPLETED: 'bg-[#E8F5E8] text-[#008A05]',
-  CANCELLED: 'bg-[#FCEBEB] text-[#A32D2D]',
-}
-
-const TYPE_LABELS: Record<string, string> = {
-  pickup: '接機', dropoff: '送機', pickup_boat: '接船', dropoff_boat: '送船',
-  transfer: '交通接駁', charter: '套裝', pending: '待確認',
-}
-
-const STATUS_LABELS: Record<string, string> = {
-  PENDING: '待接單', PUBLISHED: '待接單', ASSIGNED: '已指派', ACCEPTED: '已接單',
-  ARRIVED: '已抵達', IN_PROGRESS: '進行中', COMPLETED: '已完成', CANCELLED: '已取消',
-}
-
-const VEHICLE_LABELS: Record<string, string> = {
-  small: '小車', suv: '休旅', van9: '9人座', any: '任意車',
-}
-
 const AIRPORT_OPTIONS = [
   { value: '桃園機場', label: '桃園機場' },
   { value: '松山機場', label: '松山機場' },
@@ -112,8 +79,8 @@ export function DispatcherOrderCard({ order, token, onUpdate }: DispatcherOrderC
 
   const typeTagStyle = TYPE_TAG_STYLE[order.type || ''] || 'bg-[#F4EFE9] text-[#717171]'
   const statusTagStyle = STATUS_TAG_STYLE[order.status] || 'bg-[#F4EFE9] text-[#717171]'
-  const vehicleLabel = VEHICLE_LABELS[order.vehicle || ''] || ''
-  const typeLabel = TYPE_LABELS[order.type || ''] || '待確認'
+  const vehicleLabel = VEHICLE_LABELS[(order.vehicle || '') as VehicleType] || ''
+  const typeLabel = TYPE_LABELS[(order.type || '') as OrderType] || '待確認'
   const statusLabel = STATUS_LABELS[order.status] || order.status
 
   const [isEditing, setIsEditing] = useState(false)

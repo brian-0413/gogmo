@@ -10,25 +10,8 @@ import { format } from 'date-fns'
 import { zhTW } from 'date-fns/locale'
 import { ArrowLeft, Phone, Clock, MapPin, User, Package } from 'lucide-react'
 import { formatOrderNo } from '@/lib/utils'
-
-const TYPE_LABELS: Record<string, string> = {
-  pickup: '接機', dropoff: '送機', pickup_boat: '接船',
-  dropoff_boat: '送船', transfer: '接駁', charter: '包車',
-}
-
-const TYPE_COLORS: Record<string, { bg: string; text: string }> = {
-  pickup: { bg: '#E6F1FB', text: '#0C447C' },
-  dropoff: { bg: '#FFF3E0', text: '#92400E' },
-  pickup_boat: { bg: '#E0F7FA', text: '#006064' },
-  dropoff_boat: { bg: '#E0F7FA', text: '#006064' },
-  transfer: { bg: '#F4EFE9', text: '#717171' },
-  charter: { bg: '#F3E8FF', text: '#6B21A8' },
-}
-
-const VEHICLE_LABELS: Record<string, string> = {
-  small: '小車', suv: '休旅', van9: '9人座',
-  any: '任意', any_r: '任意R', pending: '待確認',
-}
+import { TYPE_LABELS, TYPE_COLORS, VEHICLE_LABELS } from '@/lib/constants'
+import type { OrderType, VehicleType } from '@/types'
 
 interface OrderDetail {
   id: string
@@ -171,8 +154,8 @@ export default function OrderDetailPage() {
 
   const scheduledDate = new Date(order.scheduledTime)
   const orderNo = formatOrderNo(scheduledDate, order.orderSeq)
-  const typeColor = TYPE_COLORS[order.type] ?? { bg: '#F4EFE9', text: '#717171' }
-  const orderTypeLabel = TYPE_LABELS[order.type] ?? order.type
+  const typeColor = TYPE_COLORS[order.type as OrderType] ?? { bg: '#F4EFE9', text: '#717171' }
+  const orderTypeLabel = TYPE_LABELS[order.type as OrderType] ?? order.type
   const isBoat = order.type === 'pickup_boat' || order.type === 'dropoff_boat'
   const isPickup = order.type === 'pickup'
   const pickupLabel = isBoat ? '出發港' : isPickup ? '桃園機場' : '上車'
@@ -221,7 +204,7 @@ export default function OrderDetailPage() {
               {orderTypeLabel}
             </span>
             <span className="inline-flex items-center px-3 py-1.5 text-[15px] font-bold font-mono-nums rounded bg-[#F4EFE9] text-[#717171]">
-              {VEHICLE_LABELS[order.vehicle] ?? '待確認'}
+              {VEHICLE_LABELS[order.vehicle as VehicleType] ?? '待確認'}
             </span>
             {order.kenichiRequired && (
               <span className="inline-flex items-center px-3 py-1.5 text-[15px] font-bold font-mono-nums rounded bg-[#F3E8FF] text-[#6B21A8]">

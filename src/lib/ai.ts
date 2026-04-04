@@ -640,28 +640,5 @@ export function validateParsedOrder(order: ParsedOrder): { valid: boolean; missi
   }
 }
 
-// 車型顯示用
-export const VEHICLE_LABELS: Record<VehicleType, string> = {
-  small: '小車',
-  suv: '休旅車',
-  van9: '9人座',
-  any: '任意車型',
-  any_r: '任意R牌',
-  pending: '待確認',
-}
-
-export const TYPE_LABELS: Record<OrderType, string> = {
-  pickup: '接機',
-  dropoff: '送機',
-  pickup_boat: '接船',
-  dropoff_boat: '送船',
-  transfer: '接駁',
-  charter: '包車',
-  pending: '待確認',
-}
-
-export const PLATETYPE_LABELS: Record<PlateType, string> = {
-  R: 'R牌',
-  T: 'T牌',
-  any: '任意',
-}
+// Re-export from constants.ts for backward compatibility
+export { VEHICLE_LABELS, TYPE_LABELS, PLATETYPE_LABELS } from './constants'

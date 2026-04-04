@@ -7,21 +7,10 @@ import { zhTW } from 'date-fns/locale'
 import { User, Package, FileText, ChevronDown, ChevronUp } from 'lucide-react'
 import { useState } from 'react'
 import { formatOrderNo } from '@/lib/utils'
+import { TYPE_COLORS, VEHICLE_LABELS, TYPE_LABELS } from '@/lib/constants'
 import type { OrderType, VehicleType, Order } from '@/types'
 
 export type { Order } from '@/types'
-
-// Airbnb warm cream color system
-const TYPE_COLORS: Record<OrderType, { bg: string; text: string }> = {
-  pickup: { bg: '#E6F1FB', text: '#0C447C' },
-  dropoff: { bg: '#FFF3E0', text: '#92400E' },
-  pickup_boat: { bg: '#E0F7FA', text: '#006064' },
-  dropoff_boat: { bg: '#E0F7FA', text: '#006064' },
-  transfer: { bg: '#F4EFE9', text: '#717171' },
-  charter: { bg: '#F3E8FF', text: '#6B21A8' },
-  pending: { bg: '#F4EFE9', text: '#717171' },
-}
-
 
 interface OrderCardProps {
   order: Order
@@ -30,25 +19,6 @@ interface OrderCardProps {
   showActions?: boolean
   compact?: boolean
   isNew?: boolean
-}
-
-const VEHICLE_LABELS: Record<VehicleType, string> = {
-  small: '小車',
-  suv: '休旅',
-  van9: '9人座',
-  any: '任意車',
-  any_r: '任意R',
-  pending: '待確認',
-}
-
-const TYPE_LABELS: Record<OrderType, string> = {
-  pickup: '接機',
-  dropoff: '送機',
-  pickup_boat: '接船',
-  dropoff_boat: '送船',
-  transfer: '接駁',
-  charter: '包車',
-  pending: '待確認',
 }
 
 function getTimeUrgency(scheduledTime: string | Date): "urgent" | "soon" | "normal" {
