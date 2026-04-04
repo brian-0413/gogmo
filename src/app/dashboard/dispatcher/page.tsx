@@ -27,7 +27,7 @@ import {
 import Link from 'next/link'
 
 type Tab = 'orders' | 'create' | 'review' | 'drivers' | 'settlement'
-type OrderStatus = 'PENDING' | 'PUBLISHED' | 'ASSIGNED' | 'ACCEPTED' | 'ARRIVED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED'
+type OrderStatus = 'PENDING' | 'PUBLISHED' | 'ASSIGNED' | 'ACCEPTED' | 'IN_PROGRESS' | 'ARRIVED' | 'PICKED_UP' | 'COMPLETED' | 'CANCELLED'
 
 interface Order {
   id: string
@@ -52,6 +52,10 @@ interface Order {
   kenichiRequired?: boolean
   driver?: { user: { name: string }; licensePlate: string; carType: string; carColor: string } | null
   createdAt: string
+  startedAt?: string
+  arrivedAt?: string
+  pickedUpAt?: string
+  completedAt?: string
 }
 
 interface Driver {
@@ -416,6 +420,34 @@ export default function DispatcherDashboard() {
       router.push('/login')
     }
   }, [user, isLoading, router])
+
+  // 派單方 SSE 即時接收狀態更新
+  useEffect(() => {
+    if (!token || user?.role !== 'DISPATCHER') return
+
+    const es = new EventSource('/api/dispatchers/events')
+    es.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data)
+        if (data.type === 'ORDER_STATUS_CHANGE') {
+          setOrders(prev => prev.map(order =>
+            order.id === data.orderId
+              ? {
+                  ...order,
+                  status: data.status,
+                  startedAt: data.startedAt,
+                  arrivedAt: data.arrivedAt,
+                  pickedUpAt: data.pickedUpAt,
+                  completedAt: data.completedAt,
+                }
+              : order
+          ))
+        }
+      } catch {}
+    }
+    es.onerror = () => es.close()
+    return () => es.close()
+  }, [token, user?.role])
 
   const fetchOrders = useCallback(async () => {
     if (!token) return

@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { format, parseISO } from 'date-fns'
 import { Pencil, Trash2, User, Check, X } from 'lucide-react'
 import { formatOrderNo } from '@/lib/utils'
-import { Button } from '@/components/ui/Button'
+import { ProgressBar } from '@/components/driver/ProgressBar'
 import type { OrderStatus } from '@/types'
 
 interface DispatcherOrder {
@@ -37,6 +37,10 @@ interface DispatcherOrder {
     carColor: string
   } | null
   createdAt: string
+  startedAt?: string
+  arrivedAt?: string
+  pickedUpAt?: string
+  completedAt?: string
 }
 
 interface DispatcherOrderCardProps {
@@ -104,7 +108,7 @@ export function DispatcherOrderCard({ order, token, onUpdate }: DispatcherOrderC
   const orderNo = formatOrderNo(scheduledDate, order.orderSeq)
   const hasDriver = !!order.driver
   const isPending = order.status === 'PENDING' || order.status === 'PUBLISHED'
-  const isImmutable = ['ACCEPTED', 'ARRIVED', 'IN_PROGRESS', 'COMPLETED'].includes(order.status)
+  const isImmutable = ['ACCEPTED', 'IN_PROGRESS', 'ARRIVED', 'PICKED_UP', 'COMPLETED'].includes(order.status)
 
   const typeTagStyle = TYPE_TAG_STYLE[order.type || ''] || 'bg-[#F4EFE9] text-[#717171]'
   const statusTagStyle = STATUS_TAG_STYLE[order.status] || 'bg-[#F4EFE9] text-[#717171]'
@@ -234,6 +238,16 @@ export function DispatcherOrderCard({ order, token, onUpdate }: DispatcherOrderC
           <span className="text-[13px] font-bold text-[#E24B4A]">等待司機接單</span>
         </div>
       ) : null}
+
+      {/* 進度條（僅司機已接單後顯示） */}
+      {['ACCEPTED', 'IN_PROGRESS', 'ARRIVED', 'PICKED_UP', 'COMPLETED'].includes(order.status) && order.driver && (
+        <div className="px-4 pb-3 -mt-1">
+          <ProgressBar status={order.status} size="sm" showLabel={true} animateNext={true} />
+          <p className="text-[11px] text-[#717171] mt-1 text-center">
+            司機：{order.driver.user.name}
+          </p>
+        </div>
+      )}
 
       {/* 起訖點 */}
       {isEditing ? (
