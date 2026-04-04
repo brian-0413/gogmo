@@ -100,26 +100,16 @@ export async function POST(
       })
 
       if (targetStatus === 'COMPLETED') {
-        const platformFee = Math.floor(order.price * 0.05)
-        await tx.transaction.createMany({
-          data: [
-            {
-              orderId: id,
-              driverId: driverId,
-              amount: order.price - platformFee,
-              type: 'RIDE_FARE',
-              status: 'PENDING',
-              description: `行程收入 - 訂單 #${id.slice(0, 8)}`,
-            },
-            {
-              orderId: id,
-              driverId: driverId,
-              amount: -platformFee,
-              type: 'PLATFORM_FEE',
-              status: 'SETTLED',
-              description: '平台費 (5%)',
-            },
-          ],
+        // 建立行程收入交易（平台費已在接單時預扣，不再重複收取）
+        await tx.transaction.create({
+          data: {
+            orderId: id,
+            driverId: driverId,
+            amount: order.price,
+            type: 'RIDE_FARE',
+            status: 'PENDING',
+            description: `行程收入 - 訂單 #${id.slice(0, 8)}`,
+          },
         })
         await tx.driver.update({
           where: { id: driverId },

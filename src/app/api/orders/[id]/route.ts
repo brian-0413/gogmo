@@ -210,35 +210,22 @@ export async function PATCH(
           },
         })
 
-        // Create transaction for completed ride
+        // Create transaction for completed ride (平台費已在接單時預扣)
         if (status === 'COMPLETED' && user.driver) {
-          const platformFee = Math.floor(order.price * 0.05) // 5% platform fee
-
-          await prisma.transaction.createMany({
-            data: [
-              {
-                orderId: id,
-                driverId: user.driver.id,
-                amount: order.price - platformFee, // Driver receives price minus fee
-                type: 'RIDE_FARE',
-                status: 'PENDING',
-                description: `行程收入 - 訂單 #${id.slice(0, 8)}`,
-              },
-              {
-                orderId: id,
-                driverId: user.driver.id,
-                amount: -platformFee,
-                type: 'PLATFORM_FEE',
-                status: 'SETTLED',
-                description: '平台費 (5%)',
-              },
-            ],
+          await prisma.transaction.create({
+            data: {
+              orderId: id,
+              driverId: user.driver.id,
+              amount: order.price,
+              type: 'RIDE_FARE',
+              status: 'PENDING',
+              description: `行程收入 - 訂單 #${id.slice(0, 8)}`,
+            },
           })
 
-          // Update driver balance
           await prisma.driver.update({
             where: { id: user.driver.id },
-            data: { status: 'ONLINE' }, // Set back to online after completion
+            data: { status: 'ONLINE' },
           })
         }
 
