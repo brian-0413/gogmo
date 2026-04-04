@@ -9,7 +9,7 @@
 
 ### 最後 commit
 ```
-c6cbff8 fix(scheduling): 修正接機觸發的送機推薦邏輯
+6766ef6 docs: 更新 CURRENT_WORK.md 加入接機觸發邏輯重構
 ```
 落後 origin/main 0 個 commits。
 
@@ -22,6 +22,21 @@ c6cbff8 fix(scheduling): 修正接機觸發的送機推薦邏輯
 ---
 
 ## 近期進度
+
+### [完成] QA 測試（2026-04-04）
+- `/qa` 測試司機端智慧排單功能，發現 **0 個問題**
+- Health Score：**100/100**
+- 測試涵蓋：我的行程頁面、接單大廳頁面、智慧排班面板、所有互動按鈕
+
+### [完成] Claude Code 插件安裝
+- `superpowers-marketplace`：含 `/brainstorm`, `/write-plan`, `/execute-plan` 等技能
+- `claude-hud`（jarrodwatts/claude-hud）：HUD 顯示介面
+- `frontend-design`、`skill-creator`、`ralph-wiggum`、`claude-md-management`
+
+### [完成] 派單方派單機制技能（/dispatch skill）
+- 建立 `src/.claude/skills/dispatch/SKILL.md`
+- 涵蓋：3步驟派單流程、AI解析規則、訂單狀態流程、車型對照、肯驛機制、平台費用
+- 指定路徑：`src/app/dashboard/dispatcher/`、`src/lib/ai.ts`、`src/components/dispatcher/`
 
 ### [完成] 智慧排單排序策略：區分觸發類型
 - **送機觸發**（司機確定在桃園機場）：
@@ -318,14 +333,20 @@ PENDING → PUBLISHED → ASSIGNED → ACCEPTED → ARRIVED → IN_PROGRESS → 
 ## 待辦（可能的下一步）
 
 - [x] 司機接單大廳車型過濾 + 排序功能
-- [ ] 司機「我的行程」狀態更新（抵達/開始/完成）
+- [x] 智慧排單排序策略重構（接機觸發→地理距離/送機觸發→落地時間）
+- [x] 行程卡片單一訂單智慧排單
+- [ ] 司機「我的行程」狀態更新（抵達/開始/完成按鈕）
 - [ ] 派單方帳務中心
 - [ ] 司機端即時位置追蹤
 - [ ] 通知系統（push / in-app）
 - [ ] Admin 後台
 - [ ] 轉帳確認功能
 - [ ] 自動化結算（每天跑一次）
-- [ ] **小隊模式**：每個用戶可加 10 位隊員，隊員間互相支援轉單（轉單費 8%，低於一般 10%）
+- [ ] **小隊互助系統**（規格文件已完成：`docs/squad-system.md`）
+  - 小隊建立/加入/退出/解散
+  - 小隊內轉單（5%，比退單10%便宜）
+  - 派單方同意轉單確認
+  - 行程前3小時鎖定
 - [ ] 派單方點數帳戶：派單方刪除司機已接的單時，扣派單方 5% 補貼司機
 
 ---
