@@ -9,7 +9,7 @@ import { OrderCard, Order } from '@/components/driver/OrderCard'
 import { OrderCalendar } from '@/components/driver/OrderCalendar'
 import { format, parseISO, startOfDay, startOfWeek, isSameDay } from 'date-fns'
 import { zhTW } from 'date-fns/locale'
-import { ClipboardList, FileText, Wallet, LogOut, Plane, Zap, TrendingUp, Radio, Inbox, Clock, ArrowUpDown, ArrowUp, ArrowDown, Car, Star, Sparkles, ArrowRight, CheckCircle, AlertTriangle, XCircle, Calendar, ChevronRight } from 'lucide-react'
+import { ClipboardList, FileText, Wallet, LogOut, Plane, Zap, TrendingUp, Radio, Inbox, Clock, ArrowUpDown, ArrowUp, ArrowDown, Car, Star, Sparkles, ArrowRight, CheckCircle, AlertTriangle, XCircle, Calendar, ChevronRight, ChevronDown } from 'lucide-react'
 import Link from 'next/link'
 
 type Tab = 'available' | 'myorders' | 'balance'
@@ -63,6 +63,12 @@ export default function DriverDashboard() {
     today: number; thisWeek: number; allTime: number
     todayOrders: number; weekOrders: number; allOrders: number
   }>({ today: 0, thisWeek: 0, allTime: 0, todayOrders: 0, weekOrders: 0, allOrders: 0 })
+  const [completedOrders, setCompletedOrders] = useState<Array<{
+    id: string; completedAt: string; pickupLocation: string; dropoffLocation: string
+    price: number; dispatcher?: { companyName: string }; transferStatus: string
+  }>>([])
+  const [completedLoading, setCompletedLoading] = useState(false)
+  const [showCompleted, setShowCompleted] = useState(false)
   const [driverProfile, setDriverProfile] = useState<{
     licensePlate: string; carType: string; carColor: string
   } | null>(null)
@@ -188,6 +194,40 @@ export default function DriverDashboard() {
     eventSourceRef.current = es
     return () => { es.close(); eventSourceRef.current = null }
   }, [token, activeTab])
+
+  // SSE for balance tab (transfer status updates)
+  useEffect(() => {
+    if (!token || user?.role !== 'DRIVER' || activeTab !== 'balance') return
+    const es = new EventSource('/api/drivers/events')
+    es.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data)
+        if (data.type === 'TRANSFER_STATUS_CHANGE') {
+          setCompletedOrders(prev => prev.map(order =>
+            order.id === data.orderId
+              ? { ...order, transferStatus: data.transferStatus }
+              : order
+          ))
+        }
+      } catch {}
+    }
+    es.onerror = () => es.close()
+    return () => es.close()
+  }, [token, user?.role, activeTab])
+
+  const fetchCompletedOrders = useCallback(async () => {
+    if (!token) return
+    setCompletedLoading(true)
+    try {
+      const res = await fetch('/api/drivers/completed-orders', {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      const data = await res.json()
+      if (data.success) setCompletedOrders(data.data.orders || [])
+    } finally {
+      setCompletedLoading(false)
+    }
+  }, [token])
 
   const fetchOrders = useCallback(async () => {
     if (!token) return
@@ -1337,6 +1377,70 @@ export default function DriverDashboard() {
                   </div>
                 )}
               </div>
+            </div>
+
+            {/* 已完成行程 */}
+            <div className="bg-white border border-[#DDDDDD] rounded-xl overflow-hidden">
+              <button
+                onClick={() => { setShowCompleted(!showCompleted); if (!showCompleted && completedOrders.length === 0) fetchCompletedOrders() }}
+                className="w-full flex items-center justify-between px-5 py-4 hover:bg-[#F7F7F7] transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <ClipboardList className="w-4 h-4 text-[#717171]" />
+                  <span className="text-sm font-medium text-[#222222]">已完成行程</span>
+                  <span className="text-[11px] text-[#717171]">共 {completedOrders.length} 筆</span>
+                </div>
+                {showCompleted ? <ChevronDown className="w-4 h-4 text-[#717171]" /> : <ChevronRight className="w-4 h-4 text-[#717171]" />}
+              </button>
+
+              {showCompleted && (
+                completedOrders.length === 0 ? (
+                  <div className="text-center py-8">
+                    {completedLoading ? (
+                      <p className="text-[#717171] text-sm">載入中...</p>
+                    ) : (
+                      <p className="text-[#717171] text-sm">尚無已完成行程</p>
+                    )}
+                  </div>
+                ) : (
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-t border-[#DDDDDD]">
+                        <th className="text-left text-[11px] text-[#717171] py-3 px-4 font-normal">日期</th>
+                        <th className="text-left text-[11px] text-[#717171] py-3 px-4 font-normal">起訖點</th>
+                        <th className="text-right text-[11px] text-[#717171] py-3 px-4 font-normal">金額</th>
+                        <th className="text-left text-[11px] text-[#717171] py-3 px-4 font-normal">派單人</th>
+                        <th className="text-center text-[11px] text-[#717171] py-3 px-4 font-normal">轉帳情形</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {completedOrders.map(order => {
+                        const completedAtStr = order.completedAt
+                          ? format(typeof order.completedAt === 'string' ? parseISO(order.completedAt) : order.completedAt, 'MM/dd HH:mm')
+                          : '-'
+                        const isTransferred = order.transferStatus === 'completed'
+                        return (
+                          <tr key={order.id} className="border-t border-[#DDDDDD]">
+                            <td className="py-3 px-4 text-[13px] text-[#717171] font-mono-nums">{completedAtStr}</td>
+                            <td className="py-3 px-4 text-[13px] text-[#717171]">{order.pickupLocation} → {order.dropoffLocation}</td>
+                            <td className="py-3 px-4 text-right text-[13px] text-[#FF385C] font-bold font-mono-nums">NT${order.price.toLocaleString()}</td>
+                            <td className="py-3 px-4 text-[13px] text-[#717171]">{order.dispatcher?.companyName || '-'}</td>
+                            <td className="py-3 px-4 text-center">
+                              <span className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-[12px] font-medium ${
+                                isTransferred
+                                  ? 'bg-[#E8F5E8] text-[#008A05]'
+                                  : 'bg-[#F4EFE9] text-[#717171]'
+                              }`}>
+                                {isTransferred ? '派單人已轉帳' : '派單人尚未轉帳'}
+                              </span>
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                )
+              )}
             </div>
           </div>
         )}
