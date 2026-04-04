@@ -178,6 +178,9 @@ model Order {
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
   completedAt     DateTime?   // 完成時間
+  startedAt       DateTime?   // 司機按「開始」
+  arrivedAt       DateTime?   // 司機按「抵達」
+  pickedUpAt      DateTime?   // 司機按「客上」
 
   // Relations
   transactions     Transaction[]
