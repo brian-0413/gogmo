@@ -4,8 +4,8 @@ import { OrderStatusBadge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { format, parseISO, differenceInMinutes } from 'date-fns'
 import { zhTW } from 'date-fns/locale'
-import { User, Package, FileText, Clock, ChevronDown, ChevronUp } from 'lucide-react'
-import { useState, useEffect } from 'react'
+import { User, Package, FileText, ChevronDown, ChevronUp } from 'lucide-react'
+import { useState } from 'react'
 import { formatOrderNo } from '@/lib/utils'
 import type { OrderType, VehicleType, Order } from '@/types'
 
@@ -65,7 +65,6 @@ function OrderCard({ order, onAccept, onView, showActions = true, compact = fals
   const orderType: OrderType = order.type || 'pending'
   const vehicle: VehicleType = order.vehicle || 'any'
   const urgency = getTimeUrgency(order.scheduledTime)
-  const [countdown, setCountdown] = useState<string>('')
   const [notesExpanded, setNotesExpanded] = useState(false)
   const notes = order.notes || order.note || order.rawText
   const orderNo = formatOrderNo(scheduledDate, order.orderSeq)
@@ -75,24 +74,6 @@ function OrderCard({ order, onAccept, onView, showActions = true, compact = fals
   const isBoat = orderType === 'pickup_boat' || orderType === 'dropoff_boat'
   const pickupLabel = isBoat ? '出發港' : isPickup ? '桃園機場' : '上車'
   const dropoffLabel = isBoat ? '目的地港' : isPickup ? '目的地' : '桃園機場'
-
-  useEffect(() => {
-    if (urgency === "urgent" || urgency === "soon") {
-      const updateCountdown = () => {
-        const now = new Date()
-        const time = typeof order.scheduledTime === 'string' ? parseISO(order.scheduledTime) : new Date(order.scheduledTime)
-        const seconds = differenceInMinutes(time, now) * 60 - now.getSeconds()
-        if (seconds > 0) {
-          const mins = Math.floor(seconds / 60)
-          const secs = seconds % 60
-          setCountdown(`${mins}:${secs.toString().padStart(2, '0')}`)
-        }
-      }
-      updateCountdown()
-      const interval = setInterval(updateCountdown, 1000)
-      return () => clearInterval(interval)
-    }
-  }, [order.scheduledTime, urgency])
 
   if (compact) {
     return (
@@ -167,15 +148,6 @@ function OrderCard({ order, onAccept, onView, showActions = true, compact = fals
             )}
           </div>
           <div className="flex items-center gap-1.5 flex-shrink-0">
-            {urgency !== "normal" && (
-              <span className="text-[11px] font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5 font-mono-nums" style={{
-                backgroundColor: urgency === "urgent" ? '#FCEBEB' : '#FFF3E0',
-                color: urgency === "urgent" ? '#A32D2D' : '#B45309'
-              }}>
-                <Clock className="w-3 h-3" />
-                {countdown || '00:00'}
-              </span>
-            )}
             <OrderStatusBadge status={order.status} />
           </div>
         </div>
