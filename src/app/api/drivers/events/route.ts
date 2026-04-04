@@ -87,6 +87,7 @@ export async function GET(request: NextRequest) {
           where: {
             status: 'PUBLISHED',
             driverId: null,
+            scheduledTime: { gte: new Date() }, // 排除已過期的行程
           },
           include: {
             dispatcher: { include: { user: true } },
@@ -137,6 +138,7 @@ export async function GET(request: NextRequest) {
                 gt: lastCheck,
               },
               driverId: null,
+              scheduledTime: { gte: new Date() }, // 排除已過期的行程
             },
             include: {
               dispatcher: { include: { user: true } },

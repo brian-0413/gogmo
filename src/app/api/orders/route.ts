@@ -65,6 +65,7 @@ export async function GET(request: NextRequest) {
     // Returns orders sorted by a score based on urgency + price
     if (recommended && user.role === 'DRIVER' && user.driver) {
       where.status = 'PUBLISHED' // Only recommend published orders
+      where.scheduledTime = { gte: new Date() } // 排除已過期的行程
     }
 
     // Fetch orders - for recommended, fetch more to sort in memory
