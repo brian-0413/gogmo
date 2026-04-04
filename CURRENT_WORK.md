@@ -9,19 +9,35 @@
 
 ### 最後 commit
 ```
-4d6de44 docs: 新增訂閱與金流系統規格文件
+63f91cd feat(dispatcher): 行控中心卡片加入進度條燈號
 ```
-落後 origin/main 0 個 commits。
+落後 origin/main 7 個 commits。
 
 ---
 
-## 目前開發階段：第三階段 - 司機端 MVP
+## 目前開發階段：第一期 - 司機端完善（司機行程狀態更新）
 
 派單方行控中心已完成（第一、二階段）。現正處理司機端接單流程。
 
 ---
 
 ## 近期進度
+
+### [完成] 司機行程狀態更新（2026-04-04）
+**Commits**: `ec55ab4` → `f80f240` → `3cb34e2` → `b250d8c` → `99a38a6` → `63f91cd`
+
+**功能概述**：司機接單後可在手機上依序執行「開始 → 抵達 → 客上 → 客下」，派單方行控中心的卡片即時同步顯示4格進度燈號。
+
+**實作內容**：
+- **Prisma schema**：`Order` model 新增 `startedAt`、`arrivedAt`、`pickedUpAt` 時間戳記欄位；`OrderStatus` enum 新增 `IN_PROGRESS`、`ARRIVED`、`PICKED_UP`
+- **API**：`POST /api/orders/[id]/status` 專用端點，支援 start/arrive/pickup/complete 四個動作，3小時門檻檢查，完成時建立交易紀錄並扣5%平台費
+- **SSE**：`GET /api/dispatchers/events` 派單方即時接收 ORDER_STATUS_CHANGE 事件
+- **ProgressBar 元件**：`src/components/driver/ProgressBar.tsx`，4格進度條（開始/抵達/客上/客下），亮燈/閃爍效果
+- **OrderDetailActions 元件**：`src/components/driver/OrderDetailActions.tsx`，4鍵按鈕列，含狀態鎖定邏輯
+- **司機端訂單詳情頁**：`/dashboard/driver/order/[id]`，全螢幕顯示進度條、4鍵按鈕、乘客電話可撥號、客下完成後2秒自動返回
+- **派單方行控中心**：卡片顯示進度條燈號，接收 SSE 即時更新燈號
+
+**規格文件**：`docs/driver-status-flow.md`
 
 ### [完成] QA 測試（2026-04-04）
 - `/qa` 測試司機端智慧排單功能，發現 **0 個問題**
