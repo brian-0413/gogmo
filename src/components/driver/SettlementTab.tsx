@@ -16,7 +16,7 @@ interface CompletedOrder {
   transferStatus: string
 }
 
-interface BalanceData {
+export interface BalanceData {
   balance: number
   transactions: Array<{
     id: string
@@ -32,33 +32,17 @@ interface BalanceData {
 
 interface SettlementTabProps {
   token: string | null
-}
-
-export function SettlementTab({ token }: SettlementTabProps) {
-  const [balance, setBalance] = useState<BalanceData | null>(null)
-  const [balanceStats, setBalanceStats] = useState<{
+  balance: BalanceData | null
+  balanceStats: {
     today: number; thisWeek: number; allTime: number
     todayOrders: number; weekOrders: number; allOrders: number
-  }>({ today: 0, thisWeek: 0, allTime: 0, todayOrders: 0, weekOrders: 0, allOrders: 0 })
+  }
+}
+
+export function SettlementTab({ token, balance, balanceStats }: SettlementTabProps) {
   const [completedOrders, setCompletedOrders] = useState<CompletedOrder[]>([])
   const [completedLoading, setCompletedLoading] = useState(false)
   const [showCompleted, setShowCompleted] = useState(false)
-
-  const calculateStats = useCallback((transactions: Array<{ type: string; amount: number; createdAt: string | Date }>) => {
-    const now = new Date()
-    const todayStart = startOfDay(now)
-    const weekStart = startOfWeek(now, { locale: zhTW })
-    let today = 0, thisWeek = 0, allTime = 0, todayOrders = 0, weekOrders = 0, allOrders = 0
-    for (const tx of transactions) {
-      if (tx.type !== 'RIDE_FARE') continue
-      const createdAt = typeof tx.createdAt === 'string' ? parseISO(tx.createdAt) : tx.createdAt
-      const netAmount = Math.floor(tx.amount * 0.95)
-      allTime += netAmount; allOrders++
-      if (createdAt >= todayStart) { today += netAmount; todayOrders++ }
-      if (createdAt >= weekStart) { thisWeek += netAmount; weekOrders++ }
-    }
-    setBalanceStats({ today, thisWeek, allTime, todayOrders, weekOrders, allOrders })
-  }, [])
 
   const fetchCompletedOrders = useCallback(async () => {
     if (!token) return
@@ -73,23 +57,6 @@ export function SettlementTab({ token }: SettlementTabProps) {
       setCompletedLoading(false)
     }
   }, [token])
-
-  const fetchBalance = useCallback(async () => {
-    if (!token) return
-    try {
-      const res = await fetch('/api/drivers/balance', { headers: { Authorization: `Bearer ${token}` } })
-      const data = await res.json()
-      if (data.success) {
-        setBalance(data.data)
-        calculateStats(data.data.transactions || [])
-      }
-    } catch (error) { console.error('Failed to fetch balance:', error) }
-  }, [token, calculateStats])
-
-  // Fetch balance on mount
-  useEffect(() => {
-    fetchBalance()
-  }, [fetchBalance])
 
   // SSE for TRANSFER_STATUS_CHANGE
   useEffect(() => {

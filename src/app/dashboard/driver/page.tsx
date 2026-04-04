@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/Badge'
 import { OrderCard, Order } from '@/components/driver/OrderCard'
 import { OrderCalendar } from '@/components/driver/OrderCalendar'
 import { SettlementTab } from '@/components/driver/SettlementTab'
+import type { BalanceData } from '@/components/driver/SettlementTab'
 import { format, parseISO, startOfDay, startOfWeek, isSameDay } from 'date-fns'
 import { zhTW } from 'date-fns/locale'
 import { ClipboardList, FileText, Wallet, LogOut, Plane, TrendingUp, Radio, Inbox, Clock, ArrowUpDown, ArrowUp, ArrowDown, Car, Star, Sparkles, ArrowRight, CheckCircle, AlertTriangle, XCircle, Calendar, ChevronRight } from 'lucide-react'
@@ -51,12 +52,7 @@ export default function DriverDashboard() {
   const [activeTab, setActiveTab] = useState<Tab>('available')
   const [availableOrders, setAvailableOrders] = useState<Order[]>([])
   const [myOrders, setMyOrders] = useState<Order[]>([])
-  const [balance, setBalance] = useState<{
-    balance: number
-    transactions: unknown[]
-    totalEarnings: number
-    totalPlatformFees: number
-  } | null>(null)
+  const [balance, setBalance] = useState<BalanceData | null>(null)
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const eventSourceRef = useRef<EventSource | null>(null)
@@ -1171,7 +1167,7 @@ export default function DriverDashboard() {
         )}
 
         {/* ===== BALANCE ===== */}
-        {activeTab === 'balance' && <SettlementTab token={token} />}
+        {activeTab === 'balance' && <SettlementTab token={token} balance={balance} balanceStats={balanceStats} />}
       </main>
     </div>
   )
