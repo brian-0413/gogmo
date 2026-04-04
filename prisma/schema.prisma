@@ -29,8 +29,9 @@ enum OrderStatus {
   PUBLISHED    // 已發布（可見於首頁）
   ASSIGNED     // 已指派司機
   ACCEPTED     // 司機已接單
-  ARRIVED      // 司機已抵達
-  IN_PROGRESS  // 行程進行中
+  IN_PROGRESS  // 行程開始（司機按開始）
+  ARRIVED      // 已抵達（司機按抵達）
+  PICKED_UP    // 乘客已上車（司機按客上）
   COMPLETED    // 已完成
   CANCELLED    // 已取消
 }

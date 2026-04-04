@@ -2,7 +2,7 @@
 
 export type UserRole = 'DRIVER' | 'DISPATCHER' | 'ADMIN'
 export type DriverStatus = 'ONLINE' | 'OFFLINE' | 'BUSY'
-export type OrderStatus = 'PENDING' | 'PUBLISHED' | 'ASSIGNED' | 'ACCEPTED' | 'ARRIVED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED'
+export type OrderStatus = 'PENDING' | 'PUBLISHED' | 'ASSIGNED' | 'ACCEPTED' | 'IN_PROGRESS' | 'ARRIVED' | 'PICKED_UP' | 'COMPLETED' | 'CANCELLED'
 export type TransactionType = 'RIDE_FARE' | 'PLATFORM_FEE' | 'RECHARGE' | 'WITHDRAW'
 export type TransactionStatus = 'PENDING' | 'SETTLED'
 
