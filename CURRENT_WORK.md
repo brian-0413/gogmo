@@ -9,7 +9,7 @@
 
 ### 最後 commit
 ```
-92c035d fix(orders): 司機大廳全面過濾過期訂單 + 派單方 Stats 重構
+4d6de44 docs: 新增訂閱與金流系統規格文件
 ```
 落後 origin/main 0 個 commits。
 
@@ -343,6 +343,11 @@ PENDING → PUBLISHED → ASSIGNED → ACCEPTED → ARRIVED → IN_PROGRESS → 
 - [x] 司機接單大廳車型過濾 + 排序功能
 - [x] 智慧排單排序策略重構（接機觸發→地理距離/送機觸發→落地時間）
 - [x] 行程卡片單一訂單智慧排單
+- [ ] **訂閱與金流系統**（規格文件：`docs/subscription-system.md`）
+  - Prisma schema 異動
+  - UNIPAY 整合
+  - 司機訂閱/儲值頁面
+  - 智慧排班 quota 限制
 - [ ] 司機「我的行程」狀態更新（抵達/開始/完成按鈕）
 - [ ] 派單方帳務中心
 - [ ] 司機端即時位置追蹤
@@ -355,6 +360,7 @@ PENDING → PUBLISHED → ASSIGNED → ACCEPTED → ARRIVED → IN_PROGRESS → 
   - 小隊內轉單（5%，比退單10%便宜）
   - 派單方同意轉單確認
   - 行程前3小時鎖定
+  - **Premium 用戶專屬功能**
 - [ ] 派單方點數帳戶：派單方刪除司機已接的單時，扣派單方 5% 補貼司機
 
 ---
@@ -364,6 +370,18 @@ PENDING → PUBLISHED → ASSIGNED → ACCEPTED → ARRIVED → IN_PROGRESS → 
 ### 2026-04-04（下午）
 - **司機大廳過期訂單過濾**：API 修復，原本 scheduledTime >= now 只在 recommended=true 生效，現改為司機查詢 PUBLISHED 時全面套用
 - **派單方 Stats 重構**：6 格 → 6 格（接機+送機合併顯示、未派出新增），PICKUP/DROPOFF 統計加入 _boat 類型
+- **倒數計時移除**：司機卡片上最接近過期的倒數計時移除
+- **智慧排班系統重新設計**：
+  - isSystemRecommended 欄位：司機自選=false，系統排=true
+  - 只有 isSystemRecommended=false 的單可以當觸發點
+  - **free 用戶**：每日 1 套（司機自選觸發單 + 系統排銜接單 = 2單），隔日重置
+  - **premium 用戶**：每日 3 套（6單），月費 $299 / 年費 $3,000
+  - 一般用戶一天只能手動接一次單，不能接第二單 a2+b2
+- **訂閱與金流系統**（`docs/subscription-system.md`）：
+  - 月費 $299（30天）、年費 $3,000（365天），D+1 到期
+  - 儲值：$500→520點/$1000→1050點/$2000→2150點/$3000→3300點
+  - UNIPAY API 直接串接（已參考 GF repo 的實作）
+  - 小隊模式列為 Premium 功能
 
 ### 2026-04-04
 - **接機觸發邏輯重構**：根據用戶提供的 t1/t2/t3/t4 時間鏈重新設計
