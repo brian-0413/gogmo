@@ -7,9 +7,10 @@ import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { OrderCard, Order } from '@/components/driver/OrderCard'
 import { OrderCalendar } from '@/components/driver/OrderCalendar'
+import { SettlementTab } from '@/components/driver/SettlementTab'
 import { format, parseISO, startOfDay, startOfWeek, isSameDay } from 'date-fns'
 import { zhTW } from 'date-fns/locale'
-import { ClipboardList, FileText, Wallet, LogOut, Plane, Zap, TrendingUp, Radio, Inbox, Clock, ArrowUpDown, ArrowUp, ArrowDown, Car, Star, Sparkles, ArrowRight, CheckCircle, AlertTriangle, XCircle, Calendar, ChevronRight, ChevronDown } from 'lucide-react'
+import { ClipboardList, FileText, Wallet, LogOut, Plane, TrendingUp, Radio, Inbox, Clock, ArrowUpDown, ArrowUp, ArrowDown, Car, Star, Sparkles, ArrowRight, CheckCircle, AlertTriangle, XCircle, Calendar, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 
 type Tab = 'available' | 'myorders' | 'balance'
@@ -63,12 +64,6 @@ export default function DriverDashboard() {
     today: number; thisWeek: number; allTime: number
     todayOrders: number; weekOrders: number; allOrders: number
   }>({ today: 0, thisWeek: 0, allTime: 0, todayOrders: 0, weekOrders: 0, allOrders: 0 })
-  const [completedOrders, setCompletedOrders] = useState<Array<{
-    id: string; completedAt: string; pickupLocation: string; dropoffLocation: string
-    price: number; dispatcher?: { companyName: string }; transferStatus: string
-  }>>([])
-  const [completedLoading, setCompletedLoading] = useState(false)
-  const [showCompleted, setShowCompleted] = useState(false)
   const [driverProfile, setDriverProfile] = useState<{
     licensePlate: string; carType: string; carColor: string
   } | null>(null)
@@ -118,6 +113,16 @@ export default function DriverDashboard() {
     }
   }, [scheduleResult])
 
+  const filteredOrders = useMemo(() => {
+    if (!selectedDate) return myOrders
+    return myOrders.filter(order => {
+      const d = typeof order.scheduledTime === 'string'
+        ? new Date(order.scheduledTime)
+        : order.scheduledTime
+      return isSameDay(d, selectedDate)
+    })
+  }, [myOrders, selectedDate])
+
   const calculateStats = useCallback((transactions: unknown[]) => {
     const now = new Date()
     const todayStart = startOfDay(now)
@@ -133,16 +138,6 @@ export default function DriverDashboard() {
     }
     setBalanceStats({ today, thisWeek, allTime, todayOrders, weekOrders, allOrders })
   }, [])
-
-  const filteredOrders = useMemo(() => {
-    if (!selectedDate) return myOrders
-    return myOrders.filter(order => {
-      const d = typeof order.scheduledTime === 'string'
-        ? new Date(order.scheduledTime)
-        : order.scheduledTime
-      return isSameDay(d, selectedDate)
-    })
-  }, [myOrders, selectedDate])
 
   // 車型過濾範圍（根據司機註冊車型）
   const driverCarType = driverProfile?.carType || 'pending'
@@ -173,20 +168,6 @@ export default function DriverDashboard() {
     if (!isLoading && (!user || user.role !== 'DRIVER')) router.push('/login')
   }, [user, isLoading, router])
 
-  const fetchCompletedOrders = useCallback(async () => {
-    if (!token) return
-    setCompletedLoading(true)
-    try {
-      const res = await fetch('/api/drivers/completed-orders', {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      const data = await res.json()
-      if (data.success) setCompletedOrders(data.data.orders || [])
-    } finally {
-      setCompletedLoading(false)
-    }
-  }, [token])
-
   // 合併的 SSE：單一連線處理所有事件
   useEffect(() => {
     if (!token) return
@@ -202,29 +183,13 @@ export default function DriverDashboard() {
           })
         } else if (data.type === 'ORDER_CANCELLED') {
           setAvailableOrders((prev) => prev.filter((o) => o.id !== data.orderId))
-        } else if (data.type === 'TRANSFER_STATUS_CHANGE') {
-          // 只在 balance tab 才監聽轉帳狀態，且確保已完成列表已載入
-          if (activeTab === 'balance') {
-            setCompletedOrders(prev => {
-              const exists = prev.find(o => o.id === data.orderId)
-              if (!exists) {
-                // 新完成的訂單出現，刷新列表
-                fetchCompletedOrders()
-              }
-              return prev.map(order =>
-                order.id === data.orderId
-                  ? { ...order, transferStatus: data.transferStatus }
-                  : order
-              )
-            })
-          }
         }
       } catch {}
     }
     es.onerror = () => es.close()
     eventSourceRef.current = es
     return () => { es.close(); eventSourceRef.current = null }
-  }, [token, activeTab, fetchCompletedOrders])
+  }, [token])
 
   const fetchOrders = useCallback(async () => {
     if (!token) return
@@ -1206,241 +1171,7 @@ export default function DriverDashboard() {
         )}
 
         {/* ===== BALANCE ===== */}
-        {activeTab === 'balance' && balance && (
-          <div className="space-y-5">
-            {/* Earnings cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              {/* Today */}
-              <div className="bg-white border border-[#DDDDDD] rounded-xl p-5 relative overflow-hidden shadow-sm">
-                <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#22C55E]/50 to-transparent" />
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="w-1.5 h-1.5 rounded-full bg-[#22C55E] animate-pulse" />
-                  <span className="text-[10px] text-[#22C55E] uppercase tracking-widest font-medium">今日收益</span>
-                </div>
-                <p className="text-3xl font-bold text-[#1C1917] font-mono-nums">{balanceStats.today.toLocaleString()}</p>
-                <p className="text-xs text-[#78716C] mt-1 font-mono-nums">{balanceStats.todayOrders} 單</p>
-                {/* Mini sparkline */}
-                <div className="mt-4 flex items-end gap-0.5 h-8">
-                  {Array.from({ length: 7 }).map((_, i) => {
-                    const dayStart = new Date(); dayStart.setDate(dayStart.getDate() - (6 - i))
-                    const dayStartStr = startOfDay(dayStart)
-                    let dayTotal = 0, dayCount = 0
-                    for (const tx of (balance.transactions as Array<{ type: string; amount: number; createdAt: string | Date }>) || []) {
-                      if (tx.type !== 'RIDE_FARE') continue
-                      const createdAt = typeof tx.createdAt === 'string' ? parseISO(tx.createdAt) : tx.createdAt
-                      if (startOfDay(createdAt).getTime() === dayStartStr.getTime()) { dayTotal += Math.floor(tx.amount * 0.95); dayCount++ }
-                    }
-                    const maxH = Math.max(balanceStats.today, 1)
-                    const barH = balanceStats.todayOrders > 0 ? Math.max((dayTotal / maxH) * 32, 2) : 2
-                    const isToday = i === 6
-                    return (
-                      <div key={i} className="flex-1 flex flex-col items-center gap-0.5">
-                        <div className={`w-full rounded-sm transition-all ${isToday ? 'bg-[#22C55E]' : 'bg-[#22C55E]/25'}`} style={{ height: `${barH}px` }} />
-                        <span className="text-[8px] text-[#A8A29E] font-mono-nums">{'日一二三四五六'[dayStart.getDay()]}</span>
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-
-              {/* This Week */}
-              <div className="bg-white border border-[#DDDDDD] rounded-xl p-5 relative overflow-hidden shadow-sm">
-                <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#3B82F6]/50 to-transparent" />
-                <div className="flex items-center gap-2 mb-3">
-                  <TrendingUp className="w-3.5 h-3.5 text-[#3B82F6]" />
-                  <span className="text-[10px] text-[#3B82F6] uppercase tracking-widest font-medium">本週收益</span>
-                </div>
-                <p className="text-3xl font-bold text-[#1C1917] font-mono-nums">{balanceStats.thisWeek.toLocaleString()}</p>
-                <p className="text-xs text-[#78716C] mt-1 font-mono-nums">{balanceStats.weekOrders} 單</p>
-                {/* Progress */}
-                <div className="mt-4">
-                  <div className="flex justify-between text-[10px] text-[#78716C] mb-1">
-                    <span>本週進度</span>
-                    <span className="font-mono-nums">{balanceStats.thisWeek >= 5000 ? '已達標' : `${balanceStats.thisWeek}/5000`}</span>
-                  </div>
-                  <div className="h-1.5 bg-[#F5F4F0] rounded-full overflow-hidden">
-                    <div className="h-full bg-[#3B82F6] rounded-full transition-all" style={{ width: `${Math.min((balanceStats.thisWeek / 5000) * 100, 100)}%` }} />
-                  </div>
-                </div>
-              </div>
-
-              {/* All Time */}
-              <div className="bg-white border border-[#DDDDDD] rounded-xl p-5 relative overflow-hidden shadow-sm">
-                <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#A855F7]/50 to-transparent" />
-                <div className="flex items-center gap-2 mb-3">
-                  <Zap className="w-3.5 h-3.5 text-[#A855F7]" />
-                  <span className="text-[10px] text-[#A855F7] uppercase tracking-widest font-medium">累積收益</span>
-                </div>
-                <p className="text-3xl font-bold text-[#1C1917] font-mono-nums">{balanceStats.allTime.toLocaleString()}</p>
-                <p className="text-xs text-[#78716C] mt-1 font-mono-nums">{balanceStats.allOrders} 單</p>
-                {/* Fee breakdown */}
-                <div className="mt-4 space-y-1">
-                  <div className="flex justify-between text-[10px]">
-                    <span className="text-[#78716C]">平台費 (5%)</span>
-                    <span className="text-[#EF4444] font-mono-nums">-{balance.totalPlatformFees?.toLocaleString() || 0}</span>
-                  </div>
-                  <div className="flex justify-between text-[10px]">
-                    <span className="text-[#78716C]">總收入</span>
-                    <span className="text-[#1C1917] font-mono-nums">{(balanceStats.allTime + (balance.totalPlatformFees || 0)).toLocaleString()}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Stats row */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-              {/* 帳戶餘額 */}
-              <div className="bg-white border border-[#DDDDDD] rounded-xl p-4 hover:shadow-[0_2px_12px_rgba(0,0,0,0.08)] transition-shadow">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-6 h-6 rounded-lg bg-[#FFF3E0] border border-[#FFE0B2] flex items-center justify-center">
-                    <Wallet className="w-3.5 h-3.5 text-[#B45309]" />
-                  </div>
-                  <span className="text-[10px] text-[#717171] font-normal">帳戶餘額</span>
-                </div>
-                <p className="text-2xl font-bold text-[#222222] font-mono-nums">{balance.balance.toLocaleString()}</p>
-                <p className="text-[11px] text-[#B0B0B0] mt-0.5">點</p>
-              </div>
-              {/* 待結算 */}
-              <div className="bg-white border border-[#DDDDDD] rounded-xl p-4 hover:shadow-[0_2px_12px_rgba(0,0,0,0.08)] transition-shadow">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-6 h-6 rounded-lg bg-[#FFF3E0] border border-[#FFE0B2] flex items-center justify-center">
-                    <Clock className="w-3.5 h-3.5 text-[#B45309]" />
-                  </div>
-                  <span className="text-[10px] text-[#717171] font-normal">待結算</span>
-                </div>
-                <p className="text-2xl font-bold text-[#222222] font-mono-nums">
-                  {(balance.transactions as Array<{ status: string }>).filter(t => t.status === 'PENDING').length}
-                </p>
-                <p className="text-[11px] text-[#B0B0B0] mt-0.5">筆</p>
-              </div>
-              {/* 總行程 */}
-              <div className="bg-white border border-[#DDDDDD] rounded-xl p-4 hover:shadow-[0_2px_12px_rgba(0,0,0,0.08)] transition-shadow">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-6 h-6 rounded-lg bg-[#E6F1FB] border border-[#C2DBF5] flex items-center justify-center">
-                    <TrendingUp className="w-3.5 h-3.5 text-[#0C447C]" />
-                  </div>
-                  <span className="text-[10px] text-[#717171] font-normal">總行程</span>
-                </div>
-                <p className="text-2xl font-bold text-[#222222] font-mono-nums">
-                  {(balance.transactions as Array<{ type: string }>).filter(t => t.type === 'RIDE_FARE').length}
-                </p>
-                <p className="text-[11px] text-[#B0B0B0] mt-0.5">單</p>
-              </div>
-              {/* 平台費率 */}
-              <div className="bg-white border border-[#DDDDDD] rounded-xl p-4 hover:shadow-[0_2px_12px_rgba(0,0,0,0.08)] transition-shadow">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-6 h-6 rounded-lg bg-[#F3E8FF] border border-[#E9D5FF] flex items-center justify-center">
-                    <Zap className="w-3.5 h-3.5 text-[#6B21A8]" />
-                  </div>
-                  <span className="text-[10px] text-[#717171] font-normal">平台費率</span>
-                </div>
-                <p className="text-2xl font-bold text-[#222222] font-mono-nums">5%</p>
-                <p className="text-[11px] text-[#B0B0B0] mt-0.5">每單</p>
-              </div>
-            </div>
-
-            {/* Transactions */}
-            <div className="bg-white border border-[#DDDDDD] rounded-xl overflow-hidden shadow-sm">
-              <div className="px-5 py-4 border-b border-[#DDDDDD]">
-                <h3 className="text-sm font-semibold text-[#1C1917]">最近交易</h3>
-              </div>
-              <div className="p-5">
-                {!balance.transactions || balance.transactions.length === 0 ? (
-                  <p className="text-[#78716C] text-center py-8 text-sm">暫無交易記錄</p>
-                ) : (
-                  <div className="space-y-3">
-                    {(balance.transactions as unknown[]).slice(0, 10).map((tx: unknown) => {
-                      const transaction = tx as { id: string; amount: number; type: string; status: string; description?: string; createdAt: string | Date }
-                      const displayAmount = transaction.type === 'RIDE_FARE' ? Math.floor(transaction.amount * 0.95) : transaction.amount
-                      return (
-                        <div key={transaction.id} className="flex items-center justify-between py-3 border-b border-[#DDDDDD]/50 last:border-0">
-                          <div>
-                            <p className="text-sm font-medium text-[#1C1917]">{transaction.description || transaction.type}</p>
-                            <p className="text-xs text-[#78716C] font-mono-nums">
-                              {format(typeof transaction.createdAt === 'string' ? parseISO(transaction.createdAt) : transaction.createdAt, 'yyyy/MM/dd HH:mm')}
-                            </p>
-                          </div>
-                          <div className="text-right">
-                            <p className={`text-sm font-bold font-mono-nums ${displayAmount >= 0 ? 'text-[#22C55E]' : 'text-[#EF4444]'}`}>
-                              {displayAmount >= 0 ? '+' : ''}{displayAmount.toLocaleString()}
-                            </p>
-                            <Badge variant={transaction.status === 'PENDING' ? 'warning' : 'success'} className="text-[10px] mt-0.5">
-                              {transaction.status === 'PENDING' ? '待結算' : '已結算'}
-                            </Badge>
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* 已完成行程 */}
-            <div className="bg-white border border-[#DDDDDD] rounded-xl overflow-hidden">
-              <button
-                onClick={() => { setShowCompleted(!showCompleted); if (!showCompleted && completedOrders.length === 0) fetchCompletedOrders() }}
-                className="w-full flex items-center justify-between px-5 py-4 hover:bg-[#F7F7F7] transition-colors"
-              >
-                <div className="flex items-center gap-2">
-                  <ClipboardList className="w-4 h-4 text-[#717171]" />
-                  <span className="text-sm font-medium text-[#222222]">已完成行程</span>
-                  <span className="text-[11px] text-[#717171]">共 {completedOrders.length} 筆</span>
-                </div>
-                {showCompleted ? <ChevronDown className="w-4 h-4 text-[#717171]" /> : <ChevronRight className="w-4 h-4 text-[#717171]" />}
-              </button>
-
-              {showCompleted && (
-                completedOrders.length === 0 ? (
-                  <div className="text-center py-8">
-                    {completedLoading ? (
-                      <p className="text-[#717171] text-sm">載入中...</p>
-                    ) : (
-                      <p className="text-[#717171] text-sm">尚無已完成行程</p>
-                    )}
-                  </div>
-                ) : (
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-t border-[#DDDDDD]">
-                        <th className="text-left text-[11px] text-[#717171] py-3 px-4 font-normal">日期</th>
-                        <th className="text-left text-[11px] text-[#717171] py-3 px-4 font-normal">起訖點</th>
-                        <th className="text-right text-[11px] text-[#717171] py-3 px-4 font-normal">金額</th>
-                        <th className="text-left text-[11px] text-[#717171] py-3 px-4 font-normal">派單人</th>
-                        <th className="text-center text-[11px] text-[#717171] py-3 px-4 font-normal">轉帳情形</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {completedOrders.map(order => {
-                        const completedAtStr = order.completedAt
-                          ? format(typeof order.completedAt === 'string' ? parseISO(order.completedAt) : order.completedAt, 'MM/dd HH:mm')
-                          : '-'
-                        const isTransferred = order.transferStatus === 'completed'
-                        return (
-                          <tr key={order.id} className="border-t border-[#DDDDDD]">
-                            <td className="py-3 px-4 text-[13px] text-[#717171] font-mono-nums">{completedAtStr}</td>
-                            <td className="py-3 px-4 text-[13px] text-[#717171]">{order.pickupLocation} → {order.dropoffLocation}</td>
-                            <td className="py-3 px-4 text-right text-[13px] text-[#FF385C] font-bold font-mono-nums">NT${order.price.toLocaleString()}</td>
-                            <td className="py-3 px-4 text-[13px] text-[#717171]">{order.dispatcher?.companyName || '-'}</td>
-                            <td className="py-3 px-4 text-center">
-                              <span className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-[12px] font-medium ${
-                                isTransferred
-                                  ? 'bg-[#E8F5E8] text-[#008A05]'
-                                  : 'bg-[#F4EFE9] text-[#717171]'
-                              }`}>
-                                {isTransferred ? '派單人已轉帳' : '派單人尚未轉帳'}
-                              </span>
-                            </td>
-                          </tr>
-                        )
-                      })}
-                    </tbody>
-                  </table>
-                )
-              )}
-            </div>
-          </div>
-        )}
+        {activeTab === 'balance' && <SettlementTab token={token} />}
       </main>
     </div>
   )
