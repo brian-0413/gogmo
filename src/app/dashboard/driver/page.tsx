@@ -1138,15 +1138,19 @@ export default function DriverDashboard() {
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
                 {filteredOrders.map(order => (
                   <div key={order.id} className="relative">
-                    <OrderCard order={order} showActions={true} compact={true} />
+                    <div
+                      onClick={() => router.push(`/dashboard/driver/order/${order.id}`)}
+                      className="cursor-pointer"
+                    >
+                      <OrderCard order={order} showActions={true} compact={true} />
+                    </div>
                     {order.status === 'ACCEPTED' && (
                       <div className="mt-2 flex gap-2">
                         <button
-                          onClick={() => handleScheduleForOrder(order.id)}
-                          disabled={scheduleLoading === true}
-                          className="flex-1 py-2 px-3 bg-[#0C447C] text-white text-[13px] font-bold rounded-lg hover:bg-[#0a3a6e] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                          onClick={() => router.push(`/dashboard/driver/order/${order.id}`)}
+                          className="flex-1 py-2 px-3 bg-[#0C447C] text-white text-[13px] font-bold rounded-lg hover:bg-[#0a3a6e] transition-colors"
                         >
-                          智慧排單
+                          執行行程
                         </button>
                         <button
                           onClick={() => handleCancelOrder(order.id)}
