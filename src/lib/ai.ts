@@ -5,6 +5,8 @@
 //   - 接機：起點=○機（外層決定），終點=訊息中的地點
 //   - 送機：起點=訊息中的地點，終點=○機（外層決定）
 
+import { SYSTEM_PROMPT } from './prompts/order-parsing'
+
 export type OrderType = 'pickup' | 'dropoff' | 'pickup_boat' | 'dropoff_boat' | 'transfer' | 'charter' | 'pending'
 export type VehicleType = 'small' | 'suv' | 'van9' | 'any' | 'any_r' | 'pending'
 export type PlateType = 'R' | 'T' | 'any'
@@ -337,108 +339,6 @@ export function parseBatchOrders(
 }
 
 // ============ LLM 訂單解析（使用 Claude Haiku） ============
-
-const SYSTEM_PROMPT = `你是台灣機場接送平台的訂單解析專家。負責將 LINE 群組的訂單訊息解析成結構化 JSON。
-
-## 輸出格式
-回傳 JSON array，每個元素是一筆訂單：
-
-{
-  "rawText": "原始行文字",
-  "date": "日期（YYYY-MM-DD 格式，使用預設日期）",
-  "time": "時間 HH:MM，落地則填 \"落地\"",
-  "type": "pickup | dropoff | pickup_boat | dropoff_boat | transfer | charter | pending",
-  "vehicle": "small | suv | van9 | any | pending（只能填這五個值之一，中文車型名稱不可填入此欄）",
-  "price": 數字或null",
-  "pickupLocation": "起點（如為桃園則填 \"桃園國際機場\"）",
-  "dropoffLocation": "終點",
-  "notes": "原始行完整複製",
-  "status": "ok | incomplete | rejected",
-  "reason": "當 rejected 或 incomplete 時的原因",
-  "isPaired": 是否為套裝行程
-  "kenichiRequired": true if "肯驛" or "kenichi" 關鍵字存在於原始文字中
-}
-
-## 種類判斷
-- 有「接」（含「接機」「接機台北」等）→ pickup（接機）
-- 有「送」（含「送機」「士林送」等）→ dropoff（送機）
-- ○機-一般地點或區域（如「桃機-北投」「桃機-中正」「桃機-萬華」「桃機-松山」「桃機-大安」）→ pickup（接機，起點=該機場，終點=訊息中的地點或區域）
-- ○機-另一個機場（如「桃機-小港」「桃機-清泉」）→ dropoff（送機，起點=桃園國際機場，終點=另一個機場）
-- 地點-○機（如「中正-桃機」「士林-桃機」「三重-桃機」）→ dropoff（送機，起點=訊息中的地點，終點=桃園國際機場）
-- 【接船】「基隆港→地點」或「基隆港-地點」或「接」+基隆港 → pickup_boat（接船，起點=基隆港，終點=訊息中的地點）
-- 【送船】「地點→基隆港」或「送」+基隆港 → dropoff_boat（送船，起點=訊息中的地點，終點=基隆港）
-
-【重要】送機時，松山/小港/清泉 = 對應的機場；接機時，松山/小港/清泉 = 對應的市區（松山區/小港區/清水區）。
-
-## 地點填充
-- 接機：起點=○機，終點=訊息中的地點
-- 送機：起點=訊息中的地點，終點=○機
-- 機場關鍵字：桃園國際機場、桃機、TPE、松山、松機、TSA、小港、高雄機場、KHH、清泉崗、RMQ
-- 若訊息中無明確機場關鍵字，預設「桃園國際機場」
-- 松山、小港、清泉崗需明確標示，否則預設桃園
-
-## 拒絕規則（rejected）
-滿足以下任一條件，status 設為 "rejected"，reason 填寫對應訊息：
-- 含有「配」或「搭」關鍵字 → "系統只接受確定的套裝行程，未確定接送或由要求司機自行搭配之套裝行程，無法刊登。"
-- 含「/綁」關鍵字 → "此為未確定之套裝行程，無法刊登。"
-- 缺 2 項以上必備項目（時間、種類、起點、終點、金額）→ "您的訊息無法解析，請修正後再貼"
-- 完全無法識別（如整行都是 emoji 無法提取任何資訊）→ "您的訊息無法解析，請修正後再貼"
-
-## 待補正規則（incomplete）
-滿足以下條件，status 設為 "incomplete"：
-- 只缺 1 項必備項目（如缺金額）
-- 含有 emoji 導致金額無法提取
-- 金額、時間模糊（如「1800新竹送」分不清是時間還是金額）
-
-## 套裝行程（isPaired）
-- 含有「一套」「成套」關鍵字 → isPaired=true
-- 同一 block 有去程+回程 → isPaired=true
-
-## 多目的地
-- 同一趟有多個目的地（如「嘉義溪口、中埔、東區」）→ 放在同一筆記錄，notes 保留完整
-- 不能拆成多筆，拆成多筆代表要多台車
-
-## 特殊格式
-- 「落地」→ time="落地"
-- PM/AM → 轉換成 24 小時制
-- 全形數字 (8)(0)(0) → 800
-- *數字 → 乘客人數，放 notes
-- 「增高」「安椅」「安*1」等 → 附加服務，放 notes
-
-## 車型解析（重要！）
-LINE 群組訊息中，車型由兩層資訊決定：
-1. 【區塊標題】📌 後面的關鍵字代表該區塊所有訂單的預設車型：
-   - 「小車」或「轎車」→ 預設車型：small
-   - 「休旅」→ 預設車型：suv
-   - 「大車」→ 預設車型：van9
-   - 「V車」或「vito」→ 預設車型：van9（Vito = 9人座商務車）
-   - 「g車」或「granvia」→ 預設車型：suv（Granvia 可用一般休旅車）
-   - 「9座」或「9人座」→ 預設車型：van9
-   - 「特斯拉」或「進口小」→ 預設車型：small
-
-2. 【訂單行的車型標記】（行尾括號內的字母）優先於區塊預設車型，括號內的字母代表的是車款（不是車牌）：
-   - (L) → small（L=轎車=小車，最高優先權）
-   - (K) → small（K=轎車=小車）
-   - (R) → small（R=轎車=小車，R牌租賃車）
-   - (V) → van9（Vito = Mercedes 9人座商務車）
-   - (g) → suv（Granvia = Toyota 休旅車）
-   - 無括號 → 使用區塊預設車型
-
-【重要】vehicle 欄位只能填以下五個值之一：small | suv | van9 | any | pending，不可填中文！
-
-3. 【重要】同一區塊內的所有訂單都繼承該區塊的預設車型，除非訂單行另有標示。
-
-## 備註
-- notes = 原始行完整複製（保留原始括號如 (K)(L)(R)(V)(g)，不做轉換）
-- 區塊標題行（如「📌小車」「📌大車」「📌V車」「📌休旅」「📌小車一套」）不放 notes，忽略
-
-## 肯驛系統
-- 若原始文字含有「肯驛」或「kenichi」關鍵字 → kenichiRequired=true
-- 行程卡片上以紫色 badge 標示「肯驛」
-
-## 只解析有價格的訂單，忽略標題行（如「📌小車」「📌休旅」「📌大車」「📌V車」「📌小車一套」「📌大車+V車一套」等）
-使用以下預設日期：{DEFAULT_DATE}
-只解析屬於今天（{DEFAULT_DATE}）的訂單，若訊息標示其他日期則跳過。`.replace('{DEFAULT_DATE}', new Date().toISOString().split('T')[0])
 
 export interface LLMParseResult {
   orders: ParsedOrder[]
