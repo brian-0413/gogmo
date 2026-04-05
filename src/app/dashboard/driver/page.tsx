@@ -481,7 +481,7 @@ export default function DriverDashboard() {
 
       {/* Header */}
       <header className="relative z-20 bg-[#FAF8F5]/90 backdrop-blur-xl border-b border-[#E7E5E4] sticky top-0">
-        <div className="max-w-7xl mx-auto px-6">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6">
           <div className="flex items-center justify-between h-16">
             <Link href="/" className="flex items-center gap-3 group">
               <div className="w-9 h-9 rounded-lg bg-[#F59E0B] flex items-center justify-center shadow-[0_0_20px_rgba(245,158,11,0.25)]">
@@ -495,7 +495,16 @@ export default function DriverDashboard() {
                 </div>
               </div>
             </Link>
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-3 sm:gap-6">
+              {/* Mobile balance pill */}
+              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#DDDDDD] rounded-lg shadow-sm md:hidden">
+                <span className="text-sm font-bold text-[#FF385C] font-mono-nums">{user.driver?.balance ?? 0}</span>
+                <span className="text-[10px] text-[#717171]">點</span>
+                <span className="text-[10px] text-[#E7E5E4]">|</span>
+                <span className="text-[10px] text-[#717171]">今日</span>
+                <span className="text-sm font-bold text-[#008A05] font-mono-nums">{balanceStats.todayOrders}</span>
+                <span className="text-[10px] text-[#717171]">單</span>
+              </div>
               {/* Balance */}
               <div className="hidden md:flex items-center gap-3 px-4 py-2 bg-white border border-[#DDDDDD] rounded-lg shadow-sm">
                 <div className="text-right">
@@ -508,10 +517,10 @@ export default function DriverDashboard() {
                   <p className="text-lg font-bold text-[#008A05] font-mono-nums">{balanceStats.todayOrders}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 sm:gap-4">
                 <div className="text-right">
-                  <p className="text-sm font-medium text-[#1C1917]">{user.name}</p>
-                  <p className="text-xs text-[#78716C]">{driverProfile?.licensePlate || '未設定車牌'}</p>
+                  <p className="text-sm font-medium text-[#1C1917] hidden sm:block">{user.name}</p>
+                  <p className="text-xs text-[#78716C] hidden sm:block">{driverProfile?.licensePlate || '未設定車牌'}</p>
                 </div>
                 <Button variant="outline" size="sm" onClick={logout} className="border-[#DDDDDD] text-[#717171] hover:border-[#FF385C]/30 hover:text-[#FF385C] hover:bg-[#FFF3E0]">
                   <LogOut className="w-4 h-4" />
@@ -523,7 +532,7 @@ export default function DriverDashboard() {
       </header>
 
       {/* Live indicator bar */}
-      <div className="relative z-10 bg-[#FAF8F5]/80 backdrop-blur-xl border-b border-[#E7E5E4]">
+      <div className="relative z-10 bg-[#FAF8F5]/80 backdrop-blur-xl border-b border-[#E7E5E4] hidden md:block">
         <div className="max-w-7xl mx-auto px-6 py-2.5">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-[#22C55E]/5 border border-[#22C55E]/20">
@@ -541,9 +550,9 @@ export default function DriverDashboard() {
       </div>
 
       {/* Tab Navigation */}
-      <div className="relative z-10 bg-[#FAF8F5]/80 backdrop-blur-xl border-b border-[#E7E5E4] sticky top-[108px]">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex gap-0">
+      <div className="relative z-10 bg-[#FAF8F5]/80 backdrop-blur-xl border-b border-[#E7E5E4] sticky top-[64px] md:top-[108px]">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6">
+          <div className="flex gap-0 overflow-x-auto pb-px -mx-3 sm:mx-0">
             <button
               onClick={() => setActiveTab('available')}
               className={`flex items-center gap-2 px-5 py-3.5 text-sm font-medium border-b-2 transition-all duration-200 relative ${
@@ -597,7 +606,7 @@ export default function DriverDashboard() {
       </div>
 
       {/* Content */}
-      <main className="relative z-10 max-w-7xl mx-auto px-6 py-6">
+      <main className="relative z-10 max-w-7xl mx-auto px-3 sm:px-6 py-4 sm:py-6">
 
         {/* ===== AVAILABLE ORDERS ===== */}
         {activeTab === 'available' && (
@@ -612,7 +621,7 @@ export default function DriverDashboard() {
                 <div className="flex items-center justify-between mb-4 gap-3">
                   {/* 車型範圍提示 */}
                   <div className="flex items-center gap-2">
-                    <div className="flex items-center gap-1.5 px-3 py-1.5 bg-[#F5F4F0] border border-[#DDDDDD] rounded-lg">
+                    <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-[#F5F4F0] border border-[#DDDDDD] rounded-lg">
                       <Car className="w-3.5 h-3.5 text-[#717171]" />
                       <span className="text-[12px] text-[#717171]">
                         您的車型：<span className="font-bold text-[#222222]">{driverProfile?.carType || '未設定'}</span>
@@ -621,11 +630,15 @@ export default function DriverDashboard() {
                         （顯示 {filteredAvailableOrders.length} / {availableOrders.length} 單）
                       </span>
                     </div>
+                    <div className="flex items-center gap-1.5 sm:hidden">
+                      <span className="text-[13px] font-bold text-[#222222] font-mono-nums">{filteredAvailableOrders.length}</span>
+                      <span className="text-[12px] text-[#717171]">筆可接</span>
+                    </div>
                   </div>
                   {/* 排序按鈕 */}
                   <div className="flex items-center gap-1">
                     <ArrowUpDown className="w-3.5 h-3.5 text-[#717171] flex-shrink-0" />
-                    <span className="text-[11px] text-[#717171] mr-1">排序：</span>
+                    <span className="text-[11px] text-[#717171] mr-1 hidden sm:inline">排序：</span>
                     {SORT_OPTIONS.map(opt => (
                       <button
                         key={opt.key}
@@ -896,16 +909,16 @@ export default function DriverDashboard() {
                       <div className="mt-2 flex gap-2">
                         <button
                           onClick={() => router.push(`/dashboard/driver/order/${order.id}`)}
-                          className="flex-1 py-2 px-3 bg-[#0C447C] text-white text-[13px] font-bold rounded-lg hover:bg-[#0a3a6e] transition-colors"
+                          className="flex-1 py-3 sm:py-2 px-3 bg-[#0C447C] text-white text-[15px] sm:text-[13px] font-bold rounded-lg hover:bg-[#0a3a6e] transition-colors active:bg-[#082a52]"
                         >
                           執行行程
                         </button>
                         <button
                           onClick={() => handleCancelOrder(order.id)}
                           disabled={actionLoading === order.id}
-                          className="flex-1 py-2 px-3 bg-white border border-[#E24B4A] text-[#E24B4A] text-[13px] font-bold rounded-lg hover:bg-[#FCEBEB] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                          className="py-3 sm:py-2 px-3 bg-white border border-[#E24B4A] text-[#E24B4A] text-[13px] font-bold rounded-lg hover:bg-[#FCEBEB] transition-colors disabled:opacity-60 disabled:cursor-not-allowed w-20 sm:w-auto"
                         >
-                          {actionLoading === order.id ? '處理中...' : '退單'}
+                          {actionLoading === order.id ? '...' : '退單'}
                         </button>
                       </div>
                     )}

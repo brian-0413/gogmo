@@ -64,7 +64,7 @@ function OrderCard({ order, onAccept, onView, showActions = true, compact = fals
           </span>
         </div>
         <div className="flex items-center gap-2 mb-2">
-          <span className="text-lg font-bold font-mono-nums text-[#FF385C]">
+          <span className="text-[18px] sm:text-lg font-bold font-mono-nums text-[#FF385C]">
             NT${order.price}
           </span>
           <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ backgroundColor: typeBadgeColor.bg, color: typeBadgeColor.text }}>
@@ -94,7 +94,7 @@ function OrderCard({ order, onAccept, onView, showActions = true, compact = fals
         <div className="h-0.5 bg-gradient-to-r from-[#FF385C] via-[#FF385C]/50 to-[#FF385C]" />
       )}
 
-      <div className="p-4">
+      <div className="p-3 sm:p-4">
         {/* 第一行：單號 + 種類 + 車型 + 肯驛 | 倒數 + 狀態 */}
         <div className="flex items-center justify-between mb-2 gap-2 flex-wrap">
           <div className="flex items-center gap-1.5 flex-wrap">
@@ -127,7 +127,7 @@ function OrderCard({ order, onAccept, onView, showActions = true, compact = fals
           <span className="text-base font-bold text-[#222222] font-mono-nums">
             {format(scheduledDate, 'M/dd (E)', { locale: zhTW })}
           </span>
-          <span className="text-[22px] font-bold font-mono-nums text-[#222222] leading-none">
+          <span className="text-[18px] sm:text-[20px] md:text-[22px] font-bold font-mono-nums text-[#222222] leading-none">
             {format(scheduledDate, 'HH:mm')}
           </span>
           {order.flightNumber && (
@@ -139,7 +139,7 @@ function OrderCard({ order, onAccept, onView, showActions = true, compact = fals
 
         {/* 第三行：金額 */}
         <div className="mb-3">
-          <span className="text-[32px] font-bold font-mono-nums text-[#FF385C] leading-none">
+          <span className="text-[24px] sm:text-[28px] md:text-[32px] font-bold font-mono-nums text-[#FF385C] leading-none">
             NT${order.price.toLocaleString()}
           </span>
         </div>
@@ -150,7 +150,7 @@ function OrderCard({ order, onAccept, onView, showActions = true, compact = fals
             <div className="w-3 h-3 rounded-full flex-shrink-0 mt-0.5" style={{ backgroundColor: typeBadgeColor.bg === '#F4EFE9' ? '#FF385C' : typeBadgeColor.bg === '#E6F1FB' ? '#0C447C' : typeBadgeColor.bg === '#FFF3E0' ? '#92400E' : typeBadgeColor.bg === '#F3E8FF' ? '#6B21A8' : '#717171' }} />
             <div>
               <p className="text-[11px] text-[#717171] uppercase tracking-wider">{pickupLabel}</p>
-              <p className="text-[16px] font-bold text-[#222222]">{order.pickupLocation}</p>
+              <p className="text-[14px] sm:text-[16px] font-bold text-[#222222]">{order.pickupLocation}</p>
             </div>
           </div>
           <span className="text-[20px] font-bold text-[#DDDDDD] mt-1 flex-shrink-0">→</span>
@@ -158,7 +158,7 @@ function OrderCard({ order, onAccept, onView, showActions = true, compact = fals
             <div className="w-3 h-3 rounded-full bg-[#DDDDDD] flex-shrink-0 mt-0.5" />
             <div>
               <p className="text-[11px] text-[#717171] uppercase tracking-wider">{dropoffLabel}</p>
-              <p className="text-[16px] font-bold text-[#222222]">{order.dropoffLocation}</p>
+              <p className="text-[14px] sm:text-[16px] font-bold text-[#222222]">{order.dropoffLocation}</p>
             </div>
           </div>
         </div>
@@ -202,13 +202,13 @@ function OrderCard({ order, onAccept, onView, showActions = true, compact = fals
           <div className="flex gap-2 pt-2 border-t border-[#EBEBEB]">
             {onView && (
               <Button variant="outline" size="sm" onClick={() => onView(order.id)}
-                className="flex-1 border-[#DDDDDD] text-[#717171] hover:border-[#222222] hover:text-[#222222] hover:bg-[#F4EFE9]">
+                className="hidden sm:flex-1 border-[#DDDDDD] text-[#717171] hover:border-[#222222] hover:text-[#222222] hover:bg-[#F4EFE9]">
                 查看詳情
               </Button>
             )}
             {onAccept && order.status === 'PUBLISHED' && (
               <Button variant="primary" size="sm" onClick={() => onAccept(order.id)}
-                className="flex-1">
+                className="flex-1 py-3 sm:py-auto text-[15px] sm:text-sm font-bold tracking-wide">
                 立即接單
               </Button>
             )}
