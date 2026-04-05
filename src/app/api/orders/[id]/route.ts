@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getUserFromToken } from '@/lib/auth'
 import { ApiResponse } from '@/types'
-import { MAX_FIELD_LENGTHS } from '@/lib/validation'
+import { MAX_FIELD_LENGTHS, MAX_ORDER_PRICE } from '@/lib/validation'
 
 // GET /api/orders/[id] - Get single order
 export async function GET(
@@ -274,9 +274,9 @@ export async function PATCH(
       }
 
       // Validate price and passenger count if provided
-      if (body.price !== undefined && (body.price < 0 || body.price > 100000)) {
+      if (body.price !== undefined && (body.price < 0 || body.price > MAX_ORDER_PRICE)) {
         return NextResponse.json<ApiResponse>(
-          { success: false, error: '價格必須在 0 - 100,000 元之間' },
+          { success: false, error: `價格必須在 0 - ${MAX_ORDER_PRICE.toLocaleString()} 元之間` },
           { status: 400 }
         )
       }

@@ -3,6 +3,7 @@
 import { format, parseISO } from 'date-fns'
 import { zhTW } from 'date-fns/locale'
 import { Sparkles, CheckCircle, AlertTriangle, XCircle, ChevronRight, ArrowRight } from 'lucide-react'
+import { PLATFORM_FEE_RATE } from '@/lib/constants'
 
 interface SmartScheduleRecommendation {
   id: string
@@ -235,7 +236,7 @@ export function SmartSchedulePanel({
                         NT${rec.price.toLocaleString()}
                       </p>
                       <p className="text-[10px] text-[#78716C] mt-0.5 font-mono-nums">
-                        平台費 -{Math.floor(rec.price * 0.05)} 點
+                        平台費 -{Math.floor(rec.price * PLATFORM_FEE_RATE)} 點
                       </p>
                     </div>
                   </div>

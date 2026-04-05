@@ -77,3 +77,26 @@ export const STATUS_TAG_STYLE: Record<string, string> = {
   COMPLETED:   'bg-[#E8F5E8] text-[#008A05]',
   CANCELLED:   'bg-[#FCEBEB] text-[#A32D2D]',
 }
+
+// ============ 業務規則常數 ============
+
+/** 平台抽成比率（5%） */
+export const PLATFORM_FEE_RATE = 0.05
+
+/** 司機實得比率（1 - 平台抽成 = 95%） */
+export const DRIVER_EARNINGS_RATE = 0.95
+
+/** 取消訂單手續費比率（10%） */
+export const CANCELLATION_FEE_RATE = 0.1
+
+/** 每週結算目標（點數） */
+export const WEEKLY_SETTLEMENT_TARGET = 5000
+
+/** 新用戶贈送點數 */
+export const NEW_USER_BONUS = 500
+
+/** 訂單預設金額（當無法解析時） */
+export const DEFAULT_ORDER_PRICE = 800
+
+/** 最大訂單金額上限 */
+export const MAX_ORDER_PRICE = 100000

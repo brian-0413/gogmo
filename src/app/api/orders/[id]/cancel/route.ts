@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getUserFromToken } from '@/lib/auth'
 import { ApiResponse } from '@/types'
+import { CANCELLATION_FEE_RATE } from '@/lib/constants'
 
 // POST /api/orders/[id]/cancel - 司機退單（扣 10%）
 export async function POST(
@@ -64,7 +65,7 @@ export async function POST(
     }
 
     const driverId = user.driver.id
-    const cancelFee = Math.floor(order.price * 0.1) // 退單扣 10%
+    const cancelFee = Math.floor(order.price * CANCELLATION_FEE_RATE) // 退單扣 10%
 
     // Transaction：扣費 + 還原訂單狀態 + 記錄交易
     const updated = await prisma.$transaction(async (tx) => {

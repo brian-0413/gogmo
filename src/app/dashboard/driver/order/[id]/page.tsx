@@ -11,6 +11,7 @@ import { zhTW } from 'date-fns/locale'
 import { ArrowLeft, Phone, Clock, MapPin, User, Package } from 'lucide-react'
 import { formatOrderNo } from '@/lib/utils'
 import { TYPE_LABELS, TYPE_COLORS, VEHICLE_LABELS } from '@/lib/constants'
+import { CANCELLATION_FEE_RATE } from '@/lib/constants'
 import type { Order, OrderType, VehicleType } from '@/types'
 
 export default function OrderDetailPage() {
@@ -93,7 +94,7 @@ export default function OrderDetailPage() {
 
   const handleCancel = async () => {
     if (!token || !order) return
-    const cancelFee = Math.floor(order.price * 0.1)
+    const cancelFee = Math.floor(order.price * CANCELLATION_FEE_RATE)
     const confirmed = window.confirm(
       `確定要退單嗎？退單將扣除 NT$${order.price} 的 10%，共 ${cancelFee} 點`
     )

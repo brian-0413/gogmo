@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { prisma } from './prisma'
+import { NEW_USER_BONUS } from './constants'
 
 const JWT_SECRET = process.env.JWT_SECRET
 const JWT_EXPIRES_IN = '7d'
@@ -86,7 +87,7 @@ export async function register(
               licensePlate: extraData.licensePlate || '',
               carType: extraData.carType || '轎車',
               carColor: extraData.carColor || '',
-              balance: 500, // 新用戶贈送 500 點
+              balance: NEW_USER_BONUS, // 新用戶贈送點數
             },
           },
         }),

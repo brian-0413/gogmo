@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getUserFromToken } from '@/lib/auth'
 import { ApiResponse } from '@/types'
+import { PLATFORM_FEE_RATE } from '@/lib/constants'
 
 // POST /api/schedule/confirm — 確認排班組合（一次接多單）
 // 依序接單，每單扣 5% 平台費，有任何一單失敗則整體回滾
@@ -73,7 +74,7 @@ export async function POST(request: NextRequest) {
         const driver = await tx.driver.findUnique({ where: { id: driverId } })
         if (!driver) throw new Error('找不到司機資料')
 
-        const platformFee = Math.floor(order.price * 0.05)
+        const platformFee = Math.floor(order.price * PLATFORM_FEE_RATE)
         if (driver.balance < platformFee) {
           throw new Error(`點數不足，需要 ${platformFee} 點（訂單 ${orderId}）`)
         }

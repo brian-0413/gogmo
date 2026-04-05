@@ -12,6 +12,7 @@ import { CreateDefaultsCard } from '@/components/dispatcher/CreateDefaultsCard'
 import { ReviewItemCard, ReviewItem } from '@/components/dispatcher/ReviewItemCard'
 import { format } from 'date-fns'
 import { getDateOptions } from '@/lib/utils'
+import { DEFAULT_ORDER_PRICE } from '@/lib/constants'
 import type { Order } from '@/types'
 import {
   ClipboardList,
@@ -161,7 +162,7 @@ export default function DispatcherDashboard() {
   const handleEditItem = (item: ReviewItem) => {
     setEditingId(item.reviewId)
     setEditForm({
-      price: item.price ?? 800,
+      price: item.price ?? DEFAULT_ORDER_PRICE,
       scheduledTime: item.time || undefined,
       pickupLocation: item.pickupLocation || undefined,
       dropoffLocation: item.dropoffLocation || undefined,

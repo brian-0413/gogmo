@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getUserFromToken } from '@/lib/auth'
 import { ApiResponse } from '@/types'
+import { PLATFORM_FEE_RATE } from '@/lib/constants'
 
 // GET /api/dispatchers/settlement - Get settlement report
 export async function GET(request: NextRequest) {
@@ -64,7 +65,7 @@ export async function GET(request: NextRequest) {
     // Calculate summary using reduce (more efficient than multiple iterations)
     const summary = orders.reduce(
       (acc, order) => {
-        const platformFee = Math.floor(order.price * 0.05)
+        const platformFee = Math.floor(order.price * PLATFORM_FEE_RATE)
         return {
           totalOrders: acc.totalOrders + 1,
           totalRevenue: acc.totalRevenue + order.price,
@@ -89,7 +90,7 @@ export async function GET(request: NextRequest) {
 
       const driverId = order.driver.id
       const existing = driverMap.get(driverId)
-      const platformFee = Math.floor(order.price * 0.05)
+      const platformFee = Math.floor(order.price * PLATFORM_FEE_RATE)
 
       if (existing) {
         existing.totalOrders++

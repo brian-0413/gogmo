@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getUserFromToken } from '@/lib/auth'
 import { ApiResponse } from '@/types'
+import { PLATFORM_FEE_RATE } from '@/lib/constants'
 
 // ─── 衝突檢查 ─────────────────────────────────────────
 
@@ -127,7 +128,7 @@ export async function POST(
         const conflictMsg = checkConflict(newOrderTime, order.type, activeOrders)
         if (conflictMsg) {
           const driver = await prisma.driver.findUnique({ where: { id: driverId } })
-          const platformFee = Math.floor(order.price * 0.05)
+          const platformFee = Math.floor(order.price * PLATFORM_FEE_RATE)
 
           if (!driver) {
             return NextResponse.json<ApiResponse>(
@@ -159,7 +160,7 @@ export async function POST(
       const driver = await tx.driver.findUnique({ where: { id: driverId } })
       if (!driver) throw new Error('找不到司機資料')
 
-      const platformFee = Math.floor(order.price * 0.05)
+      const platformFee = Math.floor(order.price * PLATFORM_FEE_RATE)
 
       if (driver.balance < platformFee) {
         throw new Error(`點數不足，需要 ${platformFee} 點`)
@@ -193,7 +194,7 @@ export async function POST(
       return updatedOrder
     })
 
-    const platformFee = Math.floor(order.price * 0.05)
+    const platformFee = Math.floor(order.price * PLATFORM_FEE_RATE)
 
     return NextResponse.json<ApiResponse>({
       success: true,

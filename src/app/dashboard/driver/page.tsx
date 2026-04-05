@@ -12,6 +12,7 @@ import { SettlementTab } from '@/components/driver/SettlementTab'
 import type { BalanceData } from '@/components/driver/SettlementTab'
 import { format, parseISO, startOfDay, startOfWeek, isSameDay } from 'date-fns'
 import { zhTW } from 'date-fns/locale'
+import { DRIVER_EARNINGS_RATE, CANCELLATION_FEE_RATE } from '@/lib/constants'
 import { ClipboardList, FileText, Wallet, LogOut, Plane, Radio, Inbox, ArrowUpDown, ArrowUp, ArrowDown, Car, Sparkles, Calendar } from 'lucide-react'
 import Link from 'next/link'
 
@@ -128,7 +129,7 @@ export default function DriverDashboard() {
     for (const tx of transactions as Array<{ type: string; amount: number; createdAt: string | Date }>) {
       if (tx.type !== 'RIDE_FARE') continue
       const createdAt = typeof tx.createdAt === 'string' ? parseISO(tx.createdAt) : tx.createdAt
-      const netAmount = Math.floor(tx.amount * 0.95)
+      const netAmount = Math.floor(tx.amount * DRIVER_EARNINGS_RATE)
       allTime += netAmount; allOrders++
       if (createdAt >= todayStart) { today += netAmount; todayOrders++ }
       if (createdAt >= weekStart) { thisWeek += netAmount; weekOrders++ }
@@ -287,7 +288,7 @@ export default function DriverDashboard() {
     if (!token) return
     const order = myOrders.find(o => o.id === orderId)
     if (!order) return
-    const cancelFee = Math.floor(order.price * 0.1)
+    const cancelFee = Math.floor(order.price * CANCELLATION_FEE_RATE)
     const confirmed = window.confirm(
       `確定要退單嗎？退單將扣除 NT$${order.price} 的 10%，共 ${cancelFee} 點`
     )

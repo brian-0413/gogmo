@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { getUserFromToken } from '@/lib/auth'
 import { ApiResponse, CreateOrderRequest } from '@/types'
 import { checkRateLimit } from '@/lib/api-utils'
-import { MAX_FIELD_LENGTHS } from '@/lib/validation'
+import { MAX_FIELD_LENGTHS, MAX_ORDER_PRICE } from '@/lib/validation'
 import { format } from 'date-fns'
 
 // Helper to get user from request
@@ -200,9 +200,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate price range
-    if (body.price < 0 || body.price > 100000) {
+    if (body.price < 0 || body.price > MAX_ORDER_PRICE) {
       return NextResponse.json<ApiResponse>(
-        { success: false, error: '價格必須在 0 - 100,000 元之間' },
+        { success: false, error: `價格必須在 0 - ${MAX_ORDER_PRICE.toLocaleString()} 元之間` },
         { status: 400 }
       )
     }

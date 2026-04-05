@@ -5,6 +5,7 @@ import { Wallet, TrendingUp, Clock, ClipboardList, ChevronRight, ChevronDown, Za
 import { format, parseISO, startOfDay, startOfWeek } from 'date-fns'
 import { zhTW } from 'date-fns/locale'
 import { Badge } from '@/components/ui/Badge'
+import { DRIVER_EARNINGS_RATE, WEEKLY_SETTLEMENT_TARGET } from '@/lib/constants'
 
 interface CompletedOrder {
   id: string
@@ -112,7 +113,7 @@ export function SettlementTab({ token, balance, balanceStats }: SettlementTabPro
               for (const tx of balance.transactions) {
                 if (tx.type !== 'RIDE_FARE') continue
                 const createdAt = typeof tx.createdAt === 'string' ? parseISO(tx.createdAt) : tx.createdAt
-                if (startOfDay(createdAt).getTime() === dayStartStr.getTime()) { dayTotal += Math.floor(tx.amount * 0.95) }
+                if (startOfDay(createdAt).getTime() === dayStartStr.getTime()) { dayTotal += Math.floor(tx.amount * DRIVER_EARNINGS_RATE) }
               }
               const maxH = Math.max(balanceStats.today, 1)
               const barH = balanceStats.todayOrders > 0 ? Math.max((dayTotal / maxH) * 32, 2) : 2
@@ -139,10 +140,10 @@ export function SettlementTab({ token, balance, balanceStats }: SettlementTabPro
           <div className="mt-4">
             <div className="flex justify-between text-[10px] text-[#78716C] mb-1">
               <span>本週進度</span>
-              <span className="font-mono-nums">{balanceStats.thisWeek >= 5000 ? '已達標' : `${balanceStats.thisWeek}/5000`}</span>
+              <span className="font-mono-nums">{balanceStats.thisWeek >= WEEKLY_SETTLEMENT_TARGET ? '已達標' : `${balanceStats.thisWeek}/WEEKLY_SETTLEMENT_TARGET`}</span>
             </div>
             <div className="h-1.5 bg-[#F5F4F0] rounded-full overflow-hidden">
-              <div className="h-full bg-[#3B82F6] rounded-full transition-all" style={{ width: `${Math.min((balanceStats.thisWeek / 5000) * 100, 100)}%` }} />
+              <div className="h-full bg-[#3B82F6] rounded-full transition-all" style={{ width: `${Math.min((balanceStats.thisWeek / WEEKLY_SETTLEMENT_TARGET) * 100, 100)}%` }} />
             </div>
           </div>
         </div>
@@ -232,7 +233,7 @@ export function SettlementTab({ token, balance, balanceStats }: SettlementTabPro
           ) : (
             <div className="space-y-3">
               {balance.transactions.slice(0, 10).map((tx) => {
-                const displayAmount = tx.type === 'RIDE_FARE' ? Math.floor(tx.amount * 0.95) : tx.amount
+                const displayAmount = tx.type === 'RIDE_FARE' ? Math.floor(tx.amount * DRIVER_EARNINGS_RATE) : tx.amount
                 return (
                   <div key={tx.id} className="flex items-center justify-between py-3 border-b border-[#DDDDDD]/50 last:border-0">
                     <div>
