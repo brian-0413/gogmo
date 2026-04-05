@@ -20,9 +20,6 @@ import {
   TrendingUp,
   Clock,
   Calendar,
-  Car,
-  CheckCircle,
-  UserCheck,
 } from 'lucide-react'
 import Link from 'next/link'
 
