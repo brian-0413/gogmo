@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { getUserFromToken } from '@/lib/auth'
 import { ApiResponse, CreateOrderRequest } from '@/types'
 import { checkRateLimit } from '@/lib/api-utils'
+import { MAX_FIELD_LENGTHS } from '@/lib/validation'
 import { format } from 'date-fns'
 
 // Helper to get user from request
@@ -187,20 +188,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate field lengths to prevent database errors
-    const MAX_LENGTHS: Record<string, number> = {
-      passengerName: 50,
-      passengerPhone: 20,
-      pickupLocation: 100,
-      pickupAddress: 200,
-      dropoffLocation: 100,
-      dropoffAddress: 200,
-      flightNumber: 20,
-      note: 500,
-      notes: 500,
-      rawText: 1000,
-    }
 
-    for (const [field, maxLength] of Object.entries(MAX_LENGTHS)) {
+    for (const [field, maxLength] of Object.entries(MAX_FIELD_LENGTHS)) {
       const value = body[field as keyof CreateOrderRequest]
       if (value && typeof value === 'string' && value.length > maxLength) {
         return NextResponse.json<ApiResponse>(

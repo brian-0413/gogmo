@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getUserFromToken } from '@/lib/auth'
 import { ApiResponse } from '@/types'
+import { MAX_FIELD_LENGTHS } from '@/lib/validation'
 
 // GET /api/orders/[id] - Get single order
 export async function GET(
@@ -261,18 +262,8 @@ export async function PATCH(
       ]
 
       // Validate field lengths
-      const MAX_LENGTHS: Record<string, number> = {
-        passengerName: 50,
-        passengerPhone: 20,
-        pickupLocation: 100,
-        pickupAddress: 200,
-        dropoffLocation: 100,
-        dropoffAddress: 200,
-        flightNumber: 20,
-        note: 500,
-      }
 
-      for (const [field, maxLength] of Object.entries(MAX_LENGTHS)) {
+      for (const [field, maxLength] of Object.entries(MAX_FIELD_LENGTHS)) {
         const value = body[field]
         if (value && typeof value === 'string' && value.length > maxLength) {
           return NextResponse.json<ApiResponse>(
