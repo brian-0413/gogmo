@@ -1,25 +1,14 @@
 'use client'
 
-import { format } from 'date-fns'
-import { zhTW } from 'date-fns/locale'
 import { Calendar, FileText } from 'lucide-react'
+import { getDateOptions } from '@/lib/utils'
 
 // VEHICLE_OPTIONS — 從 page.tsx 行 73-76 複製
 const VEHICLE_OPTIONS = [
   '任意車', '小車', '休旅', '7人座', '9人座', 'VITO', 'GRANVIA', '自填',
 ] as const
 
-// DATE_OPTIONS — 動態生成，與 page.tsx 行 51-60 相同邏輯
-const DATE_OPTIONS = [
-  { value: '', label: '選擇日期...' },
-]
-for (let i = 0; i <= 14; i++) {
-  const d = new Date()
-  d.setDate(d.getDate() + i)
-  const dateStr = format(d, 'yyyy-MM-dd')
-  const dayLabel = i === 0 ? '今天' : i === 1 ? '明天' : format(d, 'M/d (EEE)', { locale: zhTW })
-  DATE_OPTIONS.push({ value: dateStr, label: dayLabel })
-}
+const DATE_OPTIONS = getDateOptions()
 
 interface CreateDefaultsCardProps {
   defaults: {

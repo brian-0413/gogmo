@@ -11,7 +11,7 @@ import { SettlementTab } from '@/components/dispatcher/SettlementTab'
 import { CreateDefaultsCard } from '@/components/dispatcher/CreateDefaultsCard'
 import { ReviewItemCard, ReviewItemCardItem } from '@/components/dispatcher/ReviewItemCard'
 import { format } from 'date-fns'
-import { zhTW } from 'date-fns/locale'
+import { getDateOptions } from '@/lib/utils'
 import type { Order } from '@/types'
 import {
   ClipboardList,
@@ -47,16 +47,7 @@ interface ReviewItem extends ParsedOrder {
   editedKenichi?: boolean
 }
 
-const DATE_OPTIONS = [
-  { value: '', label: '選擇日期...' },
-]
-for (let i = 0; i <= 14; i++) {
-  const d = new Date()
-  d.setDate(d.getDate() + i)
-  const dateStr = format(d, 'yyyy-MM-dd')
-  const dayLabel = i === 0 ? '今天' : i === 1 ? '明天' : format(d, 'M/d (EEE)', { locale: zhTW })
-  DATE_OPTIONS.push({ value: dateStr, label: dayLabel })
-}
+const DATE_OPTIONS = getDateOptions()
 
 function generateId() {
   return Math.random().toString(36).substring(2, 9)
