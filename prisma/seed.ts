@@ -4,10 +4,11 @@ import { PrismaPg } from '@prisma/adapter-pg'
 import pg from 'pg'
 import bcrypt from 'bcryptjs'
 
-let connectionString = process.env.DATABASE_URL
-const url = new URL(connectionString!)
-url.searchParams.set('sslmode', 'no-verify')
-connectionString = url.toString()
-const pool = new pg.Pool({ connectionString })
+const connectionString = process.env.DATABASE_URL!
+const sslConnectionString = connectionString.includes('sslmode')
+  ? connectionString.replace(/sslmode=[^&]*/g, 'sslmode=no-verify')
+  : connectionString + (connectionString.includes('?') ? '&' : '?') + 'sslmode=no-verify'
+
+const pool = new pg.Pool({ connectionString: sslConnectionString })
 const adapter = new PrismaPg(pool)
 const prisma = new PrismaClient({ adapter })
