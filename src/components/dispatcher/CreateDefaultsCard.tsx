@@ -8,7 +8,6 @@ import { Calendar, FileText } from 'lucide-react'
 const VEHICLE_OPTIONS = [
   '任意車', '小車', '休旅', '7人座', '9人座', 'VITO', 'GRANVIA', '自填',
 ] as const
-type VehicleOption = typeof VEHICLE_OPTIONS[number]
 
 // DATE_OPTIONS — 動態生成，與 page.tsx 行 51-60 相同邏輯
 const DATE_OPTIONS = [
