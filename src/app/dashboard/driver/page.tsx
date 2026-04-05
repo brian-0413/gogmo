@@ -12,7 +12,7 @@ import { SettlementTab } from '@/components/driver/SettlementTab'
 import type { BalanceData } from '@/components/driver/SettlementTab'
 import { format, parseISO, startOfDay, startOfWeek, isSameDay } from 'date-fns'
 import { zhTW } from 'date-fns/locale'
-import { ClipboardList, FileText, Wallet, LogOut, Plane, TrendingUp, Radio, Inbox, Clock, ArrowUpDown, ArrowUp, ArrowDown, Car, Star, Sparkles, ArrowRight, CheckCircle, AlertTriangle, XCircle, Calendar, ChevronRight } from 'lucide-react'
+import { ClipboardList, FileText, Wallet, LogOut, Plane, Radio, Inbox, ArrowUpDown, ArrowUp, ArrowDown, Car, Sparkles, Calendar } from 'lucide-react'
 import Link from 'next/link'
 
 type Tab = 'available' | 'myorders' | 'balance'
