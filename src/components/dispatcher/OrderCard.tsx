@@ -273,60 +273,6 @@ export function DispatcherOrderCard({ order, token, onUpdate }: DispatcherOrderC
         </div>
       )}
 
-      {/* Editable fields */}
-      {isEditing && (
-        <div className="space-y-2 mb-3">
-          <div className="space-y-1">
-            <label className="text-[11px] text-[#717171] font-medium">時間</label>
-            <input
-              type="datetime-local"
-              className={inputClass}
-              value={editForm.scheduledTime}
-              onChange={e => setEditForm(f => ({ ...f, scheduledTime: e.target.value }))}
-            />
-          </div>
-          <div className="grid grid-cols-3 gap-2">
-            <div className="space-y-1">
-              <label className="text-[11px] text-[#717171] font-medium">金額</label>
-              <input
-                type="number"
-                className={inputClass}
-                value={editForm.price}
-                onChange={e => setEditForm(f => ({ ...f, price: e.target.value }))}
-              />
-            </div>
-            <div className="space-y-1">
-              <label className="text-[11px] text-[#717171] font-medium">人數</label>
-              <input
-                type="number"
-                className={inputClass}
-                value={editForm.passengerCount}
-                onChange={e => setEditForm(f => ({ ...f, passengerCount: e.target.value }))}
-              />
-            </div>
-            <div className="space-y-1">
-              <label className="text-[11px] text-[#717171] font-medium">行李</label>
-              <input
-                type="number"
-                className={inputClass}
-                value={editForm.luggageCount}
-                onChange={e => setEditForm(f => ({ ...f, luggageCount: e.target.value }))}
-              />
-            </div>
-          </div>
-          <div className="space-y-1">
-            <label className="text-[11px] text-[#717171] font-medium">備註</label>
-            <input
-              type="text"
-              className={inputClass}
-              value={editForm.note}
-              onChange={e => setEditForm(f => ({ ...f, note: e.target.value }))}
-              placeholder="填寫備註"
-            />
-          </div>
-        </div>
-      )}
-
       {/* 附屬資訊：司機已接單時顯示鎖定提示 */}
       {isImmutable && (
         <div className="text-[11px] text-[#B0B0B0] italic mb-3">司機已接單，無法修改</div>
