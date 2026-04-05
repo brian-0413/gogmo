@@ -5,19 +5,19 @@
 
 ---
 
-## 專案現況（2026-04-05）
+## 專案現況（2026-04-06）
 
 ### 最後 commit
 ```
-(升級 Prisma 5→7 + pg adapter，即將推送)
+ebf2f98 fix: 手機 RWD 響應式調整
 ```
-落後 origin/main 2 個 commits。
+落後 origin/main 0 個 commits。
 
 ---
 
 ## 目前開發階段：Zeabur 部署修復（Prisma 7 升級）
 
-### [進行中] Prisma 5 → 7 升級（解決 Zeabur libssl.so.1.1 問題）
+### [完成] Prisma 5 → 7 升級（解決 Zeabur libssl.so.1.1 問題）
 **原因**：Zeabur 使用 Debian 12，只有 libssl.so.3，Prisma 5 需要 libssl.so.1.1 無法連接資料庫。
 
 **變更**：
@@ -285,7 +285,7 @@
 ### 技術棧
 - **Framework**: Next.js 14 App Router + TypeScript
 - **UI**: Tailwind CSS + 自定義元件（shadcn/ui 改造）
-- **Database**: PostgreSQL + Prisma ORM v5
+- **Database**: PostgreSQL + Prisma ORM v7
 - **認證**: 自定義 JWT（無 NextAuth）
 - **部署**: Vercel
 - **Supabase**: PostgreSQL（Transaction Pooler port 6543）
