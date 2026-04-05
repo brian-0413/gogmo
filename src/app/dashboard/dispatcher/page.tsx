@@ -8,18 +8,17 @@ import { parseBatchOrders, ParsedOrder, BatchOrderDefaults, TYPE_LABELS } from '
 import { DispatcherOrderCard } from '@/components/dispatcher/OrderCard'
 import { FleetControl } from '@/components/dispatcher/FleetControl'
 import { SettlementTab } from '@/components/dispatcher/SettlementTab'
+import { CreateDefaultsCard } from '@/components/dispatcher/CreateDefaultsCard'
 import { format } from 'date-fns'
 import { zhTW } from 'date-fns/locale'
 import type { Order } from '@/types'
 import {
   ClipboardList,
   Search,
-  FileText,
   Plane,
   LogOut,
   TrendingUp,
   Clock,
-  Calendar,
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -69,11 +68,6 @@ const PRICE_OPTIONS = [
   { value: 3000, label: '$3000' }, { value: 3500, label: '$3500' },
   { value: 4000, label: '$4000' },
 ]
-
-const VEHICLE_OPTIONS = [
-  '任意車', '小車', '休旅', '7人座', '9人座', 'VITO', 'GRANVIA', '自填',
-] as const
-type VehicleOption = typeof VEHICLE_OPTIONS[number]
 
 function generateId() {
   return Math.random().toString(36).substring(2, 9)
@@ -450,94 +444,10 @@ export default function DispatcherDashboard() {
         {/* ===== CREATE TAB ===== */}
         {activeTab === 'create' && (
           <div className="space-y-5">
-            {/* Defaults card */}
-            <div className="bg-white border border-[#DDDDDD] rounded-xl overflow-hidden">
-              <div className="px-5 py-4 border-b border-[#DDDDDD] flex items-center gap-3">
-                <FileText className="w-4 h-4 text-[#717171]" />
-                <div>
-                  <h3 className="text-[18px] font-medium text-[#222222]">派單中心 — AI 智能解析</h3>
-                  <p className="text-[13px] text-[#717171]">選擇日期與車型，AI 自動解析訂單文字</p>
-                </div>
-              </div>
-              <div className="p-5 space-y-5">
-                {/* Date */}
-                <div className="space-y-2">
-                  <label className="text-[11px] text-[#717171] font-normal">日期（必選）</label>
-                  <div className="relative">
-                    <select
-                      value={defaults.date || ''}
-                      onChange={(e) => setDefaults(prev => ({ ...prev, date: e.target.value }))}
-                      className="w-full bg-white border border-[#DDDDDD] rounded-lg pl-10 pr-3 py-2.5 text-[#222222] text-sm focus:outline-none focus:border-[#222222] cursor-pointer font-mono-nums"
-                    >
-                      {DATE_OPTIONS.map(opt => (
-                        <option key={opt.value} value={opt.value}>{opt.label}</option>
-                      ))}
-                    </select>
-                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#717171] pointer-events-none" />
-                  </div>
-                </div>
-
-                {/* Vehicle */}
-                <div className="space-y-2">
-                  <label className="text-[11px] text-[#717171] font-normal">車型（整批套用）</label>
-                  <div className="flex flex-wrap gap-2">
-                    {VEHICLE_OPTIONS.filter(v => v !== '自填').map(v => (
-                      <button
-                        key={v}
-                        type="button"
-                        onClick={() => setDefaults(prev => ({ ...prev, vehicle: v, vehicleCustom: '' }))}
-                        className={`px-3 py-1.5 rounded-lg text-[13px] font-normal transition-colors ${
-                          defaults.vehicle === v
-                            ? 'bg-[#FF385C] text-white'
-                            : 'bg-white text-[#717171] border border-[#DDDDDD] hover:bg-[#F7F7F7]'
-                        }`}
-                      >
-                        {v}
-                      </button>
-                    ))}
-                    <button
-                      type="button"
-                      onClick={() => setDefaults(prev => ({ ...prev, vehicle: '自填' }))}
-                      className={`px-3 py-1.5 rounded-lg text-[13px] font-normal transition-colors ${
-                        defaults.vehicle === '自填'
-                          ? 'bg-[#FF385C] text-white'
-                          : 'bg-white text-[#717171] border border-[#DDDDDD] hover:bg-[#F7F7F7]'
-                      }`}
-                    >
-                      自填
-                    </button>
-                  </div>
-                  {defaults.vehicle === '自填' && (
-                    <input
-                      type="text"
-                      value={defaults.vehicleCustom || ''}
-                      onChange={(e) => setDefaults(prev => ({ ...prev, vehicleCustom: e.target.value }))}
-                      placeholder="輸入車型"
-                      className="mt-1 bg-white border border-[#DDDDDD] rounded-lg px-3 py-2 text-[#222222] text-sm focus:outline-none focus:border-[#222222] w-full max-w-xs"
-                    />
-                  )}
-                </div>
-
-                {/* Kenichi */}
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setDefaults(prev => ({ ...prev, kenichiRequired: !prev.kenichiRequired }))}
-                    className={`w-5 h-5 rounded border transition-colors flex items-center justify-center ${
-                      defaults.kenichiRequired ? 'bg-[#6B21A8] border-[#6B21A8]' : 'bg-white border-[#DDDDDD]'
-                    }`}
-                  >
-                    {defaults.kenichiRequired && (
-                      <svg className="w-full h-full text-white" viewBox="0 0 12 12" fill="none">
-                        <path d="M2 6L5 9L10 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    )}
-                  </button>
-                  <span className="text-[13px] text-[#6B21A8]">肯驛系統</span>
-                  <span className="text-[13px] text-[#717171]">（整批標記）</span>
-                </div>
-              </div>
-            </div>
+            <CreateDefaultsCard
+              defaults={defaults}
+              onChange={(newDefaults) => setDefaults(prev => ({ ...prev, ...newDefaults }))}
+            />
 
             {/* Text input */}
             <div className="bg-white border border-[#DDDDDD] rounded-xl overflow-hidden">
