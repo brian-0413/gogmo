@@ -450,6 +450,9 @@ ${text}
 }
 
 // ============ 舊版 API 相容性 ============
+/**
+ * @deprecated 舊版解析邏輯，已被 parseBatchOrders / parseBatchOrdersLLM 取代，預計下個 major version 移除
+ */
 export interface LegacyParsedOrder {
   passengerName?: string
   passengerPhone?: string
@@ -469,6 +472,9 @@ export interface LegacyParsedOrder {
 }
 
 // 舊版 parseOrderText（保留相容性）
+/**
+ * @deprecated 舊版單行解析，已被 parseBatchOrders / parseBatchOrdersLLM 取代，預計下個 major version 移除
+ */
 export function parseOrderText(rawText: string): LegacyParsedOrder {
   const result: LegacyParsedOrder = {}
 
