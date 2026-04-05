@@ -7,11 +7,18 @@ const globalForPrisma = globalThis as unknown as {
 }
 
 function createPrismaClient() {
-  const connectionString = process.env.DATABASE_URL
+  let connectionString = process.env.DATABASE_URL
   if (!connectionString) {
     throw new Error('DATABASE_URL environment variable is not set')
   }
-  const pool = new pg.Pool({ connectionString, ssl: { rejectUnauthorized: false } })
+  // Append SSL params to connection string for Supabase pooler
+  const url = new URL(connectionString)
+  url.searchParams.set('sslmode', 'no-verify')
+  url.searchParams.set('sslcert', '')
+  url.searchParams.set('sslkey', '')
+  url.searchParams.set('sslrootcert', '')
+  connectionString = url.toString()
+  const pool = new pg.Pool({ connectionString })
   const adapter = new PrismaPg(pool)
   return new PrismaClient({
     adapter,
