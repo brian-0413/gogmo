@@ -7,6 +7,6 @@ export default defineConfig({
     url: process.env.DATABASE_URL,
   },
   migrations: {
-    seed: 'tsx --env-file=.env prisma/seed.ts',
+    seed: 'tsx prisma/seed.ts',
   },
 })
