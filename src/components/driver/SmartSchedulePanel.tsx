@@ -103,7 +103,7 @@ export function SmartSchedulePanel({
         {scheduleResult.timeline.length > 0 && (
           <div>
             <p className="text-[11px] text-[#78716C] uppercase tracking-wider mb-2 font-medium">排班預覽</p>
-            <div className="bg-[#FAFAFA] rounded-xl p-4 border border-[#EBEBEB] space-y-2">
+            <div className="relative bg-[#FAFAFA] rounded-xl p-4 border border-[#EBEBEB] space-y-2">
               {scheduleResult.timeline.map((node, idx) => (
                 <div key={idx} className="flex items-center gap-2">
                   {idx > 0 && (
@@ -263,7 +263,9 @@ export function SmartSchedulePanel({
                       <span className={`inline-flex items-center px-2 py-0.5 text-[11px] font-bold rounded ${tightnessColor.bg} ${tightnessColor.text} border ${tightnessColor.border}`}>
                         {rec.tightnessLabel}
                       </span>
-                      <p className="text-[12px] text-[#B45309] italic">{rec.reason}</p>
+                      {rec.reason && (
+                        <p className="text-[12px] text-[#B45309] italic">{rec.reason}</p>
+                      )}
                     </div>
                     {isSelected && (
                       <span className="text-[12px] font-bold text-[#B45309]">
