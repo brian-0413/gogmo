@@ -5,13 +5,13 @@
 
 ---
 
-## 專案現況（2026-04-04）
+## 專案現況（2026-04-05）
 
 ### 最後 commit
 ```
-63f91cd feat(dispatcher): 行控中心卡片加入進度條燈號
+ca8197d refactor: 抽出業務規則魔法數字至 constants.ts 具名常數
 ```
-落後 origin/main 7 個 commits。
+落後 origin/main 1 個 commits。
 
 ---
 
@@ -22,6 +22,25 @@
 ---
 
 ## 近期進度
+
+### [完成] Phase 2D 魔法數字重構（2026-04-05）
+**Commit**: `ca8197d`
+**功能概述**：抽出所有業務規則硬編碼數值為具名常數於 `src/lib/constants.ts`。
+
+**新增常數**：
+- `PLATFORM_FEE_RATE = 0.05`（5% 平台抽成）
+- `DRIVER_EARNINGS_RATE = 0.95`（司機實得 = 1 - PLATFORM_FEE_RATE）
+- `CANCELLATION_FEE_RATE = 0.1`（10% 取消手續費）
+- `WEEKLY_SETTLEMENT_TARGET = 5000`（每週結算目標）
+- `NEW_USER_BONUS = 500`（新用戶贈送點數）
+- `DEFAULT_ORDER_PRICE = 800`（訂單預設金額）
+- `MAX_ORDER_PRICE = 100000`（最大訂單金額上限）
+
+**替換範圍**（14 個檔案）：
+- API routes：`accept`、`cancel`、`schedule/confirm`、`settlement`、`orders`、`orders/[id]`
+- Frontend pages：`driver/page`、`driver/order/[id]`、`dispatcher/page`
+- Components：`SettlementTab`、`SmartSchedulePanel`
+- Lib：`auth`、`constants`、`validation`
 
 ### [完成] 司機行程狀態更新（2026-04-04）
 **Commits**: `ec55ab4` → `f80f240` → `3cb34e2` → `b250d8c` → `99a38a6` → `63f91cd`
