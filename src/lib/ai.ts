@@ -6,10 +6,8 @@
 //   - 送機：起點=訊息中的地點，終點=○機（外層決定）
 
 import { SYSTEM_PROMPT } from './prompts/order-parsing'
+import type { OrderType, VehicleType, PlateType } from '@/types'
 
-export type OrderType = 'pickup' | 'dropoff' | 'pickup_boat' | 'dropoff_boat' | 'transfer' | 'charter' | 'pending'
-export type VehicleType = 'small' | 'suv' | 'van9' | 'any' | 'any_r' | 'pending'
-export type PlateType = 'R' | 'T' | 'any'
 export type ParseStatus = 'ok' | 'incomplete' | 'rejected'
 
 export interface ParsedOrder {
