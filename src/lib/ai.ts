@@ -449,7 +449,9 @@ ${text}
   return { orders: validatedOrders, rawResponse }
 }
 
-// ============ 舊版 API 相容性 ============
+// ============ 舊版 API 相容性（已廢棄） ============
+// 以下介面和函式已標記為 @deprecated
+// 將在 v2.0 正式移除，請勿在新程式碼中使用
 /**
  * @deprecated 舊版解析邏輯，已被 parseBatchOrders / parseBatchOrdersLLM 取代，預計下個 major version 移除
  */
