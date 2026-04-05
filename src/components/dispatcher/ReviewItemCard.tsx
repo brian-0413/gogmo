@@ -15,7 +15,7 @@ const PRICE_OPTIONS = [
   { value: 4000, label: '$4000' },
 ]
 
-export interface ReviewItemCardItem {
+export interface ReviewItem {
   reviewId: string
   date?: string | null
   time?: string | null
@@ -26,13 +26,16 @@ export interface ReviewItemCardItem {
   dropoffLocation?: string
   rawText?: string
   notes?: string
+  plateType?: string
   editedPrice?: number
   editedTime?: string
   editedPickup?: string
   editedDropoff?: string
   editedNotes?: string
+  editedType?: string
   editedVehicle?: string
   editedVehicleCustom?: string
+  editedPlateType?: string
   editedKenichi?: boolean
 }
 
@@ -44,11 +47,11 @@ export interface ReviewItemCardEditForm {
 }
 
 export interface ReviewItemCardProps {
-  item: ReviewItemCardItem
+  item: ReviewItem
   index: number
   editingId: string | null
   editForm: ReviewItemCardEditForm
-  onEdit: (item: ReviewItemCardItem & { [key: string]: unknown }) => void
+  onEdit: (item: ReviewItem) => void
   onSave: (reviewId: string) => void
   onCancel: () => void
   onDelete: (reviewId: string) => void
@@ -157,7 +160,7 @@ export function ReviewItemCard({
               NT${item.editedPrice ?? item.price ?? 800}
             </span>
             <div className="flex gap-1.5">
-              <Button variant="outline" size="sm" onClick={() => onEdit(item as ReviewItemCardItem & Record<string, unknown>)} className="text-[14px] py-1.5 px-3">編輯</Button>
+              <Button variant="outline" size="sm" onClick={() => onEdit(item)} className="text-[14px] py-1.5 px-3">編輯</Button>
               <Button variant="outline" size="sm" onClick={() => onDelete(item.reviewId)} className="text-[#E24B4A] hover:bg-[#FCEBEB] text-[14px] py-1.5 px-3">刪除</Button>
             </div>
           </div>

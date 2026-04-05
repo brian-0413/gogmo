@@ -4,12 +4,12 @@ import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
-import { parseBatchOrders, ParsedOrder, BatchOrderDefaults, TYPE_LABELS } from '@/lib/ai'
+import { parseBatchOrders, BatchOrderDefaults, TYPE_LABELS } from '@/lib/ai'
 import { DispatcherOrderCard } from '@/components/dispatcher/OrderCard'
 import { FleetControl } from '@/components/dispatcher/FleetControl'
 import { SettlementTab } from '@/components/dispatcher/SettlementTab'
 import { CreateDefaultsCard } from '@/components/dispatcher/CreateDefaultsCard'
-import { ReviewItemCard, ReviewItemCardItem } from '@/components/dispatcher/ReviewItemCard'
+import { ReviewItemCard, ReviewItem } from '@/components/dispatcher/ReviewItemCard'
 import { format } from 'date-fns'
 import { getDateOptions } from '@/lib/utils'
 import type { Order } from '@/types'
@@ -31,20 +31,6 @@ interface Driver {
   carType: string
   carColor: string
   user: { name: string; phone: string }
-}
-
-interface ReviewItem extends ParsedOrder {
-  reviewId: string
-  editedPrice?: number
-  editedTime?: string
-  editedPickup?: string
-  editedDropoff?: string
-  editedNotes?: string
-  editedType?: string
-  editedVehicle?: string
-  editedVehicleCustom?: string
-  editedPlateType?: string
-  editedKenichi?: boolean
 }
 
 const DATE_OPTIONS = getDateOptions()
@@ -172,7 +158,7 @@ export default function DispatcherDashboard() {
     } catch (e: any) { alert('解析失敗：' + e.message) } finally { setCreateLoading(false) }
   }
 
-  const handleEditItem = (item: ReviewItemCardItem & { [key: string]: unknown }) => {
+  const handleEditItem = (item: ReviewItem) => {
     setEditingId(item.reviewId)
     setEditForm({
       price: item.price ?? 800,
