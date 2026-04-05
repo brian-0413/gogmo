@@ -55,7 +55,8 @@ export async function POST(request: NextRequest) {
     const results: { orderId: string; success: boolean; price: number; fee: number }[] = []
     let totalFee = 0
 
-    await prisma.$transaction(async (tx) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await prisma.$transaction(async (tx: any) => {
       for (const orderId of orderIds) {
         const order = await tx.order.findUnique({ where: { id: orderId } })
 

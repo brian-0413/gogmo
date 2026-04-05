@@ -50,7 +50,8 @@ export async function GET(_request: NextRequest) {
       }),
     ])
 
-    const data = orders.map(order => ({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const data = (orders as any[]).map((order: any) => ({
       id: order.id,
       completedAt: order.completedAt,
       pickupLocation: order.pickupLocation,

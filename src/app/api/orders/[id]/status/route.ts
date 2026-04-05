@@ -89,7 +89,8 @@ export async function POST(
     if (targetStatus === 'PICKED_UP')  updateData.pickedUpAt = new Date()
     if (targetStatus === 'COMPLETED')  updateData.completedAt = new Date()
 
-    const updated = await prisma.$transaction(async (tx) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const updated = await prisma.$transaction(async (tx: any) => {
       const updatedOrder = await tx.order.update({
         where: { id },
         data: updateData,

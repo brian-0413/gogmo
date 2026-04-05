@@ -9,9 +9,26 @@
 
 ### 最後 commit
 ```
-ca8197d refactor: 抽出業務規則魔法數字至 constants.ts 具名常數
+(升級 Prisma 5→7 + pg adapter，即將推送)
 ```
-落後 origin/main 1 個 commits。
+落後 origin/main 2 個 commits。
+
+---
+
+## 目前開發階段：Zeabur 部署修復（Prisma 7 升級）
+
+### [進行中] Prisma 5 → 7 升級（解決 Zeabur libssl.so.1.1 問題）
+**原因**：Zeabur 使用 Debian 12，只有 libssl.so.3，Prisma 5 需要 libssl.so.1.1 無法連接資料庫。
+
+**變更**：
+- 升級 Prisma 5.22 → 7.6.0（含 `@prisma/adapter-pg` + `pg` driver）
+- `schema.prisma`：移除 `url = env("DATABASE_URL")`（Prisma 7 改由 config 檔案）
+- 新增 `prisma.config.ts`（schema 路徑 + datasource URL + seed 指令）
+- `src/lib/prisma.ts`：使用 `PrismaPg(pool)` adapter 模式
+- `prisma/seed.ts`：使用 adapter + `@ts-nocheck`（避免型別干擾）
+- `package.json`：`prisma.seed` 改用 `tsx --env-file=.env`
+- 修補所有 `implicit any` 類型錯誤（10+ 個 API routes）
+- 安裝依賴：`@prisma/adapter-pg`、`pg`、`@types/pg`、`tsx`
 
 ---
 

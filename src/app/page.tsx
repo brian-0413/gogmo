@@ -56,17 +56,20 @@ async function getStats() {
     })
 
     const now = new Date()
-    const recentOrders = publishedOrders.filter(o => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const recentOrders = (publishedOrders as any[]).filter((o: any) => {
       const time = typeof o.scheduledTime === 'string' ? parseISO(o.scheduledTime) : o.scheduledTime
       const diff = differenceInMinutes(time, now)
       return diff > 0 && diff <= 60
     })
 
-    const pickupCount = publishedOrders.filter(o =>
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const pickupCount = (publishedOrders as any[]).filter((o: any) =>
       o.pickupLocation.includes("桃園機場") || o.pickupLocation.includes("機場")
     ).length
 
-    const totalAmount = allOrders.reduce((sum, o) => sum + o.price, 0)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const totalAmount = (allOrders as any[]).reduce((sum: any, o: any) => sum + o.price, 0)
 
     return {
       pickupCount,

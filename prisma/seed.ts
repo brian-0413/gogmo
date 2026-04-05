@@ -1,7 +1,12 @@
+// @ts-nocheck
 import { PrismaClient } from '@prisma/client'
+import { PrismaPg } from '@prisma/adapter-pg'
+import pg from 'pg'
 import bcrypt from 'bcryptjs'
 
-const prisma = new PrismaClient()
+const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL })
+const adapter = new PrismaPg(pool)
+const prisma = new PrismaClient({ adapter })
 
 async function main() {
   console.log('🌱 Starting seed...')
@@ -158,8 +163,10 @@ async function main() {
 
   console.log(`✅ Created ${driverUsers.length} drivers`)
 
-  const drivers = driverUsers.map(u => u.driver!)
-  const dispatchers = dispatcherUsers.map(u => u.dispatcher!)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const drivers = driverUsers.map((u: any) => u.driver!)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const dispatchers = dispatcherUsers.map((u: any) => u.dispatcher!)
 
   // ========== Create Orders (訂單) ==========
   const now = new Date()
@@ -422,7 +429,8 @@ async function main() {
   console.log(`✅ Created ${orders.length} orders`)
 
   // Create transactions for completed orders
-  const completedOrders = orders.filter(o => o.status === 'COMPLETED')
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const completedOrders = (orders as any[]).filter((o: any) => o.status === 'COMPLETED')
   for (const order of completedOrders) {
     const platformFee = Math.floor(order.price * 0.05)
     await prisma.transaction.createMany({

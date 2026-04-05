@@ -98,7 +98,8 @@ export async function GET(request: NextRequest) {
     if (recommended && user.role === 'DRIVER') {
       const now = new Date()
       sortedOrders = orders
-        .map(order => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .map((order: any) => {
           // Calculate time urgency score (0-100, higher = more urgent)
           const timeDiff = new Date(order.scheduledTime).getTime() - now.getTime()
           const minutesUntil = timeDiff / (1000 * 60)
@@ -117,7 +118,8 @@ export async function GET(request: NextRequest) {
 
           return { ...order, recommendationScore }
         })
-        .sort((a, b) => b.recommendationScore - a.recommendationScore)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .sort((a: any, b: any) => b.recommendationScore - a.recommendationScore)
         .slice(0, limit) // Return only requested limit after sorting
     }
 

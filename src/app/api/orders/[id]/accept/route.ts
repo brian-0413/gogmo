@@ -156,7 +156,8 @@ export async function POST(
     }
 
     // ─── Transaction ───────────────────────────────────
-    const updated = await prisma.$transaction(async (tx) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const updated = await prisma.$transaction(async (tx: any) => {
       const driver = await tx.driver.findUnique({ where: { id: driverId } })
       if (!driver) throw new Error('找不到司機資料')
 

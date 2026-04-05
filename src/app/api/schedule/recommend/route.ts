@@ -43,7 +43,8 @@ export async function GET(request: NextRequest) {
 
     // 如果有指定 orderId，只取那一張當觸發
     if (triggerOrderId) {
-      currentOrders = currentOrders.filter(o => o.id === triggerOrderId)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      currentOrders = (currentOrders as any[]).filter((o: any) => o.id === triggerOrderId)
     }
 
     // 抓接單大廳所有 PUBLISHED 訂單
@@ -109,7 +110,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json<ApiResponse>({
         success: true,
         data: {
-          currentOrders: orders.map((o) => ({ ...o, scheduledTime: o.scheduledTime.toString() })),
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          currentOrders: (orders as any[]).map((o: any) => ({ ...o, scheduledTime: o.scheduledTime.toString() })),
           currentOrder: null,
           availableCount: 0,
           recommendations: [],
@@ -184,7 +186,8 @@ export async function GET(request: NextRequest) {
 
     // 建構排班時間軸（從現有行程 + 已選推薦）
     // timeline 的 currentOrders 部分
-    const currentOrderNodes = orders.map((o) => ({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const currentOrderNodes = (orders as any[]).map((o: any) => ({
       time: new Date(o.scheduledTime).toISOString(),
       label: `${o.type === 'pickup' || o.type === 'pickup_boat' ? '接機' : '送機'} ${o.pickupLocation} → ${o.dropoffLocation}`,
       orderId: o.id,
@@ -204,12 +207,14 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    const totalIncome = orders.reduce((sum, o) => sum + o.price, 0)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const totalIncome = (orders as any[]).reduce((sum: any, o: any) => sum + o.price, 0)
 
     return NextResponse.json<ApiResponse>({
       success: true,
       data: {
-        currentOrders: orders.map((o) => ({ ...o, scheduledTime: o.scheduledTime.toString() })),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        currentOrders: (orders as any[]).map((o: any) => ({ ...o, scheduledTime: o.scheduledTime.toString() })),
         currentOrder: { ...currentOrder, scheduledTime: currentOrder.scheduledTime.toString() },
         availableCount: available.length,
         recommendations,

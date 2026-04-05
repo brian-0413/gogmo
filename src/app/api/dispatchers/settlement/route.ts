@@ -59,12 +59,13 @@ export async function GET(request: NextRequest) {
     })
 
     // Count pending transfer orders
-    const pendingTransferCount = orders.filter(o => o.transferStatus === 'pending').length
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const pendingTransferCount = (orders as any[]).filter((o: any) => o.transferStatus === 'pending').length
 
     // Use SQL-like aggregation via Prisma
     // Calculate summary using reduce (more efficient than multiple iterations)
-    const summary = orders.reduce(
-      (acc, order) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const summary = (orders as any[]).reduce((acc: any, order: any) => {
         const platformFee = Math.floor(order.price * PLATFORM_FEE_RATE)
         return {
           totalOrders: acc.totalOrders + 1,

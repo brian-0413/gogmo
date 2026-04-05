@@ -68,7 +68,8 @@ export async function POST(
     const cancelFee = Math.floor(order.price * CANCELLATION_FEE_RATE) // 退單扣 10%
 
     // Transaction：扣費 + 還原訂單狀態 + 記錄交易
-    const updated = await prisma.$transaction(async (tx) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const updated = await prisma.$transaction(async (tx: any) => {
       const driver = await tx.driver.findUnique({ where: { id: driverId } })
 
       if (!driver) throw new Error('找不到司機資料')

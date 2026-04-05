@@ -65,7 +65,8 @@ export async function GET(request: NextRequest) {
     })
 
     // 3. 格式化當前行程（計算每單的自由時間）
-    const currentWithFreeTime = currentOrders.map((o) => ({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const currentWithFreeTime = (currentOrders as any[]).map((o: any) => ({
       ...o,
       scheduledTime: o.scheduledTime,
       type: o.type as OrderType,
@@ -75,8 +76,9 @@ export async function GET(request: NextRequest) {
     }))
 
     // 4. 計算司機最早可用時間
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const driverFreeTime = getDriverFreeTime(
-      currentOrders.map((o) => ({
+      (currentOrders as any[]).map((o: any) => ({
         scheduledTime: o.scheduledTime,
         type: o.type as OrderType,
         status: o.status as 'ACCEPTED' | 'ARRIVED' | 'IN_PROGRESS',
@@ -84,13 +86,15 @@ export async function GET(request: NextRequest) {
     )
 
     // 5. 執行配單演算法
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const recommendations = findMatchingOrders(
-      currentOrders.map((o) => ({
+      (currentOrders as any[]).map((o: any) => ({
         scheduledTime: o.scheduledTime,
         type: o.type as OrderType,
         status: o.status as 'ACCEPTED' | 'ARRIVED' | 'IN_PROGRESS',
       })),
-      availableOrders.map((o) => ({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (availableOrders as any[]).map((o: any) => ({
         id: o.id,
         orderDate: o.orderDate,
         orderSeq: o.orderSeq,
@@ -132,7 +136,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json<ApiResponse>({
       success: true,
       data: {
-        currentOrders: currentWithFreeTime.map((o) => ({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        currentOrders: (currentWithFreeTime as any[]).map((o: any) => ({
           id: o.id,
           scheduledTime: o.scheduledTime.toISOString(),
           type: o.type,
