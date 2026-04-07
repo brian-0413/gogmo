@@ -9,13 +9,13 @@
 
 ### 最後 commit
 ```
-ebf2f98 fix: 手機 RWD 響應式調整
+afe27d4 feat: 新版首頁實作 — Scheme D 雙卡片輪播 + 即時數據牆
 ```
 落後 origin/main 0 個 commits。
 
 ---
 
-## 目前開發階段：Zeabur 部署修復（Prisma 7 升級）
+## 目前開發階段：首頁 Landing Page 重設計
 
 ### [完成] Prisma 5 → 7 升級（解決 Zeabur libssl.so.1.1 問題）
 **原因**：Zeabur 使用 Debian 12，只有 libssl.so.3，Prisma 5 需要 libssl.so.1.1 無法連接資料庫。
@@ -39,6 +39,29 @@ ebf2f98 fix: 手機 RWD 響應式調整
 ---
 
 ## 近期進度
+
+### [完成] 新版首頁 Landing Page（2026-04-07）
+**Commits**: `a5e2207` → `afe27d4`
+**功能概述**：全新登入前首頁，Scheme D 暖米黃風格。
+
+**實作內容**：
+- **雙卡片 Hero**：A卡白色輪播（司機/派單方由左滑入）＋B卡白色即時數據牆
+- **輪播行為**：4秒自動切換，由左滑入（translateX(-100%)→0），底部 dot indicators + arrow 按鈕
+- **即時數據牆**：4格數據卡各有專屬底色（司機接單動態→#FFF3E0橙、所有訂單→#EEF4FF藍、已派出→#F0FFF4綠、註冊司機→#FAF0FF紫）
+- **goGMO 品牌**：左上角 brand name，右上角登入按鈕，暖米黃背景
+- **圓角卡片**：border-radius: 24px，白色卡片，白色底色（A、B卡相同）
+- **按鈕尺寸**：小尺寸 padding: 8px 14px
+
+**實作檔案**：
+- `src/app/page.tsx`：新版首頁，刪除舊 FlipboardGrid / LiveTicker / DriverStatusCarousel
+- `src/components/HeroCarousel.tsx`：輪播元件，2張投影片，refs DOM 操作
+- `src/components/DataWall.tsx`：即時數據牆元件
+- `docs/superpowers/specs/2026-04-07-landing-page-design.md`：規格文件
+
+**Mockup 演進**：6 個版本迭代（v1 stacked → v2 split contrast → v3 fade carousel → v4 slide → v5 A/B split → v6 rounded cards）
+配色 Scheme A/B/C/D，最終選定 **Scheme D**（白色卡片）
+
+---
 
 ### [完成] Phase 2D 魔法數字重構（2026-04-05）
 **Commit**: `ca8197d`
