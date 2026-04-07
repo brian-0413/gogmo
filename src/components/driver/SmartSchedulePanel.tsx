@@ -59,9 +59,9 @@ export function SmartSchedulePanel({
   if (!scheduleResult) return null
 
   return (
-    <div className="mb-6 bg-white border border-[#DDDDDD] rounded-2xl overflow-hidden shadow-sm">
+    <div className="mb-6 bg-white border border-[#DDDDDD] rounded-2xl overflow-hidden shadow-sm mx-3 sm:mx-0">
       {/* 面板標題 */}
-      <div className="px-5 py-4 bg-gradient-to-r from-[#FFF7ED] to-[#FFF3E0] border-b border-[#FFE0B2]">
+      <div className="px-4 sm:px-5 py-4 bg-gradient-to-r from-[#FFF7ED] to-[#FFF3E0] border-b border-[#FFE0B2]">
         <div className="flex items-center gap-2 mb-1">
           <Sparkles className="w-4 h-4 text-[#B45309]" />
           <h3 className="text-[15px] font-semibold text-[#222222]">智慧排班推薦</h3>
@@ -76,12 +76,12 @@ export function SmartSchedulePanel({
         </p>
       </div>
 
-      <div className="p-5 space-y-5">
+      <div className="p-4 sm:p-5 space-y-5">
         {/* 當前行程 */}
         {scheduleResult.currentOrder && (
           <div>
             <p className="text-[11px] text-[#78716C] uppercase tracking-wider mb-2 font-medium">觸發行程</p>
-            <div className="bg-[#FAFAFA] rounded-xl p-4 border border-[#EBEBEB]">
+            <div className="bg-[#FAFAFA] rounded-xl p-3 sm:p-4 border border-[#EBEBEB]">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold font-mono-nums" style={{
@@ -104,7 +104,7 @@ export function SmartSchedulePanel({
         {scheduleResult.timeline.length > 0 && (
           <div>
             <p className="text-[11px] text-[#78716C] uppercase tracking-wider mb-2 font-medium">排班預覽</p>
-            <div className="relative bg-[#FAFAFA] rounded-xl p-4 border border-[#EBEBEB] space-y-2">
+            <div className="relative bg-[#FAFAFA] rounded-xl p-3 sm:p-4 border border-[#EBEBEB] space-y-2">
               {scheduleResult.timeline.map((node, idx) => (
                 <div key={idx} className="flex items-center gap-2">
                   {idx > 0 && (
@@ -196,7 +196,7 @@ export function SmartSchedulePanel({
               return (
                 <div
                   key={rec.id}
-                  className={`border rounded-xl p-4 transition-all duration-200 cursor-pointer ${
+                  className={`border rounded-xl p-3 sm:p-4 transition-all duration-200 cursor-pointer ${
                     isSelected
                       ? 'border-[#F59E0B] bg-[#FFF7ED] shadow-[0_2px_8px_rgba(245,158,11,0.15)]'
                       : 'border-[#DDDDDD] hover:border-[#F59E0B]/50 hover:bg-[#FAFAFA]'
@@ -232,7 +232,7 @@ export function SmartSchedulePanel({
                     </div>
                     {/* 金額 */}
                     <div className="text-right">
-                      <p className="text-[22px] font-bold font-mono-nums text-[#FF385C] leading-none">
+                      <p className="text-[18px] sm:text-[22px] font-bold font-mono-nums text-[#FF385C] leading-none">
                         NT${rec.price.toLocaleString()}
                       </p>
                       <p className="text-[10px] text-[#78716C] mt-0.5 font-mono-nums">
@@ -282,17 +282,17 @@ export function SmartSchedulePanel({
 
         {/* 總收入預估 + 確認按鈕 */}
         {filteredScheduleRecs.recs.length > 0 && (
-          <div className="bg-[#FAFAFA] border border-[#EBEBEB] rounded-xl p-4">
+          <div className="bg-[#FAFAFA] border border-[#EBEBEB] rounded-xl p-3 sm:p-4">
             <div className="flex items-center justify-between mb-3">
               <div>
                 <p className="text-[12px] text-[#717171]">已選訂單</p>
-                <p className="text-[22px] font-bold font-mono-nums text-[#222222]">
+                <p className="text-[18px] sm:text-[22px] font-bold font-mono-nums text-[#222222]">
                   {selectedScheduleOrders.length} 單
                 </p>
               </div>
               <div className="text-right">
                 <p className="text-[12px] text-[#717171]">總收入預估</p>
-                <p className="text-[22px] font-bold font-mono-nums text-[#008A05]">
+                <p className="text-[18px] sm:text-[22px] font-bold font-mono-nums text-[#008A05]">
                   NT${((scheduleResult.currentOrder?.price ?? 0) + filteredScheduleRecs.recs
                     .filter(r => selectedScheduleOrders.includes(r.id))
                     .reduce((sum, r) => sum + r.price, 0)

@@ -119,8 +119,8 @@ export function ReviewItemCard({
             />
           </div>
           <div className="flex gap-3 pt-2">
-            <Button onClick={() => onSave(item.reviewId)} className="text-[14px] px-6">儲存</Button>
-            <Button variant="outline" onClick={onCancel} className="text-[14px] px-6">取消</Button>
+            <Button onClick={() => onSave(item.reviewId)} className="text-[13px] sm:text-[14px] px-4 sm:px-6">儲存</Button>
+            <Button variant="outline" onClick={onCancel} className="text-[13px] sm:text-[14px] px-4 sm:px-6">取消</Button>
           </div>
         </div>
       </div>
@@ -155,8 +155,8 @@ export function ReviewItemCard({
               <span className="inline-flex items-center px-3 py-1.5 text-[15px] font-bold font-mono-nums rounded bg-[#F3E8FF] text-[#6B21A8]">肯驛</span>
             )}
           </div>
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <span className="text-[28px] font-bold font-mono-nums text-[#FF385C] leading-none">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-[18px] sm:text-[22px] font-bold font-mono-nums text-[#FF385C] leading-none">
               NT${item.editedPrice ?? item.price ?? 800}
             </span>
             <div className="flex gap-1.5">
@@ -167,16 +167,16 @@ export function ReviewItemCard({
         </div>
 
         {/* 第二行：時間 + 起訖點 */}
-        <div className="flex items-center gap-4 mb-3">
+        <div className="flex items-center gap-2 sm:gap-4 mb-3 flex-wrap">
           <div className="flex items-center gap-2">
             <Clock className="w-4 h-4 text-[#717171]" />
-            <span className="text-[15px] font-bold font-mono-nums text-[#222222]">{item.editedTime || item.time || '-'}</span>
+            <span className="text-[14px] sm:text-[15px] font-bold font-mono-nums text-[#222222]">{item.editedTime || item.time || '-'}</span>
           </div>
-          <span className="text-[16px] font-bold text-[#222222]">
+          <span className="text-[14px] sm:text-[16px] font-bold text-[#222222] truncate max-w-[80px] sm:max-w-none">
             {item.editedPickup || item.pickupLocation || '-'}
           </span>
-          <span className="text-[18px] font-bold text-[#DDDDDD]">→</span>
-          <span className="text-[16px] font-bold text-[#222222]">
+          <span className="text-[16px] font-bold text-[#DDDDDD] flex-shrink-0">→</span>
+          <span className="text-[14px] sm:text-[16px] font-bold text-[#222222] truncate max-w-[80px] sm:max-w-none">
             {item.editedDropoff || item.dropoffLocation || '-'}
           </span>
         </div>

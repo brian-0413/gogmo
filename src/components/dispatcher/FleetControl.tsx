@@ -73,7 +73,7 @@ function FleetStats({ drivers }: { drivers: Driver[] }) {
       {stats.map((stat) => (
         <div key={stat.label} className="bg-white rounded-xl p-4 border border-[#DDDDDD]">
           <p className="text-[11px] text-[#717171] mb-1">{stat.label}</p>
-          <p className="text-[22px] font-medium text-[#222222] font-mono-nums leading-none">
+          <p className="text-[18px] sm:text-[22px] font-medium text-[#222222] font-mono-nums leading-none">
             {stat.value}
             <span className="text-sm font-normal text-[#717171] ml-1">/{total}</span>
           </p>
@@ -89,7 +89,7 @@ function DriverCard({ driver }: { driver: Driver }) {
   const vehicleTag = getVehicleTag(driver.carType)
 
   return (
-    <div className={`bg-white border rounded-xl p-4 hover:shadow-[0_2px_12px_rgba(0,0,0,0.08)] transition-shadow duration-200 ${config.border}`}>
+    <div className={`bg-white border rounded-xl p-3 sm:p-4 hover:shadow-[0_2px_12px_rgba(0,0,0,0.08)] transition-shadow duration-200 ${config.border}`}>
       {/* Header */}
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-3">

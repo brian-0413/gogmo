@@ -122,7 +122,7 @@ export function OrderCalendar({ orders, selectedDate, onSelectDate }: OrderCalen
                 }
               }}
               className={`
-                relative flex flex-col items-center justify-start pt-2 pb-2 min-h-[56px] transition-all duration-100
+                relative flex flex-col items-center justify-start pt-2 pb-2 min-h-[48px] sm:min-h-[56px] transition-all duration-100
                 ${inMonth ? 'text-[#222222]' : 'text-[#D6D3D1]'}
                 ${isSelected ? 'bg-[#F59E0B]/10' : 'hover:bg-[#F4EFE9]/60'}
                 ${today && !isSelected ? 'bg-[#F59E0B]/5' : ''}

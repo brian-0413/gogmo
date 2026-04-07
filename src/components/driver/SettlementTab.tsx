@@ -102,7 +102,7 @@ export function SettlementTab({ token, balance, balanceStats }: SettlementTabPro
             <div className="w-1.5 h-1.5 rounded-full bg-[#22C55E] animate-pulse" />
             <span className="text-[10px] text-[#22C55E] uppercase tracking-widest font-medium">今日收益</span>
           </div>
-          <p className="text-3xl font-bold text-[#1C1917] font-mono-nums">{balanceStats.today.toLocaleString()}</p>
+          <p className="text-2xl sm:text-3xl font-bold text-[#1C1917] font-mono-nums">{balanceStats.today.toLocaleString()}</p>
           <p className="text-xs text-[#78716C] mt-1 font-mono-nums">{balanceStats.todayOrders} 單</p>
           {/* Mini sparkline */}
           <div className="mt-4 flex items-end gap-0.5 h-8">
@@ -135,7 +135,7 @@ export function SettlementTab({ token, balance, balanceStats }: SettlementTabPro
             <TrendingUp className="w-3.5 h-3.5 text-[#3B82F6]" />
             <span className="text-[10px] text-[#3B82F6] uppercase tracking-widest font-medium">本週收益</span>
           </div>
-          <p className="text-3xl font-bold text-[#1C1917] font-mono-nums">{balanceStats.thisWeek.toLocaleString()}</p>
+          <p className="text-2xl sm:text-3xl font-bold text-[#1C1917] font-mono-nums">{balanceStats.thisWeek.toLocaleString()}</p>
           <p className="text-xs text-[#78716C] mt-1 font-mono-nums">{balanceStats.weekOrders} 單</p>
           <div className="mt-4">
             <div className="flex justify-between text-[10px] text-[#78716C] mb-1">
@@ -155,7 +155,7 @@ export function SettlementTab({ token, balance, balanceStats }: SettlementTabPro
             <Zap className="w-3.5 h-3.5 text-[#A855F7]" />
             <span className="text-[10px] text-[#A855F7] uppercase tracking-widest font-medium">累積收益</span>
           </div>
-          <p className="text-3xl font-bold text-[#1C1917] font-mono-nums">{balanceStats.allTime.toLocaleString()}</p>
+          <p className="text-2xl sm:text-3xl font-bold text-[#1C1917] font-mono-nums">{balanceStats.allTime.toLocaleString()}</p>
           <p className="text-xs text-[#78716C] mt-1 font-mono-nums">{balanceStats.allOrders} 單</p>
           <div className="mt-4 space-y-1">
             <div className="flex justify-between text-[10px]">

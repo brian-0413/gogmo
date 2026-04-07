@@ -24,7 +24,7 @@ export function CreateDefaultsCard({ defaults, onChange }: CreateDefaultsCardPro
   return (
     <div className="bg-white border border-[#DDDDDD] rounded-xl overflow-hidden">
       {/* 卡片標題 */}
-      <div className="px-5 py-4 border-b border-[#DDDDDD] flex items-center gap-3">
+      <div className="px-4 sm:px-5 py-4 border-b border-[#DDDDDD] flex items-center gap-3">
         <FileText className="w-4 h-4 text-[#717171]" />
         <div>
           <h3 className="text-[18px] font-medium text-[#222222]">派單中心 — AI 智能解析</h3>
@@ -32,7 +32,7 @@ export function CreateDefaultsCard({ defaults, onChange }: CreateDefaultsCardPro
         </div>
       </div>
       {/* 內容 */}
-      <div className="p-5 space-y-5">
+      <div className="p-4 sm:p-5 space-y-5">
         {/* 日期選擇 */}
         <div className="space-y-2">
           <label className="text-[11px] text-[#717171] font-normal">日期（必選）</label>

@@ -218,7 +218,7 @@ export default function OrderDetailPage() {
 
           {/* 金額 */}
           <div>
-            <span className="text-[32px] font-bold font-mono-nums text-[#FF385C]">
+            <span className="text-[24px] sm:text-[32px] font-bold font-mono-nums text-[#FF385C]">
               NT${order.price.toLocaleString()}
             </span>
           </div>
