@@ -495,7 +495,7 @@ PENDING → PUBLISHED → ASSIGNED → ACCEPTED → ARRIVED → IN_PROGRESS → 
   - 代收現金：派單人尚未收錢，司機現場收現後回金部分傭金給派單人，司機填「代收」+「回金」，即時顯示「實拿」
 - **行李設計**：Loop 流程（尺寸→數量→確定/還有→loop）
 - **航班規則**：接機必填，送機選填
-- **介面清理**：移除所有 emoji 和 ← 箭頭符號，保持專業感
+- **介面清理**：移除所有 emoji 和 ← 箭頭符號，保持專業感（最後發現「確認發單上架」按鈕仍殘留火箭 emoji，已移除）
 - **Mockup 位置**：http://localhost:57372/03-full-chat.html
 - **下一步**：寫規格文件 → 實作 → commit
 
