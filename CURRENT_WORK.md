@@ -9,48 +9,30 @@
 
 ### 最後 commit
 ```
-afe27d4 feat: 新版首頁實作 — Scheme D 雙卡片輪播 + 即時數據牆
+591cb32 fix: SelfDispatchChat 四項 review 問題
 ```
 落後 origin/main 0 個 commits。
 
 ---
 
-## 目前開發階段：小車頭專區（Brainstorm 完成，Mockup 已確認）
+## 目前開發階段：小車頭專區（已完成）
 
-### [Brainstorm 完成] 小車頭專區 — 司機自助發單（2026-04-08）
-**功能概述**：Premium 司機專屬功能，可在司機端後台「小車頭」Tab 自行發單上架至接單大廳，訂單顯示「司機自派」標籤。
+### [完成] 小車頭專區（2026-04-08）
+**Commits**: `ad0a0c8` → `33e4a27` → `68c0f19` → `09dc30f` → `03025ee` → `591cb32`
+**功能概述**：Premium 司機專屬功能，可在司機端後台「小車頭」Tab 自行發單上架至接單大廳，LINE 風格 14 步對話式引導發單。
 
-**需求確認**（完整流程共 12 步）：
-1. **類型**：接機/船 或 送機/船（按鈕二選一）
-2. **上車地點**：桃園機場 / 松山機場 / 清泉崗 / 小港 / 基隆港 / 其他（選完後類型自動更新為接機/接船/送機/送船）
-3. **航班**：接機必填，送機選填
-4. **車型**：小車(5人) / 休旅(7人) / 9人座
-5. **乘客數**：1-8人（4x2 網格按鈕）
-6. **行李 loop**：尺寸（胖胖箱/28吋/24吋/20吋/其他/無行李）→ 數量（1-3件）→ 確定/還有其他尺寸（loop）
-7. **上下車地點**：依類型自動設定機場端，司機填另一端
-8. **費用模式**：客下轉帳 / 代收現金
-9. **金額**：客下轉帳→司機實拿；代收→代收+回金→即時計算實拿
-10. **特殊需求**：舉牌 / 安全座椅 / 其他（可複選）
-11. **摘要確認**：顯示完整摘要 + 「我要修改」（回到第1步）+ 「確認發單上架」
-12. **發單**：建立 PUBLISHED 訂單，isSelfPublish=true
+**實作內容**：
+- **Prisma**：`Order` model 新增 `isSelfPublish` boolean；`Driver` model 新增 `isPremium` boolean
+- **Auth 層**：login/register 回傳 `isPremium`；AuthResult 介面新增 `isPremium`
+- **API**：`POST /api/orders/self-publish` 司機自助發單端點（含 Premium 驗證、費用模式邏輯、系統派單方建立）
+- **前端**：司機後台新增「小車頭」Tab（普通司機鎖定灰色，Premium 司機可使用）
+- **對話式元件**：`SelfDispatchChat.tsx`（1019 行），LINE 風格 14 步流程（含行李 loop、費用計算、特殊需求、備註）
+- **4 項 review 修復**：ProgressDots 改 14 格、備註文字框加入 Step 12、行李數量加入「4件」、代收回金超額警告
 
-**UI 決定**：
-- **呈現方式**：Tab 分頁（司機後台第四個 Tab，與接單大廳/我的行程/帳務中心並列）
-- **Premium 鎖定**：普通司機可見 Tab 但發單按鈕鎖定（灰色 + 提示「Premium 功能」）
-- **介面風格**：LINE 風格對話泡泡（聊天機器人流），每步一組泡泡 + 按鈕/輸入框
-- **實作方式**：對話式逐步引導，非傳統表單
+**規格文件**：`docs/superpowers/specs/2026-04-08-driver-self-dispatch-design.md`
+**Mockup 檔案**：`.superpowers/brainstorm/03-full-chat.html`
 
-**Mockup 檔案**：
-- `.superpowers/brainstorm/01-form-layout.html`：表單分組選項
-- `.superpowers/brainstorm/02-chat-flow.html`：對話流程示意
-- `.superpowers/brainstorm/03-full-chat.html`：完整 12 步 mockup（http://localhost:57372/03-full-chat.html）
-
-**待實作項目**：
-- [ ] Prisma：`Order` model 新增 `isSelfPublish` boolean
-- [ ] API：`POST /api/orders/self-publish` 司機自助發單端點
-- [ ] 前端：司機後台新增「小車頭」Tab（含 Premium 鎖定）
-- [ ] 前端：對話式發單元件（12步流程）
-- [ ] 規格文件：寫入 `docs/superpowers/specs/2026-04-08-driver-self-dispatch-design.md`
+**待實作項目**：全部完成
 
 ---
 
@@ -457,12 +439,7 @@ PENDING → PUBLISHED → ASSIGNED → ACCEPTED → ARRIVED → IN_PROGRESS → 
 - [x] 司機接單大廳車型過濾 + 排序功能
 - [x] 智慧排單排序策略重構（接機觸發→地理距離/送機觸發→落地時間）
 - [x] 行程卡片單一訂單智慧排單
-- [x] **小車頭專區**（Brainstorm 完成，Mockup 確認）
-  - [ ] Prisma：`Order` model 新增 `isSelfPublish` 欄位
-  - [ ] API：`POST /api/orders/self-publish` 司機自助發單
-  - [ ] 前端：司機後台「小車頭」Tab（含 Premium 鎖定）
-  - [ ] 前端：對話式發單元件（12步流程）
-  - [ ] 規格文件：`docs/superpowers/specs/2026-04-08-driver-self-dispatch-design.md`
+- [x] **小車頭專區**：Premium 司機專屬發單功能，LINE 風格 14 步對話流程
 - [ ] **訂閱與金流系統**（規格文件：`docs/subscription-system.md`）
   - Prisma schema 異動
   - UNIPAY 整合
