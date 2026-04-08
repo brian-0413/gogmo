@@ -96,6 +96,70 @@ export interface Transaction {
   settledAt?: Date
 }
 
+export type TransferStatus = 'PENDING_SQUAD' | 'PENDING_DISPATCHER' | 'APPROVED' | 'REJECTED' | 'CANCELLED' | 'EXPIRED'
+
+export interface SquadMember {
+  id: string
+  squadId: string
+  driverId: string
+  joinedAt: Date | string
+  driver?: {
+    id: string
+    licensePlate: string
+    carType: string
+    carColor: string
+    isPremium: boolean
+    user?: {
+      id: string
+      name: string
+      phone: string
+    }
+  }
+}
+
+export interface Squad {
+  id: string
+  name: string
+  maxMembers: number
+  memberCount: number
+  createdAt: Date | string
+  members: SquadMember[]
+}
+
+export interface OrderTransfer {
+  id: string
+  orderId: string
+  fromDriverId: string
+  toDriverId: string | null
+  squadId: string
+  reason: string | null
+  transferFee: number
+  status: TransferStatus
+  dispatcherNote: string | null
+  createdAt: Date | string
+  order?: {
+    id: string
+    scheduledTime: Date | string
+    price: number
+    pickupLocation: string
+    dropoffLocation: string
+    type: string
+    vehicle: string
+  }
+  fromDriver?: {
+    id: string
+    licensePlate: string
+    carType: string
+    user?: { name: string }
+  }
+  toDriver?: {
+    id: string
+    licensePlate: string
+    carType: string
+    user?: { name: string }
+  }
+}
+
 // API Request/Response types
 export interface ApiResponse<T = unknown> {
   success: boolean
