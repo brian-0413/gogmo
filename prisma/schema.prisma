@@ -89,6 +89,7 @@ model Driver {
   lastLocationAt  DateTime?
   bankCode        String?      // 銀行代碼
   bankAccount     String?      // 銀行帳號
+  isPremium        Boolean      @default(false) // Premium 司機可使用小車頭發單功能
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
 
@@ -170,6 +171,7 @@ model Order {
 
   // 肯驛系統
   kenichiRequired Boolean     @default(false) // 是否需要肯驛系統
+  isSelfPublish    Boolean     @default(false) // 司機自助發單
 
   // 轉帳狀態
   transferStatus   String     @default("pending") // pending / completed
