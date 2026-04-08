@@ -204,15 +204,21 @@ function MoneyBox({ children }: { children: React.ReactNode }) {
 }
 
 function MoneyRow({ label, value, onChange }: { label: string; value: string | number; onChange: (v: string) => void }) {
+  const displayValue = value === 0 || value === '' ? '' : String(value)
   return (
     <div className="flex items-center gap-1.5 mb-2 last:mb-0">
       <span className="text-[12px] font-semibold text-[#717171] whitespace-nowrap min-w-[64px]">{label}</span>
       <div className="flex-1 flex items-center gap-1">
         <span className="text-[13px] text-[#717171]">NT$</span>
         <input
-          type="number"
-          value={value}
-          onChange={e => onChange(e.target.value)}
+          type="text"
+          inputMode="decimal"
+          value={displayValue}
+          onChange={e => {
+            const digits = e.target.value.replace(/[^\d]/g, '')
+            onChange(digits === '' ? '0' : digits)
+          }}
+          placeholder="0"
           className="flex-1 px-2 py-1.5 border-2 border-[#DDDDDD] rounded-lg text-[13px] outline-none focus:border-[#FF385C] bg-white w-full"
         />
       </div>
