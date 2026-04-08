@@ -374,7 +374,7 @@ function Summary({
   )
 }
 
-function ProgressDots({ current, total = 12 }: { current: Step; total?: number }) {
+function ProgressDots({ current, total = 14 }: { current: Step; total?: number }) {
   return (
     <div className="flex gap-1 mb-4">
       {Array.from({ length: total }).map((_, i) => {
@@ -682,7 +682,7 @@ export function SelfDispatchChat({ token, onSuccess, onClose }: SelfDispatchChat
                     選擇了【<strong className="text-[#FF385C]">{form.currentLuggageSize}</strong>】，請問有幾件？
                   </p>
                   <OptGrid cols={3}>
-                    {[1, 2, 3].map(qty => (
+                    {[1, 2, 3, 4].map(qty => (
                       <OptButton
                         key={qty}
                         label={`${qty}件`}
@@ -919,10 +919,17 @@ export function SelfDispatchChat({ token, onSuccess, onClose }: SelfDispatchChat
                       onChange={v => set({ commissionReturn: Number(v) || 0 })}
                     />
                     {form.cashCollected > 0 && (
-                      <MoneyResult
-                        label="司機實拿"
-                        amount={Math.max(0, form.cashCollected - form.commissionReturn)}
-                      />
+                      <>
+                        <MoneyResult
+                          label="司機實拿"
+                          amount={Math.max(0, form.cashCollected - form.commissionReturn)}
+                        />
+                        {form.commissionReturn > form.cashCollected && (
+                          <div className="mt-1.5 px-2 py-1.5 bg-[#FCEBEB] border border-[#E24B4A] rounded-lg text-[11px] text-[#E24B4A]">
+                            回金不能超過代收金額
+                          </div>
+                        )}
+                      </>
                     )}
                   </MoneyBox>
                   <button
@@ -960,6 +967,15 @@ export function SelfDispatchChat({ token, onSuccess, onClose }: SelfDispatchChat
                       onClick={() => toggleSpecialNeed('other_need')}
                     />
                   </OptGrid>
+                  <div className="mt-3">
+                    <textarea
+                      value={form.notes}
+                      onChange={e => set({ notes: e.target.value })}
+                      placeholder="備註（選填）"
+                      rows={2}
+                      className="w-full px-3 py-2 border border-[#DDDDDD] rounded-xl text-[13px] text-[#222222] resize-none focus:outline-none focus:border-[#FF385C]"
+                    />
+                  </div>
                   <button
                     onClick={() => setStep(13)}
                     className="mt-3 w-full py-2 bg-[#FF385C] text-white border-none rounded-xl text-[13px] font-semibold cursor-pointer hover:bg-[#E83355]"
