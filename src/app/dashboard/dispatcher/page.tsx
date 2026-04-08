@@ -10,6 +10,7 @@ import { FleetControl } from '@/components/dispatcher/FleetControl'
 import { SettlementTab } from '@/components/dispatcher/SettlementTab'
 import { CreateDefaultsCard } from '@/components/dispatcher/CreateDefaultsCard'
 import { ReviewItemCard, ReviewItem } from '@/components/dispatcher/ReviewItemCard'
+import { TransferConfirmBanner, type TransferPendingData } from '@/components/dispatcher/TransferConfirmBanner'
 import { format } from 'date-fns'
 import { getDateOptions } from '@/lib/utils'
 import { DEFAULT_ORDER_PRICE } from '@/lib/constants'
@@ -55,6 +56,7 @@ export default function DispatcherDashboard() {
   const [rawText, setRawText] = useState('')
   const [reviewItems, setReviewItems] = useState<ReviewItem[]>([])
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [pendingTransfer, setPendingTransfer] = useState<TransferPendingData | null>(null)
   const [editForm, setEditForm] = useState<{
     price?: number; scheduledTime?: string; pickupLocation?: string;
     dropoffLocation?: string; note?: string; editedVehicle?: string; editedVehicleCustom?: string;
@@ -73,7 +75,7 @@ export default function DispatcherDashboard() {
     if (!token || user?.role !== 'DISPATCHER') return
 
     const es = new EventSource('/api/dispatchers/events')
-    es.onmessage = (event) => {
+    es.onmessage = async (event) => {
       try {
         const data = JSON.parse(event.data)
         if (data.type === 'ORDER_STATUS_CHANGE') {
@@ -89,12 +91,60 @@ export default function DispatcherDashboard() {
                 }
               : order
           ))
+        } else if (data.type === 'SQUAD_TRANSFER_PENDING') {
+          // Fetch full transfer details and show banner
+          try {
+            const res = await fetch(`/api/orders/${data.orderId}/transfer`, {
+              headers: { Authorization: `Bearer ${token}` },
+            })
+            const result = await res.json()
+            if (result.success && result.data?.transfer) {
+              const t = result.data.transfer
+              setPendingTransfer({
+                transferId: t.id,
+                orderId: t.orderId,
+                fromDriverId: t.fromDriverId,
+                toDriverId: t.toDriverId,
+                status: t.status,
+                order: t.order ? {
+                  scheduledTime: t.order.scheduledTime,
+                  price: t.order.price,
+                  pickupLocation: t.order.pickupLocation,
+                  dropoffLocation: t.order.dropoffLocation,
+                  type: t.order.type,
+                  vehicle: t.order.vehicle,
+                  orderDate: t.order.orderDate,
+                  orderSeq: t.order.orderSeq,
+                } : undefined,
+                fromDriver: t.fromDriver ? {
+                  licensePlate: t.fromDriver.licensePlate,
+                  carType: t.fromDriver.carType,
+                  user: t.fromDriver.user,
+                } : undefined,
+                toDriver: t.toDriver ? {
+                  licensePlate: t.toDriver.licensePlate,
+                  carType: t.toDriver.carType,
+                  user: t.toDriver.user,
+                } : undefined,
+              })
+            }
+          } catch (err) {
+            console.error('Failed to load transfer details:', err)
+          }
+        } else if (data.type === 'SQUAD_TRANSFER_APPROVED' || data.type === 'SQUAD_TRANSFER_REJECTED') {
+          // Dismiss the banner when transfer is resolved
+          setPendingTransfer(prev => prev?.transferId === data.transferId ? null : prev)
+          // Refresh orders
+          fetchOrdersRef.current?.()
         }
       } catch {}
     }
     es.onerror = () => es.close()
     return () => es.close()
   }, [token, user?.role])
+
+  // Ref so SSE handler can call fetchOrders without stale closure issues
+  const fetchOrdersRef = { current: null as (() => void) | null }
 
   const fetchOrders = useCallback(async () => {
     if (!token) return
@@ -108,6 +158,9 @@ export default function DispatcherDashboard() {
       setLoading(false)
     }
   }, [token])
+
+  // Keep ref updated
+  fetchOrdersRef.current = fetchOrders
 
   const fetchDrivers = useCallback(async () => {
     if (!token) return
@@ -274,7 +327,7 @@ export default function DispatcherDashboard() {
     <div className="min-h-screen bg-[#FAF8F5] text-[#222222]">
       {/* Header */}
       <header className="bg-[#FAF8F5] border-b border-[#DDDDDD] sticky top-0 z-20">
-        <div className="max-w-6xl mx-auto px-6">
+        <div className="max-w-6xl mx-auto px-3 sm:px-6">
           <div className="flex items-center justify-between h-14">
             {/* Title + driver count */}
             <div className="flex items-center gap-4">
@@ -303,8 +356,8 @@ export default function DispatcherDashboard() {
 
       {/* Navigation — pill buttons */}
       <div className="bg-[#FAF8F5] border-b border-[#DDDDDD]">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="flex gap-2 py-3">
+        <div className="max-w-6xl mx-auto px-3 sm:px-6">
+          <div className="flex gap-2 py-3 overflow-x-auto scrollbar-hide -mx-3 px-3 sm:mx-0 sm:px-0">
             {([
               { key: 'orders' as Tab, label: '行控中心' },
               { key: 'create' as Tab, label: '派單中心' },
@@ -343,46 +396,57 @@ export default function DispatcherDashboard() {
       </div>
 
       {/* Content */}
-      <main className="max-w-6xl mx-auto px-6 py-6">
+      <main className="max-w-6xl mx-auto px-3 sm:px-6 py-4 sm:py-6">
 
         {/* ===== ORDERS TAB ===== */}
         {activeTab === 'orders' && (
           <>
+            {/* Transfer confirmation banner */}
+            {pendingTransfer && (
+              <TransferConfirmBanner
+                transfer={pendingTransfer}
+                token={token}
+                onApprove={() => setPendingTransfer(null)}
+                onReject={() => setPendingTransfer(null)}
+                onDismiss={() => setPendingTransfer(null)}
+              />
+            )}
+
             {/* Stats — 6 in a row: 接(x)/送(x) / 待接單 / 已接單 / 進行中 / 已完成 / 未派出 */}
             <div className="grid grid-cols-3 lg:grid-cols-6 gap-2 mb-6">
               {/* 接(x)/送(x) */}
-              <div className="bg-white border border-[#DDDDDD] rounded-xl p-4 flex flex-col items-center justify-center gap-0.5">
-                <p className="text-[13px] text-[#717171] font-bold leading-tight">接機</p>
+              <div className="bg-white border border-[#DDDDDD] rounded-xl p-3 sm:p-4 flex flex-col items-center justify-center gap-0.5">
+                <p className="text-[11px] sm:text-[13px] text-[#717171] font-bold leading-tight">接機</p>
                 <div className="flex items-baseline gap-0.5 leading-none">
-                  <p className="text-[28px] font-bold text-[#0C447C] font-mono-nums">{statusCounts.PICKUP}</p>
-                  <p className="text-[16px] text-[#717171] font-mono-nums">/</p>
-                  <p className="text-[28px] font-bold text-[#B45309] font-mono-nums">{statusCounts.DROPOFF}</p>
+                  <p className="text-[22px] sm:text-[28px] font-bold text-[#0C447C] font-mono-nums">{statusCounts.PICKUP}</p>
+                  <p className="text-[13px] sm:text-[16px] text-[#717171] font-mono-nums">/</p>
+                  <p className="text-[22px] sm:text-[28px] font-bold text-[#B45309] font-mono-nums">{statusCounts.DROPOFF}</p>
                 </div>
               </div>
               {/* 待接單 */}
-              <div className="bg-white border border-[#DDDDDD] rounded-xl p-4 flex flex-col items-center justify-center gap-0.5">
-                <p className="text-[13px] text-[#A32D2D] font-bold leading-tight">待接單</p>
-                <p className="text-[36px] font-bold text-[#A32D2D] font-mono-nums leading-none">{statusCounts.PENDING}</p>
+              <div className="bg-white border border-[#DDDDDD] rounded-xl p-3 sm:p-4 flex flex-col items-center justify-center gap-0.5">
+                <p className="text-[11px] sm:text-[13px] text-[#A32D2D] font-bold leading-tight">待接單</p>
+                <p className="text-[28px] sm:text-[36px] font-bold text-[#A32D2D] font-mono-nums leading-none">{statusCounts.PENDING}</p>
               </div>
               {/* 已接單 */}
-              <div className="bg-white border border-[#DDDDDD] rounded-xl p-4 flex flex-col items-center justify-center gap-0.5">
-                <p className="text-[13px] text-[#B45309] font-bold leading-tight">已接單</p>
-                <p className="text-[36px] font-bold text-[#B45309] font-mono-nums leading-none">{statusCounts.ACCEPTED}</p>
+              <div className="bg-white border border-[#DDDDDD] rounded-xl p-3 sm:p-4 flex flex-col items-center justify-center gap-0.5">
+                <p className="text-[11px] sm:text-[13px] text-[#B45309] font-bold leading-tight">已接單</p>
+                <p className="text-[28px] sm:text-[36px] font-bold text-[#B45309] font-mono-nums leading-none">{statusCounts.ACCEPTED}</p>
               </div>
               {/* 進行中 */}
-              <div className="bg-white border border-[#DDDDDD] rounded-xl p-4 flex flex-col items-center justify-center gap-0.5">
-                <p className="text-[13px] text-[#0C447C] font-bold leading-tight">進行中</p>
-                <p className="text-[36px] font-bold text-[#0C447C] font-mono-nums leading-none">{statusCounts.IN_PROGRESS}</p>
+              <div className="bg-white border border-[#DDDDDD] rounded-xl p-3 sm:p-4 flex flex-col items-center justify-center gap-0.5">
+                <p className="text-[11px] sm:text-[13px] text-[#0C447C] font-bold leading-tight">進行中</p>
+                <p className="text-[28px] sm:text-[36px] font-bold text-[#0C447C] font-mono-nums leading-none">{statusCounts.IN_PROGRESS}</p>
               </div>
               {/* 已完成 */}
-              <div className="bg-white border border-[#DDDDDD] rounded-xl p-4 flex flex-col items-center justify-center gap-0.5">
-                <p className="text-[13px] text-[#008A05] font-bold leading-tight">已完成</p>
-                <p className="text-[36px] font-bold text-[#008A05] font-mono-nums leading-none">{statusCounts.COMPLETED}</p>
+              <div className="bg-white border border-[#DDDDDD] rounded-xl p-3 sm:p-4 flex flex-col items-center justify-center gap-0.5">
+                <p className="text-[11px] sm:text-[13px] text-[#008A05] font-bold leading-tight">已完成</p>
+                <p className="text-[28px] sm:text-[36px] font-bold text-[#008A05] font-mono-nums leading-none">{statusCounts.COMPLETED}</p>
               </div>
               {/* 未派出 */}
-              <div className="bg-white border border-[#DDDDDD] rounded-xl p-4 flex flex-col items-center justify-center gap-0.5">
-                <p className="text-[13px] text-[#717171] font-bold leading-tight">未派出</p>
-                <p className="text-[36px] font-bold text-[#717171] font-mono-nums leading-none">{statusCounts.UNASSIGNED}</p>
+              <div className="bg-white border border-[#DDDDDD] rounded-xl p-3 sm:p-4 flex flex-col items-center justify-center gap-0.5">
+                <p className="text-[11px] sm:text-[13px] text-[#717171] font-bold leading-tight">未派出</p>
+                <p className="text-[28px] sm:text-[36px] font-bold text-[#717171] font-mono-nums leading-none">{statusCounts.UNASSIGNED}</p>
               </div>
             </div>
 
@@ -434,7 +498,7 @@ export default function DispatcherDashboard() {
 0430 新竹東區送桃機/9座 $1000
 2310 tr875 接北屯+北區 任意車2000
 1545 桃機接萬華 任意R 800`}
-                  className="w-full h-40 bg-[#F7F7F7] border border-[#DDDDDD] rounded-lg px-4 py-3 text-[#222222] text-sm font-mono-nums focus:outline-none focus:border-[#222222] resize-none placeholder-[#B0B0B0]"
+                  className="w-full h-32 sm:h-40 bg-[#F7F7F7] border border-[#DDDDDD] rounded-lg px-4 py-3 text-[#222222] text-sm font-mono-nums focus:outline-none focus:border-[#222222] resize-none placeholder-[#B0B0B0]"
                 />
                 <Button
                   onClick={handleParseBatch}

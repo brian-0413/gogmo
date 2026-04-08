@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { prisma } from '@/lib/prisma'
 import { getUserFromToken } from '@/lib/auth'
+import { globalEmitter as sseEmitter, type DispatcherNotifyEvent } from '@/lib/sse-emitter'
 
 // In-memory map: dispatcherId → last check time
 const dispatcherLastCheckMap = new Map<string, Date>()
@@ -9,6 +10,10 @@ const dispatcherLastCheckMap = new Map<string, Date>()
 type SSEEvent =
   | { type: 'HEARTBEAT'; timestamp: string }
   | { type: 'ORDER_STATUS_CHANGE'; orderId: string; status: string; driverName: string; startedAt?: string; arrivedAt?: string; pickedUpAt?: string; completedAt?: string; transferStatus?: string }
+  | { type: 'SQUAD_TRANSFER_PENDING'; transferId: string; orderId: string; fromDriverId: string; toDriverId?: string; status: string }
+  | { type: 'SQUAD_TRANSFER_APPROVED'; transferId: string; orderId: string }
+  | { type: 'SQUAD_TRANSFER_REJECTED'; transferId: string; orderId: string }
+  | { type: 'SQUAD_TRANSFER_ACCEPTED'; transferId: string; orderId: string; fromDriverId: string; toDriverId: string }
 
 // GET /api/dispatchers/events - SSE endpoint for dispatcher real-time updates
 export async function GET(request: NextRequest) {
@@ -52,6 +57,37 @@ export async function GET(request: NextRequest) {
 
       // Send initial heartbeat
       sendEvent({ type: 'HEARTBEAT', timestamp: new Date().toISOString() })
+
+      // Listen for dispatcher notification events (squad transfer notifications)
+      const onDispatcherEvent = (event: DispatcherNotifyEvent) => {
+        if (isClosed) return
+        // Only send if this transfer belongs to this dispatcher
+        if (event.type === 'TRANSFER_PENDING') {
+          sendEvent({
+            type: 'SQUAD_TRANSFER_PENDING',
+            transferId: event.transferId,
+            orderId: event.orderId,
+            fromDriverId: event.fromDriverId,
+            toDriverId: event.toDriverId,
+            status: event.status,
+          } as SSEEvent)
+        } else if (event.type === 'TRANSFER_APPROVED') {
+          sendEvent({
+            type: 'SQUAD_TRANSFER_APPROVED',
+            transferId: event.transferId,
+            orderId: event.orderId,
+          } as SSEEvent)
+        } else if (event.type === 'TRANSFER_REJECTED') {
+          sendEvent({
+            type: 'SQUAD_TRANSFER_REJECTED',
+            transferId: event.transferId,
+            orderId: event.orderId,
+          } as SSEEvent)
+        }
+        sendEvent({ type: 'HEARTBEAT', timestamp: new Date().toISOString() })
+      }
+
+      sseEmitter.on('dispatcher-event', onDispatcherEvent)
 
       // Poll every 3 seconds for status changes on this dispatcher's orders
       const intervalId = setInterval(async () => {
@@ -102,6 +138,7 @@ export async function GET(request: NextRequest) {
       request.signal.addEventListener('abort', () => {
         isClosed = true
         clearInterval(intervalId)
+        sseEmitter.off('dispatcher-event', onDispatcherEvent)
         try { controller.close() } catch {}
       })
     },
