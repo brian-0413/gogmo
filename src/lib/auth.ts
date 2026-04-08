@@ -27,6 +27,7 @@ export interface AuthResult {
     email: string
     name: string
     role: string
+    isPremium?: boolean
   }
   error?: string
 }
@@ -116,6 +117,7 @@ export async function register(
         email: user.email,
         name: user.name,
         role: user.role,
+        isPremium: user.driver?.isPremium ?? false,
       },
     }
   } catch (error) {
@@ -162,6 +164,7 @@ export async function login(email: string, password: string): Promise<AuthResult
         email: user.email,
         name: user.name,
         role: user.role,
+        isPremium: user.driver?.isPremium ?? false,
       },
     }
   } catch (error) {

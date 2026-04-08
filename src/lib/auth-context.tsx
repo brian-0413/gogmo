@@ -12,6 +12,7 @@ interface User {
     id: string
     status: string
     balance: number
+    isPremium?: boolean
   }
   dispatcher?: {
     id: string
