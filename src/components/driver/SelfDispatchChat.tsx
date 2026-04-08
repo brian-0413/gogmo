@@ -32,7 +32,7 @@ interface FormData {
   notes: string
 }
 
-type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13
+type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14
 
 interface SelfDispatchChatProps {
   token: string
@@ -111,11 +111,16 @@ function formatLuggageSummary(items: LuggageItem[]): string {
 function formatTime24(date: string, time: string): string {
   if (!date || !time) return ''
   const [h, m] = time.split(':')
-  return `${date} ${h}:${m}`
+  return `${date.replace(/-/g, '/')} ${h}:${m}`
 }
 
 function isPickupOrder(orderType: string | null): boolean {
   return orderType === 'pickup' || orderType === 'pickup_boat'
+}
+
+// 台灣手機號碼驗證（09開頭 + 8位數字，或 +886 格式）
+function isValidTaiwanPhone(phone: string): boolean {
+  return /^(?:(?:\+886|886)?9\d{8})$/.test(phone.replace(/-/g, ''))
 }
 
 // ============ Sub-components ============
@@ -203,8 +208,8 @@ function MoneyBox({ children }: { children: React.ReactNode }) {
   )
 }
 
-function MoneyRow({ label, value, onChange }: { label: string; value: string | number; onChange: (v: string) => void }) {
-  const displayValue = value === 0 || value === '' ? '' : String(value)
+function MoneyRow({ label, value, onChange }: { label: string; value: number; onChange: (v: number) => void }) {
+  const displayValue = value === 0 ? '' : String(value)
   return (
     <div className="flex items-center gap-1.5 mb-2 last:mb-0">
       <span className="text-[12px] font-semibold text-[#717171] whitespace-nowrap min-w-[64px]">{label}</span>
@@ -216,7 +221,7 @@ function MoneyRow({ label, value, onChange }: { label: string; value: string | n
           value={displayValue}
           onChange={e => {
             const digits = e.target.value.replace(/[^\d]/g, '')
-            onChange(digits === '' ? '0' : digits)
+            onChange(digits === '' ? 0 : parseInt(digits, 10))
           }}
           placeholder="0"
           className="flex-1 px-2 py-1.5 border-2 border-[#DDDDDD] rounded-lg text-[13px] outline-none focus:border-[#FF385C] bg-white w-full"
@@ -288,7 +293,7 @@ function Summary({ form, finalAmount }: { form: FormData; finalAmount: number })
 }
 
 function StepIndicator({ step }: { step: Step }) {
-  const total = 13
+  const total = 14
   return (
     <div className="px-4 py-3 text-center border-t border-[#F0EDE8]">
       <div className="flex gap-0.5 mb-1.5">
@@ -699,6 +704,7 @@ export function SelfDispatchChat({ token, onSuccess, onClose }: SelfDispatchChat
                   value={form.contactName}
                   onChange={e => set({ contactName: e.target.value })}
                   placeholder="姓名"
+                  maxLength={50}
                   className="flex-1 px-3 py-2 border-2 border-[#DDDDDD] rounded-xl text-[13px] outline-none focus:border-[#FF385C] bg-white w-full max-w-full"
                 />
                 <input
@@ -706,14 +712,19 @@ export function SelfDispatchChat({ token, onSuccess, onClose }: SelfDispatchChat
                   value={form.contactPhone}
                   onChange={e => set({ contactPhone: e.target.value })}
                   placeholder="電話"
+                  maxLength={15}
                   className="flex-1 px-3 py-2 border-2 border-[#DDDDDD] rounded-xl text-[13px] outline-none focus:border-[#FF385C] bg-white w-full max-w-full"
                 />
               </div>
+              {!isValidTaiwanPhone(form.contactPhone) && form.contactPhone.length > 0 && (
+                <p className="text-[11px] text-[#E24B4A] mt-1">請輸入有效的手機號碼（例：0912345678）</p>
+              )}
               <button
                 onClick={() => {
+                  if (!isValidTaiwanPhone(form.contactPhone)) return
                   if (form.contactName && form.contactPhone) { addUser(`${form.contactName} ${form.contactPhone}`); setStep(11) }
                 }}
-                disabled={!form.contactName || !form.contactPhone}
+                disabled={!form.contactName || !form.contactPhone || !isValidTaiwanPhone(form.contactPhone)}
                 className="mt-2 w-full py-2 bg-[#FF385C] text-white border-none rounded-xl text-[13px] font-semibold cursor-pointer hover:bg-[#E83355] disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 下一步
@@ -751,7 +762,7 @@ export function SelfDispatchChat({ token, onSuccess, onClose }: SelfDispatchChat
             <BotBubble>
               <p>選擇了 <strong className="text-[#FF385C]">客下轉帳</strong>，請輸入司機實拿金額：</p>
               <MoneyBox>
-                <MoneyRow label="司機實拿" value={form.driverAmount} onChange={v => set({ driverAmount: Number(v) || 0 })} />
+                <MoneyRow label="司機實拿" value={form.driverAmount} onChange={v => set({ driverAmount: v })} />
               </MoneyBox>
               <button
                 onClick={() => {
@@ -769,8 +780,8 @@ export function SelfDispatchChat({ token, onSuccess, onClose }: SelfDispatchChat
             <BotBubble>
               <p>選擇了 <strong className="text-[#FF385C]">代收現金</strong>模式，請填寫：</p>
               <MoneyBox>
-                <MoneyRow label="代收金額" value={form.cashCollected} onChange={v => set({ cashCollected: Number(v) || 0 })} />
-                <MoneyRow label="回金給派單" value={form.commissionReturn} onChange={v => set({ commissionReturn: Number(v) || 0 })} />
+                <MoneyRow label="代收金額" value={form.cashCollected} onChange={v => set({ cashCollected: v })} />
+                <MoneyRow label="回金給派單" value={form.commissionReturn} onChange={v => set({ commissionReturn: v })} />
                 {form.cashCollected > 0 && (
                   <>
                     <MoneyResult label="司機實拿" amount={Math.max(0, form.cashCollected - form.commissionReturn)} />
@@ -815,7 +826,7 @@ export function SelfDispatchChat({ token, onSuccess, onClose }: SelfDispatchChat
                   const needs = form.specialNeeds.map(s => SPECIAL_NEED_LABELS[s]).join('、')
                   addUser(needs ? `需求：${needs}` : '無特殊需求')
                   if (form.notes) addUser(`備註：${form.notes}`)
-                  setStep(13)
+                  setStep(14)
                 }}
                 className="mt-3 w-full py-2 bg-[#FF385C] text-white border-none rounded-xl text-[13px] font-semibold cursor-pointer hover:bg-[#E83355]"
               >
@@ -824,8 +835,8 @@ export function SelfDispatchChat({ token, onSuccess, onClose }: SelfDispatchChat
             </BotBubble>
           )}
 
-          {/* ===== STEP 13: Summary ===== */}
-          {step === 13 && (
+          {/* ===== STEP 14: Summary ===== */}
+          {step === 14 && (
             <BotBubble>
               <p>即將發單上架，請確認：</p>
               <Summary form={form} finalAmount={finalAmount} />
@@ -841,7 +852,7 @@ export function SelfDispatchChat({ token, onSuccess, onClose }: SelfDispatchChat
               </button>
               <button
                 onClick={() => {
-                  setForm(DEFAULT_FORM)
+                  setForm({ ...DEFAULT_FORM, luggageStep: 'size' })
                   setStep(1)
                   setMessages([])
                 }}
