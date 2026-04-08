@@ -124,7 +124,7 @@ export function DispatcherOrderCard({ order, token, onUpdate }: DispatcherOrderC
 
   return (
     <div
-      className={`bg-white border rounded-xl p-4 transition-shadow duration-200 hover:shadow-[0_2px_12px_rgba(0,0,0,0.08)] ${
+      className={`bg-white border rounded-xl p-3 sm:p-4 transition-shadow duration-200 hover:shadow-[0_2px_12px_rgba(0,0,0,0.08)] ${
         isPending ? 'border-[2px] border-solid border-[#E24B4A]' : 'border-[#DDDDDD]'
       }`}
     >

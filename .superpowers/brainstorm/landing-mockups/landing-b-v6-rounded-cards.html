@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Landing Page v6 — 圓角卡片配色組</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans TC', sans-serif; background: #FAF8F5; color: #222222; line-height: 1.5; }
+  .page-wrapper { padding: 0 24px 40px; }
+
+  /* NAV */
+  .nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; padding: 16px 48px; display: flex; align-items: center; justify-content: space-between; background: #FAF8F5; border-bottom: 1px solid #DDDDDD; }
+  .nav-logo { font-size: 20px; font-weight: 700; color: #222222; text-decoration: none; }
+  .nav-links { display: flex; gap: 32px; }
+  .nav-links a { color: #717171; font-size: 14px; text-decoration: none; }
+  .nav-links a:hover { color: #222222; }
+  .nav-cta { background: #FF385C; color: white; padding: 8px 20px; border-radius: 8px; font-size: 14px; font-weight: 600; text-decoration: none; }
+
+  /* PAGE LABEL */
+  .page-label { text-align: center; padding: 20px 0 8px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: #B0B0B0; }
+
+  /* HERO CONTAINER */
+  .hero-container { display: flex; gap: 16px; max-width: 1200px; margin: 0 auto; padding-top: 80px; }
+  .hero-card { flex: 1; border-radius: 24px; overflow: hidden; display: flex; flex-direction: column; justify-content: center; position: relative; }
+
+  /* A CARD */
+  .card-a { background: #FFF5F0; min-height: 520px; padding: 40px; position: relative; overflow: hidden; }
+  .card-a::before { content: ''; position: absolute; width: 300px; height: 300px; border-radius: 50%; background: radial-gradient(circle, rgba(255,56,92,0.06) 0%, transparent 70%); top: -50px; right: -50px; }
+
+  .eyebrow { font-size: 11px; font-weight: 600; color: #FF385C; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .eyebrow::before { content: ''; width: 16px; height: 2px; background: #FF385C; }
+  .card-a h1 { font-size: clamp(24px, 3vw, 36px); font-weight: 800; line-height: 1.25; margin-bottom: 12px; color: #222222; }
+  .card-a h1 .accent { color: #FF385C; }
+  .card-a p { font-size: 13px; color: #717171; line-height: 1.7; margin-bottom: 20px; max-width: 360px; }
+
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; text-decoration: none; transition: all 0.2s; white-space: nowrap; }
+  .btn-join { background: #FF385C; color: white; }
+  .btn-join:hover { background: #E83355; }
+
+  .tag-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 14px; }
+  .tag { display: inline-flex; align-items: center; gap: 4px; padding: 4px 9px; background: #F4EFE9; border: 1px solid #EBEBEB; border-radius: 20px; font-size: 11px; color: #717171; font-weight: 500; }
+  .tag .dot { width: 4px; height: 4px; border-radius: 50%; }
+
+  /* CAROUSEL NAV */
+  .carousel-nav { position: absolute; bottom: 20px; left: 40px; display: flex; gap: 6px; align-items: center; }
+  .carousel-dot { width: 8px; height: 8px; border-radius: 50%; background: #DDDDDD; border: none; cursor: pointer; transition: all 0.3s; }
+  .carousel-dot.active { background: #FF385C; width: 24px; border-radius: 4px; }
+  .carousel-arrows { position: absolute; bottom: 16px; right: 40px; display: flex; gap: 6px; }
+  .carousel-arrow { width: 28px; height: 28px; border-radius: 8px; border: 1px solid #DDDDDD; background: white; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; color: #717171; transition: all 0.2s; }
+  .carousel-arrow:hover { background: #F4EFE9; }
+
+  /* SLIDES */
+  .slide { padding: 0; }
+  .slide { position: absolute; inset: 40px; display: flex; flex-direction: column; justify-content: center; opacity: 0; pointer-events: none; transition: transform 0.5s cubic-bezier(0.4,0,0.2,1), opacity 0.5s ease; }
+  .slide.active { opacity: 1; pointer-events: auto; }
+
+  /* B CARD */
+  .card-b { background: white; min-height: 520px; padding: 32px; display: flex; flex-direction: column; justify-content: center; }
+  .data-wall-header { font-size: 11px; font-weight: 600; color: #A8A29E; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+  .live-dot { width: 5px; height: 5px; border-radius: 50%; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+  .data-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+  .data-card { background: white; border-radius: 16px; padding: 16px; }
+  .data-card:nth-child(1) { background: #FFF0F5; } /* 司機接單動態 */
+  .data-card:nth-child(2) { background: #EEF4FF; } /* 所有訂單 */
+  .data-card:nth-child(3) { background: #F0FFF4; } /* 已派出 */
+  .data-card:nth-child(4) { background: #FFF8EE; } /* 註冊司機 */
+  .data-card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .data-label { font-size: 11px; color: #717171; font-weight: 500; }
+  .data-icon { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 12px; }
+  .data-value { font-size: 28px; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1; color: #222222; }
+  .data-unit { font-size: 12px; color: #717171; font-weight: 400; margin-left: 3px; }
+  .data-change { font-size: 10px; color: #FF385C; margin-top: 4px; }
+  .data-card.urgent { border: 1px solid rgba(255,56,92,0.2); }
+  .data-card.urgent .data-value { color: #FF385C; }
+
+  .order-feed { margin-top: 4px; }
+  .feed-header { font-size: 10px; color: #A8A29E; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px; font-weight: 600; }
+  .feed-item { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid #EBEBEB; }
+  .feed-item:last-child { border-bottom: none; }
+  .feed-time { font-size: 10px; color: #A8A29E; font-variant-numeric: tabular-nums; min-width: 32px; }
+  .feed-route { font-size: 12px; color: #717171; font-weight: 500; flex: 1; }
+  .feed-price { font-size: 12px; color: #FF385C; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+  /* ===== SCHEME A: 淡奶橘 ===== */
+  .scheme-a .card-a { background: white; }
+  .scheme-a .card-b { background: #FFF5F0; }
+  .scheme-a .live-dot { background: #FF385C; }
+  .scheme-a .data-card:nth-child(1) { background: #FFF0F5; }
+  .scheme-a .data-card:nth-child(2) { background: #EEF4FF; }
+  .scheme-a .data-card:nth-child(3) { background: #F0FFF4; }
+  .scheme-a .data-card:nth-child(4) { background: #FFF8EE; }
+
+  /* ===== SCHEME B: 淡薰衣草 ===== */
+  .scheme-b .card-a { background: white; }
+  .scheme-b .card-b { background: white; }
+  .scheme-b .live-dot { background: #A855F7; }
+  .scheme-b .data-change { color: #A855F7; }
+  .scheme-b .feed-price { color: #A855F7; }
+  .scheme-b .data-card:nth-child(1) { background: #FAF0FF; }
+  .scheme-b .data-card:nth-child(2) { background: #EEF4FF; }
+  .scheme-b .data-card:nth-child(3) { background: #F0FFF4; }
+  .scheme-b .data-card:nth-child(4) { background: #FFF8EE; }
+
+  /* ===== SCHEME C: 淡灰綠 ===== */
+  .scheme-c .card-a { background: white; }
+  .scheme-c .card-b { background: white; }
+  .scheme-c .live-dot { background: #008A05; }
+  .scheme-c .data-change { color: #008A05; }
+  .scheme-c .feed-price { color: #008A05; }
+  .scheme-c .data-card:nth-child(1) { background: #F0FFF4; }
+  .scheme-c .data-card:nth-child(2) { background: #EEF4FF; }
+  .scheme-c .data-card:nth-child(3) { background: #FFF0F5; }
+  .scheme-c .data-card:nth-child(4) { background: #FFF8EE; }
+
+  /* ===== SCHEME D: 暖藕棕 ===== */
+  .scheme-d .card-a { background: white; }
+  .scheme-d .card-b { background: white; }
+  .scheme-d .live-dot { background: #92400E; }
+  .scheme-d .data-change { color: #92400E; }
+  .scheme-d .feed-price { color: #D97706; }
+  .scheme-d .data-card:nth-child(1) { background: #FFF3E0; }
+  .scheme-d .data-card:nth-child(2) { background: #EEF4FF; }
+  .scheme-d .data-card:nth-child(3) { background: #F0FFF4; }
+  .scheme-d .data-card:nth-child(4) { background: #FAF0FF; }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<div class="nav">
+  <a href="#" class="nav-logo">goGMO</a>
+  <div class="nav-links">
+    <a href="#driver">司機服務</a>
+    <a href="#dispatcher">派單方服務</a>
+  </div>
+  <a href="/login" class="nav-cta">登入</a>
+</div>
+
+<!-- ========== SCHEME A ========== -->
+<div class="page-wrapper">
+  <div class="page-label">Scheme A — 淡粉 + 淡奶橘</div>
+  <div class="hero-container scheme-a">
+    <!-- A: 輪播 -->
+    <div class="hero-card card-a">
+      <div class="slide active" id="s0-0">
+        <div class="eyebrow">司機服務</div>
+        <h1>來 <span class="accent">goGMO</span> 接單，<br>做個自由的司機。</h1>
+        <p>告別 LINE 群組的混亂趟訊，隨心所欲接單，智慧接續配單有我，接有效率的單，開輕鬆的車。</p>
+        <a href="/register" class="btn btn-join">免費加入、自由接單 →</a>
+        <div class="tag-row">
+          <div class="tag"><div class="dot" style="background:#FF385C"></div>視覺接單</div>
+          <div class="tag"><div class="dot" style="background:#22C55E"></div>智慧配單</div>
+          <div class="tag"><div class="dot" style="background:#3B82F6"></div>行程管理</div>
+          <div class="tag"><div class="dot" style="background:#F59E0B"></div>即時訊息</div>
+          <div class="tag"><div class="dot" style="background:#A855F7"></div>帳務管理</div>
+          <div class="tag"><div class="dot" style="background:#06B6D4"></div>小隊模式</div>
+        </div>
+      </div>
+      <div class="slide" id="s0-1">
+        <div class="eyebrow">派單方服務</div>
+        <h1>來 <span class="accent">goGMO</span> 派單，<br>做個聰明的車頭。</h1>
+        <p>告別派單地獄，車頭的救星，調度的希望。LINE 文字 AI 解析，一鍵上架所有司機立刻看到。</p>
+        <a href="/register" class="btn btn-join">免費加入、聰明派單 →</a>
+        <div class="tag-row">
+          <div class="tag"><div class="dot" style="background:#FF385C"></div>一鍵派單</div>
+          <div class="tag"><div class="dot" style="background:#22C55E"></div>行程管理</div>
+          <div class="tag"><div class="dot" style="background:#3B82F6"></div>進度追蹤</div>
+          <div class="tag"><div class="dot" style="background:#F59E0B"></div>即時訊息</div>
+          <div class="tag"><div class="dot" style="background:#A855F7"></div>帳務管理</div>
+          <div class="tag"><div class="dot" style="background:#06B6D4"></div>效率升級</div>
+        </div>
+      </div>
+      <div class="carousel-nav">
+        <button class="carousel-dot active"></button>
+        <button class="carousel-dot"></button>
+      </div>
+      <div class="carousel-arrows">
+        <button class="carousel-arrow prev-arrow">‹</button>
+        <button class="carousel-arrow next-arrow">›</button>
+      </div>
+    </div>
+    <!-- B: 數據牆 -->
+    <div class="hero-card card-b">
+      <div class="data-wall-header">
+        <div class="live-dot"></div>
+        即時動態
+      </div>
+      <div class="data-row">
+        <div class="data-card urgent">
+          <div class="data-card-top">
+            <div class="data-label">司機接單動態</div>
+            <div class="data-icon" style="background:rgba(255,56,92,0.1)">🚗</div>
+          </div>
+          <div class="data-value">12<span class="data-unit">人在線</span></div>
+          <div class="data-change">▲ 3 位剛上線</div>
+        </div>
+        <div class="data-card">
+          <div class="data-card-top">
+            <div class="data-label">所有訂單</div>
+            <div class="data-icon" style="background:rgba(59,130,246,0.1)">📋</div>
+          </div>
+          <div class="data-value">47<span class="data-unit">筆</span></div>
+          <div class="data-change">+6 今日新上架</div>
+        </div>
+      </div>
+      <div class="data-row">
+        <div class="data-card">
+          <div class="data-card-top">
+            <div class="data-label">已派出</div>
+            <div class="data-icon" style="background:rgba(34,197,94,0.1)">✓</div>
+          </div>
+          <div class="data-value">31<span class="data-unit">筆</span></div>
+          <div class="data-change">完成率 66%</div>
+        </div>
+        <div class="data-card">
+          <div class="data-card-top">
+            <div class="data-label">註冊司機</div>
+            <div class="data-icon" style="background:rgba(168,85,247,0.1)">👤</div>
+          </div>
+          <div class="data-value">156<span class="data-unit">位</span></div>
+          <div class="data-change">+2 本週新加入</div>
+        </div>
+      </div>
+      <div class="order-feed">
+        <div class="feed-header">最新派出</div>
+        <div class="feed-item"><span class="feed-time">14:32</span><span class="feed-route">桃園機場 → 新北市</span><span class="feed-price">NT$800</span></div>
+        <div class="feed-item"><span class="feed-time">14:28</span><span class="feed-route">松山機場 → 台北市</span><span class="feed-price">NT$600</span></div>
+        <div class="feed-item"><span class="feed-time">14:15</span><span class="feed-route">桃園機場 → 台中市</span><span class="feed-price">NT$1,500</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== SCHEME B ========== -->
+<div class="page-wrapper">
+  <div class="page-label">Scheme B — 淡玫瑰 + 淡薰衣草</div>
+  <div class="hero-container scheme-b">
+    <div class="hero-card card-a">
+      <div class="slide active" id="s1-0">
+        <div class="eyebrow">司機服務</div>
+        <h1>來 <span class="accent">goGMO</span> 接單，<br>做個自由的司機。</h1>
+        <p>告別 LINE 群組的混亂趟訊，隨心所欲接單，智慧接續配單有我，接有效率的單，開輕鬆的車。</p>
+        <a href="/register" class="btn btn-join">免費加入、自由接單 →</a>
+        <div class="tag-row">
+          <div class="tag"><div class="dot" style="background:#FF385C"></div>視覺接單</div>
+          <div class="tag"><div class="dot" style="background:#22C55E"></div>智慧配單</div>
+          <div class="tag"><div class="dot" style="background:#3B82F6"></div>行程管理</div>
+          <div class="tag"><div class="dot" style="background:#F59E0B"></div>即時訊息</div>
+          <div class="tag"><div class="dot" style="background:#A855F7"></div>帳務管理</div>
+          <div class="tag"><div class="dot" style="background:#06B6D4"></div>小隊模式</div>
+        </div>
+      </div>
+      <div class="slide" id="s1-1">
+        <div class="eyebrow">派單方服務</div>
+        <h1>來 <span class="accent">goGMO</span> 派單，<br>做個聰明的車頭。</h1>
+        <p>告別派單地獄，車頭的救星，調度的希望。LINE 文字 AI 解析，一鍵上架所有司機立刻看到。</p>
+        <a href="/register" class="btn btn-join">免費加入、聰明派單 →</a>
+        <div class="tag-row">
+          <div class="tag"><div class="dot" style="background:#FF385C"></div>一鍵派單</div>
+          <div class="tag"><div class="dot" style="background:#22C55E"></div>行程管理</div>
+          <div class="tag"><div class="dot" style="background:#3B82F6"></div>進度追蹤</div>
+          <div class="tag"><div class="dot" style="background:#F59E0B"></div>即時訊息</div>
+          <div class="tag"><div class="dot" style="background:#A855F7"></div>帳務管理</div>
+          <div class="tag"><div class="dot" style="background:#06B6D4"></div>效率升級</div>
+        </div>
+      </div>
+      <div class="carousel-nav">
+        <button class="carousel-dot active"></button>
+        <button class="carousel-dot"></button>
+      </div>
+      <div class="carousel-arrows">
+        <button class="carousel-arrow prev-arrow">‹</button>
+        <button class="carousel-arrow next-arrow">›</button>
+      </div>
+    </div>
+    <div class="hero-card card-b">
+      <div class="data-wall-header">
+        <div class="live-dot"></div>
+        即時動態
+      </div>
+      <div class="data-row">
+        <div class="data-card urgent">
+          <div class="data-card-top">
+            <div class="data-label">司機接單動態</div>
+            <div class="data-icon" style="background:rgba(168,85,247,0.1)">🚗</div>
+          </div>
+          <div class="data-value">12<span class="data-unit">人在線</span></div>
+          <div class="data-change">▲ 3 位剛上線</div>
+        </div>
+        <div class="data-card">
+          <div class="data-card-top">
+            <div class="data-label">所有訂單</div>
+            <div class="data-icon" style="background:rgba(59,130,246,0.1)">📋</div>
+          </div>
+          <div class="data-value">47<span class="data-unit">筆</span></div>
+          <div class="data-change">+6 今日新上架</div>
+        </div>
+      </div>
+      <div class="data-row">
+        <div class="data-card">
+          <div class="data-card-top">
+            <div class="data-label">已派出</div>
+            <div class="data-icon" style="background:rgba(34,197,94,0.1)">✓</div>
+          </div>
+          <div class="data-value">31<span class="data-unit">筆</span></div>
+          <div class="data-change">完成率 66%</div>
+        </div>
+        <div class="data-card">
+          <div class="data-card-top">
+            <div class="data-label">註冊司機</div>
+            <div class="data-icon" style="background:rgba(168,85,247,0.1)">👤</div>
+          </div>
+          <div class="data-value">156<span class="data-unit">位</span></div>
+          <div class="data-change">+2 本週新加入</div>
+        </div>
+      </div>
+      <div class="order-feed">
+        <div class="feed-header">最新派出</div>
+        <div class="feed-item"><span class="feed-time">14:32</span><span class="feed-route">桃園機場 → 新北市</span><span class="feed-price">NT$800</span></div>
+        <div class="feed-item"><span class="feed-time">14:28</span><span class="feed-route">松山機場 → 台北市</span><span class="feed-price">NT$600</span></div>
+        <div class="feed-item"><span class="feed-time">14:15</span><span class="feed-route">桃園機場 → 台中市</span><span class="feed-price">NT$1,500</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== SCHEME C ========== -->
+<div class="page-wrapper">
+  <div class="page-label">Scheme C — 白 + 淡灰綠（清新自然風）</div>
+  <div class="hero-container scheme-c">
+    <div class="hero-card card-a">
+      <div class="slide active" id="s2-0">
+        <div class="eyebrow">司機服務</div>
+        <h1>來 <span class="accent">goGMO</span> 接單，<br>做個自由的司機。</h1>
+        <p>告別 LINE 群組的混亂趟訊，隨心所欲接單，智慧接續配單有我，接有效率的單，開輕鬆的車。</p>
+        <a href="/register" class="btn btn-join">免費加入、自由接單 →</a>
+        <div class="tag-row">
+          <div class="tag"><div class="dot" style="background:#FF385C"></div>視覺接單</div>
+          <div class="tag"><div class="dot" style="background:#22C55E"></div>智慧配單</div>
+          <div class="tag"><div class="dot" style="background:#3B82F6"></div>行程管理</div>
+          <div class="tag"><div class="dot" style="background:#F59E0B"></div>即時訊息</div>
+          <div class="tag"><div class="dot" style="background:#A855F7"></div>帳務管理</div>
+          <div class="tag"><div class="dot" style="background:#06B6D4"></div>小隊模式</div>
+        </div>
+      </div>
+      <div class="slide" id="s2-1">
+        <div class="eyebrow">派單方服務</div>
+        <h1>來 <span class="accent">goGMO</span> 派單，<br>做個聰明的車頭。</h1>
+        <p>告別派單地獄，車頭的救星，調度的希望。LINE 文字 AI 解析，一鍵上架所有司機立刻看到。</p>
+        <a href="/register" class="btn btn-join">免費加入、聰明派單 →</a>
+        <div class="tag-row">
+          <div class="tag"><div class="dot" style="background:#FF385C"></div>一鍵派單</div>
+          <div class="tag"><div class="dot" style="background:#22C55E"></div>行程管理</div>
+          <div class="tag"><div class="dot" style="background:#3B82F6"></div>進度追蹤</div>
+          <div class="tag"><div class="dot" style="background:#F59E0B"></div>即時訊息</div>
+          <div class="tag"><div class="dot" style="background:#A855F7"></div>帳務管理</div>
+          <div class="tag"><div class="dot" style="background:#06B6D4"></div>效率升級</div>
+        </div>
+      </div>
+      <div class="carousel-nav">
+        <button class="carousel-dot active"></button>
+        <button class="carousel-dot"></button>
+      </div>
+      <div class="carousel-arrows">
+        <button class="carousel-arrow prev-arrow">‹</button>
+        <button class="carousel-arrow next-arrow">›</button>
+      </div>
+    </div>
+    <div class="hero-card card-b">
+      <div class="data-wall-header">
+        <div class="live-dot"></div>
+        即時動態
+      </div>
+      <div class="data-row">
+        <div class="data-card urgent">
+          <div class="data-card-top">
+            <div class="data-label">司機接單動態</div>
+            <div class="data-icon" style="background:rgba(0,138,5,0.1)">🚗</div>
+          </div>
+          <div class="data-value">12<span class="data-unit">人在線</span></div>
+          <div class="data-change">▲ 3 位剛上線</div>
+        </div>
+        <div class="data-card">
+          <div class="data-card-top">
+            <div class="data-label">所有訂單</div>
+            <div class="data-icon" style="background:rgba(59,130,246,0.1)">📋</div>
+          </div>
+          <div class="data-value">47<span class="data-unit">筆</span></div>
+          <div class="data-change">+6 今日新上架</div>
+        </div>
+      </div>
+      <div class="data-row">
+        <div class="data-card">
+          <div class="data-card-top">
+            <div class="data-label">已派出</div>
+            <div class="data-icon" style="background:rgba(0,138,5,0.1)">✓</div>
+          </div>
+          <div class="data-value">31<span class="data-unit">筆</span></div>
+          <div class="data-change">完成率 66%</div>
+        </div>
+        <div class="data-card">
+          <div class="data-card-top">
+            <div class="data-label">註冊司機</div>
+            <div class="data-icon" style="background:rgba(168,85,247,0.1)">👤</div>
+          </div>
+          <div class="data-value">156<span class="data-unit">位</span></div>
+          <div class="data-change">+2 本週新加入</div>
+        </div>
+      </div>
+      <div class="order-feed">
+        <div class="feed-header">最新派出</div>
+        <div class="feed-item"><span class="feed-time">14:32</span><span class="feed-route">桃園機場 → 新北市</span><span class="feed-price">NT$800</span></div>
+        <div class="feed-item"><span class="feed-time">14:28</span><span class="feed-route">松山機場 → 台北市</span><span class="feed-price">NT$600</span></div>
+        <div class="feed-item"><span class="feed-time">14:15</span><span class="feed-route">桃園機場 → 台中市</span><span class="feed-price">NT$1,500</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== SCHEME D ========== -->
+<div class="page-wrapper">
+  <div class="page-label">Scheme D — 暖藕棕 + 淺奶茶（低調沉穩）</div>
+  <div class="hero-container scheme-d">
+    <div class="hero-card card-a">
+      <div class="slide active" id="s3-0">
+        <div class="eyebrow">司機服務</div>
+        <h1>來 <span class="accent">goGMO</span> 接單，<br>做個自由的司機。</h1>
+        <p>告別 LINE 群組的混亂趟訊，隨心所欲接單，智慧接續配單有我，接有效率的單，開輕鬆的車。</p>
+        <a href="/register" class="btn btn-join">免費加入、自由接單 →</a>
+        <div class="tag-row">
+          <div class="tag"><div class="dot" style="background:#FF385C"></div>視覺接單</div>
+          <div class="tag"><div class="dot" style="background:#22C55E"></div>智慧配單</div>
+          <div class="tag"><div class="dot" style="background:#3B82F6"></div>行程管理</div>
+          <div class="tag"><div class="dot" style="background:#F59E0B"></div>即時訊息</div>
+          <div class="tag"><div class="dot" style="background:#A855F7"></div>帳務管理</div>
+          <div class="tag"><div class="dot" style="background:#06B6D4"></div>小隊模式</div>
+        </div>
+      </div>
+      <div class="slide" id="s3-1">
+        <div class="eyebrow">派單方服務</div>
+        <h1>來 <span class="accent">goGMO</span> 派單，<br>做個聰明的車頭。</h1>
+        <p>告別派單地獄，車頭的救星，調度的希望。LINE 文字 AI 解析，一鍵上架所有司機立刻看到。</p>
+        <a href="/register" class="btn btn-join">免費加入、聰明派單 →</a>
+        <div class="tag-row">
+          <div class="tag"><div class="dot" style="background:#FF385C"></div>一鍵派單</div>
+          <div class="tag"><div class="dot" style="background:#22C55E"></div>行程管理</div>
+          <div class="tag"><div class="dot" style="background:#3B82F6"></div>進度追蹤</div>
+          <div class="tag"><div class="dot" style="background:#F59E0B"></div>即時訊息</div>
+          <div class="tag"><div class="dot" style="background:#A855F7"></div>帳務管理</div>
+          <div class="tag"><div class="dot" style="background:#06B6D4"></div>效率升級</div>
+        </div>
+      </div>
+      <div class="carousel-nav">
+        <button class="carousel-dot active"></button>
+        <button class="carousel-dot"></button>
+      </div>
+      <div class="carousel-arrows">
+        <button class="carousel-arrow prev-arrow">‹</button>
+        <button class="carousel-arrow next-arrow">›</button>
+      </div>
+    </div>
+    <div class="hero-card card-b">
+      <div class="data-wall-header">
+        <div class="live-dot"></div>
+        即時動態
+      </div>
+      <div class="data-row">
+        <div class="data-card urgent">
+          <div class="data-card-top">
+            <div class="data-label">司機接單動態</div>
+            <div class="data-icon" style="background:rgba(217,119,6,0.1)">🚗</div>
+          </div>
+          <div class="data-value">12<span class="data-unit">人在線</span></div>
+          <div class="data-change">▲ 3 位剛上線</div>
+        </div>
+        <div class="data-card">
+          <div class="data-card-top">
+            <div class="data-label">所有訂單</div>
+            <div class="data-icon" style="background:rgba(59,130,246,0.1)">📋</div>
+          </div>
+          <div class="data-value">47<span class="data-unit">筆</span></div>
+          <div class="data-change">+6 今日新上架</div>
+        </div>
+      </div>
+      <div class="data-row">
+        <div class="data-card">
+          <div class="data-card-top">
+            <div class="data-label">已派出</div>
+            <div class="data-icon" style="background:rgba(0,138,5,0.1)">✓</div>
+          </div>
+          <div class="data-value">31<span class="data-unit">筆</span></div>
+          <div class="data-change">完成率 66%</div>
+        </div>
+        <div class="data-card">
+          <div class="data-card-top">
+            <div class="data-label">註冊司機</div>
+            <div class="data-icon" style="background:rgba(168,85,247,0.1)">👤</div>
+          </div>
+          <div class="data-value">156<span class="data-unit">位</span></div>
+          <div class="data-change">+2 本週新加入</div>
+        </div>
+      </div>
+      <div class="order-feed">
+        <div class="feed-header">最新派出</div>
+        <div class="feed-item"><span class="feed-time">14:32</span><span class="feed-route">桃園機場 → 新北市</span><span class="feed-price">NT$800</span></div>
+        <div class="feed-item"><span class="feed-time">14:28</span><span class="feed-route">松山機場 → 台北市</span><span class="feed-price">NT$600</span></div>
+        <div class="feed-item"><span class="feed-time">14:15</span><span class="feed-route">桃園機場 → 台中市</span><span class="feed-price">NT$1,500</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Per-scheme carousel with left-to-right slide direction
+function initSchemeCarousel(idx) {
+  const container = document.querySelectorAll('.hero-container')[idx];
+  if (!container) return;
+  const slides = container.querySelectorAll('.slide');
+  const dots = container.querySelectorAll('.carousel-dot');
+  let current = 0;
+  let timer;
+
+  // Init non-active slides to left (off-screen)
+  slides.forEach((s, i) => {
+    s.style.transition = 'none';
+    s.style.transform = i === 0 ? 'translateX(0)' : 'translateX(-100%)';
+    s.style.opacity = i === 0 ? '1' : '0';
+    s.style.pointerEvents = i === 0 ? 'auto' : 'none';
+    setTimeout(() => { s.style.transition = ''; }, 20);
+  });
+
+  function goTo(target) {
+    if (target === current) return
+    clearInterval(timer)
+
+    // Exit current slide to the right
+    slides[current].style.transform = 'translateX(100%)'
+    slides[current].style.opacity = '0'
+    slides[current].classList.remove('active')
+    slides[current].style.pointerEvents = 'none'
+
+    // Enter target slide from the left
+    slides[target].style.transform = 'translateX(-100%)'
+    slides[target].style.opacity = '0'
+    slides[target].classList.add('active')
+    slides[target].style.pointerEvents = 'auto'
+    void slides[target].offsetWidth
+    slides[target].style.transform = 'translateX(0)'
+    slides[target].style.opacity = '1'
+
+    dots[current].classList.remove('active')
+    dots[target].classList.add('active')
+    current = target
+
+    timer = setInterval(() => goTo((current + 1) % slides.length), 4000)
+  }
+
+  function next() { goTo((current + 1) % slides.length); }
+  function prev() { goTo((current - 1 + slides.length) % slides.length); }
+
+  dots.forEach((dot, i) => {
+    dot.addEventListener('click', () => goTo(i));
+  });
+
+  // Wire arrow buttons to container data attributes
+  const arrows = container.querySelectorAll('.carousel-arrow');
+  arrows[0]?.addEventListener('click', prev);
+  arrows[1]?.addEventListener('click', next);
+
+  timer = setInterval(() => goTo((current + 1) % slides.length), 4000);
+}
+
+[0, 1, 2, 3].forEach((_, i) => initSchemeCarousel(i));
+</script>
+
+</body>
+</html>

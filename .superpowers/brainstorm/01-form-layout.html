@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>小車頭專區 — 表單分組</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans TC', sans-serif; background: #FAF8F5; color: #222222; line-height: 1.6; padding: 40px 24px; }
+  .container { max-width: 900px; margin: 0 auto; }
+  .badge { display: inline-block; padding: 3px 12px; background: #FF385C; color: white; border-radius: 20px; font-size: 11px; font-weight: 700; }
+  h1 { font-size: 24px; font-weight: 800; margin: 12px 0 4px; }
+  .subtitle { color: #717171; font-size: 14px; margin-bottom: 24px; }
+  h2 { font-size: 18px; font-weight: 700; margin: 24px 0 12px; border-bottom: 2px solid #FF385C; padding-bottom: 6px; }
+
+  .tabs { display: flex; gap: 4px; background: white; border: 1px solid #DDDDDD; border-radius: 12px; padding: 4px; margin-bottom: 24px; }
+  .tab { padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; color: #717171; cursor: pointer; transition: all 0.2s; }
+  .tab.active { background: #FF385C; color: white; }
+  .tab.premium { border: 1px dashed #FF385C; color: #FF385C; }
+
+  .options { display: flex; flex-direction: column; gap: 16px; }
+  .option { background: white; border: 2px solid #DDDDDD; border-radius: 16px; padding: 24px; cursor: pointer; transition: all 0.2s; }
+  .option:hover { border-color: #FF385C; }
+  .option.selected { border-color: #FF385C; background: #FFF3F5; }
+
+  .group { margin-bottom: 16px; }
+  .group-title { font-size: 13px; font-weight: 700; color: #FF385C; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
+  .fields-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+  .field-chip { background: #F4EFE9; border: 1px solid #DDDDDD; border-radius: 8px; padding: 8px 12px; font-size: 12px; text-align: center; }
+
+  .layout-preview { margin-top: 16px; background: #F9F7F4; border-radius: 12px; padding: 20px; }
+  .preview-title { font-size: 11px; font-weight: 700; color: #A8A29E; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+  .preview-card { background: white; border-radius: 12px; padding: 16px; border: 1px solid #DDDDDD; }
+  .preview-row { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+  .preview-input { background: #FAF8F5; border: 1px solid #DDDDDD; border-radius: 8px; padding: 8px 12px; font-size: 12px; flex: 1; min-width: 100px; }
+  .preview-btn { background: #DDDDDD; color: white; border-radius: 8px; padding: 10px 20px; font-size: 13px; font-weight: 700; text-align: center; margin-top: 12px; }
+  .preview-btn.active { background: #FF385C; cursor: pointer; }
+
+  .option h3 { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+  .option p { font-size: 13px; color: #717171; margin-bottom: 8px; }
+  .tag { display: inline-block; padding: 2px 8px; background: #F4EFE9; border-radius: 6px; font-size: 11px; margin-right: 4px; }
+
+  .q-box { background: white; border-radius: 20px; padding: 28px; margin-top: 32px; border: 1px solid #DDDDDD; }
+</style>
+</head>
+<body>
+<div class="container">
+  <span class="badge">Premium 功能</span>
+  <h1>司機端「小車頭專區」</h1>
+  <p class="subtitle">Premium 司機可發單，普通司機可見 Tab但按鈕鎖定</p>
+
+  <!-- Tab Preview -->
+  <div class="tabs">
+    <div class="tab">接單大廳</div>
+    <div class="tab">我的行程</div>
+    <div class="tab">帳務中心</div>
+    <div class="tab premium active">小車頭</div>
+  </div>
+
+  <!-- Layout Preview -->
+  <div class="layout-preview">
+    <div class="preview-title">表單預覽</div>
+    <div class="preview-card">
+      <div class="preview-row">
+        <input class="preview-input" placeholder="日期" />
+        <input class="preview-input" placeholder="時間" />
+      </div>
+      <div class="preview-row">
+        <input class="preview-input" placeholder="接/送機" />
+        <input class="preview-input" placeholder="航班" />
+      </div>
+      <div class="preview-row">
+        <input class="preview-input" placeholder="車型" />
+        <input class="preview-input" placeholder="乘客數" />
+        <input class="preview-input" placeholder="行李數" />
+      </div>
+      <div class="preview-row">
+        <input class="preview-input" placeholder="聯絡人" />
+        <input class="preview-input" placeholder="電話" />
+      </div>
+      <div class="preview-row">
+        <input class="preview-input" placeholder="上車地址" />
+        <input class="preview-input" placeholder="下單地址" />
+      </div>
+      <div class="preview-row">
+        <input class="preview-input" placeholder="客下匯款 NT$" />
+        <input class="preview-input" placeholder="代收 NT$" />
+        <input class="preview-input" placeholder="回金 NT$" />
+      </div>
+      <div class="preview-btn">發單上架</div>
+    </div>
+  </div>
+
+  <div class="q-box">
+    <h2 style="border:none;padding:0;margin:0 0 16px;font-size:18px">Q2：表單欄位怎麼分組呈現？</h2>
+
+    <div class="options">
+      <div class="option" onclick="select(this, 'A')">
+        <h3>A. 全部一列攤開（純水平排列）</h3>
+        <p>14個欄位全部排成一列，標題在上方，適合電腦版填寫</p>
+        <span class="tag">簡單直接</span><span class="tag">適合桌機</span>
+      </div>
+
+      <div class="option" onclick="select(this, 'B')">
+        <h3>B. 上下分組（行程 / 乘客 / 款項 三塊）</h3>
+        <p>分成三個 section：行程資訊（日期~航班）/ 乘客資料（車型~電話）/ 款項明細（匯款~回金）</p>
+        <span class="tag">結構清晰</span><span class="tag">推薦</span>
+      </div>
+
+      <div class="option" onclick="select(this, 'C')">
+        <h3>C. 分步驟精靈（Step by Step）</h3>
+        <p>三步驟：① 基本行程 → ② 乘客資料 → ③ 款項送出，適合手機操作</p>
+        <span class="tag">適合手機</span><span class="tag">引導式</span>
+      </div>
+
+      <div class="option" onclick="select(this, 'D')">
+        <h3>D. 卡片式分組</h3>
+        <p>每組一個圓角卡片，三張卡片垂直排列，卡片內欄位水平排列</p>
+        <span class="tag">視覺美觀</span><span class="tag">手機優先</span>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+function select(el, choice) {
+  document.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Landing Page Mockup A — 滑動堆疊式</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans TC', sans-serif; background: #FAF8F5; color: #222222; line-height: 1.5; }
+  .section { min-height: 100vh; display: flex; flex-direction: column; }
+
+  /* HERO */
+  .hero { position: relative; min-height: 100vh; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  .hero-bg { position: absolute; inset: 0; background: linear-gradient(135deg, #1C1917 0%, #2D2A26 60%, #3D3830 100%); z-index: 0; }
+  .hero-bg::after { content: ''; position: absolute; inset: 0; background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 900"><text x="50%50%" font-size="400" opacity="0.03">✈</text></svg>') no-repeat center; background-size: 60%; }
+  .hero-content { position: relative; z-index: 1; text-align: center; max-width: 680px; padding: 0 24px; }
+  .hero-badge { display: inline-block; padding: 6px 16px; background: rgba(255,56,92,0.15); border: 1px solid rgba(255,56,92,0.3); border-radius: 999px; color: #FF7090; font-size: 13px; font-weight: 500; margin-bottom: 24px; }
+  .hero h1 { color: #FFFFFF; font-size: clamp(40px, 7vw, 64px); font-weight: 700; line-height: 1.15; margin-bottom: 16px; }
+  .hero h1 span { color: #FF385C; }
+  .hero p { color: rgba(255,255,255,0.7); font-size: 18px; margin-bottom: 40px; line-height: 1.6; }
+  .hero-ctas { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .cta-primary { background: #FF385C; color: white; padding: 14px 32px; border-radius: 12px; font-size: 16px; font-weight: 600; border: none; cursor: pointer; text-decoration: none; transition: all 0.2s; }
+  .cta-primary:hover { background: #E83355; transform: translateY(-1px); }
+  .cta-outline { background: transparent; color: white; padding: 14px 32px; border-radius: 12px; font-size: 16px; font-weight: 600; border: 2px solid rgba(255,255,255,0.3); cursor: pointer; text-decoration: none; transition: all 0.2s; }
+  .cta-outline:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.5); }
+  .hero-scroll { position: absolute; bottom: 32px; left: 50%; transform: translateX(-50%); color: rgba(255,255,255,0.4); font-size: 12px; display: flex; flex-direction: column; align-items: center; gap: 8px; z-index: 1; }
+  .hero-scroll::after { content: ''; width: 1px; height: 40px; background: rgba(255,255,255,0.2); }
+
+  /* STATS BAR */
+  .stats-bar { background: white; border-bottom: 1px solid #DDDDDD; padding: 20px 0; }
+  .stats-inner { max-width: 1200px; margin: 0 auto; padding: 0 24px; display: flex; justify-content: center; gap: 48px; flex-wrap: wrap; }
+  .stat-item { text-align: center; }
+  .stat-value { font-size: 28px; font-weight: 700; color: #222222; font-variant-numeric: tabular-nums; }
+  .stat-label { font-size: 12px; color: #717171; margin-top: 2px; }
+
+  /* SECTION STYLES */
+  .value-section { padding: 100px 24px; display: flex; flex-direction: column; align-items: center; }
+  .section-title { font-size: 36px; font-weight: 700; text-align: center; margin-bottom: 8px; }
+  .section-subtitle { font-size: 16px; color: #717171; text-align: center; margin-bottom: 56px; }
+  .cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; max-width: 1000px; width: 100%; }
+  .value-card { background: white; border: 1px solid #DDDDDD; border-radius: 20px; padding: 36px 28px; text-align: center; transition: all 0.25s; }
+  .value-card:hover { box-shadow: 0 8px 32px rgba(0,0,0,0.08); transform: translateY(-2px); }
+  .card-icon { width: 56px; height: 56px; background: #F4EFE9; border-radius: 16px; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 24px; }
+  .card-title { font-size: 18px; font-weight: 700; margin-bottom: 10px; }
+  .card-desc { font-size: 14px; color: #717171; line-height: 1.7; }
+  .section-cta { margin-top: 48px; }
+  .cta-secondary { background: #222222; color: white; padding: 14px 36px; border-radius: 12px; font-size: 15px; font-weight: 600; border: none; cursor: pointer; text-decoration: none; display: inline-block; transition: all 0.2s; }
+  .cta-secondary:hover { background: #444444; }
+  .cta-secondary.outline { background: transparent; color: #222222; border: 2px solid #222222; }
+  .cta-secondary.outline:hover { background: #222222; color: white; }
+
+  /* DRIVER SECTION */
+  .driver-section { background: white; }
+  .driver-section .value-section { padding: 100px 24px; }
+  .driver-section .card-icon { background: #E6F1FB; }
+
+  /* DISPATCHER SECTION */
+  .dispatcher-section .card-icon { background: #FFF3E0; }
+
+  /* FOOTER CTA */
+  .footer-cta { background: #1C1917; padding: 80px 24px; text-align: center; }
+  .footer-cta h2 { color: white; font-size: 32px; font-weight: 700; margin-bottom: 12px; }
+  .footer-cta p { color: rgba(255,255,255,0.6); font-size: 16px; margin-bottom: 32px; }
+  .footer-ctas { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+  /* NAV BAR */
+  .nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; }
+  .nav-logo { font-size: 20px; font-weight: 700; color: white; text-decoration: none; }
+  .nav-links { display: flex; gap: 24px; }
+  .nav-links a { color: rgba(255,255,255,0.7); font-size: 14px; text-decoration: none; transition: color 0.2s; }
+  .nav-links a:hover { color: white; }
+  .nav-cta { background: white; color: #222222; padding: 8px 20px; border-radius: 8px; font-size: 14px; font-weight: 600; text-decoration: none; }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<div class="nav">
+  <a href="#" class="nav-logo">AirportDispatch</a>
+  <div class="nav-links">
+    <a href="#driver">司機服務</a>
+    <a href="#dispatcher">派單服務</a>
+    <a href="#contact">聯絡我們</a>
+  </div>
+  <a href="/login" class="nav-cta">登入</a>
+</div>
+
+<!-- HERO -->
+<div class="section hero">
+  <div class="hero-bg"></div>
+  <div class="hero-content">
+    <div class="hero-badge">全新智慧排班系統上線</div>
+    <h1>機場接送<span>派接更快</span><br>一趟都不漏</h1>
+    <p>為專業司機打造的高效派單平台，為派單方提供智能管理工具。從機場到目的地，我們讓每一次接送更簡單。</p>
+    <div class="hero-ctas">
+      <a href="/register" class="cta-primary">司機免費加入</a>
+      <a href="/register" class="cta-outline">派單方申請</a>
+    </div>
+  </div>
+  <div class="hero-scroll">向下滑動</div>
+</div>
+
+<!-- STATS -->
+<div class="stats-bar">
+  <div class="stats-inner">
+    <div class="stat-item"><div class="stat-value">2,847</div><div class="stat-label">已完成行程</div></div>
+    <div class="stat-item"><div class="stat-value">156</div><div class="stat-label">合作司機</div></div>
+    <div class="stat-item"><div class="stat-value">98.2%</div><div class="stat-label">準點率</div></div>
+    <div class="stat-item"><div class="stat-value">4.9</div><div class="stat-label">平均評分</div></div>
+  </div>
+</div>
+
+<!-- DRIVER VALUE -->
+<div class="section driver-section" id="driver">
+  <div class="value-section">
+    <div class="section-title">司機師傅們的首選</div>
+    <div class="section-subtitle">用專業工具提升收益，用智能系統節省時間</div>
+    <div class="cards-grid">
+      <div class="value-card">
+        <div class="card-icon">🎯</div>
+        <div class="card-title">智能排班推薦</div>
+        <div class="card-desc">AI 根據行程時間與地理距離，自動推薦最順暢的銜接訂單，一次接多單不漏接。</div>
+      </div>
+      <div class="value-card">
+        <div class="card-icon">⚡</div>
+        <div class="card-title">即時推播搶單</div>
+        <div class="card-desc">訂單發布後 3 秒內即時推播，先搶先贏。SSE 技術，零延遲體驗。</div>
+      </div>
+      <div class="value-card">
+        <div class="card-icon">💰</div>
+        <div class="card-title">每週快速結算</div>
+        <div class="card-desc">每週結算一次，帳目清清楚楚。平台只收 5% 媒合費，其餘全是您的。</div>
+      </div>
+      <div class="value-card">
+        <div class="card-icon">📱</div>
+        <div class="card-title">手機一鍵完成</div>
+        <div class="card-desc">從接單到完成全程手機操作，出發、抵達、客上、客下，點一點就搞定。</div>
+      </div>
+    </div>
+    <div class="section-cta">
+      <a href="/register" class="cta-secondary">司機免費加入</a>
+    </div>
+  </div>
+</div>
+
+<!-- DISPATCHER VALUE -->
+<div class="section dispatcher-section" id="dispatcher">
+  <div class="value-section">
+    <div class="section-title">派單方的管理利器</div>
+    <div class="section-subtitle">LINE 群組文字一貼，AI 自動解析上架</div>
+    <div class="cards-grid">
+      <div class="value-card">
+        <div class="card-icon">🤖</div>
+        <div class="card-title">AI 智能解析</div>
+        <div class="card-desc">把 LINE 群組的訂單文字貼上，AI 自動拆解時間、地點、金額，人工核對後馬上架。</div>
+      </div>
+      <div class="value-card">
+        <div class="card-icon">📋</div>
+        <div class="card-title">行控中心</div>
+        <div class="card-desc">所有司機一目了然，狀態、位置即時追蹤，出發抵達動態掌握。</div>
+      </div>
+      <div class="value-card">
+        <div class="card-icon">📊</div>
+        <div class="card-title">帳務統計</div>
+        <div class="card-desc">每日/每週/每月營收一目了然，轉帳記錄清清楚楚，帳務不再霧煞煞。</div>
+      </div>
+      <div class="value-card">
+        <div class="card-icon">🔗</div>
+        <div class="card-title">司機車隊管理</div>
+        <div class="card-desc">建立自己的司機車隊，長期配合更順暢，管理一支球隊般的團隊。</div>
+      </div>
+    </div>
+    <div class="section-cta">
+      <a href="/register" class="cta-secondary outline">派單方申請</a>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER CTA -->
+<div class="footer-cta">
+  <h2>現在加入，全新體驗</h2>
+  <p>加入平台，不收取任何加入費用。從今天開始，讓每一次接送更有效率。</p>
+  <div class="footer-ctas">
+    <a href="/register" class="cta-primary">司機免費加入</a>
+    <a href="/register" class="cta-outline">派單方申請</a>
+  </div>
+</div>
+
+</body>
+</html>

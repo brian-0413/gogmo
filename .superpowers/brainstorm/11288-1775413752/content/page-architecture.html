@@ -1,0 +1,205 @@
+<h2>頁面整體架構</h2>
+<p class="subtitle">Header、Navigation、內容區域的配置方式</p>
+
+<div class="section" style="margin-top: 1.5rem;">
+  <p class="label">討論範圍</p>
+  <p style="margin-top: 0.5rem; color: #717171; font-size: 13px;">司機端 / 派單方 的 Header 設計、Tab 位置、內容區佔比</p>
+</div>
+
+<div class="cards">
+  <!-- Option A: 頂部 Header + Tab 導航（主流 App 風） -->
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-body">
+      <h3>A. 頂部 Header + Tab 導航</h3>
+      <p style="color: #717171; font-size: 13px;">Header 置頂、功能列在手機螢幕上方，Tab 在 Header 下方</p>
+      <div style="background: #FAF7F2; border-radius: 16px; padding: 12px; margin-top: 12px; font-size: 12px;">
+        <!-- Mock: 頂部 Header + Tab -->
+        <div style="background: white; border-radius: 10px; padding: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); margin-bottom: 8px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <div style="width: 28px; height: 28px; background: #FF385C; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                <span style="color: white; font-size: 12px; font-weight: bold;">✈</span>
+              </div>
+              <span style="font-size: 14px; font-weight: bold; color: #222;">司機端</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 12px; color: #008A05; font-weight: bold;">● 在線</span>
+              <div style="background: #222; color: white; padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: bold;">點數 1,200</div>
+            </div>
+          </div>
+        </div>
+        <!-- Tab 導航 -->
+        <div style="display: flex; gap: 4px; margin-bottom: 10px;">
+          <div style="flex: 1; background: #FF385C; color: white; padding: 8px; border-radius: 8px; text-align: center; font-size: 12px; font-weight: bold;">接單大廳</div>
+          <div style="flex: 1; background: #F4EFE9; color: #717171; padding: 8px; border-radius: 8px; text-align: center; font-size: 12px;">我的行程</div>
+          <div style="flex: 1; background: #F4EFE9; color: #717171; padding: 8px; border-radius: 8px; text-align: center; font-size: 12px;">帳務中心</div>
+        </div>
+        <!-- 內容區 -->
+        <div style="background: white; border-radius: 10px; padding: 10px; border: 1px solid #EBEBEB;">
+          <div style="font-size: 11px; color: #B0B0B0; margin-bottom: 6px;">內容區</div>
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <div style="background: #F4EFE9; border-radius: 8px; padding: 8px; font-size: 11px; color: #717171;">行程卡片 1</div>
+            <div style="background: #F4EFE9; border-radius: 8px; padding: 8px; font-size: 11px; color: #717171;">行程卡片 2</div>
+            <div style="background: #F4EFE9; border-radius: 8px; padding: 8px; font-size: 11px; color: #717171;">行程卡片 3</div>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top: 10px; font-size: 12px; color: #717171;">
+        <strong>優點：</strong>熟悉的手機 App 模式，Tab 切換直覺<br/>
+        <strong>缺點：</strong>Header 佔一整行高度
+      </div>
+    </div>
+  </div>
+
+  <!-- Option B: Header + Tab + 統計卡一排 -->
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-body">
+      <h3>B. Header + Tab + Stats 同排</h3>
+      <p style="color: #717171; font-size: 13px;">Header 在左、功能在右，Tab 在下方，統計卡片和 Tab 同排</p>
+      <div style="background: #FAF7F2; border-radius: 16px; padding: 12px; margin-top: 12px; font-size: 12px;">
+        <!-- Header -->
+        <div style="background: white; border-radius: 10px; padding: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); margin-bottom: 8px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <div style="width: 28px; height: 28px; background: #FF385C; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                <span style="color: white; font-size: 12px;">✈</span>
+              </div>
+              <span style="font-size: 14px; font-weight: bold; color: #222;">司機端</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 12px; color: #008A05; font-weight: bold;">● 在線</span>
+              <div style="background: #222; color: white; padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: bold;">點數 1,200</div>
+            </div>
+          </div>
+        </div>
+        <!-- Tab + Stats 同排 -->
+        <div style="display: flex; gap: 6px; margin-bottom: 10px;">
+          <div style="flex: 1;">
+            <div style="display: flex; gap: 4px; margin-bottom: 6px;">
+              <div style="flex: 1; background: #FF385C; color: white; padding: 8px; border-radius: 8px; text-align: center; font-size: 12px; font-weight: bold;">接單大廳</div>
+              <div style="flex: 1; background: #F4EFE9; color: #717171; padding: 8px; border-radius: 8px; text-align: center; font-size: 12px;">我的行程</div>
+              <div style="flex: 1; background: #F4EFE9; color: #717171; padding: 8px; border-radius: 8px; text-align: center; font-size: 12px;">帳務</div>
+            </div>
+          </div>
+        </div>
+        <!-- 內容區 -->
+        <div style="background: white; border-radius: 10px; padding: 10px; border: 1px solid #EBEBEB;">
+          <div style="font-size: 11px; color: #B0B0B0; margin-bottom: 6px;">內容區</div>
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <div style="background: #F4EFE9; border-radius: 8px; padding: 8px; font-size: 11px; color: #717171;">行程卡片 1</div>
+            <div style="background: #F4EFE9; border-radius: 8px; padding: 8px; font-size: 11px; color: #717171;">行程卡片 2</div>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top: 10px; font-size: 12px; color: #717171;">
+        <strong>優點：</strong>Header 精簡，Tab 直覺<br/>
+        <strong>缺點：</strong>Stats 卡沒有空間
+      </div>
+    </div>
+  </div>
+
+  <!-- Option C: 底部 Tab Bar（手機原生感） -->
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-body">
+      <h3>C. 底部 Tab Bar</h3>
+      <p style="color: #717171; font-size: 13px;">Header 精簡、Tab 在最底部，內容區最大。類似 LINE / Uber Eats 模式</p>
+      <div style="background: #FAF7F2; border-radius: 16px; padding: 12px; margin-top: 12px; font-size: 12px;">
+        <!-- Header -->
+        <div style="background: white; border-radius: 10px; padding: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); margin-bottom: 8px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <div style="width: 28px; height: 28px; background: #FF385C; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                <span style="color: white; font-size: 12px;">✈</span>
+              </div>
+              <span style="font-size: 14px; font-weight: bold; color: #222;">司機端</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 12px; color: #008A05; font-weight: bold;">●</span>
+              <div style="background: #222; color: white; padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: bold;">1,200</div>
+            </div>
+          </div>
+        </div>
+        <!-- 內容區（最大） -->
+        <div style="background: white; border-radius: 10px; padding: 10px; border: 1px solid #EBEBEB; margin-bottom: 8px; min-height: 120px;">
+          <div style="font-size: 11px; color: #B0B0B0; margin-bottom: 6px;">內容區</div>
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <div style="background: #F4EFE9; border-radius: 8px; padding: 10px; font-size: 12px; color: #717171;">行程卡片 1</div>
+            <div style="background: #F4EFE9; border-radius: 8px; padding: 10px; font-size: 12px; color: #717171;">行程卡片 2</div>
+            <div style="background: #F4EFE9; border-radius: 8px; padding: 10px; font-size: 12px; color: #717171;">行程卡片 3</div>
+          </div>
+        </div>
+        <!-- 底部 Tab Bar -->
+        <div style="display: flex; background: white; border-radius: 10px; padding: 8px; box-shadow: 0 -1px 4px rgba(0,0,0,0.06); gap: 4px;">
+          <div style="flex: 1; display: flex; flex-direction: column; align-items: center; padding: 6px;">
+            <div style="width: 20px; height: 20px; background: #FF385C; border-radius: 50%; margin-bottom: 2px;"></div>
+            <span style="font-size: 10px; color: #FF385C; font-weight: bold;">接單</span>
+          </div>
+          <div style="flex: 1; display: flex; flex-direction: column; align-items: center; padding: 6px;">
+            <div style="width: 20px; height: 20px; background: #F4EFE9; border-radius: 50%; margin-bottom: 2px;"></div>
+            <span style="font-size: 10px; color: #717171;">行程</span>
+          </div>
+          <div style="flex: 1; display: flex; flex-direction: column; align-items: center; padding: 6px;">
+            <div style="width: 20px; height: 20px; background: #F4EFE9; border-radius: 50%; margin-bottom: 2px;"></div>
+            <span style="font-size: 10px; color: #717171;">帳務</span>
+          </div>
+          <div style="flex: 1; display: flex; flex-direction: column; align-items: center; padding: 6px;">
+            <div style="width: 20px; height: 20px; background: #F4EFE9; border-radius: 50%; margin-bottom: 2px;"></div>
+            <span style="font-size: 10px; color: #717171;">設定</span>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top: 10px; font-size: 12px; color: #717171;">
+        <strong>優點：</strong>內容區最大、單手操作方便、iOS/Android 原生感<br/>
+        <strong>缺點：</strong>切換 Tab 需要移動手指
+      </div>
+    </div>
+  </div>
+
+  <!-- Option D: Sticky Tab 在內容區頂部 -->
+  <div class="card" data-choice="d" onclick="toggleSelect(this)">
+    <div class="card-body">
+      <h3>D. Sticky Tab 在內容區頂部</h3>
+      <p style="color: #717171; font-size: 13px;">Header 固定在頂，Tab 跟著內容滾動時變 sticky，節省垂直空間</p>
+      <div style="background: #FAF7F2; border-radius: 16px; padding: 12px; margin-top: 12px; font-size: 12px;">
+        <!-- Header -->
+        <div style="background: white; border-radius: 10px; padding: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); margin-bottom: 8px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <div style="width: 28px; height: 28px; background: #FF385C; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                <span style="color: white; font-size: 12px;">✈</span>
+              </div>
+              <span style="font-size: 14px; font-weight: bold; color: #222;">司機端</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 12px; color: #008A05; font-weight: bold;">● 在線</span>
+              <div style="background: #222; color: white; padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: bold;">點數 1,200</div>
+            </div>
+          </div>
+        </div>
+        <!-- 內容區 -->
+        <div style="background: white; border-radius: 10px; border: 1px solid #EBEBEB;">
+          <!-- Sticky Tab -->
+          <div style="position: sticky; top: 0; background: white; padding: 8px 10px; border-radius: 10px 10px 0 0; display: flex; gap: 4px; z-index: 10;">
+            <div style="flex: 1; background: #FF385C; color: white; padding: 8px; border-radius: 8px; text-align: center; font-size: 12px; font-weight: bold;">接單大廳</div>
+            <div style="flex: 1; background: #F4EFE9; color: #717171; padding: 8px; border-radius: 8px; text-align: center; font-size: 12px;">我的行程</div>
+            <div style="flex: 1; background: #F4EFE9; color: #717171; padding: 8px; border-radius: 8px; text-align: center; font-size: 12px;">帳務中心</div>
+          </div>
+          <div style="padding: 10px;">
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+              <div style="background: #F4EFE9; border-radius: 8px; padding: 10px; font-size: 11px; color: #717171;">行程卡片 1</div>
+              <div style="background: #F4EFE9; border-radius: 8px; padding: 10px; font-size: 11px; color: #717171;">行程卡片 2</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top: 10px; font-size: 12px; color: #717171;">
+        <strong>優點：</strong>Header 固定、Tab 可 sticky、節省空間<br/>
+        <strong>缺點：</strong>Tab 和內容過近
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.card-body h3 { margin: 0 0 4px 0; }
+</style>

@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Landing Page Mockup B v4 — 滑出滑入輪播版</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans TC', sans-serif; background: #FAF8F5; color: #222222; line-height: 1.5; }
+
+  /* NAV */
+  .nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; padding: 16px 48px; display: flex; align-items: center; justify-content: space-between; background: rgba(250,248,245,0.95); backdrop-filter: blur(10px); border-bottom: 1px solid #DDDDDD; }
+  .nav-logo { font-size: 20px; font-weight: 700; color: #222222; text-decoration: none; }
+  .nav-links { display: flex; gap: 32px; }
+  .nav-links a { color: #717171; font-size: 14px; text-decoration: none; transition: color 0.2s; }
+  .nav-links a:hover { color: #222222; }
+  .nav-cta { background: #FF385C; color: white; padding: 8px 20px; border-radius: 8px; font-size: 14px; font-weight: 600; text-decoration: none; transition: background 0.2s; }
+  .nav-cta:hover { background: #E83355; }
+
+  /* HERO CAROUSEL */
+  .hero-carousel { position: relative; min-height: 100vh; overflow: hidden; }
+  .hero-slide { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; padding: 80px 48px 80px; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.6s ease; }
+  .hero-slide.driver { background: #FAF8F5; }
+  .hero-slide.dispatcher { background: #FFF8F5; }
+
+  /* Slide states */
+  .hero-slide.from-right { transform: translateX(100%); opacity: 0; }
+  .hero-slide.from-left { transform: translateX(-100%); opacity: 0; }
+  .hero-slide.to-left { transform: translateX(-100%); opacity: 0; }
+  .hero-slide.to-right { transform: translateX(100%); opacity: 0; }
+  .hero-slide.active { transform: translateX(0); opacity: 1; }
+
+  .slide-inner { max-width: 640px; }
+  .eyebrow { font-size: 12px; font-weight: 600; color: #FF385C; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px; }
+  .hero-slide h1 { font-size: clamp(32px, 4.5vw, 52px); font-weight: 700; line-height: 1.2; margin-bottom: 16px; color: #222222; }
+  .hero-slide p { font-size: 15px; color: #717171; line-height: 1.8; margin-bottom: 24px; max-width: 480px; }
+
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; text-decoration: none; transition: all 0.2s; white-space: nowrap; }
+  .btn-join { background: #FF385C; color: white; }
+  .btn-join:hover { background: #E83355; transform: translateY(-1px); }
+
+  .tag-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+  .tag { display: inline-flex; align-items: center; gap: 5px; padding: 5px 10px; background: white; border: 1px solid #DDDDDD; border-radius: 20px; font-size: 12px; color: #717171; font-weight: 500; }
+  .tag .dot { width: 5px; height: 5px; border-radius: 50%; }
+
+  /* CAROUSEL DOTS */
+  .carousel-nav { position: absolute; bottom: 40px; left: 48px; display: flex; gap: 8px; align-items: center; z-index: 10; }
+  .carousel-dot { width: 10px; height: 10px; border-radius: 50%; background: #DDDDDD; border: none; cursor: pointer; transition: all 0.3s; }
+  .carousel-dot.active { background: #FF385C; width: 32px; border-radius: 5px; }
+  .carousel-label { font-size: 12px; color: #717171; margin-left: 8px; font-weight: 500; }
+
+  /* SWITCH ARROWS */
+  .carousel-arrows { position: absolute; bottom: 36px; right: 48px; display: flex; gap: 8px; z-index: 10; }
+  .carousel-arrow { width: 36px; height: 36px; border-radius: 50%; border: 1px solid #DDDDDD; background: white; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; font-size: 18px; color: #717171; }
+  .carousel-arrow:hover { background: #F4EFE9; border-color: #B0B0B0; }
+
+  /* FEATURE ROWS */
+  .features-section { padding: 80px 48px; }
+  .features-section.driver { background: white; }
+  .features-section.dispatcher { background: #FAF8F5; }
+  .section-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 48px; flex-wrap: wrap; gap: 16px; }
+  .section-header h2 { font-size: 28px; font-weight: 700; }
+  .section-header p { font-size: 14px; color: #717171; margin-top: 4px; }
+  .feature-list { display: flex; flex-direction: column; gap: 0; }
+  .feature-row { display: flex; align-items: center; gap: 24px; padding: 28px 0; border-bottom: 1px solid #EBEBEB; }
+  .feature-row:last-child { border-bottom: none; }
+  .feature-num { font-size: 48px; font-weight: 800; color: #FF385C; font-variant-numeric: tabular-nums; opacity: 0.3; line-height: 1; flex-shrink: 0; width: 64px; }
+  .feature-content h3 { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+  .feature-content p { font-size: 14px; color: #717171; line-height: 1.7; }
+  .feature-tags { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+  .feature-tag { padding: 4px 10px; background: #F4EFE9; border-radius: 6px; font-size: 12px; color: #717171; }
+  .driver .feature-tag { background: #E6F1FB; color: #0C447C; }
+  .dispatcher .feature-tag { background: #FFF3E0; color: #92400E; }
+
+  /* CTA BANNER */
+  .cta-banner { background: #1C1917; padding: 80px 48px; text-align: center; }
+  .cta-banner h2 { color: white; font-size: 36px; font-weight: 700; margin-bottom: 16px; }
+  .cta-banner p { color: rgba(255,255,255,0.6); font-size: 16px; margin-bottom: 36px; }
+  .cta-row { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+  .cta-btn { padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; text-decoration: none; transition: all 0.2s; }
+  .cta-btn.primary { background: #FF385C; color: white; }
+  .cta-btn.primary:hover { background: #E83355; }
+  .cta-btn.secondary { background: rgba(255,255,255,0.1); color: white; border: 2px solid rgba(255,255,255,0.2); }
+  .cta-btn.secondary:hover { background: rgba(255,255,255,0.2); }
+
+  /* BACKGROUND DECO */
+  .deco-circle { position: absolute; border-radius: 50%; opacity: 0.05; background: #FF385C; }
+  .deco-1 { width: 600px; height: 600px; right: -100px; top: -100px; }
+  .deco-2 { width: 400px; height: 400px; left: -80px; bottom: 50px; }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<div class="nav">
+  <a href="#" class="nav-logo">goGMO</a>
+  <div class="nav-links">
+    <a href="#driver">司機服務</a>
+    <a href="#dispatcher">派單方服務</a>
+  </div>
+  <a href="/login" class="nav-cta">登入</a>
+</div>
+
+<!-- HERO CAROUSEL -->
+<div class="hero-carousel">
+  <!-- SLIDE 1: Driver -->
+  <div class="hero-slide driver active" id="slide-0" data-slide="0">
+    <div class="deco-circle deco-1"></div>
+    <div class="deco-circle deco-2"></div>
+    <div class="slide-inner">
+      <div class="eyebrow">司機服務</div>
+      <h1>來 goGMO 接單，<br>做個自由的司機。</h1>
+      <p>告別 LINE 群組的混亂趟訊，所有的行程一目瞭然，隨心所欲接單在你，智慧接續配單有我，我們一起在 goGMO，接有效率的單，開輕鬆的車。</p>
+      <a href="/register" class="btn btn-join">
+        免費加入、自由接單
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+      <div class="tag-row">
+        <div class="tag"><div class="dot" style="background:#FF385C"></div>視覺接單</div>
+        <div class="tag"><div class="dot" style="background:#22C55E"></div>智慧配單</div>
+        <div class="tag"><div class="dot" style="background:#3B82F6"></div>行程管理</div>
+        <div class="tag"><div class="dot" style="background:#F59E0B"></div>即時訊息</div>
+        <div class="tag"><div class="dot" style="background:#A855F7"></div>帳務管理</div>
+        <div class="tag"><div class="dot" style="background:#06B6D4"></div>小隊模式</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 2: Dispatcher -->
+  <div class="hero-slide dispatcher" id="slide-1" data-slide="1">
+    <div class="deco-circle deco-1"></div>
+    <div class="deco-circle deco-2"></div>
+    <div class="slide-inner">
+      <div class="eyebrow">派單方服務</div>
+      <h1>來 goGMO 派單，<br>做個聰明的車頭。</h1>
+      <p>有單派不出？LINE 帳號後總是接著「有群拉我」？有人喊單要先檢查三證？今天起讓我們告別派單地獄，歡迎來到 goGMO，車頭的救星，調度的希望。</p>
+      <a href="/register" class="btn btn-join">
+        免費加入、聰明派單
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+      <div class="tag-row">
+        <div class="tag"><div class="dot" style="background:#FF385C"></div>一鍵派單</div>
+        <div class="tag"><div class="dot" style="background:#22C55E"></div>行程管理</div>
+        <div class="tag"><div class="dot" style="background:#3B82F6"></div>進度追蹤</div>
+        <div class="tag"><div class="dot" style="background:#F59E0B"></div>即時訊息</div>
+        <div class="tag"><div class="dot" style="background:#A855F7"></div>帳務管理</div>
+        <div class="tag"><div class="dot" style="background:#06B6D4"></div>效率升級</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NAVIGATION -->
+  <div class="carousel-nav">
+    <button class="carousel-dot active" data-target="0" aria-label="司機服務"></button>
+    <button class="carousel-dot" data-target="1" aria-label="派單方服務"></button>
+    <span class="carousel-label" id="carouselLabel">司機服務</span>
+  </div>
+  <div class="carousel-arrows">
+    <button class="carousel-arrow" id="prevBtn" aria-label="上一個">‹</button>
+    <button class="carousel-arrow" id="nextBtn" aria-label="下一個">›</button>
+  </div>
+</div>
+
+<!-- DRIVER FEATURES -->
+<div class="features-section driver" id="driver">
+  <div class="section-header">
+    <div>
+      <h2>司機的接單樂園</h2>
+      <p>從接單到完成，全程為您設計</p>
+    </div>
+    <a href="/register" class="btn btn-join" style="font-size:13px;padding:10px 20px;">免費加入 →</a>
+  </div>
+  <div class="feature-list">
+    <div class="feature-row">
+      <div class="feature-num">01</div>
+      <div class="feature-content">
+        <h3>AI 智能排班推薦</h3>
+        <p>系統自動分析航班時間與地理距離，推薦最佳銜接組合。一次最多接 6 單，收益翻倍。</p>
+        <div class="feature-tags"><span class="feature-tag">接機→送機</span><span class="feature-tag">地理距離排序</span><span class="feature-tag">銜接緊密度標示</span></div>
+      </div>
+    </div>
+    <div class="feature-row">
+      <div class="feature-num">02</div>
+      <div class="feature-content">
+        <h3>3 秒即時推播</h3>
+        <p>派單方發布訂單後 3 秒內推播到所有在線司機的 APP，先搶先贏不漏單。</p>
+        <div class="feature-tags"><span class="feature-tag">SSE 技術</span><span class="feature-tag">零延遲</span><span class="feature-tag">訂單倒數計時</span></div>
+      </div>
+    </div>
+    <div class="feature-row">
+      <div class="feature-num">03</div>
+      <div class="feature-content">
+        <h3>手機一鍵完成</h3>
+        <p>出發、抵達、客上、客下，四個步驟點一點就完成。狀態即時同步派單方。</p>
+        <div class="feature-tags"><span class="feature-tag">出發</span><span class="feature-tag">抵達</span><span class="feature-tag">客上</span><span class="feature-tag">客下</span></div>
+      </div>
+    </div>
+    <div class="feature-row">
+      <div class="feature-num">04</div>
+      <div class="feature-content">
+        <h3>帳務管理中心</h3>
+        <p>每單結束自動記錄，已收未收清楚明瞭，算錢就該開開心心！</p>
+        <div class="feature-tags"><span class="feature-tag">每週結算</span><span class="feature-tag">平台費 5%</span><span class="feature-tag">歷史記錄 180 天</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DISPATCHER FEATURES -->
+<div class="features-section dispatcher" id="dispatcher">
+  <div class="section-header">
+    <div>
+      <h2>車頭的派單天堂</h2>
+      <p>把複雜的派單工作，變成指尖的輕鬆操作</p>
+    </div>
+    <a href="/register" class="btn btn-join" style="font-size:13px;padding:10px 20px;">免費加入 →</a>
+  </div>
+  <div class="feature-list">
+    <div class="feature-row">
+      <div class="feature-num" style="opacity:0.2">01</div>
+      <div class="feature-content">
+        <h3>AI 智慧解析，多筆行程一次生成</h3>
+        <p>再多訂單，交給 goGMO，一次搞定你一天的單；平台替你預先審核司機三證，派單流程再加速！</p>
+        <div class="feature-tags"><span class="feature-tag">AI 解析</span><span class="feature-tag">支援機場與基隆港</span><span class="feature-tag">批次處理</span><span class="feature-tag">三證預審</span></div>
+      </div>
+    </div>
+    <div class="feature-row">
+      <div class="feature-num" style="opacity:0.2">02</div>
+      <div class="feature-content">
+        <h3>行控中心即時掌握</h3>
+        <p>已派 / 已接 / 進行中 / 完成，行程分類整理。司機進度即時追蹤，即時訊息雙方互通，任何狀況一手掌握。</p>
+        <div class="feature-tags"><span class="feature-tag">行控中心</span><span class="feature-tag">SSE 即時推播</span><span class="feature-tag">司機狀態</span></div>
+      </div>
+    </div>
+    <div class="feature-row">
+      <div class="feature-num" style="opacity:0.2">03</div>
+      <div class="feature-content">
+        <h3>帳務結算效率升級</h3>
+        <p>每單結束自動歸入帳務中心，司機帳號預先載入，訂單金額、轉帳帳號明細清楚，對帳簡便，完成轉帳一鍵通知，帳務資料一鍵下載，告別惱人的對帳流程。</p>
+        <div class="feature-tags"><span class="feature-tag">週結算</span><span class="feature-tag">轉帳通知</span><span class="feature-tag">Excel 下載</span><span class="feature-tag">明細清楚</span></div>
+      </div>
+    </div>
+    <div class="feature-row">
+      <div class="feature-num" style="opacity:0.2">04</div>
+      <div class="feature-content">
+        <h3>降低成本</h3>
+        <p>大幅減輕人力派單、對接司機，行程追蹤、對帳作業，有效減輕人力負荷。</p>
+        <div class="feature-tags"><span class="feature-tag">省時省力</span><span class="feature-tag">自動化</span><span class="feature-tag">效率提升</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CTA -->
+<div class="cta-banner">
+  <h2>現在加入 goGMO</h2>
+  <p>告別 LINE 群組的派單地獄，用更聰明的方式完成每一趟接送</p>
+  <div class="cta-row">
+    <a href="/register" class="cta-btn primary">司機免費加入 →</a>
+    <a href="/register" class="cta-btn secondary">派單方申請 →</a>
+  </div>
+</div>
+
+<script>
+  const slides = document.querySelectorAll('.hero-slide');
+  const dots = document.querySelectorAll('.carousel-dot');
+  const label = document.getElementById('carouselLabel');
+  const labels = ['司機服務', '派單方服務'];
+  let current = 0;
+  let timer = null;
+  let isAnimating = false;
+
+  function goTo(index, direction) {
+    if (isAnimating || index === current) return;
+    isAnimating = true;
+
+    const prevSlide = slides[current];
+    const nextSlide = slides[index];
+
+    // Direction: 'next' = current slides left, new comes from right
+    // Direction: 'prev' = current slides right, new comes from left
+    if (direction === 'next') {
+      prevSlide.classList.add('to-left');
+      nextSlide.classList.add('from-right', 'active');
+    } else {
+      prevSlide.classList.add('to-right');
+      nextSlide.classList.add('from-left', 'active');
+    }
+
+    dots[current].classList.remove('active');
+    dots[index].classList.add('active');
+    label.textContent = labels[index];
+    current = index;
+
+    setTimeout(() => {
+      prevSlide.classList.remove('active', 'to-left', 'to-right');
+      nextSlide.classList.remove('from-right', 'from-left');
+      isAnimating = false;
+    }, 600);
+  }
+
+  function next() {
+    goTo((current + 1) % slides.length, 'next');
+    resetTimer();
+  }
+
+  function prev() {
+    goTo((current - 1 + slides.length) % slides.length, 'prev');
+    resetTimer();
+  }
+
+  function resetTimer() {
+    clearInterval(timer);
+    timer = setInterval(next, 4500);
+  }
+
+  dots.forEach(dot => {
+    dot.addEventListener('click', () => {
+      const target = parseInt(dot.dataset.target);
+      const dir = target > current ? 'next' : 'prev';
+      goTo(target, dir);
+      resetTimer();
+    });
+  });
+
+  document.getElementById('nextBtn').addEventListener('click', next);
+  document.getElementById('prevBtn').addEventListener('click', prev);
+
+  // Auto-rotate
+  timer = setInterval(next, 4500);
+</script>
+
+</body>
+</html>

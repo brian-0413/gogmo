@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>小車頭專區 Brainstorm</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans TC', sans-serif; background: #FAF8F5; color: #222222; line-height: 1.6; padding: 40px 24px; }
+  .container { max-width: 800px; margin: 0 auto; }
+  h1 { font-size: 28px; font-weight: 800; margin-bottom: 8px; }
+  h2 { font-size: 20px; font-weight: 700; margin-bottom: 12px; margin-top: 32px; }
+  .subtitle { color: #717171; font-size: 15px; margin-bottom: 24px; }
+  .badge { display: inline-block; padding: 2px 10px; background: #FF385C; color: white; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  ul { padding-left: 20px; }
+  li { margin-bottom: 6px; font-size: 14px; }
+  .fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; margin-top: 12px; }
+  .field { background: white; border: 1px solid #DDDDDD; border-radius: 12px; padding: 12px; font-size: 13px; text-align: center; }
+  .field strong { color: #FF385C; }
+  .options { display: flex; flex-direction: column; gap: 12px; margin-top: 24px; }
+  .option { background: white; border: 2px solid #DDDDDD; border-radius: 16px; padding: 20px; cursor: pointer; transition: all 0.2s; }
+  .option:hover { border-color: #FF385C; }
+  .option.selected { border-color: #FF385C; background: #FFF3F5; }
+  .option h3 { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+  .option p { font-size: 13px; color: #717171; }
+  .option .tag { display: inline-block; padding: 2px 8px; background: #F4EFE9; border-radius: 6px; font-size: 11px; margin-top: 6px; }
+  .q-box { background: white; border-radius: 20px; padding: 32px; margin-top: 32px; border: 1px solid #DDDDDD; }
+  .q-box h2 { margin-top: 0; }
+</style>
+</head>
+<body>
+<div class="container">
+  <span class="badge">Premium 功能</span>
+  <h1 style="margin-top:12px">司機端「小車頭專區」</h1>
+  <p class="subtitle">讓 Premium 司機自己發單上架接單大廳的功能</p>
+
+  <h2>功能定位</h2>
+  <ul>
+    <li>Premium 司機專屬功能（普通司機看不到入口）</li>
+    <li>司機自己填單 → 直接上架到接單大廳</li>
+    <li>訂單顯示「司機自派」標籤</li>
+    <li>派單/接單/帳務流程與派單方相同</li>
+  </ul>
+
+  <h2>表單欄位（14 項）</h2>
+  <div class="fields">
+    <div class="field"><strong>1</strong><br>日期</div>
+    <div class="field"><strong>2</strong><br>時間</div>
+    <div class="field"><strong>3</strong><br>接或送機</div>
+    <div class="field"><strong>4</strong><br>航班</div>
+    <div class="field"><strong>5</strong><br>車型</div>
+    <div class="field"><strong>6</strong><br>乘客數</div>
+    <div class="field"><strong>7</strong><br>行李數</div>
+    <div class="field"><strong>8</strong><br>聯絡人</div>
+    <div class="field"><strong>9</strong><br>電話</div>
+    <div class="field"><strong>10</strong><br>上車地址</div>
+    <div class="field"><strong>11</strong><br>下單地址</div>
+    <div class="field"><strong>12</strong><br>客下匯款</div>
+    <div class="field"><strong>13</strong><br>代收</div>
+    <div class="field"><strong>14</strong><br>回金</div>
+  </div>
+
+  <div class="q-box">
+    <h2>Q1：發單介面用什麼方式呈現？</h2>
+    <div class="options">
+      <div class="option" onclick="select(this, 'A')">
+        <h3>A. 獨立頁面</h3>
+        <p>點擊入口進獨立完整頁面，有左側導航</p>
+        <span class="tag">適合大量功能擴展</span>
+      </div>
+      <div class="option" onclick="select(this, 'B')">
+        <h3>B. 彈出 Modal（全螢幕覆蓋）</h3>
+        <p>任意頁面按鈕觸發，覆蓋整個畫面</p>
+        <span class="tag">不離開當前頁面</span>
+      </div>
+      <div class="option" onclick="select(this, 'C')">
+        <h3>C. Tab 分頁</h3>
+        <p>在司機後台新增「小車頭」Tab，與接單大廳/我的行程/帳務中心並列</p>
+        <span class="tag">符合現有架構</span>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+function select(el, choice) {
+  document.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  fetch('/save?choice=' + choice);
+}
+</script>
+</body>
+</html>

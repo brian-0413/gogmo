@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>智慧排單流程</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft JhengHei", "PingFang TC", sans-serif; background: #111; color: #fff; padding: 16px; }
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  @keyframes backdropFade { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  .scene { margin-bottom: 24px; }
+  .scene-label { font-size: 11px; color: #FF4D6A; font-weight: bold; letter-spacing: 1px; margin-bottom: 6px; text-transform: uppercase; }
+  .scene-desc { font-size: 11px; color: #8A8A88; margin-bottom: 10px; }
+</style>
+</head>
+<body>
+
+<!-- ========== 說明 ========== -->
+<div style="max-width: 420px; margin: 0 auto 16px; background: #1A2820; border-radius: 12px; padding: 14px; border: 1px solid #28B463;">
+  <p style="font-size: 13px; color: #28B463; margin: 0 0 8px; font-weight: bold;">智慧排單完整流程</p>
+  <ul style="font-size: 11px; color: #28B463; margin: 0; padding-left: 1.2rem; line-height: 1.8;">
+    <li>司機點任一行程卡上的「智慧排單」按鈕</li>
+    <li>系統推薦評比最好的 3 張，司機選 1 張（B1/B2/B3）</li>
+    <li>選了 B2 後，B1 和 B3 消失</li>
+    <li>一般會員：A → B2，結束（消耗 1 次）</li>
+    <li>Premium：B2 出現「接續推薦」，可繼續觸發 C1/C2/C3</li>
+    <li>以此類推，最多 5 張，每日 00:00 重置</li>
+  </ul>
+</div>
+
+<!-- ============================================================ -->
+<!-- 場景一：接單大廳 — 點擊「智慧排單」按鈕 -->
+<!-- ============================================================ -->
+<div class="scene">
+  <div class="scene-label">場景一：接單大廳</div>
+  <div class="scene-desc">司機點擊任一行程卡上的「智慧排單」按鈕</div>
+  <div style="background: #0E0E10; border-radius: 16px; max-width: 420px; margin: 0 auto; overflow: hidden;">
+    <!-- Header -->
+    <div style="background: #191920; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #28282E;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div style="width: 32px; height: 32px; background: #FF4D6A; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; color: white;">王</div>
+        <div style="font-size: 14px; font-weight: bold; color: #E8E8E6;">王小明</div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 6px;">
+        <span style="background: #1A2820; border: 1px solid #1E8449; padding: 3px 8px; border-radius: 12px; font-size: 10px; color: #1E8449; font-weight: bold;">● 在線</span>
+        <div style="background: #28282E; border: none; border-radius: 8px; padding: 6px; cursor: pointer;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FF4D6A" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </div>
+      </div>
+    </div>
+    <!-- Tab -->
+    <div style="background: #141418; padding: 8px 14px; display: flex; gap: 4px; border-bottom: 1px solid #28282E;">
+      <div style="background: #FF4D6A; border-radius: 8px; padding: 5px 12px; font-size: 12px; font-weight: bold; color: white;">接單大廳</div>
+      <div style="padding: 5px 12px; font-size: 12px; color: #6B6B6B;">我的行程</div>
+      <div style="padding: 5px 12px; font-size: 12px; color: #6B6B6B;">帳務</div>
+      <div style="padding: 5px 12px; font-size: 12px; color: #6B6B6B;">訊息</div>
+      <div style="padding: 5px 12px; font-size: 12px; color: #6B6B6B;">個人</div>
+    </div>
+    <!-- 訂單列表 -->
+    <div style="padding: 14px;">
+      <!-- 卡片 A：觸發單（送機） -->
+      <div style="background: #191920; border-radius: 14px; padding: 12px; margin-bottom: 10px; border: 1px solid #28282E; position: relative;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="background: #CA6F1E; color: white; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; font-family: monospace;">#20260407-001</span>
+            <span style="background: #FDF3E7; color: #CA6F1E; padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: bold;">送機</span>
+          </div>
+          <span style="font-size: 14px; font-weight: bold; color: #FF4D6A; font-family: monospace;">NT$1,400</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+          <div style="width: 8px; height: 8px; background: #CA6F1E; border-radius: 50%;"></div>
+          <span style="font-size: 13px; font-weight: bold; color: #E8E8E6;">台北市大安區</span>
+        </div>
+        <div style="padding-left: 3px; margin-bottom: 4px;">
+          <div style="width: 1px; height: 10px; background: #484846; margin-left: 3px;"></div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">
+          <div style="width: 8px; height: 8px; background: #484846; border-radius: 50%; border: 1px solid #484846;"></div>
+          <span style="font-size: 13px; font-weight: bold; color: #8A8A88;">桃園機場</span>
+          <span style="margin-left: auto; font-size: 12px; color: #6B6B6B;">今天 14:00</span>
+        </div>
+        <div style="display: flex; gap: 6px;">
+          <div style="flex: 1; display: flex; align-items: center; gap: 4px;">
+            <div style="width: 20px; height: 20px; background: #CA6F1E; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; color: white; font-weight: bold;">李</div>
+            <span style="font-size: 11px; color: #8A8A88;">阿美德髮</span>
+          </div>
+          <button style="background: linear-gradient(135deg, #FF4D6A, #C0392B); border: none; border-radius: 8px; padding: 6px 12px; font-size: 11px; font-weight: bold; color: white; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            智慧排單
+          </button>
+        </div>
+      </div>
+      <!-- 其他卡片（略過） -->
+      <div style="background: #191920; border-radius: 14px; padding: 12px; border: 1px solid #28282E; opacity: 0.5;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="background: #1A5276; color: white; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; font-family: monospace;">#20260407-002</span>
+            <span style="background: #E6EFF8; color: #1A5276; padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: bold;">接機</span>
+          </div>
+          <span style="font-size: 14px; font-weight: bold; color: #FF4D6A; font-family: monospace;">NT$1,000</span>
+        </div>
+        <div style="font-size: 12px; color: #6B6B6B; margin-top: 6px;">桃園機場 → 新北市新莊 · 今天 16:00</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 箭頭 -->
+<div style="text-align: center; color: #FF4D6A; font-size: 20px; margin: -8px 0 -12px;">↓</div>
+
+<!-- ============================================================ -->
+<!-- 場景二：Bottom Sheet — 顯示 3 張推薦 -->
+<!-- ============================================================ -->
+<div class="scene">
+  <div class="scene-label">場景二：Bottom Sheet 展開（情境：送機觸發）</div>
+  <div class="scene-desc">系統推薦評比最好的 3 張接機單，按銜接緊密度排序</div>
+
+  <!-- 遮罩 -->
+  <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 10;"></div>
+
+  <!-- Bottom Sheet -->
+  <div style="position: fixed; bottom: 0; left: 0; right: 0; max-width: 420px; margin: 0 auto; z-index: 20; animation: slideUp 0.3s ease-out;">
+    <div style="background: #0E0E10; border-radius: 20px 20px 0 0; max-height: 85vh; display: flex; flex-direction: column;">
+
+      <!-- 頂部 -->
+      <div style="padding: 12px 14px 8px; display: flex; justify-content: space-between; align-items: center;">
+        <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
+          <div style="width: 36px; height: 4px; background: #28282E; border-radius: 2px; margin-bottom: 8px;"></div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF4D6A" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            <span style="font-size: 15px; font-weight: bold; color: #E8E8E6;">智慧排單</span>
+            <span style="background: linear-gradient(135deg, #FF4D6A, #C0392B); color: white; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: bold;">Premium</span>
+          </div>
+        </div>
+        <button style="background: #28282E; border: none; border-radius: 8px; padding: 6px 10px; font-size: 12px; color: #8A8A88; cursor: pointer;">✕</button>
+      </div>
+
+      <!-- 觸發單摘要 -->
+      <div style="padding: 0 14px 8px;">
+        <div style="background: #141418; border-radius: 10px; padding: 8px 12px; border: 1px solid #28282E; display: flex; align-items: center; gap: 8px;">
+          <span style="background: #CA6F1E; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold;">觸發</span>
+          <span style="font-size: 12px; color: #E8E8E6;">14:00 送機 · 大安 → 桃園機場</span>
+          <span style="margin-left: auto; font-size: 11px; color: #6B6B6B;">T2 14:45 到達</span>
+        </div>
+      </div>
+
+      <!-- 統計列 -->
+      <div style="padding: 0 14px 10px;">
+        <div style="background: #141418; border-radius: 10px; padding: 8px 12px; border: 1px solid #28282E; display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <div style="font-size: 10px; color: #6B6B6B;">今日已觸發</div>
+            <div style="font-size: 18px; font-weight: bold; color: #FF4D6A; font-family: monospace; margin-top: 2px;">0<span style="font-size: 12px; color: #6B6B6B; font-weight: normal;"> / 5 次</span></div>
+          </div>
+          <div style="text-align: right;">
+            <div style="font-size: 10px; color: #6B6B6B;">安全時間</div>
+            <div style="font-size: 14px; font-weight: bold; color: #1E8449; font-family: monospace; margin-top: 2px;">T4 15:35</div>
+          </div>
+          <div style="text-align: right;">
+            <div style="font-size: 10px; color: #6B6B6B;">推薦</div>
+            <div style="font-size: 14px; font-weight: bold; color: #8A8A88; font-family: monospace; margin-top: 2px;">3 張</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 標題 -->
+      <div style="padding: 0 14px 6px; font-size: 10px; font-weight: bold; color: #8A8A88; letter-spacing: 1px; text-transform: uppercase;">
+        推薦接機單（評比最好的 3 張）
+      </div>
+
+      <!-- 推薦列表 -->
+      <div style="flex: 1; overflow-y: auto; padding: 0 14px;">
+
+        <!-- B1：完美銜接 -->
+        <div style="background: #191920; border-radius: 12px; padding: 12px; margin-bottom: 8px; border: 1px solid #28282E; animation: slideIn 0.3s ease-out;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="background: #1E8449; color: white; padding: 2px 6px; border-radius: 4px; font-size: 9px; font-weight: bold;">完美銜接</span>
+              <span style="background: #E6EFF8; color: #1A5276; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold;">接機</span>
+            </div>
+            <span style="font-size: 13px; font-weight: bold; color: #FF4D6A; font-family: monospace;">NT$1,000</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+            <div style="width: 8px; height: 8px; background: #FF4D6A; border-radius: 50%;"></div>
+            <span style="font-size: 12px; font-weight: bold; color: #E8E8E6;">15:30 落地</span>
+            <span style="font-size: 11px; color: #1E8449; font-weight: bold;">（T4 15:35 ±5分）</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">
+            <div style="width: 8px; height: 8px; background: #484846; border-radius: 50%; border: 1px solid #484846;"></div>
+            <span style="font-size: 12px; color: #8A8A88;">桃園 → 中和區</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 4px;">
+              <div style="width: 18px; height: 18px; background: #1E8449; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 8px; color: white; font-weight: bold;">陳</div>
+              <span style="font-size: 10px; color: #8A8A88;">永達接送</span>
+              <span style="font-size: 10px; color: #6B6B6B;">· 等候約 5 分鐘</span>
+            </div>
+            <button style="background: #1E8449; border: none; border-radius: 8px; padding: 6px 14px; font-size: 11px; font-weight: bold; color: white; cursor: pointer;">接這單</button>
+          </div>
+        </div>
+
+        <!-- B2：良好銜接（選了這個） -->
+        <div style="background: #191920; border-radius: 12px; padding: 12px; margin-bottom: 8px; border: 1px solid #FF4D6A; border-left-width: 3px; animation: slideIn 0.3s ease-out; animation-delay: 0.05s;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="background: #1A5276; color: white; padding: 2px 6px; border-radius: 4px; font-size: 9px; font-weight: bold;">良好銜接</span>
+              <span style="background: #E6EFF8; color: #1A5276; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold;">接機</span>
+            </div>
+            <span style="font-size: 13px; font-weight: bold; color: #FF4D6A; font-family: monospace;">NT$1,100</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+            <div style="width: 8px; height: 8px; background: #FF4D6A; border-radius: 50%;"></div>
+            <span style="font-size: 12px; font-weight: bold; color: #E8E8E6;">15:45 落地</span>
+            <span style="font-size: 11px; color: #1A5276;">（T4 15:35 +10分）</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">
+            <div style="width: 8px; height: 8px; background: #484846; border-radius: 50%; border: 1px solid #484846;"></div>
+            <span style="font-size: 12px; color: #8A8A88;">桃園 → 板橋區</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 4px;">
+              <div style="width: 18px; height: 18px; background: #CA6F1E; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 8px; color: white; font-weight: bold;">李</div>
+              <span style="font-size: 10px; color: #8A8A88;">阿美德髮</span>
+              <span style="font-size: 10px; color: #6B6B6B;">· 等候約 20 分鐘</span>
+            </div>
+            <button style="background: #FF4D6A; border: none; border-radius: 8px; padding: 6px 14px; font-size: 11px; font-weight: bold; color: white; cursor: pointer;">接這單 ✓</button>
+          </div>
+        </div>
+
+        <!-- B3：可接受 -->
+        <div style="background: #191920; border-radius: 12px; padding: 12px; margin-bottom: 8px; border: 1px solid #28282E; animation: slideIn 0.3s ease-out; animation-delay: 0.1s;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="background: #CA6F1E; color: white; padding: 2px 6px; border-radius: 4px; font-size: 9px; font-weight: bold;">可接受</span>
+              <span style="background: #E6EFF8; color: #1A5276; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold;">接機</span>
+            </div>
+            <span style="font-size: 13px; font-weight: bold; color: #FF4D6A; font-family: monospace;">NT$900</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+            <div style="width: 8px; height: 8px; background: #FF4D6A; border-radius: 50%;"></div>
+            <span style="font-size: 12px; font-weight: bold; color: #E8E8E6;">16:10 落地</span>
+            <span style="font-size: 11px; color: #CA6F1E;">（T4 15:35 +35分，需等較久）</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">
+            <div style="width: 8px; height: 8px; background: #484846; border-radius: 50%; border: 1px solid #484846;"></div>
+            <span style="font-size: 12px; color: #8A8A88;">桃園 → 新莊區</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 4px;">
+              <div style="width: 18px; height: 18px; background: #1A5276; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 8px; color: white; font-weight: bold;">林</div>
+              <span style="font-size: 10px; color: #8A8A88;">便利出行</span>
+              <span style="font-size: 10px; color: #6B6B6B;">· 等候約 45 分鐘</span>
+            </div>
+            <button style="background: #1E8449; border: none; border-radius: 8px; padding: 6px 14px; font-size: 11px; font-weight: bold; color: white; cursor: pointer;">接這單</button>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- 箭頭 -->
+<div style="text-align: center; color: #FF4D6A; font-size: 20px; margin: -8px 0 -12px;">↓</div>
+
+<!-- ============================================================ -->
+<!-- 場景三：司機選了 B2 — 鏈變成 A → B2 -->
+<!-- ============================================================ -->
+<div class="scene">
+  <div class="scene-label">場景三：司機選了 B2（B1 和 B3 消失）</div>
+  <div class="scene-desc">Premium：B2 出現「接續推薦」按鈕 | 一般會員：無此按鈕，流程結束</div>
+
+  <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 10;"></div>
+  <div style="position: fixed; bottom: 0; left: 0; right: 0; max-width: 420px; margin: 0 auto; z-index: 20; animation: slideUp 0.3s ease-out;">
+    <div style="background: #0E0E10; border-radius: 20px 20px 0 0; max-height: 85vh; display: flex; flex-direction: column;">
+
+      <!-- 頂部 -->
+      <div style="padding: 12px 14px 8px; display: flex; justify-content: space-between; align-items: center;">
+        <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
+          <div style="width: 36px; height: 4px; background: #28282E; border-radius: 2px; margin-bottom: 8px;"></div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF4D6A" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            <span style="font-size: 15px; font-weight: bold; color: #E8E8E6;">智慧排單</span>
+            <span style="background: linear-gradient(135deg, #FF4D6A, #C0392B); color: white; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: bold;">Premium</span>
+          </div>
+        </div>
+        <button style="background: #28282E; border: none; border-radius: 8px; padding: 6px 10px; font-size: 12px; color: #8A8A88; cursor: pointer;">✕</button>
+      </div>
+
+      <!-- 統計列 -->
+      <div style="padding: 0 14px 10px;">
+        <div style="background: #141418; border-radius: 10px; padding: 8px 12px; border: 1px solid #28282E; display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <div style="font-size: 10px; color: #6B6B6B;">今日已觸發</div>
+            <div style="font-size: 18px; font-weight: bold; color: #FF4D6A; font-family: monospace; margin-top: 2px;">1<span style="font-size: 12px; color: #6B6B6B; font-weight: normal;"> / 5 次</span></div>
+          </div>
+          <div style="text-align: right;">
+            <div style="font-size: 10px; color: #6B6B6B;">目前鏈</div>
+            <div style="font-size: 14px; font-weight: bold; color: #E8E8E6; font-family: monospace; margin-top: 2px;">2 張</div>
+          </div>
+          <div style="text-align: right;">
+            <div style="font-size: 10px; color: #6B6B6B;">預估收入</div>
+            <div style="font-size: 14px; font-weight: bold; color: #1E8449; font-family: monospace; margin-top: 2px;">NT$2,500</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 已選鏈 -->
+      <div style="padding: 0 14px 6px; font-size: 10px; font-weight: bold; color: #8A8A88; letter-spacing: 1px; text-transform: uppercase;">
+        已選行程鏈
+      </div>
+      <div style="padding: 0 14px; display: flex; align-items: center; gap: 4px; flex-wrap: wrap; margin-bottom: 8px;">
+        <!-- A -->
+        <div style="background: #141418; border: 1px solid #CA6F1E; border-radius: 20px; padding: 4px 10px; font-size: 11px; color: #CA6F1E; font-weight: bold;">14:00 送機</div>
+        <div style="color: #484846; font-size: 12px;">→</div>
+        <!-- B2 -->
+        <div style="background: #141418; border: 1px solid #1A5276; border-radius: 20px; padding: 4px 10px; font-size: 11px; color: #1A5276; font-weight: bold;">15:45 接機</div>
+        <!-- 箭頭 + 接續 -->
+        <div style="color: #FF4D6A; font-size: 12px;">→</div>
+        <div style="background: #FF4D6A; border-radius: 20px; padding: 4px 10px; font-size: 11px; color: white; font-weight: bold; opacity: 0.4;">?</div>
+      </div>
+
+      <!-- 已選卡片 B2（帶接續推薦） -->
+      <div style="padding: 0 14px 6px;">
+        <div style="background: #191920; border-radius: 12px; padding: 12px; border: 1px solid #FF4D6A; border-left-width: 3px;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="background: #FF4D6A; color: white; padding: 2px 6px; border-radius: 4px; font-size: 9px; font-weight: bold;">已選</span>
+              <span style="background: #1A5276; color: white; padding: 2px 6px; border-radius: 4px; font-size: 9px; font-weight: bold;">良好銜接</span>
+              <span style="background: #E6EFF8; color: #1A5276; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold;">接機</span>
+            </div>
+            <span style="font-size: 13px; font-weight: bold; color: #FF4D6A; font-family: monospace;">NT$1,100</span>
+          </div>
+          <div style="font-size: 12px; color: #8A8A88; margin-bottom: 8px;">15:45 落地 · 桃園 → 板橋區 · 阿美德髮</div>
+          <!-- 接續推薦按鈕（Premium 專用） -->
+          <button style="width: 100%; background: linear-gradient(135deg, #FF4D6A, #C0392B); border: none; border-radius: 8px; padding: 8px; font-size: 12px; font-weight: bold; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            接續推薦（以此單觸發）
+          </button>
+          <div style="text-align: center; margin-top: 4px; font-size: 10px; color: #6B6B6B;">Premium 專屬 · 還可觸發 4 次</div>
+        </div>
+      </div>
+
+      <!-- 提示：一般會員沒有接續推薦 -->
+      <div style="padding: 0 14px; margin-bottom: 10px;">
+        <div style="background: #141418; border-radius: 8px; padding: 8px 12px; border: 1px solid #28282E; display: flex; align-items: center; gap: 8px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8A8A88" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span style="font-size: 11px; color: #8A8A88;">一般會員：無「接續推薦」按鈕，流程到此結束（已消耗 1 次）</span>
+        </div>
+      </div>
+
+      <!-- 底部 -->
+      <div style="padding: 10px 14px 20px; border-top: 1px solid #28282E;">
+        <button style="width: 100%; background: #FF4D6A; border: none; border-radius: 12px; padding: 14px; font-size: 15px; font-weight: bold; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+          確認排單（2張）
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- 箭頭 -->
+<div style="text-align: center; color: #FF4D6A; font-size: 20px; margin: -8px 0 -12px;">↓</div>
+
+<!-- ============================================================ -->
+<!-- 場景四：接續推薦 — 以 B2 觸發，推薦 3 張送機單 -->
+<!-- ============================================================ -->
+<div class="scene">
+  <div class="scene-label">場景四：接續推薦 — 以 B2（接機）觸發，推薦 3 張送機單</div>
+  <div class="scene-desc">情境切換：接機 → 銜接送機（複雜情境，需計算次生活圈行車時間）</div>
+
+  <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 10;"></div>
+  <div style="position: fixed; bottom: 0; left: 0; right: 0; max-width: 420px; margin: 0 auto; z-index: 20; animation: slideUp 0.3s ease-out;">
+    <div style="background: #0E0E10; border-radius: 20px 20px 0 0; max-height: 85vh; display: flex; flex-direction: column;">
+
+      <!-- 頂部 -->
+      <div style="padding: 12px 14px 8px; display: flex; justify-content: space-between; align-items: center;">
+        <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
+          <div style="width: 36px; height: 4px; background: #28282E; border-radius: 2px; margin-bottom: 8px;"></div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF4D6A" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            <span style="font-size: 15px; font-weight: bold; color: #E8E8E6;">智慧排單</span>
+            <span style="background: linear-gradient(135deg, #FF4D6A, #C0392B); color: white; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: bold;">Premium</span>
+          </div>
+        </div>
+        <button style="background: #28282E; border: none; border-radius: 8px; padding: 6px 10px; font-size: 12px; color: #8A8A88; cursor: pointer;">✕</button>
+      </div>
+
+      <!-- 統計 -->
+      <div style="padding: 0 14px 10px;">
+        <div style="background: #141418; border-radius: 10px; padding: 8px 12px; border: 1px solid #28282E; display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <div style="font-size: 10px; color: #6B6B6B;">今日已觸發</div>
+            <div style="font-size: 18px; font-weight: bold; color: #FF4D6A; font-family: monospace; margin-top: 2px;">2<span style="font-size: 12px; color: #6B6B6B; font-weight: normal;"> / 5 次</span></div>
+          </div>
+          <div style="text-align: right;">
+            <div style="font-size: 10px; color: #6B6B6B;">目前鏈</div>
+            <div style="font-size: 14px; font-weight: bold; color: #E8E8E6; font-family: monospace; margin-top: 2px;">2 張</div>
+          </div>
+          <div style="text-align: right;">
+            <div style="font-size: 10px; color: #6B6B6B;">預估收入</div>
+            <div style="font-size: 14px; font-weight: bold; color: #1E8449; font-family: monospace; margin-top: 2px;">NT$2,500</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 觸發單摘要 -->
+      <div style="padding: 0 14px 8px;">
+        <div style="background: #141418; border-radius: 10px; padding: 8px 12px; border: 1px solid #28282E; display: flex; align-items: center; gap: 8px;">
+          <span style="background: #1A5276; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold;">觸發</span>
+          <span style="font-size: 12px; color: #E8E8E6;">15:45 接機 · 桃園 → 板橋</span>
+          <span style="margin-left: auto; font-size: 10px; color: #6B6B6B;">T3 16:50 到板橋（永和中和圈）</span>
+        </div>
+      </div>
+
+      <!-- 標題 -->
+      <div style="padding: 0 14px 6px; font-size: 10px; font-weight: bold; color: #8A8A88; letter-spacing: 1px; text-transform: uppercase;">
+        推薦送機單（評比最好的 3 張）
+      </div>
+
+      <!-- 推薦列表 -->
+      <div style="flex: 1; overflow-y: auto; padding: 0 14px;">
+
+        <!-- C1：完美銜接 -->
+        <div style="background: #191920; border-radius: 12px; padding: 12px; margin-bottom: 8px; border: 1px solid #28282E;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="background: #1E8449; color: white; padding: 2px 6px; border-radius: 4px; font-size: 9px; font-weight: bold;">完美銜接</span>
+              <span style="background: #FDF3E7; color: #CA6F1E; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold;">送機</span>
+            </div>
+            <span style="font-size: 13px; font-weight: bold; color: #FF4D6A; font-family: monospace;">NT$1,200</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+            <div style="width: 8px; height: 8px; background: #CA6F1E; border-radius: 50%;"></div>
+            <span style="font-size: 12px; font-weight: bold; color: #E8E8E6;">17:30 出發</span>
+            <span style="font-size: 11px; color: #1E8449;">緩衝 30 分鐘</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+            <div style="width: 8px; height: 8px; background: #484846; border-radius: 50%; border: 1px solid #484846;"></div>
+            <span style="font-size: 12px; color: #8A8A88;">板橋 → 桃園機場</span>
+          </div>
+          <div style="font-size: 10px; color: #6B6B6B; margin-bottom: 8px;">
+            永和中和 → 板橋土城：20 分鐘 · 17:30 出發在離峰時段
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 4px;">
+              <div style="width: 18px; height: 18px; background: #CA6F1E; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 8px; color: white; font-weight: bold;">李</div>
+              <span style="font-size: 10px; color: #8A8A88;">阿美德髮</span>
+            </div>
+            <button style="background: #1E8449; border: none; border-radius: 8px; padding: 6px 14px; font-size: 11px; font-weight: bold; color: white; cursor: pointer;">接這單</button>
+          </div>
+        </div>
+
+        <!-- C2：時間充裕 -->
+        <div style="background: #191920; border-radius: 12px; padding: 12px; margin-bottom: 8px; border: 1px solid #28282E;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="background: #1A5276; color: white; padding: 2px 6px; border-radius: 4px; font-size: 9px; font-weight: bold;">時間充裕</span>
+              <span style="background: #FDF3E7; color: #CA6F1E; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold;">送機</span>
+            </div>
+            <span style="font-size: 13px; font-weight: bold; color: #FF4D6A; font-family: monospace;">NT$1,400</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+            <div style="width: 8px; height: 8px; background: #CA6F1E; border-radius: 50%;"></div>
+            <span style="font-size: 12px; font-weight: bold; color: #E8E8E6;">18:00 出發</span>
+            <span style="font-size: 11px; color: #1A5276;">緩衝 40 分鐘</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+            <div style="width: 8px; height: 8px; background: #484846; border-radius: 50%; border: 1px solid #484846;"></div>
+            <span style="font-size: 12px; color: #8A8A88;">內湖 → 桃園機場</span>
+          </div>
+          <div style="font-size: 10px; color: #6B6B6B; margin-bottom: 8px;">
+            永和中和 → 內湖汐止：30 分鐘 · 但 17:20 出發在離峰，抵達 17:50 在尖峰前
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 4px;">
+              <div style="width: 18px; height: 18px; background: #1E8449; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 8px; color: white; font-weight: bold;">陳</div>
+              <span style="font-size: 10px; color: #8A8A88;">永達接送</span>
+            </div>
+            <button style="background: #1E8449; border: none; border-radius: 8px; padding: 6px 14px; font-size: 11px; font-weight: bold; color: white; cursor: pointer;">接這單</button>
+          </div>
+        </div>
+
+        <!-- C3：時間寬鬆 -->
+        <div style="background: #191920; border-radius: 12px; padding: 12px; margin-bottom: 8px; border: 1px solid #28282E;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="background: #CA6F1E; color: white; padding: 2px 6px; border-radius: 4px; font-size: 9px; font-weight: bold;">時間寬鬆</span>
+              <span style="background: #FDF3E7; color: #CA6F1E; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold;">送機</span>
+            </div>
+            <span style="font-size: 13px; font-weight: bold; color: #FF4D6A; font-family: monospace;">NT$950</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+            <div style="width: 8px; height: 8px; background: #CA6F1E; border-radius: 50%;"></div>
+            <span style="font-size: 12px; font-weight: bold; color: #E8E8E6;">19:00 出發</span>
+            <span style="font-size: 11px; color: #CA6F1E;">緩衝 55 分鐘</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+            <div style="width: 8px; height: 8px; background: #484846; border-radius: 50%; border: 1px solid #484846;"></div>
+            <span style="font-size: 12px; color: #8A8A88;">三重 → 桃園機場</span>
+          </div>
+          <div style="font-size: 10px; color: #6B6B6B; margin-bottom: 8px;">
+            永和中和 → 三重蘆洲：20 分鐘 · 等候時間較長但安全
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 4px;">
+              <div style="width: 18px; height: 18px; background: #1A5276; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 8px; color: white; font-weight: bold;">林</div>
+              <span style="font-size: 10px; color: #8A8A88;">便利出行</span>
+            </div>
+            <button style="background: #1E8449; border: none; border-radius: 8px; padding: 6px 14px; font-size: 11px; font-weight: bold; color: white; cursor: pointer;">接這單</button>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- 箭頭 -->
+<div style="text-align: center; color: #FF4D6A; font-size: 20px; margin: -8px 0 -12px;">↓</div>
+
+<!-- ============================================================ -->
+<!-- 場景五：完整鏈 A → B2 → C1 → D1 → E1 → F1 -->
+<!-- ============================================================ -->
+<div class="scene">
+  <div class="scene-label">場景五：完整鏈展示（Premium 5 張極限）</div>
+  <div class="scene-desc">司機一路接續，最終形成 A→B2→C1→D1→E1→F1，共 5 張，來回 3 套</div>
+
+  <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 10;"></div>
+  <div style="position: fixed; bottom: 0; left: 0; right: 0; max-width: 420px; margin: 0 auto; z-index: 20; animation: slideUp 0.3s ease-out;">
+    <div style="background: #0E0E10; border-radius: 20px 20px 0 0; max-height: 85vh; display: flex; flex-direction: column;">
+
+      <!-- 頂部 -->
+      <div style="padding: 12px 14px 8px; display: flex; justify-content: space-between; align-items: center;">
+        <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
+          <div style="width: 36px; height: 4px; background: #28282E; border-radius: 2px; margin-bottom: 8px;"></div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF4D6A" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            <span style="font-size: 15px; font-weight: bold; color: #E8E8E6;">智慧排單</span>
+            <span style="background: linear-gradient(135deg, #FF4D6A, #C0392B); color: white; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: bold;">Premium</span>
+          </div>
+        </div>
+        <button style="background: #28282E; border: none; border-radius: 8px; padding: 6px 10px; font-size: 12px; color: #8A8A88; cursor: pointer;">✕</button>
+      </div>
+
+      <!-- 統計 -->
+      <div style="padding: 0 14px 10px;">
+        <div style="background: #141418; border-radius: 10px; padding: 8px 12px; border: 1px solid #FF4D6A; display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <div style="font-size: 10px; color: #6B6B6B;">今日已觸發</div>
+            <div style="font-size: 18px; font-weight: bold; color: #FF4D6A; font-family: monospace; margin-top: 2px;">5<span style="font-size: 12px; color: #FF7090; font-weight: normal;"> / 5 次</span></div>
+          </div>
+          <div style="text-align: center;">
+            <div style="font-size: 10px; color: #6B6B6B;">來回套數</div>
+            <div style="font-size: 18px; font-weight: bold; color: #FF4D6A; font-family: monospace; margin-top: 2px;">3<span style="font-size: 12px; color: #6B6B6B; font-weight: normal;"> 套</span></div>
+          </div>
+          <div style="text-align: right;">
+            <div style="font-size: 10px; color: #6B6B6B;">預估總收入</div>
+            <div style="font-size: 18px; font-weight: bold; color: #1E8449; font-family: monospace; margin-top: 2px;">NT$6,050</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 已選鏈 -->
+      <div style="padding: 0 14px 6px; font-size: 10px; font-weight: bold; color: #8A8A88; letter-spacing: 1px; text-transform: uppercase;">
+        排單鏈（5張 / 來回3套）
+      </div>
+      <div style="padding: 0 14px; display: flex; align-items: center; gap: 4px; flex-wrap: wrap; margin-bottom: 8px;">
+        <div style="background: #141418; border: 1px solid #CA6F1E; border-radius: 20px; padding: 4px 10px; font-size: 11px; color: #CA6F1E; font-weight: bold;">①送機</div>
+        <div style="color: #484846; font-size: 12px;">→</div>
+        <div style="background: #141418; border: 1px solid #1A5276; border-radius: 20px; padding: 4px 10px; font-size: 11px; color: #1A5276; font-weight: bold;">②接機</div>
+        <div style="color: #484846; font-size: 12px;">→</div>
+        <div style="background: #141418; border: 1px solid #CA6F1E; border-radius: 20px; padding: 4px 10px; font-size: 11px; color: #CA6F1E; font-weight: bold;">③送機</div>
+        <div style="color: #484846; font-size: 12px;">→</div>
+        <div style="background: #141418; border: 1px solid #1A5276; border-radius: 20px; padding: 4px 10px; font-size: 11px; color: #1A5276; font-weight: bold;">④接機</div>
+        <div style="color: #484846; font-size: 12px;">→</div>
+        <div style="background: #141418; border: 1px solid #CA6F1E; border-radius: 20px; padding: 4px 10px; font-size: 11px; color: #CA6F1E; font-weight: bold;">⑤送機</div>
+      </div>
+
+      <!-- 已選卡片列表 -->
+      <div style="flex: 1; overflow-y: auto; padding: 0 14px;">
+
+        <div style="background: #191920; border-radius: 10px; padding: 10px; margin-bottom: 6px; border: 1px solid #CA6F1E; border-left-width: 3px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="font-size: 16px; font-weight: bold; color: #CA6F1E;">①</span>
+              <span style="font-size: 12px; color: #E8E8E6;">14:00 送機 · 大安 → 桃園</span>
+            </div>
+            <span style="font-size: 12px; font-weight: bold; color: #FF4D6A; font-family: monospace;">NT$1,400</span>
+          </div>
+        </div>
+
+        <div style="background: #191920; border-radius: 10px; padding: 10px; margin-bottom: 6px; border: 1px solid #1A5276; border-left-width: 3px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="font-size: 16px; font-weight: bold; color: #1A5276;">②</span>
+              <span style="font-size: 12px; color: #E8E8E6;">15:45 接機 · 桃園 → 板橋</span>
+            </div>
+            <span style="font-size: 12px; font-weight: bold; color: #FF4D6A; font-family: monospace;">NT$1,100</span>
+          </div>
+        </div>
+
+        <div style="background: #191920; border-radius: 10px; padding: 10px; margin-bottom: 6px; border: 1px solid #CA6F1E; border-left-width: 3px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="font-size: 16px; font-weight: bold; color: #CA6F1E;">③</span>
+              <span style="font-size: 12px; color: #E8E8E6;">17:30 送機 · 板橋 → 桃園</span>
+            </div>
+            <span style="font-size: 12px; font-weight: bold; color: #FF4D6A; font-family: monospace;">NT$1,200</span>
+          </div>
+        </div>
+
+        <div style="background: #191920; border-radius: 10px; padding: 10px; margin-bottom: 6px; border: 1px solid #1A5276; border-left-width: 3px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="font-size: 16px; font-weight: bold; color: #1A5276;">④</span>
+              <span style="font-size: 12px; color: #E8E8E6;">19:15 接機 · 桃園 → 三重</span>
+            </div>
+            <span style="font-size: 12px; font-weight: bold; color: #FF4D6A; font-family: monospace;">NT$1,050</span>
+          </div>
+        </div>
+
+        <div style="background: #191920; border-radius: 10px; padding: 10px; margin-bottom: 6px; border: 1px solid #CA6F1E; border-left-width: 3px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="font-size: 16px; font-weight: bold; color: #CA6F1E;">⑤</span>
+              <span style="font-size: 12px; color: #E8E8E6;">21:00 送機 · 三重 → 桃園</span>
+            </div>
+            <span style="font-size: 12px; font-weight: bold; color: #FF4D6A; font-family: monospace;">NT$1,300</span>
+          </div>
+        </div>
+
+        <!-- 已達上限 -->
+        <div style="background: #141418; border-radius: 10px; padding: 10px; border: 1px solid #28282E; opacity: 0.5;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6B6B6B" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <span style="font-size: 12px; color: #6B6B6B;">Premium 每日上限 5 張，請明天再繼續</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 底部 -->
+      <div style="padding: 10px 14px 20px; border-top: 1px solid #28282E;">
+        <button style="width: 100%; background: #1E8449; border: none; border-radius: 12px; padding: 14px; font-size: 15px; font-weight: bold; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+          確認排單（5張 · 來回3套）
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
