@@ -27,6 +27,7 @@ export interface Driver {
   currentLng?: number
   lastLocationAt?: Date
   user?: User
+  isPremium?: boolean
 }
 
 export interface Dispatcher {
@@ -79,6 +80,7 @@ export interface Order {
   dispatcher?: Dispatcher
   driver?: Driver
   kenichiRequired?: boolean
+  isSelfPublish?: boolean
   parsedData?: unknown
 }
 
@@ -144,6 +146,25 @@ export interface CreateOrderRequest {
 }
 export interface ParseOrderRequest {
   text: string
+}
+
+export interface SelfPublishRequest {
+  orderType: OrderType
+  scheduledTime: string
+  flightNumber: string
+  vehicleType: VehicleType
+  passengerCount: number
+  luggage: Array<{ size: string; quantity: number }>
+  pickupLocation: string
+  dropoffLocation: string
+  contactName: string
+  contactPhone: string
+  feeMode: 'transfer' | 'cash_collection'
+  driverAmount: number
+  cashCollected?: number
+  commissionReturn?: number
+  specialNeeds: string[]
+  notes?: string
 }
 
 // SSE Event types
