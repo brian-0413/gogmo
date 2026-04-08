@@ -7,7 +7,7 @@ import { zhTW } from 'date-fns/locale'
 import { User, Package, FileText, ChevronDown, ChevronUp } from 'lucide-react'
 import { useState } from 'react'
 import { formatOrderNo } from '@/lib/utils'
-import { TYPE_COLORS, VEHICLE_LABELS, TYPE_LABELS } from '@/lib/constants'
+import { TYPE_COLORS, VEHICLE_LABELS, TYPE_LABELS, TRANSFER_FEE_RATE } from '@/lib/constants'
 import type { OrderType, VehicleType, Order } from '@/types'
 
 export type { Order } from '@/types'
@@ -16,9 +16,12 @@ interface OrderCardProps {
   order: Order
   onAccept?: (orderId: string) => void
   onView?: (orderId: string) => void
+  onTransferRequest?: (orderId: string, reason: string) => void
+  onCancel?: (orderId: string) => void
   showActions?: boolean
   compact?: boolean
   isNew?: boolean
+  transferLoading?: string | null
 }
 
 function getTimeUrgency(scheduledTime: string | Date): "urgent" | "soon" | "normal" {
@@ -30,7 +33,7 @@ function getTimeUrgency(scheduledTime: string | Date): "urgent" | "soon" | "norm
   return "normal"
 }
 
-function OrderCard({ order, onAccept, onView, showActions = true, compact = false, isNew = false }: OrderCardProps) {
+function OrderCard({ order, onAccept, onView, onTransferRequest, onCancel, showActions = true, compact = false, isNew = false, transferLoading = null }: OrderCardProps) {
   const scheduledDate = typeof order.scheduledTime === 'string' ? parseISO(order.scheduledTime) : order.scheduledTime
   const orderType: OrderType = order.type || 'pending'
   const vehicle: VehicleType = order.vehicle || 'any'
@@ -119,6 +122,11 @@ function OrderCard({ order, onAccept, onView, showActions = true, compact = fals
           </div>
           <div className="flex items-center gap-1.5 flex-shrink-0">
             <OrderStatusBadge status={order.status} />
+            {order.status === 'ACCEPTED' && order.transferStatus && order.transferStatus !== 'pending' && (
+              <span className="inline-flex items-center px-2 py-1 text-[11px] font-bold rounded bg-[#FFF3E0] text-[#B45309]">
+                等待小隊支援
+              </span>
+            )}
           </div>
         </div>
 
@@ -199,18 +207,62 @@ function OrderCard({ order, onAccept, onView, showActions = true, compact = fals
 
         {/* Actions */}
         {showActions && (
-          <div className="flex gap-2 pt-2 border-t border-[#EBEBEB]">
-            {onView && (
-              <Button variant="outline" size="sm" onClick={() => onView(order.id)}
-                className="hidden sm:flex-1 border-[#DDDDDD] text-[#717171] hover:border-[#222222] hover:text-[#222222] hover:bg-[#F4EFE9]">
-                查看詳情
-              </Button>
-            )}
-            {onAccept && order.status === 'PUBLISHED' && (
-              <Button variant="primary" size="sm" onClick={() => onAccept(order.id)}
-                className="flex-1 py-3 sm:py-auto text-[15px] sm:text-sm font-bold tracking-wide">
-                立即接單
-              </Button>
+          <div className="flex flex-col gap-2 pt-2 border-t border-[#EBEBEB]">
+            {/* 第一列：PUBLISHED 接單 / 查看詳情 */}
+            <div className="flex gap-2">
+              {onView && (
+                <Button variant="outline" size="sm" onClick={() => onView(order.id)}
+                  className="hidden sm:flex-1 border-[#DDDDDD] text-[#717171] hover:border-[#222222] hover:text-[#222222] hover:bg-[#F4EFE9]">
+                  查看詳情
+                </Button>
+              )}
+              {onAccept && order.status === 'PUBLISHED' && (
+                <Button variant="primary" size="sm" onClick={() => onAccept(order.id)}
+                  className="flex-1 py-3 sm:py-auto text-[15px] sm:text-sm font-bold tracking-wide">
+                  立即接單
+                </Button>
+              )}
+            </div>
+            {/* ACCEPTED 狀態：執行行程 / 小隊支援 / 退單 */}
+            {order.status === 'ACCEPTED' && (
+              <>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    onClick={onView ? () => onView(order.id) : undefined}
+                    className="flex-1 py-2.5 sm:py-auto text-[14px] sm:text-[13px] font-bold bg-[#0C447C] text-white hover:bg-[#0a3a6e] transition-colors"
+                  >
+                    執行行程
+                  </Button>
+                  {onTransferRequest && (
+                    <Button
+                      size="sm"
+                      onClick={() => onTransferRequest(order.id, '')}
+                      disabled={!!transferLoading}
+                      className="flex-1 py-2.5 sm:py-auto text-[14px] sm:text-[13px] font-bold bg-[#0C447C] text-white hover:bg-[#0a3a6e] transition-colors disabled:bg-gray-200 disabled:text-gray-400"
+                    >
+                      {transferLoading === order.id ? '等待隊友回應...' : '請求小隊支援'}
+                    </Button>
+                  )}
+                  <Button
+                    size="sm"
+                    onClick={onCancel ? () => onCancel(order.id) : undefined}
+                    className="py-2.5 sm:py-auto px-3 text-[13px] font-bold border border-[#E24B4A] text-[#E24B4A] hover:bg-[#FCEBEB] transition-colors bg-white disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    退單
+                  </Button>
+                </div>
+                {/* 費用說明 */}
+                <div className="text-[11px] text-[#717171] px-1">
+                  <span className="text-[#0C447C]">請求支援</span>
+                  <span className="mx-1">：</span>
+                  轉單費 5%（約 NT${Math.floor(order.price * TRANSFER_FEE_RATE).toLocaleString()}）
+                  <span className="mx-2 text-[#DDDDDD]">|</span>
+                  <span className="text-[#E24B4A]">直接退單</span>
+                  <span className="mx-1">：</span>
+                  退單費 10%
+                </div>
+              </>
             )}
           </div>
         )}

@@ -13,8 +13,9 @@ import { SquadTab } from '@/components/driver/SquadTab'
 import { SelfDispatchChat } from '@/components/driver/SelfDispatchChat'
 import type { BalanceData } from '@/components/driver/SettlementTab'
 import { format, parseISO, startOfDay, startOfWeek, isSameDay } from 'date-fns'
+import { formatOrderNo } from '@/lib/utils'
 import { zhTW } from 'date-fns/locale'
-import { DRIVER_EARNINGS_RATE, CANCELLATION_FEE_RATE } from '@/lib/constants'
+import { DRIVER_EARNINGS_RATE, CANCELLATION_FEE_RATE, TRANSFER_FEE_RATE } from '@/lib/constants'
 import { ClipboardList, FileText, Wallet, LogOut, Plane, Radio, Inbox, ArrowUpDown, ArrowUp, ArrowDown, Car, Sparkles, Calendar, Sparkle, Users } from 'lucide-react'
 import Link from 'next/link'
 
@@ -102,6 +103,13 @@ export default function DriverDashboard() {
   const [scheduleConfirming, setScheduleConfirming] = useState(false)
   // 小車頭 Tab 狀態
   const [showSelfDispatch, setShowSelfDispatch] = useState(false)
+  // 請求小隊支援對話框
+  const [transferDialog, setTransferDialog] = useState<{ open: boolean; orderId: string | null; order: Order | null }>({
+    open: false,
+    orderId: null,
+    order: null,
+  })
+  const [transferReason, setTransferReason] = useState('')
 
   // 根據觸發類型過濾推薦（送機觸發→只看接機；接機觸發→只看送機）
   const filteredScheduleRecs = useMemo(() => {
@@ -322,6 +330,55 @@ export default function DriverDashboard() {
     } catch {
       alert('網路錯誤，請稍後再試')
     } finally { setActionLoading(null) }
+  }
+
+  const handleTransferRequest = async (orderId: string, reason: string) => {
+    if (!token) return
+    const order = myOrders.find(o => o.id === orderId)
+    if (!order) return
+    const transferFee = Math.floor(order.price * TRANSFER_FEE_RATE)
+    setTransferDialog({ open: true, orderId, order })
+    setTransferReason(reason)
+  }
+
+  const handleConfirmTransfer = async () => {
+    if (!token || !transferDialog.orderId) return
+    setActionLoading(transferDialog.orderId)
+    setTransferDialog({ open: false, orderId: null, order: null })
+    try {
+      const res = await fetch(`/api/orders/${transferDialog.orderId}/transfer-request`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ reason: transferReason }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        // 更新訂單的 transferStatus
+        setMyOrders(prev =>
+          prev.map(o =>
+            o.id === transferDialog.orderId
+              ? { ...o, transferStatus: 'PENDING_SQUAD' }
+              : o
+          )
+        )
+        alert(`已發出小隊支援請求，轉單費 NT$${Math.floor((transferDialog.order?.price || 0) * TRANSFER_FEE_RATE).toLocaleString()} 將於確認後扣除`)
+      } else {
+        alert(data.error || '請求小隊支援失敗')
+      }
+    } catch {
+      alert('網路錯誤，請稍後再試')
+    } finally {
+      setActionLoading(null)
+      setTransferReason('')
+    }
+  }
+
+  const handleCancelTransfer = () => {
+    setTransferDialog({ open: false, orderId: null, order: null })
+    setTransferReason('')
   }
 
   const handleCheckMatch = async () => {
@@ -937,23 +994,41 @@ export default function DriverDashboard() {
                       onClick={() => router.push(`/dashboard/driver/order/${order.id}`)}
                       className="cursor-pointer"
                     >
-                      <OrderCard order={order} showActions={true} compact={true} />
+                      <OrderCard order={order} showActions={true} compact={true} onTransferRequest={handleTransferRequest} onCancel={handleCancelOrder} transferLoading={actionLoading} />
                     </div>
                     {order.status === 'ACCEPTED' && (
-                      <div className="mt-2 flex gap-2">
-                        <button
-                          onClick={() => router.push(`/dashboard/driver/order/${order.id}`)}
-                          className="flex-1 py-3 sm:py-2 px-3 bg-[#0C447C] text-white text-[15px] sm:text-[13px] font-bold rounded-lg hover:bg-[#0a3a6e] transition-colors active:bg-[#082a52]"
-                        >
-                          執行行程
-                        </button>
-                        <button
-                          onClick={() => handleCancelOrder(order.id)}
-                          disabled={actionLoading === order.id}
-                          className="py-3 sm:py-2 px-3 bg-white border border-[#E24B4A] text-[#E24B4A] text-[13px] font-bold rounded-lg hover:bg-[#FCEBEB] transition-colors disabled:opacity-60 disabled:cursor-not-allowed w-20 sm:w-auto"
-                        >
-                          {actionLoading === order.id ? '...' : '退單'}
-                        </button>
+                      <div className="mt-2 flex flex-col gap-2">
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => router.push(`/dashboard/driver/order/${order.id}`)}
+                            className="flex-1 py-3 sm:py-2 px-3 bg-[#0C447C] text-white text-[15px] sm:text-[13px] font-bold rounded-lg hover:bg-[#0a3a6e] transition-colors active:bg-[#082a52]"
+                          >
+                            執行行程
+                          </button>
+                          <button
+                            onClick={() => handleTransferRequest(order.id, '')}
+                            disabled={actionLoading === order.id || !!order.transferStatus}
+                            className="flex-1 py-3 sm:py-2 px-3 bg-[#0C447C] text-white text-[15px] sm:text-[13px] font-bold rounded-lg hover:bg-[#0a3a6e] transition-colors active:bg-[#082a52] disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed"
+                          >
+                            {order.transferStatus && order.transferStatus !== 'pending' ? '等待隊友回應...' : '請求小隊支援'}
+                          </button>
+                          <button
+                            onClick={() => handleCancelOrder(order.id)}
+                            disabled={actionLoading === order.id}
+                            className="py-3 sm:py-2 px-3 bg-white border border-[#E24B4A] text-[#E24B4A] text-[13px] font-bold rounded-lg hover:bg-[#FCEBEB] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                          >
+                            退單
+                          </button>
+                        </div>
+                        <div className="text-[11px] text-[#717171] px-1">
+                          <span className="text-[#0C447C]">請求支援</span>
+                          <span className="mx-1">：</span>
+                          轉單費 5%（約 NT${Math.floor(order.price * TRANSFER_FEE_RATE).toLocaleString()}）
+                          <span className="mx-2 text-[#DDDDDD]">|</span>
+                          <span className="text-[#E24B4A]">直接退單</span>
+                          <span className="mx-1">：</span>
+                          退單費 10%
+                        </div>
                       </div>
                     )}
                   </div>
@@ -1007,6 +1082,73 @@ export default function DriverDashboard() {
         {/* ===== 我的小隊 ===== */}
         {activeTab === 'squad' && token && (
           <SquadTab token={token} driverId={user.driver?.id || ''} />
+        )}
+
+        {/* ===== 請求小隊支援對話框 ===== */}
+        {transferDialog.open && transferDialog.order && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+              {/* Header */}
+              <div className="bg-[#0C447C] px-6 py-4">
+                <h3 className="text-lg font-bold text-white">請求小隊支援</h3>
+              </div>
+              {/* Body */}
+              <div className="p-6">
+                <div className="mb-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="inline-flex items-center px-2.5 py-1 bg-[#FF385C] text-white text-[13px] font-bold font-mono-nums rounded">
+                      #{formatOrderNo(
+                        typeof transferDialog.order.scheduledTime === 'string'
+                          ? parseISO(transferDialog.order.scheduledTime)
+                          : transferDialog.order.scheduledTime,
+                        transferDialog.order.orderSeq
+                      )}
+                    </span>
+                    <span className="text-[13px] text-[#717171]">
+                      NT${transferDialog.order.price.toLocaleString()}
+                    </span>
+                  </div>
+                  <p className="text-[13px] text-[#717171]">
+                    {transferDialog.order.pickupLocation} → {transferDialog.order.dropoffLocation}
+                  </p>
+                </div>
+                {/* 費用說明 */}
+                <div className="bg-[#FFF3E0] border border-[#FFE0B2] rounded-lg px-4 py-3 mb-4 text-[13px] text-[#B45309]">
+                  <p className="font-bold mb-1">轉單費用說明</p>
+                  <p>請求小隊支援後，將扣除轉單費 <strong>5%（約 NT${Math.floor(transferDialog.order.price * TRANSFER_FEE_RATE).toLocaleString()}）</strong></p>
+                  <p className="mt-1">若無隊友接手，訂單退回大廳，轉單費不退</p>
+                </div>
+                {/* 原因輸入 */}
+                <div className="mb-4">
+                  <label className="block text-[13px] font-medium text-[#717171] mb-1.5">
+                    轉單原因（選填）
+                  </label>
+                  <textarea
+                    value={transferReason}
+                    onChange={(e) => setTransferReason(e.target.value)}
+                    placeholder="例如：臨時有事、無法趕到、路線重疊..."
+                    rows={3}
+                    className="w-full px-3 py-2.5 border border-[#DDDDDD] rounded-lg text-[14px] text-[#222222] placeholder:text-[#A8A29E] focus:outline-none focus:ring-2 focus:ring-[#0C447C]/30 focus:border-[#0C447C] resize-none"
+                  />
+                </div>
+                {/* 按鈕 */}
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleCancelTransfer}
+                    className="flex-1 py-2.5 px-4 bg-white border border-[#DDDDDD] text-[#717171] text-[14px] font-bold rounded-lg hover:bg-[#F5F4F0] transition-colors"
+                  >
+                    取消
+                  </button>
+                  <button
+                    onClick={handleConfirmTransfer}
+                    className="flex-1 py-2.5 px-4 bg-[#0C447C] text-white text-[14px] font-bold rounded-lg hover:bg-[#0a3a6e] transition-colors"
+                  >
+                    確認發出請求
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         )}
       </main>
     </div>
