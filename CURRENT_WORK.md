@@ -9,13 +9,28 @@
 
 ### 最後 commit
 ```
-591cb32 fix: SelfDispatchChat 四項 review 問題
+241a199 feat: 小車頭 SelfDispatchChat UI 全面重構
 ```
 落後 origin/main 0 個 commits。
 
 ---
 
 ## 目前開發階段：小車頭專區（已完成）
+
+### [完成] 小車頭 SelfDispatchChat UI 重構（2026-04-09）
+**Commit**: `241a199`
+**功能概述**：依 mockup 全面重構對話式發單介面。
+
+**實作內容**：
+- 日期/時間拆為兩個獨立問題（Step 3 = 日期，Step 4 = 時間）
+- 航班輸入文字改為動態「接機必填 / 送機選填」
+- 所有輸入框加 `max-w-full` 約束，防止超出對話泡泡
+- 移除 `step >= N` 條件，改為精確 `step === N` 只渲染當前步驟（消除對話框重疊問題）
+- 新增 `StepIndicator` 底部進度條元件（13 格進度點 + 步驟標籤）
+- 今天/明天/後天快速日期捷徑按鈕
+- 聯絡人姓名/電話列寬度調整為 `flex-1` 自適應
+
+**Mockup 檔案**：`self-dispatch-mockup.html`（7 個畫面，涵蓋全部 13 步驟）
 
 ### [完成] 小車頭專區（2026-04-08）
 **Commits**: `ad0a0c8` → `33e4a27` → `68c0f19` → `09dc30f` → `03025ee` → `591cb32`
