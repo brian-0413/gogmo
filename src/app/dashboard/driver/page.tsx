@@ -9,15 +9,16 @@ import { OrderCard, Order } from '@/components/driver/OrderCard'
 import { OrderCalendar } from '@/components/driver/OrderCalendar'
 import { SmartSchedulePanel } from '@/components/driver/SmartSchedulePanel'
 import { SettlementTab } from '@/components/driver/SettlementTab'
+import { SquadTab } from '@/components/driver/SquadTab'
 import { SelfDispatchChat } from '@/components/driver/SelfDispatchChat'
 import type { BalanceData } from '@/components/driver/SettlementTab'
 import { format, parseISO, startOfDay, startOfWeek, isSameDay } from 'date-fns'
 import { zhTW } from 'date-fns/locale'
 import { DRIVER_EARNINGS_RATE, CANCELLATION_FEE_RATE } from '@/lib/constants'
-import { ClipboardList, FileText, Wallet, LogOut, Plane, Radio, Inbox, ArrowUpDown, ArrowUp, ArrowDown, Car, Sparkles, Calendar, Sparkle } from 'lucide-react'
+import { ClipboardList, FileText, Wallet, LogOut, Plane, Radio, Inbox, ArrowUpDown, ArrowUp, ArrowDown, Car, Sparkles, Calendar, Sparkle, Users } from 'lucide-react'
 import Link from 'next/link'
 
-type Tab = 'available' | 'myorders' | 'balance' | 'selfdispatch'
+type Tab = 'available' | 'myorders' | 'balance' | 'selfdispatch' | 'squad'
 type SortKey = 'scheduledTime' | 'price' | 'type'
 type SortDir = 'asc' | 'desc'
 
@@ -620,6 +621,20 @@ export default function DriverDashboard() {
                 <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#FF385C]" style={{ boxShadow: '0 0 8px rgba(255,56,92,0.4)' }} />
               )}
             </button>
+            <button
+              onClick={() => setActiveTab('squad')}
+              className={`flex items-center gap-2 px-5 py-3.5 text-sm font-medium border-b-2 transition-all duration-200 relative ${
+                activeTab === 'squad'
+                  ? 'border-[#F59E0B] text-[#F59E0B]'
+                  : 'border-transparent text-[#78716C] hover:text-[#1C1917] hover:bg-[#F5F4F0]/50'
+              }`}
+            >
+              <Users className="w-4 h-4" />
+              我的小隊
+              {activeTab === 'squad' && (
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#F59E0B]" style={{ boxShadow: '0 0 8px rgba(245,158,11,0.4)' }} />
+              )}
+            </button>
           </div>
         </div>
       </div>
@@ -987,6 +1002,11 @@ export default function DriverDashboard() {
               </div>
             )}
           </div>
+        )}
+
+        {/* ===== 我的小隊 ===== */}
+        {activeTab === 'squad' && token && (
+          <SquadTab token={token} driverId={user.driver?.id || ''} />
         )}
       </main>
     </div>

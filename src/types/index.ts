@@ -124,6 +124,11 @@ export interface Squad {
   memberCount: number
   createdAt: Date | string
   members: SquadMember[]
+  founderId: string
+  founder?: {
+    id: string
+    user?: { id: string; name: string }
+  }
 }
 
 export interface OrderTransfer {
