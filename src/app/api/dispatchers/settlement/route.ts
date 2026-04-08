@@ -113,14 +113,39 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // 分組統計
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const ordersWithDriver = orders as any[]
+    const pendingOrders = ordersWithDriver.filter((o: any) => o.transferStatus === 'pending')
+    const completedOrders = ordersWithDriver.filter((o: any) => o.transferStatus === 'completed')
+
+    const pendingAmount = pendingOrders.reduce((sum: number, o: any) => sum + o.price, 0)
+    const completedAmount = completedOrders.reduce((sum: number, o: any) => sum + o.price, 0)
+    const totalAmount = pendingAmount + completedAmount
+
     return NextResponse.json<ApiResponse>({
       success: true,
       data: {
-        allOrdersCount: allOrders.length,
-        pendingTransferCount,
-        summary,
-        orders,
-        driverTransferList: Array.from(driverMap.values()),
+        completedOrdersCount: orders.length,
+        totalAmount,
+        pendingCount: pendingOrders.length,
+        pendingAmount,
+        completedCount: completedOrders.length,
+        completedAmount,
+        orders: orders.map((o: any) => ({
+          id: o.id,
+          orderDate: o.orderDate,
+          orderSeq: o.orderSeq,
+          price: o.price,
+          completedAt: o.completedAt ? new Date(o.completedAt).toISOString() : null,
+          transferStatus: o.transferStatus,
+          driver: o.driver ? {
+            user: { name: o.driver.user.name },
+            licensePlate: o.driver.licensePlate,
+            bankCode: o.driver.bankCode || null,
+            bankAccount: o.driver.bankAccount || null,
+          } : null,
+        })),
       },
     })
   } catch (error) {
