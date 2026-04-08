@@ -47,7 +47,44 @@ enum TransactionStatus {
   SETTLED   // 已結算
 }
 
+enum TransferStatus {
+  PENDING_SQUAD       // 等待隊友接
+  PENDING_DISPATCHER  // 等待派單方確認
+  APPROVED            // 已完成
+  REJECTED            // 派單方拒絕
+  CANCELLED           // 已取消
+  EXPIRED             // 過期（行程鎖定）
+}
+
 // ============== Models ==============
+
+model Squad {
+  id        String        @id @default(cuid())
+  name      String
+  maxMembers Int          @default(10)
+  founderId String        // 建立者（司機）
+  founder   Driver        @relation("SquadFounder", fields: [founderId], references: [id])
+  createdAt DateTime      @default(now())
+  updatedAt DateTime     @updatedAt
+
+  members   SquadMember[]
+  transfers OrderTransfer[]
+
+  @@map("squads")
+}
+
+model SquadMember {
+  id        String   @id @default(cuid())
+  squadId   String
+  squad     Squad    @relation(fields: [squadId], references: [id], onDelete: Cascade)
+  driverId  String   @unique  // 一個司機只能在一個小隊
+  driver    Driver   @relation(fields: [driverId], references: [id], onDelete: Cascade)
+  joinedAt  DateTime @default(now())
+
+  @@unique([squadId, driverId])
+  @@index([squadId])
+  @@map("squad_members")
+}
 
 model User {
   id        String   @id @default(uuid())
@@ -96,6 +133,10 @@ model Driver {
   // Relations
   orders          Order[]
   transactions    Transaction[]
+  squadMembership SquadMember?
+  foundedSquads   Squad[]         @relation("SquadFounder")
+  transfersOut    OrderTransfer[] @relation("TransferFrom")
+  transfersIn     OrderTransfer[] @relation("TransferTo")
 
   @@map("drivers")
 }
@@ -186,6 +227,8 @@ model Order {
 
   // Relations
   transactions     Transaction[]
+  isLocked        Boolean         @default(false)
+  transfers       OrderTransfer[]
 
   @@index([status])
   @@index([driverId])
@@ -216,4 +259,29 @@ model Transaction {
   @@index([driverId, status])
   @@index([orderId])
   @@map("transactions")
+}
+
+model OrderTransfer {
+  id            String          @id @default(cuid())
+  orderId       String
+  order         Order           @relation(fields: [orderId], references: [id])
+  fromDriverId  String
+  fromDriver    Driver          @relation("TransferFrom", fields: [fromDriverId], references: [id])
+  toDriverId    String?         // null = 還在等隊友接
+  toDriver      Driver?         @relation("TransferTo", fields: [toDriverId], references: [id])
+  squadId       String
+  squad         Squad           @relation(fields: [squadId], references: [id])
+  reason        String?
+  transferFee   Int             // 轉單費用（訂單金額 * 5%）
+  status        TransferStatus @default(PENDING_SQUAD)
+  dispatcherNote String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  @@index([orderId])
+  @@index([fromDriverId])
+  @@index([toDriverId])
+  @@index([squadId])
+  @@index([status])
+  @@map("order_transfers")
 }
