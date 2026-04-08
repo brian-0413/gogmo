@@ -469,7 +469,7 @@ PENDING → PUBLISHED → ASSIGNED → ACCEPTED → ARRIVED → IN_PROGRESS → 
   - 司機訂閱/儲值頁面
   - 智慧排班 quota 限制
 - [ ] 司機「我的行程」狀態更新（抵達/開始/完成按鈕）
-- [ ] 派單方帳務中心
+- [x] **派單方帳務中心**：6 格 Stats（筆數+金額）、轉帳狀態篩選、不可逆已轉帳按鈕（下單後通知司機）、下載 Excel 含銀行帳號
 - [ ] 司機端即時位置追蹤
 - [ ] 通知系統（push / in-app）
 - [ ] Admin 後台
@@ -486,6 +486,9 @@ PENDING → PUBLISHED → ASSIGNED → ACCEPTED → ARRIVED → IN_PROGRESS → 
 ---
 
 ## 最新討論摘要
+
+### 2026-04-08
+- **派單方帳務中心**：Brainstorm → 規格文件 → 實作完成。6 格 Stats（含待轉帳/已轉帳筆數和金額）、轉帳狀態下拉篩選、不可逆已轉帳按鈕（按下確認後鎖定並通知司機）、下載 Excel 含銀行帳號。API：`GET /api/dispatchers/settlement` 加強 + `POST /api/dispatchers/settlement/transfer` 新增。
 
 ### 2026-04-08
 - **小車頭專區 Brainstorm 完成**：Premium 司機專屬發單功能，共 12 步對話流程（LINE 風格泡泡介面）
