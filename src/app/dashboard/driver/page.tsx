@@ -9,14 +9,15 @@ import { OrderCard, Order } from '@/components/driver/OrderCard'
 import { OrderCalendar } from '@/components/driver/OrderCalendar'
 import { SmartSchedulePanel } from '@/components/driver/SmartSchedulePanel'
 import { SettlementTab } from '@/components/driver/SettlementTab'
+import { SelfDispatchChat } from '@/components/driver/SelfDispatchChat'
 import type { BalanceData } from '@/components/driver/SettlementTab'
 import { format, parseISO, startOfDay, startOfWeek, isSameDay } from 'date-fns'
 import { zhTW } from 'date-fns/locale'
 import { DRIVER_EARNINGS_RATE, CANCELLATION_FEE_RATE } from '@/lib/constants'
-import { ClipboardList, FileText, Wallet, LogOut, Plane, Radio, Inbox, ArrowUpDown, ArrowUp, ArrowDown, Car, Sparkles, Calendar } from 'lucide-react'
+import { ClipboardList, FileText, Wallet, LogOut, Plane, Radio, Inbox, ArrowUpDown, ArrowUp, ArrowDown, Car, Sparkles, Calendar, Sparkle } from 'lucide-react'
 import Link from 'next/link'
 
-type Tab = 'available' | 'myorders' | 'balance'
+type Tab = 'available' | 'myorders' | 'balance' | 'selfdispatch'
 type SortKey = 'scheduledTime' | 'price' | 'type'
 type SortDir = 'asc' | 'desc'
 
@@ -98,6 +99,8 @@ export default function DriverDashboard() {
   const [selectedScheduleOrders, setSelectedScheduleOrders] = useState<string[]>([])
   // 排班確認中
   const [scheduleConfirming, setScheduleConfirming] = useState(false)
+  // 小車頭 Tab 狀態
+  const [showSelfDispatch, setShowSelfDispatch] = useState(false)
 
   // 根據觸發類型過濾推薦（送機觸發→只看接機；接機觸發→只看送機）
   const filteredScheduleRecs = useMemo(() => {
@@ -601,6 +604,22 @@ export default function DriverDashboard() {
                 <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#F59E0B]" style={{ boxShadow: '0 0 8px rgba(245,158,11,0.4)' }} />
               )}
             </button>
+            <button
+              onClick={() => setActiveTab('selfdispatch')}
+              className={`flex items-center gap-2 px-5 py-3.5 text-sm font-medium border-b-2 transition-all duration-200 relative ${
+                activeTab === 'selfdispatch'
+                  ? 'border-[#FF385C] text-[#FF385C]'
+                  : user?.driver?.isPremium
+                  ? 'border-transparent text-[#78716C] hover:text-[#1C1917] hover:bg-[#F5F4F0]/50'
+                  : 'border-transparent text-[#A8A29E] cursor-not-allowed'
+              }`}
+            >
+              <Sparkle className="w-4 h-4" />
+              小車頭
+              {activeTab === 'selfdispatch' && (
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#FF385C]" style={{ boxShadow: '0 0 8px rgba(255,56,92,0.4)' }} />
+              )}
+            </button>
           </div>
         </div>
       </div>
@@ -931,6 +950,44 @@ export default function DriverDashboard() {
 
         {/* ===== BALANCE ===== */}
         {activeTab === 'balance' && <SettlementTab token={token} balance={balance} balanceStats={balanceStats} />}
+
+        {/* ===== 小車頭 ===== */}
+        {activeTab === 'selfdispatch' && token && (
+          <div>
+            {!user?.driver?.isPremium ? (
+              <div className="text-center py-20 bg-white border border-[#DDDDDD] rounded-2xl">
+                <div className="w-16 h-16 rounded-2xl bg-[#F4EFE9] border border-[#DDDDDD] flex items-center justify-center mx-auto mb-4">
+                  <Sparkle className="w-8 h-8 text-[#D6D3D1]" />
+                </div>
+                <p className="text-[#717171] text-lg font-medium mb-2">小車頭功能僅限 Premium 司機</p>
+                <p className="text-[#A8A29E] text-sm">升級 Premium 解鎖自助發單功能</p>
+              </div>
+            ) : showSelfDispatch ? (
+              <SelfDispatchChat
+                token={token}
+                onSuccess={() => {
+                  setShowSelfDispatch(false)
+                  setActiveTab('myorders')
+                }}
+                onClose={() => setShowSelfDispatch(false)}
+              />
+            ) : (
+              <div className="text-center py-20 bg-white border border-[#DDDDDD] rounded-2xl">
+                <div className="w-16 h-16 rounded-2xl bg-[#FFF3E0] border border-[#F59E0B]/20 flex items-center justify-center mx-auto mb-4">
+                  <Sparkle className="w-8 h-8 text-[#F59E0B]" />
+                </div>
+                <p className="text-[#222222] text-lg font-medium mb-2">小車頭 — 自行發單上架</p>
+                <p className="text-[#717171] text-sm mb-6">將您的空車時間發布到接單大廳，讓派單方看到您的車</p>
+                <button
+                  onClick={() => setShowSelfDispatch(true)}
+                  className="px-6 py-3 bg-[#FF385C] text-white text-[15px] font-bold rounded-xl hover:bg-[#E83355] transition-colors"
+                >
+                  開始發單
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </main>
     </div>
   )
