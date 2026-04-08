@@ -9,7 +9,7 @@
 
 ### 最後 commit
 ```
-241a199 feat: 小車頭 SelfDispatchChat UI 全面重構
+1126610 fix: MoneyRow 金額輸入框 0 無法清除的問題
 ```
 落後 origin/main 0 個 commits。
 
@@ -455,6 +455,7 @@ PENDING → PUBLISHED → ASSIGNED → ACCEPTED → ARRIVED → IN_PROGRESS → 
 - [x] 智慧排單排序策略重構（接機觸發→地理距離/送機觸發→落地時間）
 - [x] 行程卡片單一訂單智慧排單
 - [x] **小車頭專區**：Premium 司機專屬發單功能，LINE 風格 14 步對話流程
+- [ ] **使用者註冊功能改善** — 車型改為下拉選單、車色改為下拉選單、強化驗證
 - [ ] **訂閱與金流系統**（規格文件：`docs/subscription-system.md`）
   - Prisma schema 異動
   - UNIPAY 整合
