@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { login } from '@/lib/auth'
+import { login, loginByPlate } from '@/lib/auth'
 import { ApiResponse, LoginRequest } from '@/types'
 import { checkRateLimit } from '@/lib/api-utils'
 
@@ -10,18 +10,27 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json() as LoginRequest
-    const { email, password } = body
+    const { account, password, role } = body
 
-    if (!email || !password) {
+    if (!account || !password || !role) {
       return NextResponse.json<ApiResponse>(
-        { success: false, error: '請提供 Email 和密碼' },
+        { success: false, error: '缺少必填欄位' },
         { status: 400 }
       )
     }
 
-    console.log('[AUTH LOGIN] Login request:', { email, hasPassword: !!password })
+    if (!['DRIVER', 'DISPATCHER'].includes(role)) {
+      return NextResponse.json<ApiResponse>(
+        { success: false, error: '無效的角色' },
+        { status: 400 }
+      )
+    }
 
-    const result = await login(email, password)
+    console.log('[AUTH LOGIN] Login request:', { account, role, hasPassword: !!password })
+
+    const result = role === 'DRIVER'
+      ? await loginByPlate(account, password)
+      : await login(account, password)
 
     console.log('[AUTH LOGIN] Login result:', { success: result.success, error: result.error, hasToken: !!result.token })
 
