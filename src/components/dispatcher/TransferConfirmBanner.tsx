@@ -12,6 +12,7 @@ export interface TransferPendingData {
   toDriverId?: string
   status: string
   note?: string
+  bonusPoints?: number
   // Full order info embedded
   order?: {
     scheduledTime: string
@@ -138,6 +139,10 @@ export function TransferConfirmBanner({ transfer, token, onApprove, onReject, on
   const pickupLoc = order?.pickupLocation || '—'
   const dropoffLoc = order?.dropoffLocation || '—'
 
+  // Bonus points
+  const bonusPoints = transfer.bonusPoints || 0
+  const transferReason = transfer.note || '未填寫原因'
+
   const handleApprove = async () => {
     setLoading(true)
     try {
@@ -214,6 +219,17 @@ export function TransferConfirmBanner({ transfer, token, onApprove, onReject, on
               <span>{dropoffLoc}</span>
               <span className="ml-2 font-medium text-[#222222] font-mono-nums">{priceStr}</span>
             </div>
+            {/* 轉單原因 + bonus */}
+            <div className="flex items-center gap-3 mt-2 pt-2 border-t border-[#EBEBEB]">
+              <span className="text-[12px] text-[#717171]">
+                原因：<span className="text-[#222222]">{transferReason}</span>
+              </span>
+              {bonusPoints > 0 && (
+                <span className="text-[12px] font-bold px-2 py-0.5 rounded bg-[#F3E8FF] text-[#6B21A8]">
+                  +{bonusPoints.toLocaleString()} bonus
+                </span>
+              )}
+            </div>
           </div>
         )}
 
@@ -246,7 +262,7 @@ export function TransferConfirmBanner({ transfer, token, onApprove, onReject, on
             loading={loading}
             className="flex-1 text-[14px] py-2.5 bg-[#008A05] hover:bg-[#007004] border-[#008A05]"
           >
-            同意轉單
+            同意進入小隊池
           </Button>
           <Button
             variant="outline"

@@ -106,6 +106,8 @@ export default function DispatcherDashboard() {
                 fromDriverId: t.fromDriverId,
                 toDriverId: t.toDriverId,
                 status: t.status,
+                bonusPoints: t.bonusPoints || 0,
+                note: t.reason || '',
                 order: t.order ? {
                   scheduledTime: t.order.scheduledTime,
                   price: t.order.price,

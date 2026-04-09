@@ -11,6 +11,7 @@ import { SmartSchedulePanel } from '@/components/driver/SmartSchedulePanel'
 import { SettlementTab } from '@/components/driver/SettlementTab'
 import { SquadTab } from '@/components/driver/SquadTab'
 import { SelfDispatchChat } from '@/components/driver/SelfDispatchChat'
+import { TransferRequestForm } from '@/components/driver/TransferRequestForm'
 import type { BalanceData } from '@/components/driver/SettlementTab'
 import { format, parseISO, startOfDay, startOfWeek, isSameDay } from 'date-fns'
 import { formatOrderNo } from '@/lib/utils'
@@ -336,44 +337,25 @@ export default function DriverDashboard() {
     if (!token) return
     const order = myOrders.find(o => o.id === orderId)
     if (!order) return
-    const transferFee = Math.floor(order.price * TRANSFER_FEE_RATE)
     setTransferDialog({ open: true, orderId, order })
     setTransferReason(reason)
   }
 
-  const handleConfirmTransfer = async () => {
+  const handleTransferSuccess = async (message: string) => {
     if (!token || !transferDialog.orderId) return
-    setActionLoading(transferDialog.orderId)
     setTransferDialog({ open: false, orderId: null, order: null })
-    try {
-      const res = await fetch(`/api/orders/${transferDialog.orderId}/transfer-request`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ reason: transferReason }),
-      })
-      const data = await res.json()
-      if (data.success) {
-        // 更新訂單的 transferStatus
-        setMyOrders(prev =>
-          prev.map(o =>
-            o.id === transferDialog.orderId
-              ? { ...o, transferStatus: 'PENDING_SQUAD' }
-              : o
-          )
-        )
-        alert(`已發出小隊支援請求，轉單費 NT$${Math.floor((transferDialog.order?.price || 0) * TRANSFER_FEE_RATE).toLocaleString()} 將於確認後扣除`)
-      } else {
-        alert(data.error || '請求小隊支援失敗')
-      }
-    } catch {
-      alert('網路錯誤，請稍後再試')
-    } finally {
-      setActionLoading(null)
-      setTransferReason('')
-    }
+    setTransferReason('')
+    alert(message)
+    // Update the order's transferStatus
+    setMyOrders(prev =>
+      prev.map(o =>
+        o.id === transferDialog.orderId
+          ? { ...o, transferStatus: 'PENDING_SQUAD' }
+          : o
+      )
+    )
+    // Refresh balance
+    await fetchBalance()
   }
 
   const handleCancelTransfer = () => {
@@ -1086,69 +1068,13 @@ export default function DriverDashboard() {
 
         {/* ===== 請求小隊支援對話框 ===== */}
         {transferDialog.open && transferDialog.order && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
-              {/* Header */}
-              <div className="bg-[#0C447C] px-6 py-4">
-                <h3 className="text-lg font-bold text-white">請求小隊支援</h3>
-              </div>
-              {/* Body */}
-              <div className="p-6">
-                <div className="mb-4">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="inline-flex items-center px-2.5 py-1 bg-[#FF385C] text-white text-[13px] font-bold font-mono-nums rounded">
-                      #{formatOrderNo(
-                        typeof transferDialog.order.scheduledTime === 'string'
-                          ? parseISO(transferDialog.order.scheduledTime)
-                          : transferDialog.order.scheduledTime,
-                        transferDialog.order.orderSeq
-                      )}
-                    </span>
-                    <span className="text-[13px] text-[#717171]">
-                      NT${transferDialog.order.price.toLocaleString()}
-                    </span>
-                  </div>
-                  <p className="text-[13px] text-[#717171]">
-                    {transferDialog.order.pickupLocation} → {transferDialog.order.dropoffLocation}
-                  </p>
-                </div>
-                {/* 費用說明 */}
-                <div className="bg-[#FFF3E0] border border-[#FFE0B2] rounded-lg px-4 py-3 mb-4 text-[13px] text-[#B45309]">
-                  <p className="font-bold mb-1">轉單費用說明</p>
-                  <p>請求小隊支援後，將扣除轉單費 <strong>5%（約 NT${Math.floor(transferDialog.order.price * TRANSFER_FEE_RATE).toLocaleString()}）</strong></p>
-                  <p className="mt-1">若無隊友接手，訂單退回大廳，轉單費不退</p>
-                </div>
-                {/* 原因輸入 */}
-                <div className="mb-4">
-                  <label className="block text-[13px] font-medium text-[#717171] mb-1.5">
-                    轉單原因（選填）
-                  </label>
-                  <textarea
-                    value={transferReason}
-                    onChange={(e) => setTransferReason(e.target.value)}
-                    placeholder="例如：臨時有事、無法趕到、路線重疊..."
-                    rows={3}
-                    className="w-full px-3 py-2.5 border border-[#DDDDDD] rounded-lg text-[14px] text-[#222222] placeholder:text-[#A8A29E] focus:outline-none focus:ring-2 focus:ring-[#0C447C]/30 focus:border-[#0C447C] resize-none"
-                  />
-                </div>
-                {/* 按鈕 */}
-                <div className="flex gap-2">
-                  <button
-                    onClick={handleCancelTransfer}
-                    className="flex-1 py-2.5 px-4 bg-white border border-[#DDDDDD] text-[#717171] text-[14px] font-bold rounded-lg hover:bg-[#F5F4F0] transition-colors"
-                  >
-                    取消
-                  </button>
-                  <button
-                    onClick={handleConfirmTransfer}
-                    className="flex-1 py-2.5 px-4 bg-[#0C447C] text-white text-[14px] font-bold rounded-lg hover:bg-[#0a3a6e] transition-colors"
-                  >
-                    確認發出請求
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
+          <TransferRequestForm
+            order={transferDialog.order}
+            driverBalance={user.driver?.balance ?? 0}
+            token={token}
+            onSuccess={handleTransferSuccess}
+            onCancel={handleCancelTransfer}
+          />
         )}
       </main>
     </div>

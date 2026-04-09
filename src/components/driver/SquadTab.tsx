@@ -1,7 +1,9 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import { Users, Plus, UserPlus, LogOut, Crown, Car, Phone, AlertTriangle, Loader2 } from 'lucide-react'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { Users, Plus, UserPlus, LogOut, Crown, Car, Phone, AlertTriangle, Loader2, ArrowRightLeft, Bell, Clock, CheckCircle, XCircle } from 'lucide-react'
+import { format, parseISO } from 'date-fns'
+import { zhTW } from 'date-fns/locale'
 import type { Squad, SquadMember } from '@/types'
 
 interface SquadTabProps {
@@ -17,6 +19,60 @@ const CAR_TYPE_LABELS: Record<string, string> = {
   any: '任意',
   any_r: '任意R',
   pending: '待確認',
+}
+
+// 訂單種類標籤
+const TYPE_LABELS: Record<string, string> = {
+  pickup: '接機', dropoff: '送機', pickup_boat: '接船',
+  dropoff_boat: '送船', transfer: '接駁', charter: '包車', pending: '待確認',
+}
+
+// Pool transfer item type
+interface PoolTransfer {
+  id: string
+  orderId: string
+  fromDriverId: string
+  status: string
+  reason: string | null
+  bonusPoints: number
+  transferFee: number
+  createdAt: Date | string
+  order?: {
+    id: string
+    scheduledTime: Date | string
+    price: number
+    pickupLocation: string
+    dropoffLocation: string
+    type: string
+    vehicle: string
+    passengerCount: number
+    passengerName: string
+    passengerPhone: string
+    flightNumber: string
+  }
+  fromDriver?: {
+    user?: { name: string; phone: string }
+  }
+}
+
+// Pending invite type
+interface PendingInvite {
+  id: string
+  squadId: string
+  squad?: { name: string }
+  founder?: { user?: { name: string } }
+}
+
+// SSE invite event from /api/squads/events
+interface SquadInviteEventData {
+  type: 'SQUAD_INVITE' | 'SQUAD_INVITE_ACCEPTED' | 'SQUAD_INVITE_REJECTED'
+  invite: {
+    inviteId: string
+    squadId: string
+    squadName: string
+    driverId: string
+    founderName?: string
+  }
 }
 
 function MemberCard({ member, isFounder }: {
@@ -61,6 +117,165 @@ function MemberCard({ member, isFounder }: {
   )
 }
 
+function PoolCard({ transfer, token, onClaimed, onError }: {
+  transfer: PoolTransfer
+  token: string | null
+  onClaimed: () => void
+  onError: (msg: string) => void
+}) {
+  const [loading, setLoading] = useState(false)
+
+  const scheduledDate = typeof transfer.order?.scheduledTime === 'string'
+    ? parseISO(transfer.order.scheduledTime)
+    : transfer.order?.scheduledTime as Date
+  const typeLabel = TYPE_LABELS[transfer.order?.type || 'pending'] || '待確認'
+  const fromName = transfer.fromDriver?.user?.name || '未知司機'
+  const timeStr = scheduledDate
+    ? format(scheduledDate, 'M/dd (E) HH:mm', { locale: zhTW })
+    : '—'
+
+  const handleClaim = async () => {
+    if (!token) return
+    setLoading(true)
+    try {
+      const res = await fetch(`/api/squads/pool/${transfer.id}/claim`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      const data = await res.json()
+      if (data.success) {
+        onClaimed()
+      } else {
+        onError(data.error || '搶單失敗')
+      }
+    } catch {
+      onError('網路錯誤，請稍後再試')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="bg-white border border-[#DDDDDD] rounded-xl p-4 hover:shadow-[0_2px_8px_rgba(0,0,0,0.06)] transition-all duration-200">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <span className="inline-flex items-center px-2.5 py-1 rounded text-[12px] font-bold font-mono-nums bg-[#FFF3E0] text-[#B45309]">
+            {typeLabel}
+          </span>
+          {transfer.bonusPoints > 0 && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[#F3E8FF] text-[#6B21A8] text-[12px] font-bold">
+              +{transfer.bonusPoints.toLocaleString()} bonus
+            </span>
+          )}
+        </div>
+        <span className="text-[11px] text-[#A8A29E]">來自 {fromName}</span>
+      </div>
+
+      {/* Time */}
+      <div className="flex items-center gap-1.5 mb-2">
+        <Clock className="w-3.5 h-3.5 text-[#717171]" />
+        <span className="text-[14px] font-bold font-mono-nums text-[#222222]">{timeStr}</span>
+      </div>
+
+      {/* Route */}
+      <div className="flex items-center gap-2 text-[13px] text-[#717171] mb-2">
+        <span className="font-medium text-[#222222] truncate">{transfer.order?.pickupLocation || '—'}</span>
+        <span className="text-[#DDDDDD] flex-shrink-0">→</span>
+        <span className="font-medium text-[#222222] truncate">{transfer.order?.dropoffLocation || '—'}</span>
+      </div>
+
+      {/* Price + reason */}
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-[18px] font-bold font-mono-nums text-[#FF385C]">
+          NT${transfer.order?.price?.toLocaleString() || '—'}
+        </span>
+        {transfer.reason && (
+          <span className="text-[11px] text-[#717171] italic truncate max-w-[160px]">{transfer.reason}</span>
+        )}
+      </div>
+
+      {/* Claim button */}
+      <button
+        onClick={handleClaim}
+        disabled={loading}
+        className="w-full py-2.5 bg-[#0C447C] text-white text-[14px] font-bold rounded-lg hover:bg-[#0a3a6e] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+      >
+        {loading ? '處理中...' : '我要支援'}
+      </button>
+    </div>
+  )
+}
+
+function InviteCard({ invite, token, onResponded }: {
+  invite: PendingInvite
+  token: string | null
+  onResponded: () => void
+}) {
+  const [loading, setLoading] = useState<string | null>(null)
+  const squadName = invite.squad?.name || '未知小隊'
+  const founderName = invite.founder?.user?.name || '未知'
+
+  const handleRespond = async (action: 'accept' | 'reject') => {
+    if (!token) return
+    setLoading(action)
+    try {
+      const res = await fetch('/api/squads/respond', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ inviteId: invite.id, action }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        onResponded()
+      } else {
+        alert(data.error || `${action === 'accept' ? '接受' : '拒絕'}失敗`)
+      }
+    } catch {
+      alert('網路錯誤，請稍後再試')
+    } finally {
+      setLoading(null)
+    }
+  }
+
+  return (
+    <div className="flex items-center justify-between p-4 bg-[#FFF8E6] border border-[#D4A017] rounded-xl">
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-full bg-[#F59E0B]/10 border border-[#F59E0B]/20 flex items-center justify-center">
+          <Users className="w-5 h-5 text-[#F59E0B]" />
+        </div>
+        <div>
+          <p className="text-[15px] font-bold text-[#222222]">{squadName}</p>
+          <p className="text-[12px] text-[#717171]">
+            小隊長：{founderName}
+          </p>
+        </div>
+      </div>
+      <div className="flex gap-2">
+        <button
+          onClick={() => handleRespond('accept')}
+          disabled={loading !== null}
+          className="px-4 py-2 bg-[#008A05] text-white text-[13px] font-bold rounded-lg hover:bg-[#007004] transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-1"
+        >
+          {loading === 'accept' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle className="w-3.5 h-3.5" />}
+          接受
+        </button>
+        <button
+          onClick={() => handleRespond('reject')}
+          disabled={loading !== null}
+          className="px-4 py-2 bg-white border border-[#DDDDDD] text-[#717171] text-[13px] font-bold rounded-lg hover:bg-[#F4EFE9] transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-1"
+        >
+          {loading === 'reject' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <XCircle className="w-3.5 h-3.5" />}
+          拒絕
+        </button>
+      </div>
+    </div>
+  )
+}
+
 export function SquadTab({ token, driverId }: SquadTabProps) {
   const [squad, setSquad] = useState<Squad | null>(null)
   const [loading, setLoading] = useState(true)
@@ -70,6 +285,34 @@ export function SquadTab({ token, driverId }: SquadTabProps) {
   const [inviteSuccess, setInviteSuccess] = useState('')
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [createName, setCreateName] = useState('')
+
+  // 支援池狀態
+  const [poolTransfers, setPoolTransfers] = useState<PoolTransfer[]>([])
+  const [poolLoading, setPoolLoading] = useState(false)
+  const [pendingInvites, setPendingInvites] = useState<PendingInvite[]>([])
+  const [inviteNotification, setInviteNotification] = useState<string | null>(null)
+  const sseRef = useRef<EventSource | null>(null)
+
+  const fetchInvites = useCallback(async () => {
+    if (!token) return
+    try {
+      const res = await fetch('/api/squads/invites', {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      const data = await res.json()
+      if (data.success) {
+        const invites: PendingInvite[] = (data.data.invites || []).map((inv: any) => ({
+          id: inv.id,
+          squadId: inv.squadId,
+          squad: inv.squad ? { name: inv.squad.name } : undefined,
+          founder: inv.squad?.founder,
+        }))
+        setPendingInvites(invites)
+      }
+    } catch (error) {
+      console.error('Failed to fetch invites:', error)
+    }
+  }, [token])
 
   const fetchSquad = useCallback(async () => {
     if (!token) return
@@ -88,9 +331,82 @@ export function SquadTab({ token, driverId }: SquadTabProps) {
     }
   }, [token])
 
+  const fetchPool = useCallback(async () => {
+    if (!token || !squad) return
+    setPoolLoading(true)
+    try {
+      const res = await fetch('/api/squads/pool', {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      const data = await res.json()
+      if (data.success) {
+        setPoolTransfers(data.data.transfers || [])
+      }
+    } catch (error) {
+      console.error('Failed to fetch pool:', error)
+    } finally {
+      setPoolLoading(false)
+    }
+  }, [token, squad])
+
+  // SSE listener for squad events
+  useEffect(() => {
+    if (!token) return
+
+    // 只在小隊存在時建立 SSE 連線
+    if (!squad) return
+
+    const es = new EventSource('/api/squads/events')
+    sseRef.current = es
+
+    es.onmessage = (event) => {
+      try {
+        const raw = JSON.parse(event.data)
+        // Skip heartbeat
+        if (raw.type === 'HEARTBEAT') return
+
+        if (raw.type === 'SQUAD_POOL_NEW' || raw.type === 'TRANSFER_CREATED') {
+          fetchPool()
+        } else if (raw.type === 'TRANSFER_APPROVED' || raw.type === 'TRANSFER_EXPIRED' || raw.type === 'TRANSFER_WITHDRAWN' || raw.type === 'TRANSFER_CANCELLED' || raw.type === 'TRANSFER_REJECTED') {
+          fetchPool()
+          if (raw.type === 'TRANSFER_APPROVED') {
+            alert('有隊友成功接手轉單！')
+          }
+        } else if (raw.type === 'SQUAD_INVITE') {
+          const inviteData = raw.invite as SquadInviteEventData['invite']
+          setInviteNotification(`${inviteData.squadName} 小隊邀請你加入！`)
+          setTimeout(() => setInviteNotification(null), 5000)
+          fetchInvites()
+          fetchSquad()
+        } else if (raw.type === 'SQUAD_INVITE_ACCEPTED') {
+          fetchSquad()
+          fetchPool()
+        } else if (raw.type === 'SQUAD_INVITE_REJECTED') {
+          alert(`邀請被拒絕`)
+          fetchSquad()
+        }
+      } catch {}
+    }
+
+    es.onerror = () => es.close()
+
+    return () => {
+      es.close()
+      sseRef.current = null
+    }
+  }, [token, squad, fetchPool, fetchSquad])
+
   useEffect(() => {
     fetchSquad()
-  }, [fetchSquad])
+    fetchInvites()
+  }, [fetchSquad, fetchInvites])
+
+  // Fetch pool when squad is loaded
+  useEffect(() => {
+    if (squad) {
+      fetchPool()
+    }
+  }, [squad, fetchPool])
 
   const handleCreateSquad = async () => {
     if (!token || !createName.trim()) return
@@ -380,6 +696,95 @@ export function SquadTab({ token, driverId }: SquadTabProps) {
             </p>
           </div>
         )}
+
+        {/* 邀請通知橫幅 */}
+        {inviteNotification && (
+          <div className="mb-4 flex items-center gap-2 px-4 py-3 bg-[#FFF3E0] border border-[#F59E0B]/30 rounded-xl">
+            <Bell className="w-4 h-4 text-[#F59E0B]" />
+            <span className="text-[13px] font-medium text-[#B45309]">{inviteNotification}</span>
+            <button
+              onClick={() => setInviteNotification(null)}
+              className="ml-auto text-[#717171] hover:text-[#222222] transition-colors"
+            >
+              <XCircle className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+
+        {/* 待回覆邀請 */}
+        {pendingInvites.length > 0 && (
+          <div className="mb-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Bell className="w-4 h-4 text-[#F59E0B]" />
+              <p className="text-[14px] font-bold text-[#222222]">待回覆邀請</p>
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[#F59E0B]/10 text-[#B45309] text-[11px] font-bold">
+                {pendingInvites.length}
+              </span>
+            </div>
+            <div className="space-y-2">
+              {pendingInvites.map(invite => (
+                <InviteCard
+                  key={invite.id}
+                  invite={invite}
+                  token={token}
+                  onResponded={() => {
+                    fetchInvites()
+                    fetchSquad()
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* 支援池 */}
+        <div className="mb-4">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <ArrowRightLeft className="w-4 h-4 text-[#0C447C]" />
+              <p className="text-[14px] font-bold text-[#222222]">支援池</p>
+              {poolTransfers.length > 0 && (
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[#0C447C]/10 text-[#0C447C] text-[11px] font-bold">
+                  {poolTransfers.length}
+                </span>
+              )}
+            </div>
+            <button
+              onClick={fetchPool}
+              disabled={poolLoading}
+              className="text-[11px] text-[#717171] hover:text-[#222222] transition-colors disabled:opacity-60"
+            >
+              {poolLoading ? '載入中...' : '重新整理'}
+            </button>
+          </div>
+
+          {poolLoading && poolTransfers.length === 0 ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="w-6 h-6 text-[#F59E0B] animate-spin" />
+            </div>
+          ) : poolTransfers.length === 0 ? (
+            <div className="text-center py-8 bg-[#F4EFE9] border border-[#DDDDDD] rounded-xl">
+              <ArrowRightLeft className="w-8 h-8 text-[#DDDDDD] mx-auto mb-2" />
+              <p className="text-[13px] text-[#A8A29E]">目前沒有待支援的轉單</p>
+              <p className="text-[11px] text-[#A8A29E]">隊友請求支援時會出現在這裡</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {poolTransfers.map(transfer => (
+                <PoolCard
+                  key={transfer.id}
+                  transfer={transfer}
+                  token={token}
+                  onClaimed={() => {
+                    fetchPool()
+                    alert('搶單成功！請查看行程')
+                  }}
+                  onError={(msg) => alert(msg)}
+                />
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* 操作按鈕 */}
         <div className="flex gap-2 flex-wrap">

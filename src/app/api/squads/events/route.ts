@@ -3,7 +3,7 @@ import { cookies } from 'next/headers'
 import { prisma } from '@/lib/prisma'
 import { getUserFromToken } from '@/lib/auth'
 import { globalEmitter as sseEmitter } from '@/lib/sse-emitter'
-import type { SquadTransferEvent } from '@/lib/sse-emitter'
+import type { SquadTransferEvent, SquadInviteEvent } from '@/lib/sse-emitter'
 
 // Track which dispatchers are listening
 const squadClients = new Map<string, NodeJS.Timeout[]>()
@@ -15,6 +15,9 @@ type SSEEvent =
   | { type: 'TRANSFER_APPROVED'; transfer: SquadTransferEvent }
   | { type: 'TRANSFER_REJECTED'; transfer: SquadTransferEvent }
   | { type: 'TRANSFER_CANCELLED'; transfer: SquadTransferEvent }
+  | { type: 'SQUAD_INVITE'; invite: SquadInviteEvent }
+  | { type: 'SQUAD_INVITE_ACCEPTED'; invite: SquadInviteEvent }
+  | { type: 'SQUAD_INVITE_REJECTED'; invite: SquadInviteEvent }
 
 // GET /api/squads/events — SSE endpoint for squad member real-time transfer notifications
 export async function GET(request: NextRequest) {
@@ -67,6 +70,17 @@ export async function GET(request: NextRequest) {
       }
 
       sseEmitter.on('squad-event', onSquadEvent)
+
+      // Listen for squad invite events (targeted to this driver)
+      const onInviteEvent = (event: SquadInviteEvent) => {
+        if (isClosed) return
+        // Only send if this event is for this driver
+        if (event.driverId !== driverId) return
+        sendEvent({ type: event.type as SSEEvent['type'], invite: event } as SSEEvent)
+        sendEvent({ type: 'HEARTBEAT', timestamp: new Date().toISOString() })
+      }
+
+      sseEmitter.on('squad-invite', onInviteEvent)
 
       // Poll every 3 seconds for heartbeat
       const intervalId = setInterval(() => {
