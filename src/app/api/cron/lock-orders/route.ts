@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { broadcastSquadEvent } from '@/lib/sse-emitter'
+import { TRANSFER_LOCK_HOURS } from '@/lib/constants'
 
 const CRON_SECRET = process.env.CRON_SECRET ?? ''
 
 // GET /api/cron/lock-orders — 每分鐘跑一次
-// 鎖定行程前 3 小時內的已接單訂單，並將相關轉單請求設為過期
+// 鎖定行程前 TRANSFER_LOCK_HOURS 小時內的已接單訂單，並將相關轉單請求設為過期
 export async function GET(request: NextRequest) {
   try {
     const secret = request.headers.get('x-cron-secret')
@@ -14,10 +15,9 @@ export async function GET(request: NextRequest) {
     }
 
     const now = new Date()
-    const THREE_HOURS_MS = 3 * 60 * 60 * 1000
-    const lockThreshold = new Date(now.getTime() + THREE_HOURS_MS)
+    const lockThreshold = new Date(now.getTime() + TRANSFER_LOCK_HOURS * 60 * 60 * 1000)
 
-    // 查詢所有行程前 3 小時內的 ACCEPTED 且未鎖定的訂單
+    // 查詢所有行程前 TRANSFER_LOCK_HOURS 小時內的 ACCEPTED 且未鎖定的訂單
     const ordersToLock = await prisma.order.findMany({
       where: {
         status: 'ACCEPTED',
@@ -56,17 +56,36 @@ export async function GET(request: NextRequest) {
     })
 
     if (pendingTransfers.length > 0) {
-      await prisma.orderTransfer.updateMany({
-        where: {
-          id: { in: pendingTransfers.map((t) => t.id) },
-        },
-        data: { status: 'EXPIRED' },
-      })
-
-      // 通知所有相關小隊
+      // 退還 bonusPoints 並標記為 EXPIRED
       for (const transfer of pendingTransfers) {
+        await prisma.$transaction(async (tx) => {
+          // 退還 bonusPoints 給原司機
+          if (transfer.bonusPoints && transfer.bonusPoints > 0) {
+            await tx.driver.update({
+              where: { id: transfer.fromDriverId },
+              data: { balance: { increment: transfer.bonusPoints } },
+            })
+            await tx.transaction.create({
+              data: {
+                driverId: transfer.fromDriverId,
+                amount: transfer.bonusPoints,
+                type: 'RECHARGE',
+                status: 'SETTLED',
+                description: `轉單超時鎖定，bonus ${transfer.bonusPoints} 點已退還`,
+              },
+            })
+          }
+
+          // 標記轉單為 EXPIRED
+          await tx.orderTransfer.update({
+            where: { id: transfer.id },
+            data: { status: 'EXPIRED' },
+          })
+        })
+
+        // 通知所有相關小隊
         broadcastSquadEvent({
-          type: 'TRANSFER_CANCELLED',
+          type: 'TRANSFER_EXPIRED',
           transferId: transfer.id,
           orderId: transfer.orderId,
           fromDriverId: transfer.fromDriverId,
