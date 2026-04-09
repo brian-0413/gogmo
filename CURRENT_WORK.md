@@ -5,13 +5,45 @@
 
 ---
 
-## 專案現況（2026-04-08）
+## 專案現況（2026-04-09 早上）
 
 ### 最後 commit
 ```
-1126610 fix: MoneyRow 金額輸入框 0 無法清除的問題
+e16567b feat: 小隊互助系統 — Build 驗證通過
 ```
 落後 origin/main 0 個 commits。
+
+---
+
+## 目前開發階段：小隊互助系統（已完成）
+
+### [完成] 小隊互助系統（2026-04-09）
+**Commits**: `497a0aa` → `33a3f37` → `b82bd9d` → `f2c84ea` → `9e06179` → `f386777` → `0fc5d77` → `e16567b`
+**功能概述**：Premium 司機專屬功能，小隊內可互相轉單（5% 費用，比退單 10% 便宜）。
+
+**實作內容**：
+- **Prisma Schema**：`Squad`（小隊）、`SquadMember`（成員關聯）、`OrderTransfer`（轉單記錄，6狀態）
+- **CRUD API**：POST/GET/DELETE 小隊、邀請成員、加入、退出（自動轉讓隊長）、解散
+- **轉單 API**：發起轉單 → 隊友接受 → 派單方核准 → 完成（或拒絕）
+- **SSE 即時通知**：司機 `/api/squads/events`、派單方 `/api/dispatchers/events`
+- **3 小時鎖定 Cron**：`GET /api/cron/lock-orders`，行前三小時自動鎖定訂單
+- **司機端 UI**：「我的小隊」Tab（小隊管理、成員列表、邀請、成員離開/解散）
+- **司機行程卡片**：ACCEPTED 狀態顯示「請求小隊支援」按鈕
+- **派單方 UI**：`TransferConfirmBanner` 橫幅（轉單待核准），SSE 接收即時更新
+- **TransferStatus 5 態流程**：PENDING → ACCEPTED → APPROVED / REJECTED / CANCELLED
+- **費用計算**：`TRANSFER_FEE_RATE = 0.05`（5%）
+
+**規格文件**：`docs/squad-system.md`
+**實作計畫**：`docs/superpowers/plans/2026-04-09-squad-system.md`
+**待確認問題**：見下方「早上討論問題」
+
+### 早上討論問題（待確認）
+1. 隊友收到轉單請求時，是否有明確橫幅通知？（SquadTab 是否實作轉單橫幅？）
+2. 是否要從「直接加入」改為「邀請制」？
+3. 派單方不在頁面時的轉單通知，是否需要 push 通知？
+4. 小隊名稱是否要 unique（同一 dispatcherId 下）？
+5. 隊長刪帳號時，小隊處理邏輯？
+6. 是否需要補自動化測試？
 
 ---
 
