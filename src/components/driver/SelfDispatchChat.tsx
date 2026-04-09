@@ -427,7 +427,7 @@ export function SelfDispatchChat({ token, onSuccess, onClose }: SelfDispatchChat
 
   // ============ Render ============
   return (
-    <div className="max-w-[480px] mx-auto">
+    <div className="w-full max-w-[480px] mx-auto px-2 sm:px-0">
       <div className="bg-white border border-[#DDDDDD] rounded-3xl overflow-hidden shadow-[0_4px_24px_rgba(0,0,0,0.08)]">
         {/* Header */}
         <div className="bg-[#FF385C] text-white px-5 py-4 flex items-center gap-3">
@@ -493,24 +493,26 @@ export function SelfDispatchChat({ token, onSuccess, onClose }: SelfDispatchChat
                 <button onClick={setTomorrow} className="py-1 px-3 rounded-full border border-[#DDDDDD] bg-white text-[#717171] text-[11px] font-semibold hover:border-[#FF385C] hover:text-[#FF385C] cursor-pointer transition-all">明天</button>
                 <button onClick={setDayAfter} className="py-1 px-3 rounded-full border border-[#DDDDDD] bg-white text-[#717171] text-[11px] font-semibold hover:border-[#FF385C] hover:text-[#FF385C] cursor-pointer transition-all">後天</button>
               </div>
-              <button
-                onClick={() => {
-                  if (form.scheduledDate) {
-                    addUser(form.scheduledDate)
-                    setStep(4)
-                  }
-                }}
-                disabled={!form.scheduledDate}
-                className="mt-2 w-full py-2 bg-[#FF385C] text-white border-none rounded-xl text-[13px] font-semibold cursor-pointer hover:bg-[#E83355] disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                下一步
-              </button>
-              <button
-                onClick={() => setStep(2)}
-                className="w-full py-2 bg-white text-[#717171] border border-[#DDDDDD] rounded-xl text-[12px] font-medium cursor-pointer hover:border-[#FF385C] hover:text-[#FF385C]"
-              >
-                回上一步
-              </button>
+              <div className="flex gap-2 mt-2">
+                <button
+                  onClick={() => setStep(2)}
+                  className="flex-1 py-2 bg-white text-[#717171] border-2 border-[#DDDDDD] rounded-xl text-[13px] font-semibold cursor-pointer hover:border-[#FF385C] hover:text-[#FF385C]"
+                >
+                  回上一步
+                </button>
+                <button
+                  onClick={() => {
+                    if (form.scheduledDate) {
+                      addUser(form.scheduledDate)
+                      setStep(4)
+                    }
+                  }}
+                  disabled={!form.scheduledDate}
+                  className="flex-1 py-2 bg-[#FF385C] text-white border-2 border-[#FF385C] rounded-xl text-[13px] font-semibold cursor-pointer hover:bg-[#E83355] disabled:opacity-50"
+                >
+                  下一步
+                </button>
+              </div>
             </BotBubble>
           )}
 
@@ -527,24 +529,26 @@ export function SelfDispatchChat({ token, onSuccess, onClose }: SelfDispatchChat
                   className="w-full max-w-full"
                 />
               </div>
-              <button
-                onClick={() => {
-                  if (form.scheduledTime) {
-                    addUser(form.scheduledTime)
-                    setStep(5)
-                  }
-                }}
-                disabled={!form.scheduledTime}
-                className="mt-2 w-full py-2 bg-[#FF385C] text-white border-none rounded-xl text-[13px] font-semibold cursor-pointer hover:bg-[#E83355] disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                下一步
-              </button>
-              <button
-                onClick={() => setStep(3)}
-                className="w-full py-2 bg-white text-[#717171] border border-[#DDDDDD] rounded-xl text-[12px] font-medium cursor-pointer hover:border-[#FF385C] hover:text-[#FF385C]"
-              >
-                回上一步
-              </button>
+              <div className="flex gap-2 mt-2">
+                <button
+                  onClick={() => setStep(3)}
+                  className="flex-1 py-2 bg-white text-[#717171] border-2 border-[#DDDDDD] rounded-xl text-[13px] font-semibold cursor-pointer hover:border-[#FF385C] hover:text-[#FF385C]"
+                >
+                  回上一步
+                </button>
+                <button
+                  onClick={() => {
+                    if (form.scheduledTime) {
+                      addUser(form.scheduledTime)
+                      setStep(5)
+                    }
+                  }}
+                  disabled={!form.scheduledTime}
+                  className="flex-1 py-2 bg-[#FF385C] text-white border-2 border-[#FF385C] rounded-xl text-[13px] font-semibold cursor-pointer hover:bg-[#E83355] disabled:opacity-50"
+                >
+                  下一步
+                </button>
+              </div>
             </BotBubble>
           )}
 
@@ -560,18 +564,6 @@ export function SelfDispatchChat({ token, onSuccess, onClose }: SelfDispatchChat
                   placeholder="例如：BR 32"
                   className="flex-1 px-3 py-2 border-2 border-[#DDDDDD] rounded-xl text-[13px] outline-none focus:border-[#FF385C] bg-white w-full max-w-full"
                 />
-                <button
-                  onClick={() => {
-                    if (flightRequired && !form.flightNumber) return
-                    if (form.flightNumber) addUser(form.flightNumber)
-                    else addUser('略過')
-                    setStep(6)
-                  }}
-                  disabled={flightRequired && !form.flightNumber}
-                  className="px-4 py-2 bg-[#FF385C] text-white border-none rounded-xl text-[13px] font-semibold cursor-pointer hover:bg-[#E83355] disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-                >
-                  下一步
-                </button>
               </div>
               {!flightRequired && (
                 <button
@@ -581,12 +573,26 @@ export function SelfDispatchChat({ token, onSuccess, onClose }: SelfDispatchChat
                   略過
                 </button>
               )}
-              <button
-                onClick={() => setStep(4)}
-                className="w-full py-2 bg-white text-[#717171] border border-[#DDDDDD] rounded-xl text-[12px] font-medium cursor-pointer hover:border-[#FF385C] hover:text-[#FF385C]"
-              >
-                回上一步
-              </button>
+              <div className="flex gap-2 mt-2">
+                <button
+                  onClick={() => setStep(4)}
+                  className="flex-1 py-2 bg-white text-[#717171] border-2 border-[#DDDDDD] rounded-xl text-[13px] font-semibold cursor-pointer hover:border-[#FF385C] hover:text-[#FF385C]"
+                >
+                  回上一步
+                </button>
+                <button
+                  onClick={() => {
+                    if (flightRequired && !form.flightNumber) return
+                    if (form.flightNumber) addUser(form.flightNumber)
+                    else addUser('略過')
+                    setStep(6)
+                  }}
+                  disabled={flightRequired && !form.flightNumber}
+                  className="flex-1 py-2 bg-[#FF385C] text-white border-2 border-[#FF385C] rounded-xl text-[13px] font-semibold cursor-pointer hover:bg-[#E83355] disabled:opacity-50"
+                >
+                  下一步
+                </button>
+              </div>
             </BotBubble>
           )}
 
@@ -711,22 +717,24 @@ export function SelfDispatchChat({ token, onSuccess, onClose }: SelfDispatchChat
                   placeholder="輸入地址或地點"
                   className="flex-1 px-3 py-2 border-2 border-[#DDDDDD] rounded-xl text-[13px] outline-none focus:border-[#FF385C] bg-white w-full max-w-full"
                 />
+              </div>
+              <div className="flex gap-2 mt-2">
+                <button
+                  onClick={() => setStep(8)}
+                  className="flex-1 py-2 bg-white text-[#717171] border-2 border-[#DDDDDD] rounded-xl text-[13px] font-semibold cursor-pointer hover:border-[#FF385C] hover:text-[#FF385C]"
+                >
+                  回上一步
+                </button>
                 <button
                   onClick={() => {
                     if (form.otherLocation) { addUser(form.otherLocation); setStep(10) }
                   }}
                   disabled={!form.otherLocation}
-                  className="px-4 py-2 bg-[#FF385C] text-white border-none rounded-xl text-[13px] font-semibold cursor-pointer hover:bg-[#E83355] disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                  className="flex-1 py-2 bg-[#FF385C] text-white border-2 border-[#FF385C] rounded-xl text-[13px] font-semibold cursor-pointer hover:bg-[#E83355] disabled:opacity-50"
                 >
                   下一步
                 </button>
               </div>
-              <button
-                onClick={() => setStep(8)}
-                className="w-full py-2 bg-white text-[#717171] border border-[#DDDDDD] rounded-xl text-[12px] font-medium cursor-pointer hover:border-[#FF385C] hover:text-[#FF385C]"
-              >
-                回上一步
-              </button>
             </BotBubble>
           )}
 
@@ -755,22 +763,24 @@ export function SelfDispatchChat({ token, onSuccess, onClose }: SelfDispatchChat
               {!isValidTaiwanPhone(form.contactPhone) && form.contactPhone.length > 0 && (
                 <p className="text-[11px] text-[#E24B4A] mt-1">請輸入有效的手機號碼（例：0912345678）</p>
               )}
-              <button
-                onClick={() => {
-                  if (!isValidTaiwanPhone(form.contactPhone)) return
-                  if (form.contactName && form.contactPhone) { addUser(`${form.contactName} ${form.contactPhone}`); setStep(11) }
-                }}
-                disabled={!form.contactName || !form.contactPhone || !isValidTaiwanPhone(form.contactPhone)}
-                className="mt-2 w-full py-2 bg-[#FF385C] text-white border-none rounded-xl text-[13px] font-semibold cursor-pointer hover:bg-[#E83355] disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                下一步
-              </button>
-              <button
-                onClick={() => setStep(9)}
-                className="w-full py-2 bg-white text-[#717171] border border-[#DDDDDD] rounded-xl text-[12px] font-medium cursor-pointer hover:border-[#FF385C] hover:text-[#FF385C]"
-              >
-                回上一步
-              </button>
+              <div className="flex gap-2 mt-2">
+                <button
+                  onClick={() => setStep(9)}
+                  className="flex-1 py-2 bg-white text-[#717171] border-2 border-[#DDDDDD] rounded-xl text-[13px] font-semibold cursor-pointer hover:border-[#FF385C] hover:text-[#FF385C]"
+                >
+                  回上一步
+                </button>
+                <button
+                  onClick={() => {
+                    if (!isValidTaiwanPhone(form.contactPhone)) return
+                    if (form.contactName && form.contactPhone) { addUser(`${form.contactName} ${form.contactPhone}`); setStep(11) }
+                  }}
+                  disabled={!form.contactName || !form.contactPhone || !isValidTaiwanPhone(form.contactPhone)}
+                  className="flex-1 py-2 bg-[#FF385C] text-white border-2 border-[#FF385C] rounded-xl text-[13px] font-semibold cursor-pointer hover:bg-[#E83355] disabled:opacity-50"
+                >
+                  下一步
+                </button>
+              </div>
             </BotBubble>
           )}
 
@@ -812,21 +822,23 @@ export function SelfDispatchChat({ token, onSuccess, onClose }: SelfDispatchChat
               <MoneyBox>
                 <MoneyRow label="司機實拿" value={form.driverAmount} onChange={v => set({ driverAmount: v })} />
               </MoneyBox>
-              <button
-                onClick={() => {
-                  if (form.driverAmount > 0) { addUser(`NT$ ${form.driverAmount.toLocaleString()}`); setStep(13) }
-                }}
-                disabled={!form.driverAmount}
-                className="mt-2 w-full py-2 bg-[#FF385C] text-white border-none rounded-xl text-[13px] font-semibold cursor-pointer hover:bg-[#E83355] disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                下一步
-              </button>
-              <button
-                onClick={() => setStep(11)}
-                className="w-full py-2 bg-white text-[#717171] border border-[#DDDDDD] rounded-xl text-[12px] font-medium cursor-pointer hover:border-[#FF385C] hover:text-[#FF385C]"
-              >
-                回上一步
-              </button>
+              <div className="flex gap-2 mt-2">
+                <button
+                  onClick={() => setStep(11)}
+                  className="flex-1 py-2 bg-white text-[#717171] border-2 border-[#DDDDDD] rounded-xl text-[13px] font-semibold cursor-pointer hover:border-[#FF385C] hover:text-[#FF385C]"
+                >
+                  回上一步
+                </button>
+                <button
+                  onClick={() => {
+                    if (form.driverAmount > 0) { addUser(`NT$ ${form.driverAmount.toLocaleString()}`); setStep(13) }
+                  }}
+                  disabled={!form.driverAmount}
+                  className="flex-1 py-2 bg-[#FF385C] text-white border-2 border-[#FF385C] rounded-xl text-[13px] font-semibold cursor-pointer hover:bg-[#E83355] disabled:opacity-50"
+                >
+                  下一步
+                </button>
+              </div>
             </BotBubble>
           )}
 
@@ -845,21 +857,23 @@ export function SelfDispatchChat({ token, onSuccess, onClose }: SelfDispatchChat
                   </>
                 )}
               </MoneyBox>
-              <button
-                onClick={() => {
-                  if (form.cashCollected > 0) { addUser(`代收 NT$ ${form.cashCollected.toLocaleString()} 回金 NT$ ${form.commissionReturn.toLocaleString()}`); setStep(13) }
-                }}
-                disabled={!form.cashCollected}
-                className="mt-2 w-full py-2 bg-[#FF385C] text-white border-none rounded-xl text-[13px] font-semibold cursor-pointer hover:bg-[#E83355] disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                下一步
-              </button>
-              <button
-                onClick={() => setStep(11)}
-                className="w-full py-2 bg-white text-[#717171] border border-[#DDDDDD] rounded-xl text-[12px] font-medium cursor-pointer hover:border-[#FF385C] hover:text-[#FF385C]"
-              >
-                回上一步
-              </button>
+              <div className="flex gap-2 mt-2">
+                <button
+                  onClick={() => setStep(11)}
+                  className="flex-1 py-2 bg-white text-[#717171] border-2 border-[#DDDDDD] rounded-xl text-[13px] font-semibold cursor-pointer hover:border-[#FF385C] hover:text-[#FF385C]"
+                >
+                  回上一步
+                </button>
+                <button
+                  onClick={() => {
+                    if (form.cashCollected > 0) { addUser(`代收 NT$ ${form.cashCollected.toLocaleString()} 回金 NT$ ${form.commissionReturn.toLocaleString()}`); setStep(13) }
+                  }}
+                  disabled={!form.cashCollected}
+                  className="flex-1 py-2 bg-[#FF385C] text-white border-2 border-[#FF385C] rounded-xl text-[13px] font-semibold cursor-pointer hover:bg-[#E83355] disabled:opacity-50"
+                >
+                  下一步
+                </button>
+              </div>
             </BotBubble>
           )}
 
@@ -881,23 +895,25 @@ export function SelfDispatchChat({ token, onSuccess, onClose }: SelfDispatchChat
                   className="w-full px-3 py-2 border border-[#DDDDDD] rounded-xl text-[13px] text-[#222222] resize-none focus:outline-none focus:border-[#FF385C] max-w-full"
                 />
               </div>
-              <button
-                onClick={() => {
-                  const needs = form.specialNeeds.map(s => SPECIAL_NEED_LABELS[s]).join('、')
-                  addUser(needs ? `需求：${needs}` : '無特殊需求')
-                  if (form.notes) addUser(`備註：${form.notes}`)
-                  setStep(14)
-                }}
-                className="mt-3 w-full py-2 bg-[#FF385C] text-white border-none rounded-xl text-[13px] font-semibold cursor-pointer hover:bg-[#E83355]"
-              >
-                下一步
-              </button>
-              <button
-                onClick={() => setStep(12)}
-                className="w-full py-2 bg-white text-[#717171] border border-[#DDDDDD] rounded-xl text-[12px] font-medium cursor-pointer hover:border-[#FF385C] hover:text-[#FF385C]"
-              >
-                回上一步
-              </button>
+              <div className="flex gap-2 mt-3">
+                <button
+                  onClick={() => setStep(12)}
+                  className="flex-1 py-2 bg-white text-[#717171] border-2 border-[#DDDDDD] rounded-xl text-[13px] font-semibold cursor-pointer hover:border-[#FF385C] hover:text-[#FF385C]"
+                >
+                  回上一步
+                </button>
+                <button
+                  onClick={() => {
+                    const needs = form.specialNeeds.map(s => SPECIAL_NEED_LABELS[s]).join('、')
+                    addUser(needs ? `需求：${needs}` : '無特殊需求')
+                    if (form.notes) addUser(`備註：${form.notes}`)
+                    setStep(14)
+                  }}
+                  className="flex-1 py-2 bg-[#FF385C] text-white border-2 border-[#FF385C] rounded-xl text-[13px] font-semibold cursor-pointer hover:bg-[#E83355]"
+                >
+                  下一步
+                </button>
+              </div>
             </BotBubble>
           )}
 
