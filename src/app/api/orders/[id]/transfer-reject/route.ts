@@ -76,29 +76,49 @@ export async function POST(
       )
     }
 
-    // 更新轉單狀態為 REJECTED
-    const updatedTransfer = await prisma.orderTransfer.update({
-      where: { id: body.transferId },
-      data: {
-        status: 'REJECTED',
-        dispatcherNote: body.note ?? null,
-      },
-      include: {
-        order: {
-          select: {
-            id: true,
-            dispatcherId: true,
-            scheduledTime: true,
-            price: true,
-            pickupLocation: true,
-            dropoffLocation: true,
-            type: true,
-            vehicle: true,
+    // Transaction：退還 bonus + 更新轉單狀態為 REJECTED
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const updatedTransfer = await prisma.$transaction(async (tx: any) => {
+      // 退還 bonus 點數給原司機
+      if (transfer.bonusPoints && transfer.bonusPoints > 0) {
+        await tx.driver.update({
+          where: { id: transfer.fromDriverId },
+          data: { balance: { increment: transfer.bonusPoints } },
+        })
+        await tx.transaction.create({
+          data: {
+            driverId: transfer.fromDriverId,
+            amount: transfer.bonusPoints, // 正數 = 收入
+            type: 'RECHARGE',
+            status: 'SETTLED',
+            description: `轉單被拒絕，bonus ${transfer.bonusPoints} 點已退還`,
           },
+        })
+      }
+
+      return tx.orderTransfer.update({
+        where: { id: body.transferId },
+        data: {
+          status: 'REJECTED',
+          dispatcherNote: body.note ?? null,
         },
-        fromDriver: { include: { user: { select: { name: true } } } },
-        toDriver: { include: { user: { select: { name: true } } } },
-      },
+        include: {
+          order: {
+            select: {
+              id: true,
+              dispatcherId: true,
+              scheduledTime: true,
+              price: true,
+              pickupLocation: true,
+              dropoffLocation: true,
+              type: true,
+              vehicle: true,
+            },
+          },
+          fromDriver: { include: { user: { select: { name: true } } } },
+          toDriver: { include: { user: { select: { name: true } } } },
+        },
+      })
     })
 
     // Broadcast SSE 到小隊（通知原司機和接單司機）
