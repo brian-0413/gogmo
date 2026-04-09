@@ -1,5 +1,5 @@
 import bcrypt from 'bcryptjs'
-import jwt from 'jsonwebtoken'
+import jwt, { SignOptions } from 'jsonwebtoken'
 import { prisma } from './prisma'
 import { NEW_USER_BONUS } from './constants'
 
@@ -41,7 +41,7 @@ export async function verifyPassword(password: string, hashedPassword: string): 
   return bcrypt.compare(password, hashedPassword)
 }
 
-export function generateToken(payload: JwtPayload, expiresIn: string = '7d'): string {
+export function generateToken(payload: JwtPayload, expiresIn: SignOptions['expiresIn'] = '7d'): string {
   return jwt.sign(payload, getJwtSecret(), { expiresIn })
 }
 
