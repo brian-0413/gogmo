@@ -13,6 +13,7 @@ interface User {
     status: string
     balance: number
     isPremium?: boolean
+    accountStatus?: string
   }
   dispatcher?: {
     id: string
@@ -24,7 +25,7 @@ interface AuthContextType {
   user: User | null
   token: string | null
   isLoading: boolean
-  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
+  login: (emailOrToken: string, passwordOrUser?: string | object) => Promise<{ success: boolean; error?: string }>
   register: (data: RegisterData) => Promise<{ success: boolean; error?: string }>
   logout: () => void
 }
@@ -82,7 +83,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const login = async (email: string, password: string) => {
+  const login = async (emailOrToken: string, passwordOrUser?: string | object) => {
+    // If second arg is an object, this is (token, user) call from login page
+    if (typeof passwordOrUser === 'object' && passwordOrUser !== null) {
+      const user = passwordOrUser as User
+      setToken(emailOrToken)
+      setUser(user)
+      localStorage.setItem('token', emailOrToken)
+      document.cookie = `auth_token=${emailOrToken}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Lax`
+      router.push(user.role === 'DRIVER' ? '/dashboard/driver' : '/dashboard/dispatcher')
+      return { success: true }
+    }
+    // Otherwise it's (email, password) call - existing logic
+    const email = emailOrToken
+    const password = passwordOrUser as string
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
