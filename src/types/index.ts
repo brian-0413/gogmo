@@ -1,6 +1,7 @@
 // TypeScript type definitions for Airport Dispatch Platform
 
 export type UserRole = 'DRIVER' | 'DISPATCHER' | 'ADMIN'
+export type AccountStatus = 'PENDING_VERIFICATION' | 'PENDING_REVIEW' | 'ACTIVE' | 'REJECTED'
 export type DriverStatus = 'ONLINE' | 'OFFLINE' | 'BUSY'
 export type OrderStatus = 'PENDING' | 'PUBLISHED' | 'ASSIGNED' | 'ACCEPTED' | 'IN_PROGRESS' | 'ARRIVED' | 'PICKED_UP' | 'COMPLETED' | 'CANCELLED'
 export type TransactionType = 'RIDE_FARE' | 'PLATFORM_FEE' | 'RECHARGE' | 'WITHDRAW'
@@ -13,6 +14,21 @@ export interface User {
   phone: string
   role: UserRole
   createdAt: Date
+  emailVerified?: boolean
+  accountStatus?: AccountStatus
+  rejectReason?: string | null
+}
+
+export interface UserDocument {
+  id: string
+  userId: string
+  type: 'DRIVER_LICENSE' | 'VEHICLE_REGISTRATION' | 'INSURANCE' | 'ID_CARD' | 'BUSINESS_REGISTRATION'
+  fileUrl: string
+  fileName: string
+  mimeType: string
+  sizeBytes: number
+  status: 'PENDING' | 'APPROVED' | 'REJECTED'
+  createdAt: Date | string
 }
 
 export interface Driver {
@@ -29,6 +45,8 @@ export interface Driver {
   user?: User
   isPremium?: boolean
 }
+
+export type VehicleSizeType = 'small_sedan' | 'small_suv' | 'van7' | 'van9'
 
 export interface Dispatcher {
   id: string
@@ -186,8 +204,21 @@ export interface RegisterRequest {
 }
 
 export interface LoginRequest {
-  email: string
+  // 支援兩種登入方式（由 role 區分）
+  account: string   // 司機填車牌，派單方填 Email
   password: string
+  role: 'DRIVER' | 'DISPATCHER'
+}
+
+export interface ForgotPasswordRequest {
+  account: string   // 車牌（司機）或 Email（派單方）
+  role: 'DRIVER' | 'DISPATCHER'
+  email?: string    // 司機需要同時提供 Email 驗證
+}
+
+export interface ResetPasswordRequest {
+  token: string
+  newPassword: string
 }
 
 export interface CreateOrderRequest {
