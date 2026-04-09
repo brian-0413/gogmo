@@ -5,49 +5,47 @@
 
 ---
 
-## 專案現況（2026-04-09 早上）
+## 專案現況（2026-04-09 下午）
 
 ### 最後 commit
 ```
-e16567b feat: 小隊互助系統 — Build 驗證通過
+2d82536 feat: 小隊 v2 — SquadTab 支援池 UI + TransferRequestForm + 派單方橫幅 + 管理員後台
 ```
 落後 origin/main 0 個 commits。
 
 ---
 
-## 目前開發階段：小隊互助系統（已完成）
+## 目前開發階段：小隊互助系統 v2（已完成）
 
-### [完成] 小隊互助系統（2026-04-09）
-**Commits**: `497a0aa` → `33a3f37` → `b82bd9d` → `f2c84ea` → `9e06179` → `f386777` → `0fc5d77` → `e16567b`
-**功能概述**：Premium 司機專屬功能，小隊內可互相轉單（5% 費用，比退單 10% 便宜）。
+### [完成] 小隊互助系統 v2（2026-04-09 下午）
+**Commits**: `b812e81` → `4cc60f9` → `cfb0c2e` → `3b41d7c` → `6edd0ff` → `9ca55b5` → `6519a18` → `b56a54e` → `cc3bdc8` → `2d82536`
+**功能概述**：小隊互助系統重構版，派單方核准後進入小隊支援池搶單、bonus 點數機制、3% 轉單費、邀請制。
 
-**實作內容**：
-- **Prisma Schema**：`Squad`（小隊）、`SquadMember`（成員關聯）、`OrderTransfer`（轉單記錄，6狀態）
-- **CRUD API**：POST/GET/DELETE 小隊、邀請成員、加入、退出（自動轉讓隊長）、解散
-- **轉單 API**：發起轉單 → 隊友接受 → 派單方核准 → 完成（或拒絕）
-- **SSE 即時通知**：司機 `/api/squads/events`、派單方 `/api/dispatchers/events`
-- **3 小時鎖定 Cron**：`GET /api/cron/lock-orders`，行前三小時自動鎖定訂單
-- **司機端 UI**：「我的小隊」Tab（小隊管理、成員列表、邀請、成員離開/解散）
-- **司機行程卡片**：ACCEPTED 狀態顯示「請求小隊支援」按鈕
-- **派單方 UI**：`TransferConfirmBanner` 橫幅（轉單待核准），SSE 接收即時更新
-- **TransferStatus 5 態流程**：PENDING → ACCEPTED → APPROVED / REJECTED / CANCELLED
-- **費用計算**：`TRANSFER_FEE_RATE = 0.05`（5%）
+**實作內容（v2 新流程）**：
+- **新流程**：司機發起 → PENDING_DISPATCHER → 派單方核准 → PENDING_SQUAD → 小隊池搶單 → APPROVED
+- **bonus 預扣**：發起時立即從司機帳戶扣 bonus 點數，派單方拒絕/超時/撤回時退還
+- **3% 轉單費**：接手成功後才由原司機支付（不在發起時扣）
+- **Prisma Schema**：`bonusPoints Int @default(0)`，`TRANSFER_FEE_RATE = 0.03`，`TRANSFER_LOCK_HOURS = 1`
+- **API 實作**：
+  - `POST /api/orders/[id]/transfer-request`：bonus 預扣 + PENDING_DISPATCHER + 廣播派單方
+  - `GET /api/orders/[id]/transfer-request`：查詢轉單狀態
+  - `POST /api/orders/[id]/transfer-approve`：進入 PENDING_SQUAD 池 + SQUAD_POOL_NEW 廣播
+  - `POST /api/orders/[id]/transfer-reject`：退還 bonus + REJECTED
+  - `POST /api/orders/[id]/transfer-withdraw`：行程前 1 小時內撤回，退還 bonus + 3%
+  - `GET /api/squads/pool`：小隊支援池查詢
+  - `POST /api/squads/pool/[id]/claim`：搶單（race-condition safe）+ bonus 轉移
+  - `POST /api/squads/respond`：邀請回應（接受/拒絕）
+  - `GET /api/cron/lock-orders`：行程前 1 小時鎖定 + PENDING_SQUAD 自動 EXPIRED
+- **SSE 事件類型**：`SQUAD_TRANSFER_PENDING`、`SQUAD_POOL_NEW`、`TRANSFER_POOL_READY`、`TRANSFER_EXPIRED` 等
+- **UI 實作**：
+  - `TransferConfirmBanner`：顯示 bonus + 原因 + 同意/拒絕按鍵
+  - `SquadTab`：支援池區塊 + 搶單按鈕 + 邀請回應 accept/reject
+  - `TransferRequestForm`：bonus 點數輸入 + 預扣提示
+  - `/dashboard/admin`：管理員費率設定面板
 
-**規格文件**：`docs/squad-system.md`
-**實作計畫**：`docs/superpowers/plans/2026-04-09-squad-system.md`
-**待確認問題**：見下方「早上討論問題」
+**規格文件**：`docs/squad-system.md`、`docs/superpowers/plans/2026-04-09-squad-system-v2.md`
 
-### 早上討論問題（待確認）
-1. 隊友收到轉單請求時，是否有明確橫幅通知？（SquadTab 是否實作轉單橫幅？）
-2. 是否要從「直接加入」改為「邀請制」？
-3. 派單方不在頁面時的轉單通知，是否需要 push 通知？
-4. 小隊名稱是否要 unique（同一 dispatcherId 下）？
-5. 隊長刪帳號時，小隊處理邏輯？
-6. 是否需要補自動化測試？
-
----
-
-## 目前開發階段：小車頭專區（已完成）
+### [完成] 小車頭專區（已完成）
 
 ### [完成] 小車頭 SelfDispatchChat UI 重構（2026-04-09）
 **Commit**: `241a199`
