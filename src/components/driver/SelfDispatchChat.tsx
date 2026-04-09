@@ -118,9 +118,9 @@ function isPickupOrder(orderType: string | null): boolean {
   return orderType === 'pickup' || orderType === 'pickup_boat'
 }
 
-// 台灣手機號碼驗證（09開頭 + 8位數字，或 +886 格式）
+// 台灣手機號碼驗證（09開頭 10碼，或 +886/886 格式）
 function isValidTaiwanPhone(phone: string): boolean {
-  return /^(?:(?:\+886|886)?9\d{8})$/.test(phone.replace(/-/g, ''))
+  return /^(?:(?:\+886|886)?0?9\d{8})$/.test(phone.replace(/-/g, ''))
 }
 
 // ============ Sub-components ============
@@ -466,6 +466,12 @@ export function SelfDispatchChat({ token, onSuccess, onClose }: SelfDispatchChat
                   }} />
                 ))}
               </OptGrid>
+              <button
+                onClick={() => setStep(1)}
+                className="w-full py-2 bg-white text-[#717171] border border-[#DDDDDD] rounded-xl text-[12px] font-medium cursor-pointer hover:border-[#FF385C] hover:text-[#FF385C]"
+              >
+                回上一步
+              </button>
             </BotBubble>
           )}
 
@@ -499,6 +505,12 @@ export function SelfDispatchChat({ token, onSuccess, onClose }: SelfDispatchChat
               >
                 下一步
               </button>
+              <button
+                onClick={() => setStep(2)}
+                className="w-full py-2 bg-white text-[#717171] border border-[#DDDDDD] rounded-xl text-[12px] font-medium cursor-pointer hover:border-[#FF385C] hover:text-[#FF385C]"
+              >
+                回上一步
+              </button>
             </BotBubble>
           )}
 
@@ -526,6 +538,12 @@ export function SelfDispatchChat({ token, onSuccess, onClose }: SelfDispatchChat
                 className="mt-2 w-full py-2 bg-[#FF385C] text-white border-none rounded-xl text-[13px] font-semibold cursor-pointer hover:bg-[#E83355] disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 下一步
+              </button>
+              <button
+                onClick={() => setStep(3)}
+                className="w-full py-2 bg-white text-[#717171] border border-[#DDDDDD] rounded-xl text-[12px] font-medium cursor-pointer hover:border-[#FF385C] hover:text-[#FF385C]"
+              >
+                回上一步
               </button>
             </BotBubble>
           )}
@@ -563,6 +581,12 @@ export function SelfDispatchChat({ token, onSuccess, onClose }: SelfDispatchChat
                   略過
                 </button>
               )}
+              <button
+                onClick={() => setStep(4)}
+                className="w-full py-2 bg-white text-[#717171] border border-[#DDDDDD] rounded-xl text-[12px] font-medium cursor-pointer hover:border-[#FF385C] hover:text-[#FF385C]"
+              >
+                回上一步
+              </button>
             </BotBubble>
           )}
 
@@ -587,6 +611,12 @@ export function SelfDispatchChat({ token, onSuccess, onClose }: SelfDispatchChat
                   <OptButton key={n} label={`${n}人`} onClick={() => { set({ passengerCount: n }); addUser(`${n}人`); setStep(8) }} />
                 ))}
               </OptGrid>
+              <button
+                onClick={() => setStep(6)}
+                className="w-full py-2 bg-white text-[#717171] border border-[#DDDDDD] rounded-xl text-[12px] font-medium cursor-pointer hover:border-[#FF385C] hover:text-[#FF385C]"
+              >
+                回上一步
+              </button>
             </BotBubble>
           )}
 
@@ -691,6 +721,12 @@ export function SelfDispatchChat({ token, onSuccess, onClose }: SelfDispatchChat
                   下一步
                 </button>
               </div>
+              <button
+                onClick={() => setStep(8)}
+                className="w-full py-2 bg-white text-[#717171] border border-[#DDDDDD] rounded-xl text-[12px] font-medium cursor-pointer hover:border-[#FF385C] hover:text-[#FF385C]"
+              >
+                回上一步
+              </button>
             </BotBubble>
           )}
 
@@ -729,6 +765,12 @@ export function SelfDispatchChat({ token, onSuccess, onClose }: SelfDispatchChat
               >
                 下一步
               </button>
+              <button
+                onClick={() => setStep(9)}
+                className="w-full py-2 bg-white text-[#717171] border border-[#DDDDDD] rounded-xl text-[12px] font-medium cursor-pointer hover:border-[#FF385C] hover:text-[#FF385C]"
+              >
+                回上一步
+              </button>
             </BotBubble>
           )}
 
@@ -754,6 +796,12 @@ export function SelfDispatchChat({ token, onSuccess, onClose }: SelfDispatchChat
                   <div className="text-[10px] text-[#717171] mt-0.5">司機收現後，回金傭金給派單人</div>
                 </button>
               </div>
+              <button
+                onClick={() => setStep(10)}
+                className="w-full py-2 bg-white text-[#717171] border border-[#DDDDDD] rounded-xl text-[12px] font-medium cursor-pointer hover:border-[#FF385C] hover:text-[#FF385C]"
+              >
+                回上一步
+              </button>
             </BotBubble>
           )}
 
@@ -772,6 +820,12 @@ export function SelfDispatchChat({ token, onSuccess, onClose }: SelfDispatchChat
                 className="mt-2 w-full py-2 bg-[#FF385C] text-white border-none rounded-xl text-[13px] font-semibold cursor-pointer hover:bg-[#E83355] disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 下一步
+              </button>
+              <button
+                onClick={() => setStep(11)}
+                className="w-full py-2 bg-white text-[#717171] border border-[#DDDDDD] rounded-xl text-[12px] font-medium cursor-pointer hover:border-[#FF385C] hover:text-[#FF385C]"
+              >
+                回上一步
               </button>
             </BotBubble>
           )}
@@ -799,6 +853,12 @@ export function SelfDispatchChat({ token, onSuccess, onClose }: SelfDispatchChat
                 className="mt-2 w-full py-2 bg-[#FF385C] text-white border-none rounded-xl text-[13px] font-semibold cursor-pointer hover:bg-[#E83355] disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 下一步
+              </button>
+              <button
+                onClick={() => setStep(11)}
+                className="w-full py-2 bg-white text-[#717171] border border-[#DDDDDD] rounded-xl text-[12px] font-medium cursor-pointer hover:border-[#FF385C] hover:text-[#FF385C]"
+              >
+                回上一步
               </button>
             </BotBubble>
           )}
@@ -831,6 +891,12 @@ export function SelfDispatchChat({ token, onSuccess, onClose }: SelfDispatchChat
                 className="mt-3 w-full py-2 bg-[#FF385C] text-white border-none rounded-xl text-[13px] font-semibold cursor-pointer hover:bg-[#E83355]"
               >
                 下一步
+              </button>
+              <button
+                onClick={() => setStep(12)}
+                className="w-full py-2 bg-white text-[#717171] border border-[#DDDDDD] rounded-xl text-[12px] font-medium cursor-pointer hover:border-[#FF385C] hover:text-[#FF385C]"
+              >
+                回上一步
               </button>
             </BotBubble>
           )}
