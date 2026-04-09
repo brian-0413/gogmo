@@ -179,7 +179,7 @@ export async function POST(
 
     // 廣播 SQUAD_TRANSFER_PENDING 到派單方
     broadcastDispatcherEvent({
-      type: 'TRANSFER_PENDING',
+      type: 'SQUAD_TRANSFER_PENDING',
       transferId: transfer.id,
       orderId: id,
       fromDriverId: user.driver.id,

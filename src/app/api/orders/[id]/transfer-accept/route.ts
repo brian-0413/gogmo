@@ -171,7 +171,7 @@ export async function POST(
 
     // Broadcast SSE 到派單方
     broadcastDispatcherEvent({
-      type: 'TRANSFER_PENDING',
+      type: 'SQUAD_TRANSFER_PENDING',
       transferId: transfer.id,
       orderId: id,
       fromDriverId: transfer.fromDriverId,

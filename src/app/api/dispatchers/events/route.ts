@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
       const onDispatcherEvent = (event: DispatcherNotifyEvent) => {
         if (isClosed) return
         // Only send if this transfer belongs to this dispatcher
-        if (event.type === 'TRANSFER_PENDING') {
+        if (event.type === 'SQUAD_TRANSFER_PENDING') {
           sendEvent({
             type: 'SQUAD_TRANSFER_PENDING',
             transferId: event.transferId,
