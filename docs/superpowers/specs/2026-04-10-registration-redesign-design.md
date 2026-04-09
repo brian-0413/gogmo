@@ -74,7 +74,7 @@
 技術規格：
 - 支援格式：JPG、PNG、PDF
 - 每個檔案最大 5MB
-- 上傳至 `/api/uploads` 端點，儲存於雲端儲存（如有）或本地檔案系統
+- 上傳至 `/api/uploads` 端點，儲存於雲端空間（Vercel Blob / S3 / Cloudflare R2）
 - 檔案存取時需 admin token 驗證
 
 ### Step 5 — 密碼設定 + 同意書
@@ -222,7 +222,7 @@ model UserDocument {
 
 ## 10. 待確認事項
 
-- [ ] SMS 驗證是否為未來需求？（目前先做 Email）
-- [ ] 同意書文字內容（需要律師確認或自行撰寫）
-- [ ] 檔案儲存方式：本地、S3 還是其他？
-- [ ] Admin 審核通知：Email 即時通知管理員，還是管理員自行登入查看？
+- [x] SMS 驗證 — 未來需求，目前先做 Email
+- [ ] 同意書文字內容 — 後補（待提供）
+- [x] 檔案儲存方式 — 雲端空間（如 S3 / Vercel Blob / Cloudflare R2）
+- [x] Admin 審核通知 — 審核通過後以 Email 通知用戶
