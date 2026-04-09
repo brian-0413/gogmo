@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
 import { FeeConfigPanel } from '@/components/admin/FeeConfigPanel'
-import { Shield, LogOut, Plane, Settings } from 'lucide-react'
+import { Shield, LogOut, Plane, Settings, FileText } from 'lucide-react'
+import Link from 'next/link'
 import { Button } from '@/components/ui/Button'
 
 export default function AdminDashboard() {
@@ -55,8 +56,7 @@ export default function AdminDashboard() {
       <div className="bg-[#FAF8F5] border-b border-[#DDDDDD]">
         <div className="max-w-4xl mx-auto px-4 sm:px-6">
           <div className="flex gap-2 py-3">
-            <button
-              onClick={() => setActiveTab('config')}
+            <Link href="/dashboard/admin" onClick={() => setActiveTab('config')}
               className={`px-4 py-2 text-sm rounded-full transition-colors flex items-center gap-2 ${
                 activeTab === 'config'
                   ? 'bg-[#222222] text-white'
@@ -65,7 +65,12 @@ export default function AdminDashboard() {
             >
               <Settings className="w-3.5 h-3.5" />
               費率設定
-            </button>
+            </Link>
+            <Link href="/dashboard/admin/reviews"
+              className="px-4 py-2 text-sm rounded-full transition-colors flex items-center gap-2 bg-transparent text-[#717171] border border-[#DDDDDD] hover:bg-[#F7F7F7]">
+              <FileText className="w-3.5 h-3.5" />
+              帳號審核
+            </Link>
           </div>
         </div>
       </div>

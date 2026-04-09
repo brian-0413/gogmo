@@ -8,12 +8,13 @@ interface User {
   email: string
   name: string
   role: 'DRIVER' | 'DISPATCHER' | 'ADMIN'
+  accountStatus?: string
+  rejectReason?: string
   driver?: {
     id: string
     status: string
     balance: number
     isPremium?: boolean
-    accountStatus?: string
   }
   dispatcher?: {
     id: string

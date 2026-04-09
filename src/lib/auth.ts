@@ -29,6 +29,8 @@ export interface AuthResult {
     name: string
     role: string
     isPremium?: boolean
+    accountStatus?: string | null
+    rejectReason?: string | null
   }
   error?: string
 }
@@ -175,6 +177,8 @@ export async function login(email: string, password: string): Promise<AuthResult
         name: user.name,
         role: user.role,
         isPremium: user.driver?.isPremium ?? false,
+        accountStatus: user.accountStatus,
+        rejectReason: user.rejectReason,
       },
     }
   } catch (error) {
@@ -202,6 +206,8 @@ export async function loginByPlate(licensePlate: string, password: string): Prom
       user: {
         id: user.id, email: user.email, name: user.name, role: user.role,
         isPremium: user.driver?.isPremium ?? false,
+        accountStatus: user.accountStatus,
+        rejectReason: user.rejectReason,
       },
     }
   } catch (error) {

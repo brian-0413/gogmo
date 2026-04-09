@@ -99,6 +99,8 @@ export async function GET(request: NextRequest) {
         name: user.name,
         phone: user.phone,
         role: user.role,
+        accountStatus: user.accountStatus,
+        rejectReason: user.rejectReason,
         driver: user.driver,
         dispatcher: user.dispatcher,
       },
