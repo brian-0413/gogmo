@@ -68,6 +68,7 @@ model Squad {
   updatedAt DateTime     @updatedAt
 
   members   SquadMember[]
+  invites   SquadInvite[]
   transfers OrderTransfer[]
 
   @@map("squads")
@@ -84,6 +85,21 @@ model SquadMember {
   @@unique([squadId, driverId])
   @@index([squadId])
   @@map("squad_members")
+}
+
+model SquadInvite {
+  id        String   @id @default(cuid())
+  squadId   String
+  squad     Squad    @relation(fields: [squadId], references: [id], onDelete: Cascade)
+  driverId  String   // 被邀請司機
+  driver    Driver   @relation(fields: [driverId], references: [id])
+  status    String   @default("pending") // pending / accepted / rejected
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([driverId])
+  @@index([squadId])
+  @@map("squad_invites")
 }
 
 model User {
@@ -137,6 +153,7 @@ model Driver {
   foundedSquads   Squad[]         @relation("SquadFounder")
   transfersOut    OrderTransfer[] @relation("TransferFrom")
   transfersIn     OrderTransfer[] @relation("TransferTo")
+  squadInvites    SquadInvite[]
 
   @@map("drivers")
 }
@@ -272,7 +289,8 @@ model OrderTransfer {
   squadId       String
   squad         Squad           @relation(fields: [squadId], references: [id])
   reason        String?
-  transferFee   Int             // 轉單費用（訂單金額 * 5%）
+  transferFee   Int             // 轉單費用（訂單金額 * 3%，在接手成功後扣）
+  bonusPoints   Int             @default(0)  // bonus 點數
   status        TransferStatus @default(PENDING_SQUAD)
   dispatcherNote String?
   createdAt     DateTime        @default(now())

@@ -89,8 +89,14 @@ export const DRIVER_EARNINGS_RATE = 0.95
 /** 取消訂單手續費比率（10%） */
 export const CANCELLATION_FEE_RATE = 0.1
 
-/** 轉單手續費比率（5%） */
-export const TRANSFER_FEE_RATE = 0.05
+/** 轉單手續費比率（3%） */
+export const TRANSFER_FEE_RATE = 0.03
+
+/** 小隊鎖定小時數（行程前 N 小時鎖定） */
+export const TRANSFER_LOCK_HOURS = 1
+
+/** bonus 最低點數 */
+export const MIN_BONUS_POINTS = 10
 
 /** 每週結算目標（點數） */
 export const WEEKLY_SETTLEMENT_TARGET = 5000

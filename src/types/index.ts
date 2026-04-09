@@ -139,6 +139,7 @@ export interface OrderTransfer {
   squadId: string
   reason: string | null
   transferFee: number
+  bonusPoints?: number
   status: TransferStatus
   dispatcherNote: string | null
   createdAt: Date | string
