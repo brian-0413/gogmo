@@ -92,8 +92,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const data = await res.json()
 
       if (data.success) {
+        // Fetch full user data (with nested driver/dispatcher) from /api/auth
+        const userRes = await fetch('/api/auth', {
+          headers: { Authorization: `Bearer ${data.data.token}` },
+        })
+        const userData = await userRes.json()
         setToken(data.data.token)
-        setUser(data.data.user)
+        setUser(userData.success ? userData.data : data.data.user)
         localStorage.setItem('token', data.data.token)
         // Set auth cookie for SSE endpoint (EventSource can't set custom headers)
         document.cookie = `auth_token=${data.data.token}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Lax`
