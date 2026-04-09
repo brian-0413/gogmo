@@ -5,17 +5,41 @@
 
 ---
 
-## 專案現況（2026-04-09 下午）
+## 專案現況（2026-04-10 凌晨）
 
 ### 最後 commit
 ```
-2d82536 feat: 小隊 v2 — SquadTab 支援池 UI + TransferRequestForm + 派單方橫幅 + 管理員後台
+1e821f9 feat: Dashboard 新增帳號狀態門控（待驗證/待審核/已拒絕）
 ```
 落後 origin/main 0 個 commits。
 
 ---
 
-## 目前開發階段：小隊互助系統 v2（已完成）
+## 目前開發階段：使用者註冊功能改善（已完成）
+
+### [完成] 使用者註冊功能改善（2026-04-10 凌晨）
+**Commits**: `3616bb7` → `e99b3c1` → `20b1551` → `a713b6d` → `4c6b44b` → `3f5b95b` → `04965a2` → `9a2664f` → `3df9db5` → `8f7b173` → `313b2d4` → `5e86099` → `1e821f9`
+**規格文件**: `docs/superpowers/specs/2026-04-10-registration-redesign-design.md`
+**實作計畫**: `docs/superpowers/plans/2026-04-10-registration-redesign-plan.md`
+
+**實作內容（5 步驟註冊精靈 + 雙 Tab 登入 + 文件審核）**：
+- **多步驟註冊精靈**：
+  - Step 1：身份選擇（司機/派單方）
+  - Step 2：基本資料（司機：姓名+手機+Email；派單方：公司名+聯絡電話+Email+統編）
+  - Step 3：車輛資料（司機專屬：車牌+車廠+車型+車色+車型下拉）
+  - Step 4：文件上傳（司機：行照+駕照+保險證；派單方：負責人身分證+商業登記公文）
+  - Step 5：密碼設定 + 同意書勾選
+- **雙 Tab 登入頁**：
+  - Tab 1 司機：車牌 + 密碼（車牌=帳號）
+  - Tab 2 派單方：Email + 密碼
+  - 忘記密碼表單（司機需車牌+Email 比對；派單方用 Email）
+- **Email 驗證**：註冊後寄驗證連結 → 點擊開通 → accountStatus = PENDING_REVIEW
+- **Prisma Schema**：新增 `AccountStatus` enum、`emailVerified`、`emailVerifyToken`、`accountStatus`、`rejectReason`（User）；`carBrand`、`carModel`（Driver）；`taxId`、`contactPhone`（Dispatcher）；`UserDocument` model
+- **Admin 審核後台**：`/dashboard/admin/reviews`，司機/派單方分頁，可檢視文件、通過/拒絕
+- **帳號狀態門控**：Dashboard 根據 accountStatus 顯示鎖定畫面（待驗證/待審核/已拒絕）
+- **檔案上傳 API**：`POST /api/uploads`，支援 JPG/PNG/PDF（最大 5MB），存入 public/uploads/
+
+
 
 ### [完成] 小隊互助系統 v2（2026-04-09 下午）
 **Commits**: `b812e81` → `4cc60f9` → `cfb0c2e` → `3b41d7c` → `6edd0ff` → `9ca55b5` → `6519a18` → `b56a54e` → `cc3bdc8` → `2d82536`
@@ -485,7 +509,7 @@ PENDING → PUBLISHED → ASSIGNED → ACCEPTED → ARRIVED → IN_PROGRESS → 
 - [x] 智慧排單排序策略重構（接機觸發→地理距離/送機觸發→落地時間）
 - [x] 行程卡片單一訂單智慧排單
 - [x] **小車頭專區**：Premium 司機專屬發單功能，LINE 風格 14 步對話流程
-- [ ] **使用者註冊功能改善** — 車型改為下拉選單、車色改為下拉選單、強化驗證
+- [x] **使用者註冊功能改善** — 多步驟精靈（身份/基本資料/車輛/文件上傳/密碼）、雙Tab登入（車牌/Email）、Email驗證、Admin審核後台
 - [ ] **訂閱與金流系統**（規格文件：`docs/subscription-system.md`）
   - Prisma schema 異動
   - UNIPAY 整合
