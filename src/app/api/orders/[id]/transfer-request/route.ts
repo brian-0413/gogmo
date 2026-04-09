@@ -104,10 +104,17 @@ export async function POST(
     const driverId = user.driver.id
     const driverBalance = user.driver.balance
 
-    if (bonusPoints > 0) {
+    // 類型驗證（防止 NaN/Infinity/字串導致餘額腐蝕）
+    if (bonusPoints !== undefined) {
+      if (typeof bonusPoints !== 'number' || !Number.isFinite(bonusPoints) || bonusPoints < 0) {
+        return NextResponse.json<ApiResponse>(
+          { success: false, error: 'bonusPoints 格式不正確' },
+          { status: 400 }
+        )
+      }
       if (bonusPoints < MIN_BONUS_POINTS) {
         return NextResponse.json<ApiResponse>(
-          { success: false, error: `bonus 點數最低為 ${MIN_BONUS_POINTS}` },
+          { success: false, error: `bonusPoints 最低為 ${MIN_BONUS_POINTS} 點` },
           { status: 400 }
         )
       }
@@ -138,7 +145,7 @@ export async function POST(
             orderId: id,
             amount: -bonusPoints,
             type: 'RECHARGE',
-            status: 'PENDING',
+            status: 'SETTLED',
             description: `轉單 bonus 鎖定（訂單 ${order.orderSeq ?? order.id}）`,
           },
         })
