@@ -4,7 +4,7 @@ import { getUserFromToken } from '@/lib/auth'
 import { ApiResponse } from '@/types'
 import { broadcastSquadEvent, broadcastDispatcherEvent } from '@/lib/sse-emitter'
 
-// POST /api/orders/[id]/transfer-approve — 派單方同意轉單
+// POST /api/orders/[id]/transfer-approve — 派單方批准轉單，進入小隊支援池
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -43,7 +43,6 @@ export async function POST(
       include: {
         order: true,
         fromDriver: { include: { user: true } },
-        toDriver: { include: { user: true } },
       },
     })
 
@@ -68,13 +67,6 @@ export async function POST(
       )
     }
 
-    if (!transfer.toDriverId) {
-      return NextResponse.json<ApiResponse>(
-        { success: false, error: '此轉單尚未有接單司機' },
-        { status: 400 }
-      )
-    }
-
     // 確認派單方是此訂單的派單方
     if (transfer.order.dispatcherId !== user.dispatcher.id) {
       return NextResponse.json<ApiResponse>(
@@ -83,13 +75,12 @@ export async function POST(
       )
     }
 
-    // Transaction：更新轉單狀態 + 更新訂單司機 + 扣轉單費
+    // Transaction：更新轉單狀態為 PENDING_SQUAD（不變更訂單司機、不扣費）
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const result = await prisma.$transaction(async (tx: any) => {
-      // 更新轉單狀態
-      const updatedTransfer = await tx.orderTransfer.update({
+    const updatedTransfer = await prisma.$transaction(async (tx: any) => {
+      return tx.orderTransfer.update({
         where: { id: body.transferId },
-        data: { status: 'APPROVED' },
+        data: { status: 'PENDING_SQUAD' },
         include: {
           order: {
             select: {
@@ -104,69 +95,35 @@ export async function POST(
             },
           },
           fromDriver: { include: { user: { select: { name: true } } } },
-          toDriver: { include: { user: { select: { name: true } } } },
         },
       })
-
-      // 更新訂單司機
-      await tx.order.update({
-        where: { id },
-        data: { driverId: transfer.toDriverId },
-      })
-
-      // 從 fromDriver 帳戶扣 transferFee
-      const fromDriver = await tx.driver.findUnique({ where: { id: transfer.fromDriverId } })
-      if (!fromDriver) throw new Error('找不到原司機資料')
-
-      const newBalance = fromDriver.balance - transfer.transferFee
-      await tx.driver.update({
-        where: { id: transfer.fromDriverId },
-        data: { balance: newBalance },
-      })
-
-      // 記錄轉單扣費交易
-      await tx.transaction.create({
-        data: {
-          orderId: id,
-          driverId: transfer.fromDriverId,
-          amount: -transfer.transferFee,
-          type: 'PLATFORM_FEE',
-          status: 'SETTLED',
-          description: `轉單手續費 (5%) - 訂單 #${id.slice(0, 8)}`,
-        },
-      })
-
-      return { updatedTransfer, newBalance }
     })
 
-    // Broadcast SSE 到小隊
+    // Broadcast SQUAD_POOL_NEW 到小隊全成員
     broadcastSquadEvent({
-      type: 'TRANSFER_APPROVED',
+      type: 'SQUAD_POOL_NEW',
       transferId: transfer.id,
       orderId: id,
       fromDriverId: transfer.fromDriverId,
-      toDriverId: transfer.toDriverId!,
       squadId: transfer.squadId,
-      status: 'APPROVED',
+      status: 'PENDING_SQUAD',
+      bonusPoints: transfer.bonusPoints,
+      reason: transfer.reason ?? undefined,
     })
 
-    // Broadcast SSE 到派單方
+    // Broadcast TRANSFER_POOL_READY 到派單方
     broadcastDispatcherEvent({
-      type: 'TRANSFER_APPROVED',
+      type: 'TRANSFER_POOL_READY',
       transferId: transfer.id,
       orderId: id,
       fromDriverId: transfer.fromDriverId,
-      toDriverId: transfer.toDriverId!,
-      status: 'APPROVED',
+      squadId: transfer.squadId,
+      status: 'PENDING_SQUAD',
     })
 
     return NextResponse.json<ApiResponse>({
       success: true,
-      data: {
-        transfer: result.updatedTransfer,
-        transferFee: transfer.transferFee,
-        fromDriverNewBalance: result.newBalance,
-      },
+      data: { transfer: updatedTransfer },
     })
   } catch (error) {
     console.error('Transfer approve error:', error)
