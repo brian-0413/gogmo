@@ -37,6 +37,8 @@ export interface Driver {
   licensePlate: string
   carType: string
   carColor: string
+  carBrand?: string
+  carModel?: string
   balance: number
   status: DriverStatus
   currentLat?: number
@@ -53,6 +55,8 @@ export interface Dispatcher {
   userId: string
   companyName: string
   commissionRate: number
+  taxId?: string
+  contactPhone?: string
   user?: User
 }
 
@@ -201,6 +205,10 @@ export interface RegisterRequest {
   carType?: string
   carColor?: string
   companyName?: string
+  carBrand?: string
+  carModel?: string
+  taxId?: string
+  contactPhone?: string
 }
 
 export interface LoginRequest {

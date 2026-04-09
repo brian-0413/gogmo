@@ -64,6 +64,10 @@ export async function register(
     carType?: string
     carColor?: string
     companyName?: string
+    carBrand?: string
+    carModel?: string
+    taxId?: string
+    contactPhone?: string
   }
 ): Promise<AuthResult> {
   try {
@@ -83,6 +87,7 @@ export async function register(
         name,
         phone,
         role,
+        accountStatus: 'PENDING_VERIFICATION',
         ...(role === 'DRIVER' && {
           driver: {
             create: {
@@ -90,6 +95,8 @@ export async function register(
               carType: extraData.carType || '轎車',
               carColor: extraData.carColor || '',
               balance: NEW_USER_BONUS, // 新用戶贈送點數
+              carBrand: extraData.carBrand || null,
+              carModel: extraData.carModel || null,
             },
           },
         }),
@@ -98,6 +105,8 @@ export async function register(
             create: {
               companyName: extraData.companyName || '',
               commissionRate: 0, // 初期免費
+              taxId: extraData.taxId || null,
+              contactPhone: extraData.contactPhone || null,
             },
           },
         }),

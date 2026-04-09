@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { register, getUserFromToken } from '@/lib/auth'
+import { register, getUserFromToken, sendVerifyEmail } from '@/lib/auth'
 import { ApiResponse, RegisterRequest } from '@/types'
 import { checkRateLimit } from '@/lib/api-utils'
 
@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json() as RegisterRequest
-    const { email, password, name, phone, role, licensePlate, carType, carColor, companyName } = body
+    const { email, password, name, phone, role, licensePlate, carType, carColor, companyName, carBrand, carModel, taxId, contactPhone } = body
 
     if (!email || !password || !name || !phone || !role) {
       return NextResponse.json<ApiResponse>(
@@ -39,6 +39,10 @@ export async function POST(request: NextRequest) {
       carType: carType || '轎車',
       carColor,
       companyName,
+      carBrand: carBrand || '',
+      carModel: carModel || '',
+      taxId: taxId || '',
+      contactPhone: contactPhone || '',
     })
 
     if (!result.success) {
@@ -47,6 +51,11 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
+
+    // Send verification email (async, don't await)
+    sendVerifyEmail(result.user!.id, email).catch(err => {
+      console.error('Failed to send verify email:', err)
+    })
 
     return NextResponse.json<ApiResponse>({
       success: true,
