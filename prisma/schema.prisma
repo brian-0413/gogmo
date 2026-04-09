@@ -56,6 +56,13 @@ enum TransferStatus {
   EXPIRED             // 過期（行程鎖定）
 }
 
+enum AccountStatus {
+  PENDING_VERIFICATION
+  PENDING_REVIEW
+  ACTIVE
+  REJECTED
+}
+
 // ============== Models ==============
 
 model Squad {
@@ -108,14 +115,19 @@ model User {
   password  String
   name      String
   phone     String
-  role      UserRole
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  role             UserRole
+  emailVerified    Boolean        @default(false)
+  emailVerifyToken String?
+  accountStatus    AccountStatus  @default(PENDING_VERIFICATION)
+  rejectReason     String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
 
   // Relations
   driver     Driver?
   dispatcher Dispatcher?
   admin      Admin?
+  documents  UserDocument[]
 
   @@map("users")
 }
@@ -135,6 +147,8 @@ model Driver {
   licensePlate    String       // 車牌
   carType         String       // 車型（如：轎車、SUV、福祉車）
   carColor        String       // 車色
+  carBrand        String?      // 車廠/品牌（如：TOYOTA）
+  carModel        String?      // 車型/型號（如：CAMRY）
   balance         Int          @default(0) // 點數餘額（整數，1點=1元）
   status          DriverStatus @default(OFFLINE)
   currentLat      Float?
@@ -163,6 +177,8 @@ model Dispatcher {
   userId          String   @unique
   user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   companyName     String   // 公司/車隊名稱
+  taxId           String?  // 統一編號
+  contactPhone    String?  // 聯絡電話（獨立於 User.phone）
   commissionRate  Float    @default(0) // 抽成比例
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -276,6 +292,22 @@ model Transaction {
   @@index([driverId, status])
   @@index([orderId])
   @@map("transactions")
+}
+
+model UserDocument {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String   // DRIVER_LICENSE / VEHICLE_REGISTRATION / INSURANCE / ID_CARD / BUSINESS_REGISTRATION
+  fileUrl   String   // 雲端儲存 URL
+  fileName  String   // 原始檔案名稱
+  mimeType  String   // image/jpeg / image/png / application/pdf
+  sizeBytes Int      // 檔案大小（位元組）
+  status    String   @default("PENDING")  // PENDING / APPROVED / REJECTED
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("user_documents")
 }
 
 model OrderTransfer {
