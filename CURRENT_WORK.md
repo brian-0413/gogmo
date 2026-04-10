@@ -18,7 +18,7 @@
 ## 目前開發階段：Google Drive 文件儲存整合（已完成）
 
 ### [完成] Google Drive 文件儲存整合（2026-04-10）
-**Commits**: `30243a2` → `1ff328a` → `53ed354` → `dfe21a7` → `c1659c7` → `066ee5d` → `9864faf` → `0e21493`
+**Commits**: `30243a2` → `1ff328a` → `53ed354` → `dfe21a7` → `c1659c7` → `066ee5d` → `9864faf` → `0e21493` → `dc937a8`
 **功能概述**：將註冊流程的三證文件從本地磁碟改存 Google Drive，由服務帳號統一管理。
 
 **實作內容**：
@@ -26,7 +26,7 @@
 - **資料夾結構**：`{rootFolderId}/{userId}_{車牌}/` 下依類型命名（如 `REC2391-行照.jpg`）
 - **上傳時機**：Step 5 註冊送出時一次上傳至 Google Drive
 - **失敗處理**：上傳失敗時註冊仍成功，UserDocument 標記 `uploadFailed = true`
-- **派單方查看**：司機資訊卡新增「查看證件」按鈕，點擊開啟 Drive 分享連結
+- **派單方查看**：司機資訊卡新增「查看證件」按鈕，點擊開啟 DocumentViewerModal（3 Tab 行照/駕照/保險證，圖片直接顯示、PDF 嵌入 Google Viewer，無需跳出頁面）
 - **API**：`GET /api/drivers/[id]/documents` 供派單方查詢司機文件
 
 **規格文件**：`docs/superpowers/specs/2026-04-10-gdrive-document-storage-design.md`
