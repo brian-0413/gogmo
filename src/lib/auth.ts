@@ -224,8 +224,13 @@ export async function sendVerifyEmail(userId: string, email: string): Promise<vo
     where: { id: userId },
     data: { emailVerifyToken: token },
   })
-  // TODO: call email.ts sendVerifyEmail(email, token)
-  console.log(`[EMAIL] Verify link for ${email}: ${verifyUrl}`)
+  try {
+    const { sendVerificationEmail } = await import('./email')
+    await sendVerificationEmail(email, verifyUrl)
+  } catch (error) {
+    console.error('[EMAIL] Failed to send verification email:', error)
+    // Don't rethrow — email failure shouldn't crash registration
+  }
 }
 
 export async function verifyEmail(token: string): Promise<{ success: boolean; error?: string }> {
