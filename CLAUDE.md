@@ -5,7 +5,7 @@
 - Prisma ORM + PostgreSQL (Supabase, Transaction Pooler port 6543)
 - 自定義 JWT 認證（無 NextAuth.js）
 - Tailwind CSS + 自定義元件（shadcn/ui 改造）
-- 部署：Vercel
+- 部署：Zeabur
 
 ## 三模型同步工作流
 本專案使用 3 個 Claude Code 對話（Haiku/Sonnet/Opus）分擔不同複雜度的問題。
