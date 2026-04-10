@@ -229,7 +229,6 @@ export async function sendVerifyEmail(userId: string, email: string): Promise<vo
     await sendVerificationEmail(email, verifyUrl)
   } catch (error) {
     console.error('[EMAIL] Failed to send verification email:', error)
-    // Don't rethrow — email failure shouldn't crash registration
   }
 }
 

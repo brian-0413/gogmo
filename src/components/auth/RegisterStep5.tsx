@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 
 export interface Step5Data {
@@ -18,6 +18,9 @@ interface RegisterStep5Props {
 export function RegisterStep5({ data, onChange, onSubmit, onBack }: RegisterStep5Props) {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+
+  // Reset loading when data changes (e.g. user goes back and returns)
+  useEffect(() => { setLoading(false) }, [])
 
   const passwordError = data.password.length > 0 && data.password.length < 6 ? '密碼至少 6 個字元' : ''
   const confirmError = data.confirmPassword.length > 0 && data.password !== data.confirmPassword ? '兩次密碼不符' : ''

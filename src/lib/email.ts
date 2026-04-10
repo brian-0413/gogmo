@@ -51,6 +51,5 @@ export async function sendVerificationEmail(email: string, verifyUrl: string): P
     })
   } catch (error) {
     console.error('[EMAIL] Failed to send verification email:', error)
-    throw error
   }
 }
