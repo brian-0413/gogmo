@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { register, getUserFromToken, sendVerifyEmail } from '@/lib/auth'
-import { ApiResponse, RegisterRequest } from '@/types'
+import { ApiResponse } from '@/types'
 import { checkRateLimit } from '@/lib/api-utils'
 
 // Register new user
@@ -10,9 +10,41 @@ export async function POST(request: NextRequest) {
   if (rateLimitResult) return rateLimitResult
 
   try {
-    const body = await request.json() as RegisterRequest
-    const { email, password, name, phone, role, licensePlate, carType, carColor, companyName, carBrand, carModel, taxId, contactPhone } = body
+    const contentType = request.headers.get('content-type') || ''
 
+    let email: string, password: string, name: string, phone: string, role: string
+    let licensePlate = '', carType = '', carColor = '', companyName = ''
+    let carBrand = '', carModel = '', taxId = '', contactPhone = ''
+    let uploadedFiles: { type: string; file: File }[] = []
+
+    if (contentType.includes('multipart/form-data')) {
+      const formData = await request.formData()
+      email = formData.get('email') as string
+      password = formData.get('password') as string
+      name = formData.get('name') as string
+      phone = formData.get('phone') as string
+      role = formData.get('role') as string
+      licensePlate = (formData.get('licensePlate') as string) || ''
+      carType = (formData.get('carType') as string) || '轎車'
+      carColor = (formData.get('carColor') as string) || ''
+      companyName = (formData.get('companyName') as string) || ''
+      carBrand = (formData.get('carBrand') as string) || ''
+      carModel = (formData.get('carModel') as string) || ''
+      taxId = (formData.get('taxId') as string) || ''
+      contactPhone = (formData.get('contactPhone') as string) || ''
+
+      // Collect document files
+      const docTypes = ['VEHICLE_REGISTRATION', 'DRIVER_LICENSE', 'INSURANCE', 'ID_CARD', 'BUSINESS_REGISTRATION']
+      for (const dt of docTypes) {
+        const f = formData.get(dt) as File | null
+        if (f && f.size > 0) uploadedFiles.push({ type: dt, file: f })
+      }
+    } else {
+      const body = await request.json()
+      ;({ email, password, name, phone, role, licensePlate, carType, carColor, companyName, carBrand, carModel, taxId, contactPhone } = body)
+    }
+
+    // Basic validation
     if (!email || !password || !name || !phone || !role) {
       return NextResponse.json<ApiResponse>(
         { success: false, error: '缺少必填欄位' },
@@ -34,7 +66,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const result = await register(email, password, name, phone, role, {
+    // Register user
+    const result = await register(email, password, name, phone, role as 'DRIVER' | 'DISPATCHER', {
       licensePlate,
       carType: carType || '轎車',
       carColor,
@@ -50,6 +83,67 @@ export async function POST(request: NextRequest) {
         { success: false, error: result.error },
         { status: 400 }
       )
+    }
+
+    // Upload documents to Google Drive (if any) — failures do NOT block registration
+    if (uploadedFiles.length > 0) {
+      const { uploadFileToDrive, getOrCreateUserFolder, setFilePublic } = await import('@/lib/google-drive')
+      const { prisma } = await import('@/lib/prisma')
+
+      for (const { type, file } of uploadedFiles) {
+        try {
+          const driver = await prisma.driver.findUnique({ where: { userId: result.user!.id } })
+          const dispatcher = await prisma.dispatcher.findUnique({ where: { userId: result.user!.id } })
+          const plate = driver?.licensePlate || dispatcher?.companyName || result.user!.id
+
+          const ext = file.name.split('.').pop() || 'bin'
+          const labelMap: Record<string, string> = {
+            VEHICLE_REGISTRATION: '行照',
+            DRIVER_LICENSE: '駕照',
+            INSURANCE: '保險證',
+            ID_CARD: '身分證',
+            BUSINESS_REGISTRATION: '商業登記',
+          }
+          const fileName = `${plate}-${labelMap[type] || type}.${ext}`
+          const buffer = Buffer.from(await file.arrayBuffer())
+
+          const rootFolderId = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID
+          if (!rootFolderId) throw new Error('GOOGLE_DRIVE_ROOT_FOLDER_ID 未設定')
+
+          const folderId = await getOrCreateUserFolder(rootFolderId, result.user!.id, plate)
+          const uploaded = await uploadFileToDrive(folderId, fileName, file.type, buffer)
+          await setFilePublic(uploaded.fileId)
+
+          await prisma.userDocument.create({
+            data: {
+              userId: result.user!.id,
+              type,
+              fileUrl: uploaded.webViewLink,
+              driveFileId: uploaded.fileId,
+              driveFolderId: folderId,
+              fileName: file.name,
+              mimeType: file.type,
+              sizeBytes: file.size,
+              status: 'PENDING',
+              uploadFailed: false,
+            },
+          })
+        } catch (err) {
+          console.error(`文件上傳失敗 (${type}):`, err)
+          const { prisma } = await import('@/lib/prisma')
+          await prisma.userDocument.create({
+            data: {
+              userId: result.user!.id,
+              type,
+              fileName: file.name,
+              mimeType: file.type,
+              sizeBytes: file.size,
+              status: 'PENDING',
+              uploadFailed: true,
+            },
+          })
+        }
+      }
     }
 
     // Send verification email (async, don't await)
