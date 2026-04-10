@@ -299,11 +299,14 @@ model UserDocument {
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   type      String   // DRIVER_LICENSE / VEHICLE_REGISTRATION / INSURANCE / ID_CARD / BUSINESS_REGISTRATION
-  fileUrl   String   // 雲端儲存 URL
+  fileUrl   String?  // 改存 Google Drive 分享連結（webViewLink）
+  driveFileId   String?  // Google Drive 檔案 ID
+  driveFolderId String? // Google Drive 資料夾 ID
   fileName  String   // 原始檔案名稱
   mimeType  String   // image/jpeg / image/png / application/pdf
   sizeBytes Int      // 檔案大小（位元組）
   status    String   @default("PENDING")  // PENDING / APPROVED / REJECTED
+  uploadFailed Boolean @default(false)   // 上傳失敗標記
   createdAt DateTime @default(now())
 
   @@index([userId])
