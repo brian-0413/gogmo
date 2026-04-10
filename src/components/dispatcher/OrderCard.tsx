@@ -5,6 +5,7 @@ import { format, parseISO } from 'date-fns'
 import { Pencil, Trash2, User, Check, X } from 'lucide-react'
 import { formatOrderNo } from '@/lib/utils'
 import { ProgressBar } from '@/components/driver/ProgressBar'
+import { DocumentViewerModal } from './DocumentViewerModal'
 import { TYPE_TAG_STYLE, STATUS_TAG_STYLE, TYPE_LABELS, STATUS_LABELS, VEHICLE_LABELS } from '@/lib/constants'
 import type { Order, OrderStatus, OrderType, VehicleType } from '@/types'
 
@@ -59,6 +60,7 @@ export function DispatcherOrderCard({ order, token, onUpdate }: DispatcherOrderC
   })
   const [saveLoading, setSaveLoading] = useState(false)
   const [deleteLoading, setDeleteLoading] = useState(false)
+  const [viewingDocuments, setViewingDocuments] = useState(false)
 
   const handleSave = async () => {
     if (!token) return
@@ -165,19 +167,7 @@ export function DispatcherOrderCard({ order, token, onUpdate }: DispatcherOrderC
                 onClick={async (e) => {
                   e.stopPropagation()
                   if (!token) return
-                  try {
-                    const res = await fetch(`/api/drivers/${order.driver?.userId}/documents`, {
-                      headers: { Authorization: `Bearer ${token}` },
-                    })
-                    const data = await res.json()
-                    if (data.success && data.data.documents?.length > 0) {
-                      window.open(data.data.documents[0].fileUrl, '_blank')
-                    } else {
-                      alert('暫無文件資料')
-                    }
-                  } catch {
-                    alert('無法載入文件')
-                  }
+                  setViewingDocuments(true)
                 }}
                 className="ml-auto text-[11px] px-2 py-1 bg-[#0C447C] text-white rounded hover:bg-[#0A3570] transition-colors"
               >
@@ -352,6 +342,16 @@ export function DispatcherOrderCard({ order, token, onUpdate }: DispatcherOrderC
           </>
         )}
       </div>
+
+      {viewingDocuments && order.driver && (
+        <DocumentViewerModal
+          driverId={order.driver.userId}
+          driverName={order.driver.user?.name || ''}
+          licensePlate={order.driver.licensePlate}
+          token={token || ''}
+          onClose={() => setViewingDocuments(false)}
+        />
+      )}
     </div>
   )
 }
