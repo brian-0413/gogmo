@@ -161,6 +161,28 @@ export function DispatcherOrderCard({ order, token, onUpdate }: DispatcherOrderC
             <div className="flex items-center gap-2">
               <span className="text-[14px] font-bold px-2 py-0.5 bg-[#222222] text-white rounded font-mono-nums">{order.driver?.licensePlate}</span>
               <span className="text-[13px] text-[#717171]">{order.driver?.carColor} {order.driver?.carType}</span>
+              <button
+                onClick={async (e) => {
+                  e.stopPropagation()
+                  if (!token) return
+                  try {
+                    const res = await fetch(`/api/drivers/${order.driver?.userId}/documents`, {
+                      headers: { Authorization: `Bearer ${token}` },
+                    })
+                    const data = await res.json()
+                    if (data.success && data.data.documents?.length > 0) {
+                      window.open(data.data.documents[0].fileUrl, '_blank')
+                    } else {
+                      alert('暫無文件資料')
+                    }
+                  } catch {
+                    alert('無法載入文件')
+                  }
+                }}
+                className="ml-auto text-[11px] px-2 py-1 bg-[#0C447C] text-white rounded hover:bg-[#0A3570] transition-colors"
+              >
+                查看證件
+              </button>
             </div>
           </div>
         </div>
