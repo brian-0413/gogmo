@@ -1,11 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUserFromToken } from '@/lib/auth'
 import { ApiResponse } from '@/types'
-import { writeFile, mkdir } from 'fs/promises'
-import path from 'path'
+import { uploadFileToDrive, getOrCreateUserFolder, setFilePublic } from '@/lib/google-drive'
+import { prisma } from '@/lib/prisma'
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'application/pdf']
 const MAX_SIZE = 5 * 1024 * 1024 // 5MB
+const DOC_TYPE_FILE_NAME: Record<string, string> = {
+  VEHICLE_REGISTRATION: '行照',
+  DRIVER_LICENSE: '駕照',
+  INSURANCE: '保險證',
+  ID_CARD: '身分證',
+  BUSINESS_REGISTRATION: '商業登記',
+}
 
 export async function POST(request: NextRequest) {
   const token = request.headers.get('Authorization')?.replace('Bearer ', '')
@@ -31,34 +38,65 @@ export async function POST(request: NextRequest) {
     return NextResponse.json<ApiResponse>({ success: false, error: '檔案需小於 5MB' }, { status: 400 })
   }
 
-  // Store in public/uploads/{userId}/
-  const uploadDir = path.join(process.cwd(), 'public', 'uploads', user.id)
-  await mkdir(uploadDir, { recursive: true })
+  // Get user's license plate (Driver or Dispatcher)
+  const driver = await prisma.driver.findUnique({ where: { userId: user.id } })
+  const dispatcher = await prisma.dispatcher.findUnique({ where: { userId: user.id } })
+  const licensePlate = driver?.licensePlate || dispatcher?.companyName || user.id
 
+  // Build Google Drive file name
   const ext = file.name.split('.').pop() || 'bin'
-  const safeName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-  const filePath = path.join(uploadDir, safeName)
+  const docTypeLabel = docType ? (DOC_TYPE_FILE_NAME[docType] || docType) : '文件'
+  const driveFileName = `${licensePlate}-${docTypeLabel}.${ext}`
+
   const buffer = Buffer.from(await file.arrayBuffer())
-  await writeFile(filePath, buffer)
 
-  const fileUrl = `/uploads/${user.id}/${safeName}`
+  let fileUrl = ''
+  let driveFileId = ''
+  let driveFolderId = ''
+  let uploadFailed = false
 
-  // Also save to UserDocument table
-  const { prisma } = await import('@/lib/prisma')
-  await prisma.userDocument.create({
+  try {
+    const rootFolderId = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID
+    if (!rootFolderId) throw new Error('GOOGLE_DRIVE_ROOT_FOLDER_ID 未設定')
+
+    const folderId = await getOrCreateUserFolder(rootFolderId, user.id, licensePlate)
+    const result = await uploadFileToDrive(folderId, driveFileName, file.type, buffer)
+    await setFilePublic(result.fileId)
+
+    fileUrl = result.webViewLink
+    driveFileId = result.fileId
+    driveFolderId = folderId
+  } catch (err) {
+    console.error('Google Drive upload failed:', err)
+    uploadFailed = true
+    fileUrl = `upload-failed:${file.name}`
+  }
+
+  // Delete old documents of the same type (avoid duplicates)
+  if (docType) {
+    await prisma.userDocument.deleteMany({
+      where: { userId: user.id, type: docType },
+    })
+  }
+
+  // Create UserDocument record
+  const doc = await prisma.userDocument.create({
     data: {
       userId: user.id,
       type: docType || 'OTHER',
       fileUrl,
+      driveFileId,
+      driveFolderId,
       fileName: file.name,
       mimeType: file.type,
       sizeBytes: file.size,
       status: 'PENDING',
+      uploadFailed,
     },
   })
 
   return NextResponse.json<ApiResponse>({
     success: true,
-    data: { fileUrl, fileName: file.name, mimeType: file.type, sizeBytes: file.size },
+    data: { fileUrl, fileName: file.name, mimeType: file.type, sizeBytes: file.size, uploadFailed },
   })
 }
