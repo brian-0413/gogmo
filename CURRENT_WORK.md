@@ -9,9 +9,27 @@
 
 ### 最後 commit
 ```
-1e821f9 feat: Dashboard 新增帳號狀態門控（待驗證/待審核/已拒絕）
+0e21493 feat: 派單方司機資訊卡新增查看證件按鈕
 ```
 落後 origin/main 0 個 commits。
+
+---
+
+## 目前開發階段：Google Drive 文件儲存整合（已完成）
+
+### [完成] Google Drive 文件儲存整合（2026-04-10）
+**Commits**: `30243a2` → `1ff328a` → `53ed354` → `dfe21a7` → `c1659c7` → `066ee5d` → `9864faf` → `0e21493`
+**功能概述**：將註冊流程的三證文件從本地磁碟改存 Google Drive，由服務帳號統一管理。
+
+**實作內容**：
+- **服務帳號認證**：Google Cloud 服務帳號 + Drive API v3，無 OAuth 流程
+- **資料夾結構**：`{rootFolderId}/{userId}_{車牌}/` 下依類型命名（如 `REC2391-行照.jpg`）
+- **上傳時機**：Step 5 註冊送出時一次上傳至 Google Drive
+- **失敗處理**：上傳失敗時註冊仍成功，UserDocument 標記 `uploadFailed = true`
+- **派單方查看**：司機資訊卡新增「查看證件」按鈕，點擊開啟 Drive 分享連結
+- **API**：`GET /api/drivers/[id]/documents` 供派單方查詢司機文件
+
+**規格文件**：`docs/superpowers/specs/2026-04-10-gdrive-document-storage-design.md`
 
 ---
 
