@@ -1,14 +1,15 @@
 'use client'
 import { useState, useRef } from 'react'
 
-interface UploadedFile {
+export interface UploadedFile {
   type: string
   file: File
-  fileUrl?: string
 }
 
 interface RegisterStep4Props {
   role: 'DRIVER' | 'DISPATCHER'
+  uploadedFiles: UploadedFile[]
+  onChange: (files: UploadedFile[]) => void
   onNext: () => void
   onBack: () => void
 }
@@ -24,8 +25,7 @@ const DISPATCHER_UPLOADS = [
   { type: 'BUSINESS_REGISTRATION', label: '公司/商業登記核准公文', required: true },
 ]
 
-export function RegisterStep4({ role, onNext, onBack }: RegisterStep4Props) {
-  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([])
+export function RegisterStep4({ role, uploadedFiles, onChange, onNext, onBack }: RegisterStep4Props) {
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({})
 
   const uploadItems = role === 'DRIVER' ? DRIVER_UPLOADS : DISPATCHER_UPLOADS
@@ -33,17 +33,9 @@ export function RegisterStep4({ role, onNext, onBack }: RegisterStep4Props) {
   const handleFileSelect = (type: string, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-
-    const url = URL.createObjectURL(file)
-    setUploadedFiles(prev => {
-      const existing = prev.findIndex(f => f.type === type)
-      if (existing >= 0) {
-        const updated = [...prev]
-        updated[existing] = { type, file, fileUrl: url }
-        return updated
-      }
-      return [...prev, { type, file, fileUrl: url }]
-    })
+    onChange(
+      uploadedFiles.filter(f => f.type !== type).concat({ type, file })
+    )
   }
 
   const isFileUploaded = (type: string) => uploadedFiles.some(f => f.type === type)

@@ -6,7 +6,7 @@ import { ProgressBar } from './ProgressBar'
 import { RegisterStep1 } from './RegisterStep1'
 import { RegisterStep2, type Step2Data } from './RegisterStep2'
 import { RegisterStep3, type Step3Data } from './RegisterStep3'
-import { RegisterStep4 } from './RegisterStep4'
+import { RegisterStep4, type UploadedFile } from './RegisterStep4'
 import { RegisterStep5, type Step5Data } from './RegisterStep5'
 
 export function RegisterWizard() {
@@ -32,12 +32,14 @@ export function RegisterWizard() {
     confirmPassword: '',
     agreedToTerms: false,
   })
+  const [step4Files, setStep4Files] = useState<UploadedFile[]>([])
   const [submitting, setSubmitting] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
 
   const handleRoleSelect = (selectedRole: 'DRIVER' | 'DISPATCHER') => {
     setRole(selectedRole)
+    setStep4Files([])
     setStep(2)
   }
 
@@ -47,7 +49,10 @@ export function RegisterWizard() {
   const handleBack = () => {
     if (step === 2) setStep(1)
     else if (step === 3) setStep(2)
-    else if (step === 4) setStep(role === 'DISPATCHER' ? 2 : 3)
+    else if (step === 4) {
+      setStep4Files([])
+      setStep(role === 'DISPATCHER' ? 2 : 3)
+    }
     else if (step === 5) setStep(4)
   }
 
@@ -82,8 +87,31 @@ export function RegisterWizard() {
         }),
       })
       const data = await res.json()
-      if (data.success) setSuccess(true)
-      else setError(data.error || '註冊失敗')
+      if (!data.success) {
+        setError(data.error || '註冊失敗')
+        setSubmitting(false)
+        return
+      }
+
+      // 上傳文件到 Google Drive（失敗不阻擋註冊成功）
+      if (step4Files.length > 0 && data.data?.token) {
+        for (const { type, file } of step4Files) {
+          try {
+            const fd = new FormData()
+            fd.append('file', file)
+            fd.append('type', type)
+            await fetch('/api/uploads', {
+              method: 'POST',
+              headers: { Authorization: `Bearer ${data.data.token}` },
+              body: fd,
+            })
+          } catch {
+            // 上傳失敗不影響流程
+          }
+        }
+      }
+
+      setSuccess(true)
     } catch { setError('網路錯誤') }
     setSubmitting(false)
   }
@@ -164,6 +192,8 @@ export function RegisterWizard() {
             {step === 4 && role && (
               <RegisterStep4
                 role={role}
+                uploadedFiles={step4Files}
+                onChange={setStep4Files}
                 onNext={handleStep4Next}
                 onBack={handleBack}
               />
