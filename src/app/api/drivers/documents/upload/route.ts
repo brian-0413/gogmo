@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
       fileName: file.name,
       mimeType: file.type,
       sizeBytes: file.size,
-      status: 'PENDING_REVIEW',
+      status: 'PENDING',
       uploadFailed,
     },
   })

@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
       prisma.userDocument.findMany({
         where: {
           userId: user.id,
-          status: { in: ['APPROVED', 'PENDING_REVIEW'] },
+          status: { in: ['APPROVED', 'PENDING'] },
         },
         select: {
           id: true,

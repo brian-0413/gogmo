@@ -20,6 +20,9 @@ vi.mock('@/lib/prisma', () => {
   const mockPrisma = {
     order: {
       create: vi.fn(),
+      findFirst: vi.fn(),
+      findMany: vi.fn(),
+      count: vi.fn(),
     },
     user: {
       findUnique: vi.fn(),
@@ -42,7 +45,12 @@ import { getUserFromToken } from '@/lib/auth'
 import { POST } from '@/app/api/orders/route'
 
 const mockedPrisma = prisma as unknown as {
-  order: { create: ReturnType<typeof vi.fn> }
+  order: {
+    create: ReturnType<typeof vi.fn>
+    findFirst: ReturnType<typeof vi.fn>
+    findMany: ReturnType<typeof vi.fn>
+    count: ReturnType<typeof vi.fn>
+  }
 }
 const mockedGetUser = getUserFromToken as unknown as ReturnType<typeof vi.fn>
 
@@ -77,6 +85,7 @@ const validOrderBody = {
 beforeEach(() => {
   vi.clearAllMocks()
   mockedGetUser.mockResolvedValue(dispatcherUser)
+  mockedPrisma.order.findFirst.mockResolvedValue(null)
   mockedPrisma.order.create.mockResolvedValue({ id: 'order-123' })
 })
 
