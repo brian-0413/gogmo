@@ -19,7 +19,16 @@ function getDriveService() {
   console.log('[DRIVE] GOOGLE_SERVICE_ACCOUNT_KEY is', key.length > 0 ? 'SET' : 'EMPTY')
   console.log('[DRIVE] GOOGLE_DRIVE_ROOT_FOLDER_ID is', process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID ? 'SET' : 'EMPTY')
 
-  const credentials = JSON.parse(key)
+  // Zeabur may store literal \n as double-escaped \\n — normalize them
+  let normalizedKey = key
+  try {
+    JSON.parse(key)
+  } catch {
+    normalizedKey = key.replace(/\\n/g, '\n')
+    console.log('[DRIVE] Normalized escaped newlines in key')
+  }
+
+  const credentials = JSON.parse(normalizedKey)
   const auth = new google.auth.GoogleAuth({
     credentials,
     scopes: ['https://www.googleapis.com/auth/drive.file'],
