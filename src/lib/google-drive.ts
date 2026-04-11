@@ -46,15 +46,18 @@ function getDriveService() {
  * parentFolderId: root folder ID (GOOGLE_DRIVE_ROOT_FOLDER_ID)
  * userId: user ID
  * licensePlate: vehicle license plate
+ * name: user name
  * Returns: folderId
  */
 export async function getOrCreateUserFolder(
   parentFolderId: string,
   userId: string,
   licensePlate: string,
+  name: string,
 ): Promise<string> {
   const drive = getDriveService()
-  const folderName = `${userId}_${licensePlate}`
+  const date = new Date().toISOString().slice(0, 10).replace(/-/g, '')
+  const folderName = `${date}-${licensePlate}-${name}`
 
   // Check if folder already exists
   const res = await drive.files.list({
@@ -63,13 +66,47 @@ export async function getOrCreateUserFolder(
   })
 
   if (res.data.files && res.data.files.length > 0) {
+    console.log(`[DRIVE] Found existing folder: ${folderName} (${res.data.files[0].id})`)
     return res.data.files[0].id!
   }
 
   // Create new folder
+  console.log(`[DRIVE] Creating new folder: ${folderName}`)
   const folder = await drive.files.create({
     requestBody: {
       name: folderName,
+      mimeType: 'application/vnd.google-apps.folder',
+      parents: [parentFolderId],
+    },
+    fields: 'id',
+  })
+
+  return folder.data.id!
+}
+
+/**
+ * Get or create the admin test folder in Google Drive
+ * parentFolderId: root folder ID (GOOGLE_DRIVE_ROOT_FOLDER_ID)
+ * Returns: folderId
+ */
+export async function getOrCreateTestFolder(parentFolderId: string): Promise<string> {
+  const drive = getDriveService()
+  const testFolderName = '🔧Drive上傳測試區'
+
+  const res = await drive.files.list({
+    q: `name='${testFolderName}' and '${parentFolderId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,
+    fields: 'files(id, name)',
+  })
+
+  if (res.data.files && res.data.files.length > 0) {
+    console.log(`[DRIVE] Found test folder: ${testFolderName} (${res.data.files[0].id})`)
+    return res.data.files[0].id!
+  }
+
+  console.log(`[DRIVE] Creating test folder: ${testFolderName}`)
+  const folder = await drive.files.create({
+    requestBody: {
+      name: testFolderName,
       mimeType: 'application/vnd.google-apps.folder',
       parents: [parentFolderId],
     },

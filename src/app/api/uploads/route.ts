@@ -38,15 +38,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json<ApiResponse>({ success: false, error: '檔案需小於 5MB' }, { status: 400 })
   }
 
-  // Get user's license plate (Driver or Dispatcher)
+  // Get user's license plate and name (Driver or Dispatcher)
   const driver = await prisma.driver.findUnique({ where: { userId: user.id } })
   const dispatcher = await prisma.dispatcher.findUnique({ where: { userId: user.id } })
   const licensePlate = driver?.licensePlate || dispatcher?.companyName || user.id
+  const userName = user.name
 
-  // Build Google Drive file name
+  // Build Google Drive file name: {車牌}-{姓名}-{文件類型}.{ext}
   const ext = file.name.split('.').pop() || 'bin'
   const docTypeLabel = docType ? (DOC_TYPE_FILE_NAME[docType] || docType) : '文件'
-  const driveFileName = `${licensePlate}-${docTypeLabel}.${ext}`
+  const driveFileName = `${licensePlate}-${userName}-${docTypeLabel}.${ext}`
 
   const buffer = Buffer.from(await file.arrayBuffer())
 
@@ -59,7 +60,7 @@ export async function POST(request: NextRequest) {
     const rootFolderId = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID
     if (!rootFolderId) throw new Error('GOOGLE_DRIVE_ROOT_FOLDER_ID 未設定')
 
-    const folderId = await getOrCreateUserFolder(rootFolderId, user.id, licensePlate)
+    const folderId = await getOrCreateUserFolder(rootFolderId, user.id, licensePlate, userName)
     const result = await uploadFileToDrive(folderId, driveFileName, file.type, buffer)
     await setFilePublic(result.fileId)
 

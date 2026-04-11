@@ -100,6 +100,7 @@ export async function POST(request: NextRequest) {
           const driver = await prisma.driver.findUnique({ where: { userId: result.user!.id } })
           const dispatcher = await prisma.dispatcher.findUnique({ where: { userId: result.user!.id } })
           const plate = driver?.licensePlate || dispatcher?.companyName || result.user!.id
+          const userName = result.user!.name
 
           const ext = file.name.split('.').pop() || 'bin'
           const labelMap: Record<string, string> = {
@@ -109,13 +110,15 @@ export async function POST(request: NextRequest) {
             ID_CARD: '身分證',
             BUSINESS_REGISTRATION: '商業登記',
           }
-          const fileName = `${plate}-${labelMap[type] || type}.${ext}`
+          // 新命名格式：{車牌}-{姓名}-{文件類型}.{ext}
+          const fileName = `${plate}-${userName}-${labelMap[type] || type}.${ext}`
           const buffer = Buffer.from(await file.arrayBuffer())
 
           const rootFolderId = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID
           if (!rootFolderId) throw new Error('GOOGLE_DRIVE_ROOT_FOLDER_ID 未設定')
 
-          const folderId = await getOrCreateUserFolder(rootFolderId, result.user!.id, plate)
+          // 新資料夾格式：{YYYYMMDD}-{車牌}-{姓名}
+          const folderId = await getOrCreateUserFolder(rootFolderId, result.user!.id, plate, userName)
           console.log(`[REGISTER] Created/retrieved folder: ${folderId}`)
           const uploaded = await uploadFileToDrive(folderId, fileName, file.type, buffer)
           console.log(`[REGISTER] Uploaded file: ${uploaded.fileId} -> ${uploaded.webViewLink}`)

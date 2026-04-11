@@ -55,10 +55,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json<ApiResponse>({ success: false, error: '找不到司機資料' }, { status: 404 })
   }
   const licensePlate = driver.licensePlate || user.id
+  const userName = user.name
 
   const ext = file.name.split('.').pop() || 'bin'
   const docTypeLabel = DOC_TYPE_FILE_NAME[docType] || docType
-  const driveFileName = `${licensePlate}-${docTypeLabel}.${ext}`
+  // 新命名格式：{車牌}-{姓名}-{文件類型}.{ext}
+  const driveFileName = `${licensePlate}-${userName}-${docTypeLabel}.${ext}`
   const buffer = Buffer.from(await file.arrayBuffer())
 
   let fileUrl = ''
@@ -70,7 +72,7 @@ export async function POST(request: NextRequest) {
     const rootFolderId = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID
     if (!rootFolderId) throw new Error('GOOGLE_DRIVE_ROOT_FOLDER_ID 未設定')
 
-    const folderId = await getOrCreateUserFolder(rootFolderId, user.id, licensePlate)
+    const folderId = await getOrCreateUserFolder(rootFolderId, user.id, licensePlate, userName)
     const result = await uploadFileToDrive(folderId, driveFileName, file.type, buffer)
     await setFilePublic(result.fileId)
 
