@@ -81,22 +81,35 @@ export async function PUT(
     if (body.accountStatus === 'REJECTED' && body.rejectReason) updateData.rejectReason = body.rejectReason
   }
 
-  // 更新 Driver 或 Dispatcher 附帶資料
+  // 更新 Driver 或 Dispatcher 附帶資料（所有欄位）
   const driverUpdate: Record<string, unknown> = {}
   const dispatcherUpdate: Record<string, unknown> = {}
 
   if (target.role === 'DRIVER' && body.driver) {
-    if (body.driver.licensePlate) driverUpdate.licensePlate = body.driver.licensePlate
-    if (body.driver.carType) driverUpdate.carType = body.driver.carType
-    if (body.driver.carColor) driverUpdate.carColor = body.driver.carColor
-    if (body.driver.carBrand) driverUpdate.carBrand = body.driver.carBrand
-    if (body.driver.carModel) driverUpdate.carModel = body.driver.carModel
+    if (body.driver.licensePlate !== undefined) {
+      const newPlate = body.driver.licensePlate
+      if (newPlate) {
+        const existing = await prisma.driver.findFirst({ where: { licensePlate: newPlate, userId: { not: id } } })
+        if (existing) {
+          return NextResponse.json<ApiResponse>({ success: false, error: '此車牌號碼已被其他司機使用' }, { status: 400 })
+        }
+      }
+      driverUpdate.licensePlate = newPlate
+    }
+    if (body.driver.carType !== undefined) driverUpdate.carType = body.driver.carType
+    if (body.driver.carColor !== undefined) driverUpdate.carColor = body.driver.carColor
+    if (body.driver.carBrand !== undefined) driverUpdate.carBrand = body.driver.carBrand || null
+    if (body.driver.carModel !== undefined) driverUpdate.carModel = body.driver.carModel || null
+    if (body.driver.bankCode !== undefined) driverUpdate.bankCode = body.driver.bankCode || null
+    if (body.driver.bankAccount !== undefined) driverUpdate.bankAccount = body.driver.bankAccount || null
+    if (body.driver.isPremium !== undefined) driverUpdate.isPremium = Boolean(body.driver.isPremium)
   }
 
   if (target.role === 'DISPATCHER' && body.dispatcher) {
-    if (body.dispatcher.companyName) dispatcherUpdate.companyName = body.dispatcher.companyName
-    if (body.dispatcher.taxId) dispatcherUpdate.taxId = body.dispatcher.taxId
-    if (body.dispatcher.contactPhone) dispatcherUpdate.contactPhone = body.dispatcher.contactPhone
+    if (body.dispatcher.companyName !== undefined) dispatcherUpdate.companyName = body.dispatcher.companyName
+    if (body.dispatcher.taxId !== undefined) dispatcherUpdate.taxId = body.dispatcher.taxId || null
+    if (body.dispatcher.contactPhone !== undefined) dispatcherUpdate.contactPhone = body.dispatcher.contactPhone || null
+    if (body.dispatcher.commissionRate !== undefined) dispatcherUpdate.commissionRate = Number(body.dispatcher.commissionRate) || 0
   }
 
   await prisma.$transaction(async (tx) => {

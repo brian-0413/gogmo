@@ -3,9 +3,31 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
-import { Shield, LogOut, Settings, FileText, Users, Search, Loader2, X, Edit2, Trash2, RefreshCw, Ban, Play } from 'lucide-react'
+import { Shield, LogOut, Settings, FileText, Users, Search, Loader2, X, Edit2, Trash2, RefreshCw, Ban, Play, Plus, DollarSign } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/Button'
+
+interface DriverInfo {
+  id: string
+  licensePlate: string
+  carType: string
+  carBrand: string | null
+  carModel: string | null
+  carColor: string
+  balance: number
+  status: string
+  bankCode: string | null
+  bankAccount: string | null
+  isPremium: boolean
+}
+
+interface DispatcherInfo {
+  id: string
+  companyName: string
+  taxId: string | null
+  contactPhone: string | null
+  commissionRate: number
+}
 
 interface UserRow {
   id: string
@@ -17,22 +39,8 @@ interface UserRow {
   createdAt: string
   updatedAt: string
   rejectReason?: string | null
-  driver: {
-    id: string
-    licensePlate: string
-    carType: string
-    carBrand: string | null
-    carModel: string | null
-    carColor: string
-    balance: number
-    status: string
-  } | null
-  dispatcher: {
-    id: string
-    companyName: string
-    taxId: string | null
-    contactPhone: string | null
-  } | null
+  driver: DriverInfo | null
+  dispatcher: DispatcherInfo | null
   _docCount: number
   _pendingDocCount: number
 }
@@ -65,7 +73,14 @@ export default function AdminUsersPage() {
 
   // 編輯 modal state
   const [editingUser, setEditingUser] = useState<UserRow | null>(null)
-  const [editForm, setEditForm] = useState({ name: '', phone: '', accountStatus: '', rejectReason: '' })
+  const [editForm, setEditForm] = useState({
+    name: '', phone: '', accountStatus: '', rejectReason: '',
+    // Driver
+    licensePlate: '', carType: '', carBrand: '', carModel: '', carColor: '',
+    bankCode: '', bankAccount: '', isPremium: false,
+    // Dispatcher
+    companyName: '', taxId: '', contactPhone: '', commissionRate: '',
+  })
   const [editLoading, setEditLoading] = useState(false)
   const [editError, setEditError] = useState('')
 
@@ -74,6 +89,13 @@ export default function AdminUsersPage() {
   const [newPassword, setNewPassword] = useState('')
   const [resetLoading, setResetLoading] = useState(false)
   const [resetError, setResetError] = useState('')
+
+  // 加點 modal state
+  const [addPointsUser, setAddPointsUser] = useState<UserRow | null>(null)
+  const [addPoints, setAddPoints] = useState('')
+  const [addPointsReason, setAddPointsReason] = useState('')
+  const [addPointsLoading, setAddPointsLoading] = useState(false)
+  const [addPointsError, setAddPointsError] = useState('')
 
   // 刪除 modal state
   const [deleteUser, setDeleteUser] = useState<UserRow | null>(null)
@@ -118,7 +140,7 @@ export default function AdminUsersPage() {
     fetchUsers()
   }
 
-  // 開啟編輯 modal
+  // 開啟編輯 modal，填入所有欄位
   const openEdit = (u: UserRow) => {
     setEditingUser(u)
     setEditForm({
@@ -126,11 +148,25 @@ export default function AdminUsersPage() {
       phone: u.phone,
       accountStatus: u.accountStatus,
       rejectReason: u.rejectReason || '',
+      // Driver defaults
+      licensePlate: u.driver?.licensePlate || '',
+      carType: u.driver?.carType || '',
+      carBrand: u.driver?.carBrand || '',
+      carModel: u.driver?.carModel || '',
+      carColor: u.driver?.carColor || '',
+      bankCode: u.driver?.bankCode || '',
+      bankAccount: u.driver?.bankAccount || '',
+      isPremium: u.driver?.isPremium || false,
+      // Dispatcher defaults
+      companyName: u.dispatcher?.companyName || '',
+      taxId: u.dispatcher?.taxId || '',
+      contactPhone: u.dispatcher?.contactPhone || '',
+      commissionRate: String(u.dispatcher?.commissionRate ?? 0),
     })
     setEditError('')
   }
 
-  // 儲存編輯
+  // 儲存編輯（所有欄位）
   const handleEdit = async () => {
     if (!editingUser || !token) return
     setEditLoading(true)
@@ -142,6 +178,29 @@ export default function AdminUsersPage() {
         accountStatus: editForm.accountStatus,
         rejectReason: editForm.accountStatus === 'REJECTED' ? editForm.rejectReason : null,
       }
+
+      if (editingUser.role === 'DRIVER') {
+        body.driver = {
+          licensePlate: editForm.licensePlate,
+          carType: editForm.carType,
+          carBrand: editForm.carBrand || null,
+          carModel: editForm.carModel || null,
+          carColor: editForm.carColor,
+          bankCode: editForm.bankCode || null,
+          bankAccount: editForm.bankAccount || null,
+          isPremium: editForm.isPremium,
+        }
+      }
+
+      if (editingUser.role === 'DISPATCHER') {
+        body.dispatcher = {
+          companyName: editForm.companyName,
+          taxId: editForm.taxId || null,
+          contactPhone: editForm.contactPhone || null,
+          commissionRate: parseFloat(editForm.commissionRate) || 0,
+        }
+      }
+
       const res = await fetch(`/api/admin/users/${editingUser.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
@@ -200,6 +259,36 @@ export default function AdminUsersPage() {
       }
     } catch { setResetError('網路錯誤') }
     setResetLoading(false)
+  }
+
+  // 加點
+  const handleAddPoints = async () => {
+    if (!addPointsUser || !token) return
+    const points = parseInt(addPoints, 10)
+    if (!addPoints || isNaN(points) || points <= 0) {
+      setAddPointsError('請輸入正整數點數')
+      return
+    }
+    setAddPointsLoading(true)
+    setAddPointsError('')
+    try {
+      const res = await fetch(`/api/admin/users/${addPointsUser.id}/add-points`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ points, reason: addPointsReason }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        setAddPointsUser(null)
+        setAddPoints('')
+        setAddPointsReason('')
+        alert(`${addPointsUser.name} 的帳戶已增加 ${points} 點，目前餘額：${data.data.newBalance} 點`)
+        fetchUsers()
+      } else {
+        setAddPointsError(data.error || '加點失敗')
+      }
+    } catch { setAddPointsError('網路錯誤') }
+    setAddPointsLoading(false)
   }
 
   // 刪除
@@ -290,7 +379,6 @@ export default function AdminUsersPage() {
         {/* Filters */}
         <div className="bg-white border border-[#DDDDDD] rounded-xl p-4 mb-4">
           <form onSubmit={handleSearch} className="flex flex-wrap gap-3 items-end">
-            {/* 搜尋 */}
             <div className="flex-1 min-w-[200px]">
               <label className="text-xs text-[#717171] mb-1 block">關鍵字搜尋</label>
               <div className="relative">
@@ -304,8 +392,6 @@ export default function AdminUsersPage() {
                 />
               </div>
             </div>
-
-            {/* 角色篩選 */}
             <div>
               <label className="text-xs text-[#717171] mb-1 block">身份</label>
               <select value={roleFilter} onChange={e => { setRoleFilter(e.target.value); setPage(1) }}
@@ -316,8 +402,6 @@ export default function AdminUsersPage() {
                 <option value="ADMIN">管理員</option>
               </select>
             </div>
-
-            {/* 狀態篩選 */}
             <div>
               <label className="text-xs text-[#717171] mb-1 block">狀態</label>
               <select value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setPage(1) }}
@@ -328,7 +412,6 @@ export default function AdminUsersPage() {
                 <option value="REJECTED">已拒絕</option>
               </select>
             </div>
-
             <Button type="submit" variant="outline" size="sm" className="text-[13px]">
               <Search className="w-3.5 h-3.5" />
               搜尋
@@ -375,6 +458,9 @@ export default function AdminUsersPage() {
                           <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${role.className}`}>
                             {role.label}
                           </span>
+                          {u.driver?.isPremium && (
+                            <span className="ml-1 inline-block px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-[#FEF3C7] text-[#B45309]">VIP</span>
+                          )}
                         </td>
                         <td className="px-4 py-3">
                           <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${status.className}`}>
@@ -391,7 +477,10 @@ export default function AdminUsersPage() {
                             <div>
                               <div className="font-mono font-medium">{u.driver.licensePlate}</div>
                               <div className="text-[#717171]">{u.driver.carBrand} {u.driver.carModel} {u.driver.carColor}</div>
-                              <div className="text-[#717171]">餘額：{u.driver.balance} 點</div>
+                              <div className="text-[#717171]">餘額：<span className="font-medium">{u.driver.balance}</span> 點</div>
+                              {u.driver.bankCode && u.driver.bankAccount && (
+                                <div className="text-[#717171]">銀行：{u.driver.bankCode} {u.driver.bankAccount}</div>
+                              )}
                             </div>
                           )}
                           {u.role === 'DISPATCHER' && u.dispatcher && (
@@ -438,6 +527,14 @@ export default function AdminUsersPage() {
                                 <Play className="w-3.5 h-3.5" />
                               </button>
                             )}
+                            {u.role === 'DRIVER' && (
+                              <button
+                                onClick={() => setAddPointsUser(u)}
+                                className="p-1.5 rounded-lg hover:bg-[#DCFCE7] text-[#717171] hover:text-[#15803D] transition-colors"
+                                title="加點">
+                                <Plus className="w-3.5 h-3.5" />
+                              </button>
+                            )}
                             {u.role !== 'ADMIN' && (
                               <>
                                 <button onClick={() => setResetUser(u)}
@@ -479,10 +576,10 @@ export default function AdminUsersPage() {
         )}
       </main>
 
-      {/* 編輯 Modal */}
+      {/* 編輯 Modal — 完整表單 */}
       {editingUser && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
-          <div className="bg-white rounded-xl w-full max-w-md p-6">
+        <div className="fixed inset-0 bg-black/50 flex items-start justify-center z-50 px-4 py-8 overflow-y-auto">
+          <div className="bg-white rounded-xl w-full max-w-lg p-6 my-auto">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold">編輯使用者</h2>
               <button onClick={() => setEditingUser(null)} className="p-1 hover:bg-[#F3F4F6] rounded-lg">
@@ -496,24 +593,28 @@ export default function AdminUsersPage() {
               </div>
             )}
 
-            <div className="space-y-4">
-              <div>
-                <label className="text-xs text-[#717171] mb-1 block">姓名</label>
-                <input type="text" value={editForm.name}
-                  onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))}
-                  className="w-full bg-[#FAF8F5] border border-[#DDDDDD] rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#222222]" />
-              </div>
-              <div>
-                <label className="text-xs text-[#717171] mb-1 block">電話</label>
-                <input type="text" value={editForm.phone}
-                  onChange={e => setEditForm(f => ({ ...f, phone: e.target.value }))}
-                  className="w-full bg-[#FAF8F5] border border-[#DDDDDD] rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#222222]" />
+            {/* 基本資料 */}
+            <div className="space-y-3 mb-4">
+              <h3 className="text-sm font-bold text-[#717171] uppercase tracking-wide">基本資料</h3>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs text-[#717171] mb-1 block">姓名</label>
+                  <input type="text" value={editForm.name}
+                    onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))}
+                    className="w-full bg-[#FAF8F5] border border-[#DDDDDD] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#222222]" />
+                </div>
+                <div>
+                  <label className="text-xs text-[#717171] mb-1 block">電話</label>
+                  <input type="text" value={editForm.phone}
+                    onChange={e => setEditForm(f => ({ ...f, phone: e.target.value }))}
+                    className="w-full bg-[#FAF8F5] border border-[#DDDDDD] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#222222]" />
+                </div>
               </div>
               <div>
                 <label className="text-xs text-[#717171] mb-1 block">帳號狀態</label>
                 <select value={editForm.accountStatus}
                   onChange={e => setEditForm(f => ({ ...f, accountStatus: e.target.value }))}
-                  className="w-full bg-[#FAF8F5] border border-[#DDDDDD] rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#222222]">
+                  className="w-full bg-[#FAF8F5] border border-[#DDDDDD] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#222222]">
                   <option value="ACTIVE">正常</option>
                   <option value="PENDING_REVIEW">待審核</option>
                   <option value="REJECTED">已拒絕</option>
@@ -525,12 +626,116 @@ export default function AdminUsersPage() {
                   <input type="text" value={editForm.rejectReason}
                     onChange={e => setEditForm(f => ({ ...f, rejectReason: e.target.value }))}
                     placeholder="選填"
-                    className="w-full bg-[#FAF8F5] border border-[#DDDDDD] rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#222222]" />
+                    className="w-full bg-[#FAF8F5] border border-[#DDDDDD] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#222222]" />
                 </div>
               )}
             </div>
 
-            <div className="flex gap-2 mt-6">
+            {/* 司機資料 */}
+            {editingUser.role === 'DRIVER' && (
+              <div className="space-y-3 mb-4">
+                <h3 className="text-sm font-bold text-[#717171] uppercase tracking-wide">車輛資料</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs text-[#717171] mb-1 block">車牌（無「-」）</label>
+                    <input type="text" value={editForm.licensePlate}
+                      onChange={e => setEditForm(f => ({ ...f, licensePlate: e.target.value.toUpperCase() }))}
+                      maxLength={10}
+                      className="w-full bg-[#FAF8F5] border border-[#DDDDDD] rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:border-[#222222]" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-[#717171] mb-1 block">車型</label>
+                    <input type="text" value={editForm.carType}
+                      onChange={e => setEditForm(f => ({ ...f, carType: e.target.value }))}
+                      className="w-full bg-[#FAF8F5] border border-[#DDDDDD] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#222222]" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-[#717171] mb-1 block">車廠</label>
+                    <input type="text" value={editForm.carBrand}
+                      onChange={e => setEditForm(f => ({ ...f, carBrand: e.target.value }))}
+                      placeholder="例如：TOYOTA"
+                      className="w-full bg-[#FAF8F5] border border-[#DDDDDD] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#222222]" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-[#717171] mb-1 block">車型名</label>
+                    <input type="text" value={editForm.carModel}
+                      onChange={e => setEditForm(f => ({ ...f, carModel: e.target.value }))}
+                      placeholder="例如：CAMRY"
+                      className="w-full bg-[#FAF8F5] border border-[#DDDDDD] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#222222]" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-[#717171] mb-1 block">車色</label>
+                    <input type="text" value={editForm.carColor}
+                      onChange={e => setEditForm(f => ({ ...f, carColor: e.target.value }))}
+                      className="w-full bg-[#FAF8F5] border border-[#DDDDDD] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#222222]" />
+                  </div>
+                </div>
+
+                <h3 className="text-sm font-bold text-[#717171] uppercase tracking-wide mt-4">銀行資料</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs text-[#717171] mb-1 block">銀行代碼</label>
+                    <input type="text" value={editForm.bankCode}
+                      onChange={e => setEditForm(f => ({ ...f, bankCode: e.target.value }))}
+                      placeholder="例如：812"
+                      className="w-full bg-[#FAF8F5] border border-[#DDDDDD] rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:border-[#222222]" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-[#717171] mb-1 block">銀行帳號</label>
+                    <input type="text" value={editForm.bankAccount}
+                      onChange={e => setEditForm(f => ({ ...f, bankAccount: e.target.value }))}
+                      placeholder="帳號"
+                      className="w-full bg-[#FAF8F5] border border-[#DDDDDD] rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:border-[#222222]" />
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <input type="checkbox" id="isPremium"
+                    checked={editForm.isPremium}
+                    onChange={e => setEditForm(f => ({ ...f, isPremium: e.target.checked }))}
+                    className="w-4 h-4 rounded border-[#DDDDDD]" />
+                  <label htmlFor="isPremium" className="text-sm text-[#222222]">VIP 司機（小車頭發單功能）</label>
+                </div>
+              </div>
+            )}
+
+            {/* 派單方資料 */}
+            {editingUser.role === 'DISPATCHER' && (
+              <div className="space-y-3 mb-4">
+                <h3 className="text-sm font-bold text-[#717171] uppercase tracking-wide">公司資料</h3>
+                <div>
+                  <label className="text-xs text-[#717171] mb-1 block">公司名稱</label>
+                  <input type="text" value={editForm.companyName}
+                    onChange={e => setEditForm(f => ({ ...f, companyName: e.target.value }))}
+                    className="w-full bg-[#FAF8F5] border border-[#DDDDDD] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#222222]" />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs text-[#717171] mb-1 block">統一編號</label>
+                    <input type="text" value={editForm.taxId}
+                      onChange={e => setEditForm(f => ({ ...f, taxId: e.target.value }))}
+                      placeholder="選填"
+                      className="w-full bg-[#FAF8F5] border border-[#DDDDDD] rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:border-[#222222]" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-[#717171] mb-1 block">聯絡電話</label>
+                    <input type="text" value={editForm.contactPhone}
+                      onChange={e => setEditForm(f => ({ ...f, contactPhone: e.target.value }))}
+                      placeholder="選填"
+                      className="w-full bg-[#FAF8F5] border border-[#DDDDDD] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#222222]" />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs text-[#717171] mb-1 block">抽成比例（%）</label>
+                  <input type="number" value={editForm.commissionRate}
+                    onChange={e => setEditForm(f => ({ ...f, commissionRate: e.target.value }))}
+                    min="0" max="100" step="0.1"
+                    className="w-full bg-[#FAF8F5] border border-[#DDDDDD] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#222222]" />
+                </div>
+              </div>
+            )}
+
+            <div className="flex gap-2 mt-4">
               <Button onClick={handleEdit} disabled={editLoading} className="flex-1">
                 {editLoading ? '儲存中...' : '儲存'}
               </Button>
@@ -552,15 +757,13 @@ export default function AdminUsersPage() {
               </button>
             </div>
             <p className="text-sm text-[#717171] mb-4">
-              為「{resetUser.name}」({resetUser.email}) 重設密碼
+              為「{resetUser.name}」重設密碼
             </p>
-
             {resetError && (
               <div className="bg-[#FCEBEB] border border-[#F5C6C6] text-[#E24B4A] px-4 py-3 rounded-lg text-sm mb-4">
                 {resetError}
               </div>
             )}
-
             <div className="mb-4">
               <label className="text-xs text-[#717171] mb-1 block">新密碼（至少 6 個字元）</label>
               <input type="password" value={newPassword}
@@ -568,13 +771,65 @@ export default function AdminUsersPage() {
                 placeholder="輸入新密碼"
                 className="w-full bg-[#FAF8F5] border border-[#DDDDDD] rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#222222]" />
             </div>
-
             <div className="flex gap-2">
-              <Button onClick={handleResetPassword} disabled={resetLoading || newPassword.length < 6}
-                className="flex-1">
+              <Button onClick={handleResetPassword} disabled={resetLoading || newPassword.length < 6} className="flex-1">
                 {resetLoading ? '重設中...' : '確認重設'}
               </Button>
               <Button variant="outline" onClick={() => { setResetUser(null); setNewPassword('') }}>取消</Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 加點 Modal */}
+      {addPointsUser && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
+          <div className="bg-white rounded-xl w-full max-w-sm p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold">手動加點</h2>
+              <button onClick={() => { setAddPointsUser(null); setAddPoints(''); setAddPointsReason('') }}
+                className="p-1 hover:bg-[#F3F4F6] rounded-lg">
+                <X className="w-5 h-5 text-[#717171]" />
+              </button>
+            </div>
+            <div className="bg-[#F0FDF4] border border-[#BBF7D0] rounded-lg p-3 mb-4">
+              <div className="font-medium text-[#15803D]">{addPointsUser.name}</div>
+              <div className="text-sm text-[#717171]">{addPointsUser.email}</div>
+              <div className="text-sm font-medium text-[#15803D] mt-1">
+                目前餘額：{addPointsUser.driver?.balance} 點
+              </div>
+            </div>
+            {addPointsError && (
+              <div className="bg-[#FCEBEB] border border-[#F5C6C6] text-[#E24B4A] px-4 py-3 rounded-lg text-sm mb-4">
+                {addPointsError}
+              </div>
+            )}
+            <div className="space-y-3 mb-4">
+              <div>
+                <label className="text-xs text-[#717171] mb-1 block">增加點數（正整數）</label>
+                <div className="relative">
+                  <DollarSign className="w-4 h-4 text-[#B0B0B0] absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input type="number" value={addPoints}
+                    onChange={e => setAddPoints(e.target.value)}
+                    placeholder="例如：500"
+                    min="1"
+                    className="w-full bg-[#FAF8F5] border border-[#DDDDDD] rounded-lg pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:border-[#222222]" />
+                </div>
+              </div>
+              <div>
+                <label className="text-xs text-[#717171] mb-1 block">加點原因（選填）</label>
+                <input type="text" value={addPointsReason}
+                  onChange={e => setAddPointsReason(e.target.value)}
+                  placeholder="例如：新用戶優惠、補償等"
+                  className="w-full bg-[#FAF8F5] border border-[#DDDDDD] rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#222222]" />
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button onClick={handleAddPoints} disabled={addPointsLoading || !addPoints}
+                className="flex-1 bg-[#15803D] hover:bg-[#166534]">
+                {addPointsLoading ? '加點中...' : '確認加點'}
+              </Button>
+              <Button variant="outline" onClick={() => { setAddPointsUser(null); setAddPoints(''); setAddPointsReason('') }}>取消</Button>
             </div>
           </div>
         </div>
@@ -590,9 +845,7 @@ export default function AdminUsersPage() {
                 <X className="w-5 h-5 text-[#717171]" />
               </button>
             </div>
-            <p className="text-sm text-[#717171] mb-2">
-              確定要刪除以下使用者嗎？
-            </p>
+            <p className="text-sm text-[#717171] mb-2">確定要刪除以下使用者嗎？</p>
             <div className="bg-[#FEF2F2] border border-[#FECACA] rounded-lg p-3 mb-4">
               <div className="font-medium text-[#B91C1C]">{deleteUser.name}</div>
               <div className="text-sm text-[#DC2626]">{deleteUser.email}</div>
