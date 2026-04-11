@@ -41,7 +41,7 @@ const mockUser = {
 vi.mock('@/lib/prisma', () => ({
   prisma: {
     driver: { findUnique: vi.fn() },
-    userDocument: { create: vi.fn() },
+    userDocument: { create: vi.fn(), count: vi.fn() },
   },
 }))
 
@@ -93,6 +93,7 @@ beforeEach(() => {
   vi.clearAllMocks()
   mockedGetUser.mockResolvedValue(mockUser)
   mockedPrisma.driver.findUnique.mockResolvedValue(mockDriver)
+  mockedPrisma.userDocument.count.mockResolvedValue(0)
 })
 
 describe('POST /api/drivers/documents/upload', () => {
@@ -220,6 +221,19 @@ describe('POST /api/drivers/documents/upload', () => {
     expect(res.status).toBe(403)
     const json = await res.json()
     expect(json.error).toContain('無法替他人上傳')
+  })
+
+  it('11. 上傳失敗滿 3 次 → 400', async () => {
+    mockedPrisma.userDocument.count.mockResolvedValue(3)
+
+    const form = new FormData()
+    form.set('type', 'DRIVER_LICENSE')
+    form.set('file', new File(['x'], 'x.jpg', { type: 'image/jpeg' }))
+    const req = makeUploadRequest(form)
+    const res = await POST(req)
+    expect(res.status).toBe(400)
+    const json = await res.json()
+    expect(json.error).toContain('3 次')
   })
 
   it('10. 新建文件狀態為 PENDING（待審核）', async () => {
