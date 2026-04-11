@@ -168,6 +168,7 @@ model Driver {
   transfersOut    OrderTransfer[] @relation("TransferFrom")
   transfersIn     OrderTransfer[] @relation("TransferTo")
   squadInvites    SquadInvite[]
+  topups          Topup[]
 
   @@map("drivers")
 }
@@ -287,10 +288,14 @@ model Transaction {
   createdAt   DateTime         @default(now())
   settledAt   DateTime?        // 結算時間
 
+  topupId      String?
+  topup        Topup?           @relation(fields: [topupId], references: [id])
+
   @@index([driverId])
   @@index([status])
   @@index([driverId, status])
   @@index([orderId])
+  @@index([topupId])
   @@map("transactions")
 }
 
@@ -338,4 +343,21 @@ model OrderTransfer {
   @@index([squadId])
   @@index([status])
   @@map("order_transfers")
+}
+
+model Topup {
+  id            String    @id @default(cuid())
+  driverId      String
+  driver        Driver    @relation(fields: [driverId], references: [id])
+  amount        Int
+  method        String    // "credit" | "transfer"
+  status        String    @default("pending") // "pending" | "paid" | "cancelled"
+  payuniTradeNo String?
+  paidAt        DateTime?
+  createdAt     DateTime  @default(now())
+
+  transactions  Transaction[]
+
+  @@index([driverId])
+  @@map("topups")
 }
