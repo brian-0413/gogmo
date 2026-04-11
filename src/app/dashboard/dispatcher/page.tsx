@@ -70,6 +70,27 @@ export default function DispatcherDashboard() {
     }
   }, [user, isLoading, router])
 
+  // Account status gate — same logic as driver dashboard
+  if (user && user.accountStatus && user.accountStatus !== 'ACTIVE') {
+    const statusMessages: Record<string, { title: string; message: string; color: string; icon: string }> = {
+      PENDING_VERIFICATION: { title: '請驗證 Email', message: '請至您的 Email 收取驗證連結，點擊連結完成帳號驗證。', color: '#F59E0B', icon: '✉' },
+      PENDING_REVIEW: { title: '資料審核中', message: '您的資料已送出，我們將在 1-2 個工作天內完成審核。審核通過後即可開始發單。', color: '#3B82F6', icon: '⏳' },
+      REJECTED: { title: '審核未通過', message: `您的資料審核未通過：${user.rejectReason || '原因不明'}。如有疑問請聯繫客服。`, color: '#E24B4A', icon: '✕' },
+    }
+    const msg = statusMessages[user.accountStatus] || statusMessages.PENDING_REVIEW
+    return (
+      <div className="min-h-screen bg-[#FAF7F5] flex items-center justify-center">
+        <div className="bg-white border border-[#DDDDDD] rounded-2xl p-8 text-center max-w-md">
+          <div className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center" style={{ backgroundColor: `${msg.color}15` }}>
+            <span className="text-3xl">{msg.icon}</span>
+          </div>
+          <h2 className="text-lg font-bold text-[#222222] mb-2">{msg.title}</h2>
+          <p className="text-sm text-[#717171]">{msg.message}</p>
+        </div>
+      </div>
+    )
+  }
+
   // 派單方 SSE 即時接收狀態更新
   useEffect(() => {
     if (!token || user?.role !== 'DISPATCHER') return

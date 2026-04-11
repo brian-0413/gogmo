@@ -79,6 +79,16 @@ export async function register(
       return { success: false, error: '此 Email 已經註冊' }
     }
 
+    // For drivers, also check if license plate is already taken
+    if (role === 'DRIVER' && extraData.licensePlate) {
+      const existingPlate = await prisma.driver.findFirst({
+        where: { licensePlate: extraData.licensePlate },
+      })
+      if (existingPlate) {
+        return { success: false, error: '此車牌號碼已被註冊' }
+      }
+    }
+
     const hashedPassword = await hashPassword(password)
 
     // Create user with role-specific data
@@ -89,7 +99,7 @@ export async function register(
         name,
         phone,
         role,
-        accountStatus: 'PENDING_VERIFICATION',
+        accountStatus: 'PENDING_REVIEW',
         ...(role === 'DRIVER' && {
           driver: {
             create: {
