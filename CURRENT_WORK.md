@@ -9,9 +9,31 @@
 
 ### 最後 commit
 ```
-ef099cd feat: 審核頁面新增文件到期日管理功能
+8e27abf feat: add profile tab to driver dashboard
 ```
 落後 origin/main 0 個 commits。
+
+---
+
+## 目前開發階段：司機個人中心（已完成）
+
+### [完成] 司機個人中心（2026-04-11）
+**Commits**: `fba631f` → `eea6eae` → `b54dda3` → `e8aff66` → `3fe8c0d` → `c9c3ed1` → `479e434` → `8486c1f` → `dca05fc` → `8e27abf`
+**規格文件**: `docs/superpowers/specs/2026-04-11-driver-profile-center-design.md`
+
+**實作內容**：
+- **DB**：Topup model（加值訂單）+ Transaction.topupId 關聯
+- **PAYUNi lib**：`src/lib/payuni.ts`（AES-256-GCM 加密/解密，來自 GF 專案）
+- **Profile API**：`GET /api/drivers/profile` + `PUT /api/drivers/profile`（個人資料讀寫）
+- **文件上傳 API**：`POST /api/drivers/documents/upload`（Drive 上傳，重新上傳時不覆蓋舊文件）
+- **加值 API**：`POST /api/drivers/topup/create`（信用卡 PAYUNi / 銀行轉帳）+ `POST /api/payuni/topup/notify`（server notify callback）+ `PUT /api/drivers/topup/[id]/confirm`（客服確認轉帳）
+- **Cron API**：`GET /api/cron/check-document-expiry`（每日檢查文件過期並凍結帳號）
+- **UI**：ProfileTab 元件（4 區塊：個人資料/聯絡銀行/文件管理/存值點數）+ 新增 Tab 到 driver 頁面
+
+**文件過期機制**：
+- 到期前 30 天 → 警示 + 開放上傳
+- 到期日 00:00 → 自動凍結（REJECTED + rejectReason）
+- 補件 + 管理員審核 → 解除凍結
 
 ---
 
