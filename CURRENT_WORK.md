@@ -9,7 +9,7 @@
 
 ### 最後 commit
 ```
-55193fc feat: 小隊互助系統 v2 — 全部實作完成
+ef099cd feat: 審核頁面新增文件到期日管理功能
 ```
 落後 origin/main 0 個 commits。
 
