@@ -143,7 +143,10 @@ export async function DELETE(
   }
 
   const { id } = await params
-  const target = await prisma.user.findUnique({ where: { id } })
+  const target = await prisma.user.findUnique({
+    where: { id },
+    include: { driver: true, dispatcher: true },
+  })
   if (!target) {
     return NextResponse.json<ApiResponse>({ success: false, error: '找不到該使用者' }, { status: 404 })
   }
@@ -155,8 +158,21 @@ export async function DELETE(
     return NextResponse.json<ApiResponse>({ success: false, error: '無法刪除管理員帳號' }, { status: 403 })
   }
 
-  // Cascade delete via Prisma relations (Driver/Dispatcher has onDelete: Cascade)
-  await prisma.user.delete({ where: { id } })
+  // 先刪除關聯的訂單（否則外鍵約束會失敗）
+  try {
+    await prisma.$transaction(async (tx) => {
+      if (target.role === 'DRIVER' && target.driver) {
+        await tx.order.deleteMany({ where: { driverId: target.driver.id } })
+      }
+      if (target.role === 'DISPATCHER' && target.dispatcher) {
+        await tx.order.deleteMany({ where: { dispatcherId: target.dispatcher.id } })
+      }
+      await tx.user.delete({ where: { id } })
+    })
+  } catch (err) {
+    console.error('Delete user error:', err)
+    return NextResponse.json<ApiResponse>({ success: false, error: '刪除失敗，可能是因為有用戶關聯資料' }, { status: 500 })
+  }
 
   return NextResponse.json<ApiResponse>({
     success: true,
