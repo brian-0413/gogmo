@@ -60,9 +60,36 @@ export async function GET(request: NextRequest) {
       })
     }
 
+    // Query pending invites sent TO other members of this squad
+    const pendingInvites = await prisma.squadInvite.findMany({
+      where: {
+        squadId: membership.squad.id,
+        status: 'PENDING',
+        driverId: { not: user.driver.id },
+      },
+      include: {
+        squad: true,
+        driver: {
+          include: { user: { select: { name: true } } },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    })
+
     return NextResponse.json<ApiResponse>({
       success: true,
-      data: { squad: membership.squad },
+      data: {
+        squad: membership.squad,
+        pendingInvites: pendingInvites.map(inv => ({
+          id: inv.id,
+          squadId: inv.squadId,
+          squadName: inv.squad.name,
+          driverId: inv.driverId,
+          driverName: inv.driver.user?.name || '未知',
+          driverPlate: inv.driver.licensePlate,
+          createdAt: inv.createdAt,
+        })),
+      },
     })
   } catch (error) {
     console.error('Get squad error:', error)

@@ -280,7 +280,7 @@ export function SquadTab({ token, driverId }: SquadTabProps) {
   const [squad, setSquad] = useState<Squad | null>(null)
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
-  const [inviteEmail, setInviteEmail] = useState('')
+  const [invitePlate, setInvitePlate] = useState('')
   const [inviteError, setInviteError] = useState('')
   const [inviteSuccess, setInviteSuccess] = useState('')
   const [showCreateForm, setShowCreateForm] = useState(false)
@@ -437,7 +437,7 @@ export function SquadTab({ token, driverId }: SquadTabProps) {
   }
 
   const handleInvite = async () => {
-    if (!token || !inviteEmail.trim()) return
+    if (!token || !invitePlate.trim()) return
     setActionLoading('invite')
     setInviteError('')
     setInviteSuccess('')
@@ -448,12 +448,12 @@ export function SquadTab({ token, driverId }: SquadTabProps) {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ driverEmail: inviteEmail.trim() }),
+        body: JSON.stringify({ licensePlate: invitePlate.trim() }),
       })
       const data = await res.json()
       if (data.success) {
-        setInviteSuccess(`已成功邀請 ${inviteEmail} 加入小隊`)
-        setInviteEmail('')
+        setInviteSuccess(`已向車牌 ${invitePlate.trim().toUpperCase()} 發送邀請，等待對方回覆`)
+        setInvitePlate('')
         await fetchSquad()
       } else {
         setInviteError(data.error || '邀請失敗')
@@ -658,19 +658,19 @@ export function SquadTab({ token, driverId }: SquadTabProps) {
             </div>
             <div className="flex gap-2">
               <input
-                type="email"
-                value={inviteEmail}
-                onChange={e => { setInviteEmail(e.target.value); setInviteError(''); setInviteSuccess('') }}
+                type="text"
+                value={invitePlate}
+                onChange={e => { setInvitePlate(e.target.value); setInviteError(''); setInviteSuccess('') }}
                 onKeyDown={e => { if (e.key === 'Enter') handleInvite() }}
-                placeholder="輸入司機的 Email"
+                placeholder="輸入車牌號碼"
                 className="flex-1 px-3 py-2 border border-[#DDDDDD] rounded-lg text-[13px] text-[#222222] bg-white placeholder:text-[#A8A29E] focus:outline-none focus:border-[#F59E0B] focus:ring-1 focus:ring-[#F59E0B]/30"
               />
               <button
                 onClick={handleInvite}
-                disabled={actionLoading === 'invite' || !inviteEmail.trim()}
+                disabled={actionLoading === 'invite' || !invitePlate.trim()}
                 className="px-4 py-2 bg-[#FF385C] text-white text-[13px] font-bold rounded-lg hover:bg-[#E83355] transition-colors disabled:opacity-60 disabled:cursor-not-allowed whitespace-nowrap"
               >
-                {actionLoading === 'invite' ? '邀請中...' : '邀請'}
+                {actionLoading === 'invite' ? '發送中...' : '發送邀請'}
               </button>
             </div>
             {inviteError && (

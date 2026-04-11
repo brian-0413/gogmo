@@ -59,7 +59,7 @@ export function TransferRequestForm({
       })
       const data = await res.json()
       if (data.success) {
-        onSuccess(`已發出小隊支援請求，將扣除 ${totalDeduct.toLocaleString()} 點（轉單費 ${transferFee.toLocaleString()} + bonus ${bonusPoints.toLocaleString()}）`)
+        onSuccess(`已發出小隊支援請求，bonus ${bonusPoints.toLocaleString()} 點將被預扣（轉單費 3% 在有人接手後才從您的帳戶扣除）`)
       } else {
         setError(data.error || '請求失敗')
       }

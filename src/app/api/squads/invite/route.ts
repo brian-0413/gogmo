@@ -2,10 +2,16 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getUserFromToken } from '@/lib/auth'
 import { ApiResponse } from '@/types'
+import { broadcastSquadInviteEvent } from '@/lib/sse-emitter'
 
 const MAX_SQUAD_MEMBERS = 10
 
-// POST /api/squads/invite - Invite a member (by email)
+/** Normalize a license plate for fuzzy matching (uppercase, no spaces/dashes) */
+function normalizePlate(plate: string): string {
+  return plate.trim().toUpperCase().replace(/[\s\-_]/g, '')
+}
+
+// POST /api/squads/invite - Send a squad invite by license plate
 export async function POST(request: NextRequest) {
   try {
     const token = request.headers.get('Authorization')?.replace('Bearer ', '')
@@ -34,7 +40,15 @@ export async function POST(request: NextRequest) {
     // Find the driver's squad membership
     const membership = await prisma.squadMember.findUnique({
       where: { driverId: user.driver.id },
-      include: { squad: true },
+      include: {
+        squad: {
+          include: {
+            founder: {
+              include: { user: { select: { name: true } } },
+            },
+          },
+        },
+      },
     })
 
     if (!membership) {
@@ -57,7 +71,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    let body: { driverEmail?: string }
+    let body: { licensePlate?: string }
     try {
       body = await request.json()
     } catch {
@@ -67,36 +81,40 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (!body.driverEmail || body.driverEmail.trim().length === 0) {
+    if (!body.licensePlate || body.licensePlate.trim().length === 0) {
       return NextResponse.json<ApiResponse>(
-        { success: false, error: '請提供司機 Email' },
+        { success: false, error: '請提供車牌號碼' },
         { status: 400 }
       )
     }
 
-    const targetEmail = body.driverEmail.trim().toLowerCase()
+    const normalizedPlate = normalizePlate(body.licensePlate)
+    if (normalizedPlate.length < 4) {
+      return NextResponse.json<ApiResponse>(
+        { success: false, error: '車牌號碼格式不正確（至少需要 4 個字元）' },
+        { status: 400 }
+      )
+    }
 
-    // Find user by email
-    const targetUser = await prisma.user.findUnique({
-      where: { email: targetEmail },
-      include: { driver: true },
+    // Find driver by fuzzy-matched license plate (case-insensitive contains)
+    const targetDriver = await prisma.driver.findFirst({
+      where: {
+        licensePlate: {
+          contains: normalizedPlate,
+          mode: 'insensitive',
+        },
+      },
+      include: { user: true },
     })
 
-    if (!targetUser) {
+    if (!targetDriver) {
       return NextResponse.json<ApiResponse>(
-        { success: false, error: '找不到此 Email 的用戶' },
+        { success: false, error: '找不到此車牌的司機' },
         { status: 404 }
       )
     }
 
-    if (targetUser.role !== 'DRIVER' || !targetUser.driver) {
-      return NextResponse.json<ApiResponse>(
-        { success: false, error: '此用戶不是司機身份' },
-        { status: 400 }
-      )
-    }
-
-    if (targetUser.id === user.id) {
+    if (targetDriver.userId === user.id) {
       return NextResponse.json<ApiResponse>(
         { success: false, error: '不能邀請自己' },
         { status: 400 }
@@ -105,7 +123,7 @@ export async function POST(request: NextRequest) {
 
     // Check if already in a squad
     const existingMembership = await prisma.squadMember.findUnique({
-      where: { driverId: targetUser.driver.id },
+      where: { driverId: targetDriver.id },
     })
 
     if (existingMembership) {
@@ -117,7 +135,7 @@ export async function POST(request: NextRequest) {
 
     // Check if already a member of this squad
     const alreadyMember = await prisma.squadMember.findUnique({
-      where: { squadId_driverId: { squadId: squad.id, driverId: targetUser.driver.id } },
+      where: { squadId_driverId: { squadId: squad.id, driverId: targetDriver.id } },
     })
 
     if (alreadyMember) {
@@ -127,22 +145,53 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Directly create the membership (invited member joins immediately)
-    const newMember = await prisma.squadMember.create({
+    // Check if already has a pending invite to this squad
+    const existingInvite = await prisma.squadInvite.findFirst({
+      where: {
+        squadId: squad.id,
+        driverId: targetDriver.id,
+        status: 'PENDING',
+      },
+    })
+
+    if (existingInvite) {
+      return NextResponse.json<ApiResponse>(
+        { success: false, error: '已發送過邀請，等待對方回覆中' },
+        { status: 400 }
+      )
+    }
+
+    // Create the invite record
+    const invite = await prisma.squadInvite.create({
       data: {
         squadId: squad.id,
-        driverId: targetUser.driver.id,
+        driverId: targetDriver.id,
+        status: 'PENDING',
       },
-      include: {
-        driver: {
-          include: { user: true },
-        },
-      },
+    })
+
+    // Broadcast SSE to the target driver
+    broadcastSquadInviteEvent({
+      type: 'SQUAD_INVITE',
+      inviteId: invite.id,
+      squadId: squad.id,
+      squadName: squad.name,
+      driverId: targetDriver.id,
+      founderName: squad.founder?.user?.name,
     })
 
     return NextResponse.json<ApiResponse>({
       success: true,
-      data: { member: newMember },
+      data: {
+        invite: {
+          id: invite.id,
+          squadId: squad.id,
+          squadName: squad.name,
+          driverId: targetDriver.id,
+          licensePlate: targetDriver.licensePlate,
+          driverName: targetDriver.user?.name || '未知',
+        },
+      },
     })
   } catch (error) {
     console.error('Invite squad member error:', error)
