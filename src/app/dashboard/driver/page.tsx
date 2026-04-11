@@ -244,6 +244,7 @@ export default function DriverDashboard() {
 
   const handleAcceptOrder = async (orderId: string, skipWarning = false) => {
     if (!token) return
+    if (!user || user.accountStatus !== 'ACTIVE') { alert('帳號尚未通過審核，暫時無法接單'); return }
     const order = availableOrders.find(o => o.id === orderId)
     if (!order) return
     setActionLoading(orderId)
@@ -514,34 +515,26 @@ export default function DriverDashboard() {
     )
   }
 
-  // Account status gate
-  if (user.accountStatus && user.accountStatus !== 'ACTIVE') {
-    const statusMessages: Record<string, { title: string; message: string; color: string; icon: string }> = {
-      PENDING_VERIFICATION: { title: '請驗證 Email', message: '請至您的 Email 收取驗證連結，點擊連結完成帳號驗證。', color: '#F59E0B', icon: '✉' },
-      PENDING_REVIEW: { title: '資料審核中', message: '您的資料已送出，我們將在 1-2 個工作天內完成審核。審核通過後即可開始使用平台。', color: '#3B82F6', icon: '⏳' },
-      REJECTED: { title: '審核未通過', message: `您的資料審核未通過：${user.rejectReason || '原因不明'}。如有疑問請聯繫客服。`, color: '#E24B4A', icon: '✕' },
-    }
-    const msg = statusMessages[user.accountStatus] || statusMessages.PENDING_VERIFICATION
+  // Account status gate — REJECTED blocks full access, PENDING_* only shows banner
+  if (user.accountStatus === 'REJECTED') {
+    const msg = { title: '審核未通過', message: `您的資料審核未通過：${user.rejectReason || '原因不明'}。如有疑問請聯繫客服。`, color: '#E24B4A', icon: '✕' }
     return (
-      <div className="min-h-screen bg-[#FAF7F5] flex items-center justify-center">
+      <div className="min-h-screen bg-[#FAF8F5] flex items-center justify-center">
         <div className="bg-white border border-[#DDDDDD] rounded-2xl p-8 text-center max-w-md">
           <div className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center" style={{ backgroundColor: `${msg.color}15` }}>
             <span className="text-3xl">{msg.icon}</span>
           </div>
           <h2 className="text-lg font-bold text-[#222222] mb-2">{msg.title}</h2>
           <p className="text-sm text-[#717171]">{msg.message}</p>
-          {user.accountStatus === 'PENDING_VERIFICATION' && (
-            <button onClick={async () => {
-              await fetch('/api/auth/send-verify-email', { method: 'POST', headers: { Authorization: `Bearer ${token}` } })
-              alert('驗證信已重發')
-            }} className="mt-4 px-4 py-2 bg-[#F59E0B] text-white rounded-lg text-sm font-medium">
-              重發驗證信
-            </button>
-          )}
         </div>
       </div>
     )
   }
+
+  const showStatusBanner = user.accountStatus && user.accountStatus !== 'ACTIVE'
+  const statusMsg = showStatusBanner
+    ? { title: '資料審核中', message: '您的資料已送出，審核通過後即可開始接單。', color: '#3B82F6', icon: '⏳' }
+    : null
 
   return (
     <div className="min-h-screen bg-[#FAF8F5] text-[#1C1917]">
@@ -550,6 +543,13 @@ export default function DriverDashboard() {
         <div className="absolute inset-0 grid-bg opacity-30" />
         <div className="absolute inset-0 scan-lines" />
       </div>
+
+      {/* Status banner */}
+      {showStatusBanner && statusMsg && (
+        <div className="bg-[#3B82F6] text-white px-4 py-3 text-center text-sm font-medium z-30 relative">
+          {statusMsg.icon} {statusMsg.message}
+        </div>
+      )}
 
       {/* Header */}
       <header className="relative z-20 bg-[#FAF8F5]/90 backdrop-blur-xl border-b border-[#E7E5E4] sticky top-0">

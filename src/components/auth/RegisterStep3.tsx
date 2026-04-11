@@ -49,10 +49,11 @@ export function RegisterStep3({ data, onChange, onNext, onBack }: RegisterStep3P
             type="text"
             value={data.licensePlate}
             onChange={handlePlateChange}
-            placeholder="ABC-1234"
+            placeholder="ABC1234"
             maxLength={10}
             className="w-full bg-white border border-[#DDDDDD] rounded-lg px-3 py-2.5 text-[#222222] text-sm placeholder:text-[#B0B0B0] focus:outline-none focus:border-[#222222] font-mono-nums"
           />
+          <span className="text-[10px] text-[#B0B0B0]">車牌即為登入帳號，不含「-」符號</span>
         </div>
 
         <div className="space-y-1">

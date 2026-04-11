@@ -70,16 +70,11 @@ export default function DispatcherDashboard() {
     }
   }, [user, isLoading, router])
 
-  // Account status gate — same logic as driver dashboard
-  if (user && user.accountStatus && user.accountStatus !== 'ACTIVE') {
-    const statusMessages: Record<string, { title: string; message: string; color: string; icon: string }> = {
-      PENDING_VERIFICATION: { title: '請驗證 Email', message: '請至您的 Email 收取驗證連結，點擊連結完成帳號驗證。', color: '#F59E0B', icon: '✉' },
-      PENDING_REVIEW: { title: '資料審核中', message: '您的資料已送出，我們將在 1-2 個工作天內完成審核。審核通過後即可開始發單。', color: '#3B82F6', icon: '⏳' },
-      REJECTED: { title: '審核未通過', message: `您的資料審核未通過：${user.rejectReason || '原因不明'}。如有疑問請聯繫客服。`, color: '#E24B4A', icon: '✕' },
-    }
-    const msg = statusMessages[user.accountStatus] || statusMessages.PENDING_REVIEW
+  // Account status gate — REJECTED blocks full access, PENDING_* only shows banner
+  if (user && user.accountStatus === 'REJECTED') {
+    const msg = { title: '審核未通過', message: `您的資料審核未通過：${user.rejectReason || '原因不明'}。如有疑問請聯繫客服。`, color: '#E24B4A', icon: '✕' }
     return (
-      <div className="min-h-screen bg-[#FAF7F5] flex items-center justify-center">
+      <div className="min-h-screen bg-[#FAF8F5] flex items-center justify-center">
         <div className="bg-white border border-[#DDDDDD] rounded-2xl p-8 text-center max-w-md">
           <div className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center" style={{ backgroundColor: `${msg.color}15` }}>
             <span className="text-3xl">{msg.icon}</span>
@@ -90,6 +85,8 @@ export default function DispatcherDashboard() {
       </div>
     )
   }
+
+  const showStatusBanner = user?.accountStatus && user.accountStatus !== 'ACTIVE'
 
   // 派單方 SSE 即時接收狀態更新
   useEffect(() => {
@@ -348,6 +345,13 @@ export default function DispatcherDashboard() {
 
   return (
     <div className="min-h-screen bg-[#FAF8F5] text-[#222222]">
+      {/* Status banner */}
+      {showStatusBanner && (
+        <div className="bg-[#3B82F6] text-white px-4 py-3 text-center text-sm font-medium z-30 relative">
+          您的資料已送出，審核通過後即可開始發單。
+        </div>
+      )}
+
       {/* Header */}
       <header className="bg-[#FAF8F5] border-b border-[#DDDDDD] sticky top-0 z-20">
         <div className="max-w-6xl mx-auto px-3 sm:px-6">
