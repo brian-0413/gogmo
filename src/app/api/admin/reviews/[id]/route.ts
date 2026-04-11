@@ -15,7 +15,7 @@ export async function POST(
   }
 
   const { id: userId } = await params
-  let body: { action: 'approve' | 'reject'; note?: string } = { action: 'approve' }
+  let body: { action: 'approve' | 'reject'; note?: string; documents?: Array<{ id: string; expiryDate?: string | null }> } = { action: 'approve' }
   try { body = await request.json() } catch {}
 
   if (!['approve', 'reject'].includes(body.action)) {
@@ -41,6 +41,17 @@ export async function POST(
         where: { userId },
         data: { status: 'APPROVED' },
       })
+      // 更新文件到期日
+      if (body.documents && body.documents.length > 0) {
+        for (const doc of body.documents) {
+          if (doc.expiryDate !== undefined) {
+            await tx.userDocument.update({
+              where: { id: doc.id },
+              data: { expiryDate: doc.expiryDate ? new Date(doc.expiryDate) : null },
+            })
+          }
+        }
+      }
     } else {
       await tx.user.update({
         where: { id: userId },

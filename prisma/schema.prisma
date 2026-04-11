@@ -307,6 +307,7 @@ model UserDocument {
   sizeBytes Int      // 檔案大小（位元組）
   status    String   @default("PENDING")  // PENDING / APPROVED / REJECTED
   uploadFailed Boolean @default(false)   // 上傳失敗標記
+  expiryDate DateTime?                   // 證件到期日（行照/駕照/保險）
   createdAt DateTime @default(now())
 
   @@index([userId])

@@ -55,7 +55,16 @@ export async function GET(request: NextRequest) {
       taxId: u.dispatcher.taxId,
       contactPhone: u.dispatcher.contactPhone,
     } : null,
-    documents: documents.filter(d => d.userId === u.id),
+    documents: documents.filter(d => d.userId === u.id).map(d => ({
+      id: d.id,
+      type: d.type,
+      fileName: d.fileName,
+      fileUrl: d.fileUrl,
+      driveFileId: d.driveFileId,
+      status: d.status,
+      expiryDate: d.expiryDate,
+      uploadFailed: d.uploadFailed,
+    })),
   }))
 
   return NextResponse.json<ApiResponse>({ success: true, data: { users: result } })
