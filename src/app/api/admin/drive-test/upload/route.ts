@@ -75,6 +75,6 @@ export async function POST(request: NextRequest) {
     })
   } catch (err) {
     console.error('[DRIVE-TEST] Upload error:', err)
-    return NextResponse.json<ApiResponse>({ success: false, error: `上傳失敗：${err}` }, { status: 500 })
+    return NextResponse.json<ApiResponse>({ success: false, error: '上傳失敗，請稍後再試' }, { status: 500 })
   }
 }

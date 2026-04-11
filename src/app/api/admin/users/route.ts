@@ -56,11 +56,6 @@ export async function GET(request: NextRequest) {
       if (u.role === 'DISPATCHER' && u.dispatcher?.companyName?.toLowerCase().includes(q)) return true
       return false
     })
-    // 已在 Prisma filter 過 name/email，這裡只加車牌/公司名
-    if (filtered.length === 0) {
-      // 找不到結果時搜尋更廣泛
-      filtered = users
-    }
   }
 
   const result = filtered.map(u => ({
