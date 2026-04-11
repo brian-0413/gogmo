@@ -10,6 +10,7 @@ import { OrderCalendar } from '@/components/driver/OrderCalendar'
 import { SmartSchedulePanel } from '@/components/driver/SmartSchedulePanel'
 import { SettlementTab } from '@/components/driver/SettlementTab'
 import { SquadTab } from '@/components/driver/SquadTab'
+import { ProfileTab } from '@/components/driver/ProfileTab'
 import { SelfDispatchChat } from '@/components/driver/SelfDispatchChat'
 import { TransferRequestForm } from '@/components/driver/TransferRequestForm'
 import type { BalanceData } from '@/components/driver/SettlementTab'
@@ -20,7 +21,7 @@ import { DRIVER_EARNINGS_RATE, CANCELLATION_FEE_RATE, TRANSFER_FEE_RATE } from '
 import { ClipboardList, FileText, Wallet, LogOut, Plane, Radio, Inbox, ArrowUpDown, ArrowUp, ArrowDown, Car, Sparkles, Calendar, Sparkle, Users } from 'lucide-react'
 import Link from 'next/link'
 
-type Tab = 'available' | 'myorders' | 'balance' | 'selfdispatch' | 'squad'
+type Tab = 'available' | 'myorders' | 'balance' | 'selfdispatch' | 'squad' | 'profile'
 type SortKey = 'scheduledTime' | 'price' | 'type'
 type SortDir = 'asc' | 'desc'
 
@@ -703,6 +704,20 @@ export default function DriverDashboard() {
                 <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#F59E0B]" style={{ boxShadow: '0 0 8px rgba(245,158,11,0.4)' }} />
               )}
             </button>
+            <button
+              onClick={() => setActiveTab('profile')}
+              className={`flex items-center gap-2 px-5 py-3.5 text-sm font-medium border-b-2 transition-all duration-200 relative ${
+                activeTab === 'profile'
+                  ? 'border-[#F59E0B] text-[#F59E0B]'
+                  : 'border-transparent text-[#78716C] hover:text-[#1C1917] hover:bg-[#F5F4F0]/50'
+              }`}
+            >
+              <Users className="w-4 h-4" />
+              個人中心
+              {activeTab === 'profile' && (
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#F59E0B]" style={{ boxShadow: '0 0 8px rgba(245,158,11,0.4)' }} />
+              )}
+            </button>
           </div>
         </div>
       </div>
@@ -1093,6 +1108,11 @@ export default function DriverDashboard() {
         {/* ===== 我的小隊 ===== */}
         {activeTab === 'squad' && token && (
           <SquadTab token={token} driverId={user.driver?.id || ''} />
+        )}
+
+        {/* ===== 個人中心 ===== */}
+        {activeTab === 'profile' && token && (
+          <ProfileTab token={token} />
         )}
 
         {/* ===== 請求小隊支援對話框 ===== */}
