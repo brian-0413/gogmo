@@ -92,7 +92,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(user)
       localStorage.setItem('token', emailOrToken)
       document.cookie = `auth_token=${emailOrToken}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Lax`
-      router.push(user.role === 'DRIVER' ? '/dashboard/driver' : '/dashboard/dispatcher')
+      router.push(user.role === 'DRIVER' ? '/dashboard/driver' : user.role === 'ADMIN' ? '/dashboard/admin' : '/dashboard/dispatcher')
       return { success: true }
     }
     // Otherwise it's (email, password) call - existing logic

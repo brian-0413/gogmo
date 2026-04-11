@@ -1,13 +1,14 @@
 'use client'
 import { useState } from 'react'
 import Link from 'next/link'
-import { Plane, Car, Building2 } from 'lucide-react'
+import { Plane, Car, Building2, Shield } from 'lucide-react'
 import { DriverLoginForm } from './DriverLoginForm'
 import { DispatcherLoginForm } from './DispatcherLoginForm'
+import { AdminLoginForm } from './AdminLoginForm'
 import { ForgotPasswordForm } from './ForgotPasswordForm'
 
 export function LoginTabs() {
-  const [activeTab, setActiveTab] = useState<'DRIVER' | 'DISPATCHER'>('DRIVER')
+  const [activeTab, setActiveTab] = useState<'DRIVER' | 'DISPATCHER' | 'ADMIN'>('DRIVER')
   const [showForgot, setShowForgot] = useState(false)
 
   if (showForgot) {
@@ -51,7 +52,7 @@ export function LoginTabs() {
           </div>
 
           {/* Tab bar */}
-          <div className="grid grid-cols-2 gap-2 mb-4">
+          <div className="grid grid-cols-3 gap-2 mb-4">
             <button
               onClick={() => setActiveTab('DRIVER')}
               className={`h-11 rounded-lg text-sm font-medium border-2 transition-colors flex items-center justify-center gap-2 ${
@@ -74,23 +75,36 @@ export function LoginTabs() {
               <Building2 className="w-4 h-4" />
               派單方登入
             </button>
+            <button
+              onClick={() => setActiveTab('ADMIN')}
+              className={`h-11 rounded-lg text-sm font-medium border-2 transition-colors flex items-center justify-center gap-2 ${
+                activeTab === 'ADMIN'
+                  ? 'bg-[#6B7280] border-[#6B7280] text-white'
+                  : 'bg-white border-[#DDDDDD] text-[#717171] hover:border-[#6B7280] hover:text-[#6B7280]'
+              }`}
+            >
+              <Shield className="w-4 h-4" />
+              管理員
+            </button>
           </div>
 
           {/* Form card */}
           <div className="bg-white border border-[#DDDDDD] rounded-xl p-6">
-            {activeTab === 'DRIVER' ? <DriverLoginForm /> : <DispatcherLoginForm />}
+            {activeTab === 'DRIVER' ? <DriverLoginForm /> : activeTab === 'DISPATCHER' ? <DispatcherLoginForm /> : <AdminLoginForm />}
 
-            <div className="mt-4 pt-4 border-t border-[#EEEEEE] flex justify-between items-center">
-              <button
-                onClick={() => setShowForgot(true)}
-                className="text-[13px] text-[#717171] hover:text-[#222222] transition-colors"
-              >
-                忘記密碼？
-              </button>
-              <Link href="/register" className="text-[13px] text-[#FF385C] hover:text-[#D70466] transition-colors">
-                還沒有帳戶？立即註冊
-              </Link>
-            </div>
+            {activeTab !== 'ADMIN' && (
+              <div className="mt-4 pt-4 border-t border-[#EEEEEE] flex justify-between items-center">
+                <button
+                  onClick={() => setShowForgot(true)}
+                  className="text-[13px] text-[#717171] hover:text-[#222222] transition-colors"
+                >
+                  忘記密碼？
+                </button>
+                <Link href="/register" className="text-[13px] text-[#FF385C] hover:text-[#D70466] transition-colors">
+                  還沒有帳戶？立即註冊
+                </Link>
+              </div>
+            )}
           </div>
 
           <div className="mt-4 text-center">

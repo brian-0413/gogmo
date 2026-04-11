@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (!['DRIVER', 'DISPATCHER'].includes(role)) {
+    if (!['DRIVER', 'DISPATCHER', 'ADMIN'].includes(role)) {
       return NextResponse.json<ApiResponse>(
         { success: false, error: '無效的角色' },
         { status: 400 }
