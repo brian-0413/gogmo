@@ -5,17 +5,46 @@
 
 ---
 
-## 專案現況（2026-04-10 凌晨）
+## 專案現況（2026-04-11）
 
 ### 最後 commit
 ```
-0e21493 feat: 派單方司機資訊卡新增查看證件按鈕
+55193fc feat: 小隊互助系統 v2 — 全部實作完成
 ```
 落後 origin/main 0 個 commits。
 
 ---
 
-## 目前開發階段：Google Drive 文件儲存整合（已完成）
+## 目前開發階段：小隊互助系統 v2（已完成）
+
+### [完成] 小隊互助系統 v2（2026-04-11）
+**Commits**: 延續 `b812e81` → ... → `57b2a40`（邀請制重構） → `55193fc`（全部實作完成）
+**功能概述**：小隊互助系統重構版，派單方核准後進入小隊支援池搶單、bonus 點數機制、3% 轉單費、邀請制、管理員費率參數。
+
+**實作內容（v2 新流程）**：
+- **新流程**：司機發起 → PENDING_DISPATCHER → 派單方核准 → PENDING_SQUAD → 小隊池搶單 → APPROVED
+- **bonus 預扣**：發起時立即從司機帳戶扣 bonus 點數，派單方拒絕/超時/撤回時退還
+- **3% 轉單費**：接手成功後才由原司機支付（不在發起時扣）
+- **Prisma Schema**：`bonusPoints Int @default(0)`，`TRANSFER_FEE_RATE = 0.03`，`TRANSFER_LOCK_HOURS = 1`
+- **API 實作**：
+  - `POST /api/orders/[id]/transfer-request`：bonus 預扣 + PENDING_DISPATCHER + 廣播派單方
+  - `GET /api/orders/[id]/transfer-request`：查詢轉單狀態
+  - `POST /api/orders/[id]/transfer-approve`：進入 PENDING_SQUAD 池 + SQUAD_POOL_NEW 廣播
+  - `POST /api/orders/[id]/transfer-reject`：退還 bonus + REJECTED
+  - `POST /api/orders/[id]/transfer-withdraw`：行程前 1 小時內撤回，退還 bonus + 3%
+  - `GET /api/squads/pool`：小隊支援池查詢
+  - `POST /api/squads/pool/[id]/claim`：搶單（race-condition safe）+ bonus 轉移
+  - `POST /api/squads/respond`：邀請回應（接受/拒絕）
+  - `GET /api/cron/lock-orders`：行程前 1 小時鎖定 + PENDING_SQUAD 自動 EXPIRED + 退還 bonus
+- **邀請制重構**：`/api/squads/invite` 改為車號搜尋司機 → 建立 SquadInvite → SSE 通知 → 對方 accept/reject
+- **SSE 事件類型**：`SQUAD_TRANSFER_PENDING`、`SQUAD_POOL_NEW`、`TRANSFER_APPROVED`、`TRANSFER_EXPIRED`、`TRANSFER_WITHDRAWN` 等
+- **UI 實作**：
+  - `TransferConfirmBanner`：顯示 bonus + 原因 + 同意/拒絕按鍵
+  - `SquadTab`：支援池區塊 + 搶單按鈕 + 邀請回應 accept/reject
+  - `TransferRequestForm`：bonus 點數輸入 + 預扣提示
+  - `/dashboard/admin`：管理員費率設定面板（接單費率/退單費率/轉單費率/bonus最低點數）
+
+**規格文件**：`docs/squad-system.md`、`docs/superpowers/plans/2026-04-09-squad-system-v2.md`
 
 ### [完成] Google Drive 文件儲存整合（2026-04-10）
 **Commits**: `30243a2` → `1ff328a` → `53ed354` → `dfe21a7` → `c1659c7` → `066ee5d` → `9864faf` → `0e21493` → `dc937a8`
@@ -58,34 +87,6 @@
 - **檔案上傳 API**：`POST /api/uploads`，支援 JPG/PNG/PDF（最大 5MB），存入 public/uploads/
 
 
-
-### [完成] 小隊互助系統 v2（2026-04-09 下午）
-**Commits**: `b812e81` → `4cc60f9` → `cfb0c2e` → `3b41d7c` → `6edd0ff` → `9ca55b5` → `6519a18` → `b56a54e` → `cc3bdc8` → `2d82536`
-**功能概述**：小隊互助系統重構版，派單方核准後進入小隊支援池搶單、bonus 點數機制、3% 轉單費、邀請制。
-
-**實作內容（v2 新流程）**：
-- **新流程**：司機發起 → PENDING_DISPATCHER → 派單方核准 → PENDING_SQUAD → 小隊池搶單 → APPROVED
-- **bonus 預扣**：發起時立即從司機帳戶扣 bonus 點數，派單方拒絕/超時/撤回時退還
-- **3% 轉單費**：接手成功後才由原司機支付（不在發起時扣）
-- **Prisma Schema**：`bonusPoints Int @default(0)`，`TRANSFER_FEE_RATE = 0.03`，`TRANSFER_LOCK_HOURS = 1`
-- **API 實作**：
-  - `POST /api/orders/[id]/transfer-request`：bonus 預扣 + PENDING_DISPATCHER + 廣播派單方
-  - `GET /api/orders/[id]/transfer-request`：查詢轉單狀態
-  - `POST /api/orders/[id]/transfer-approve`：進入 PENDING_SQUAD 池 + SQUAD_POOL_NEW 廣播
-  - `POST /api/orders/[id]/transfer-reject`：退還 bonus + REJECTED
-  - `POST /api/orders/[id]/transfer-withdraw`：行程前 1 小時內撤回，退還 bonus + 3%
-  - `GET /api/squads/pool`：小隊支援池查詢
-  - `POST /api/squads/pool/[id]/claim`：搶單（race-condition safe）+ bonus 轉移
-  - `POST /api/squads/respond`：邀請回應（接受/拒絕）
-  - `GET /api/cron/lock-orders`：行程前 1 小時鎖定 + PENDING_SQUAD 自動 EXPIRED
-- **SSE 事件類型**：`SQUAD_TRANSFER_PENDING`、`SQUAD_POOL_NEW`、`TRANSFER_POOL_READY`、`TRANSFER_EXPIRED` 等
-- **UI 實作**：
-  - `TransferConfirmBanner`：顯示 bonus + 原因 + 同意/拒絕按鍵
-  - `SquadTab`：支援池區塊 + 搶單按鈕 + 邀請回應 accept/reject
-  - `TransferRequestForm`：bonus 點數輸入 + 預扣提示
-  - `/dashboard/admin`：管理員費率設定面板
-
-**規格文件**：`docs/squad-system.md`、`docs/superpowers/plans/2026-04-09-squad-system-v2.md`
 
 ### [完成] 小車頭專區（已完成）
 
