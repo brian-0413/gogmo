@@ -61,54 +61,37 @@ export function RegisterWizard() {
     setSubmitting(true)
     setError('')
     try {
+      const fd = new FormData()
+      fd.append('email', step2Data.email)
+      fd.append('password', step5Data.password)
+      fd.append('name', step2Data.name)
+      fd.append('phone', step2Data.phone)
+      fd.append('role', role)
+      if (role === 'DRIVER') {
+        fd.append('licensePlate', step3Data.licensePlate)
+        fd.append('carType', step3Data.vehicleSize || '轎車')
+        fd.append('carColor', step3Data.carColor)
+        fd.append('carBrand', step3Data.carBrand)
+        fd.append('carModel', step3Data.carModel)
+      } else {
+        fd.append('companyName', step2Data.companyName || '')
+        fd.append('taxId', step2Data.taxId || '')
+        fd.append('contactPhone', step2Data.contactPhone || '')
+      }
+      // Append uploaded files so auth route handles Drive upload directly
+      for (const { type, file } of step4Files) {
+        fd.append(type, file)
+      }
+
       const res = await fetch('/api/auth', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: step2Data.email,
-          password: step5Data.password,
-          name: step2Data.name,
-          phone: step2Data.phone,
-          role,
-          // Driver fields
-          ...(role === 'DRIVER' && {
-            licensePlate: step3Data.licensePlate,
-            carType: step3Data.vehicleSize,
-            carColor: step3Data.carColor,
-            carBrand: step3Data.carBrand,
-            carModel: step3Data.carModel,
-          }),
-          // Dispatcher fields
-          ...(role === 'DISPATCHER' && {
-            companyName: step2Data.companyName,
-            taxId: step2Data.taxId,
-            contactPhone: step2Data.contactPhone,
-          }),
-        }),
+        body: fd,
       })
       const data = await res.json()
       if (!data.success) {
         setError(data.error || '註冊失敗')
         setSubmitting(false)
         return
-      }
-
-      // 上傳文件到 Google Drive（失敗不阻擋註冊成功）
-      if (step4Files.length > 0 && data.data?.token) {
-        for (const { type, file } of step4Files) {
-          try {
-            const fd = new FormData()
-            fd.append('file', file)
-            fd.append('type', type)
-            await fetch('/api/uploads', {
-              method: 'POST',
-              headers: { Authorization: `Bearer ${data.data.token}` },
-              body: fd,
-            })
-          } catch {
-            // 上傳失敗不影響流程
-          }
-        }
       }
 
       setSuccess(true)
