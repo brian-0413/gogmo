@@ -34,6 +34,7 @@ interface ProfileData {
     fileUrl: string | null
     expiryDate: string | null
     status: string
+    uploadFailed?: boolean
   }>
   balance: number
 }
@@ -69,9 +70,10 @@ const BANK_OPTIONS = [
   { code: '052', label: '052 - 渣打銀行' },
 ]
 
-type DocStatus = 'normal' | 'expiring' | 'expired' | 'none'
+type DocStatus = 'normal' | 'expiring' | 'expired' | 'failed' | 'none'
 
-function getDocStatus(expiryDate: string | null | undefined): DocStatus {
+function getDocStatus(expiryDate: string | null | undefined, uploadFailed?: boolean): DocStatus {
+  if (uploadFailed) return 'failed'
   if (!expiryDate) return 'none'
   const today = new Date()
   today.setHours(0, 0, 0, 0)
@@ -283,21 +285,27 @@ export function ProfileTab({ token }: ProfileTabProps) {
     setTopupLoading(false)
   }
 
-  const getDocForType = (docType: string) =>
-    profile?.documents.find(d => d.type === docType) ?? null
+  // 優先取 APPROVED 的文件，若沒有才取 PENDING_REVIEW
+  const getDocForType = (docType: string) => {
+    const docs = profile?.documents.filter(d => d.type === docType) ?? []
+    return docs.find(d => d.status === 'APPROVED') ?? docs.find(d => d.status === 'PENDING_REVIEW') ?? null
+  }
 
-  const getBannerStatus = (): 'expired' | 'expiring' | null => {
+  const getBannerStatus = (): 'expired' | 'expiring' | 'failed' | null => {
     if (!profile) return null
     let hasExpired = false
     let hasExpiring = false
+    let hasFailed = false
     for (const dt of DOC_TYPES) {
       const doc = getDocForType(dt)
-      const st = getDocStatus(doc?.expiryDate)
+      const st = getDocStatus(doc?.expiryDate, doc?.uploadFailed)
       if (st === 'expired') hasExpired = true
       if (st === 'expiring') hasExpiring = true
+      if (st === 'failed') hasFailed = true
     }
     if (hasExpired) return 'expired'
     if (hasExpiring) return 'expiring'
+    if (hasFailed) return 'failed'
     return null
   }
 
@@ -334,6 +342,11 @@ export function ProfileTab({ token }: ProfileTabProps) {
       {bStatus === 'expiring' && (
         <div className="bg-[#FFF3E0] border border-[#FFE0B2] rounded-xl px-5 py-3 text-[#B45309] text-sm font-medium">
           有文件即將到期，請重新上傳
+        </div>
+      )}
+      {bStatus === 'failed' && (
+        <div className="bg-[#FFF3E0] border border-[#FFE0B2] rounded-xl px-5 py-3 text-[#B45309] text-sm font-medium">
+          文件上傳失敗，請重新上傳
         </div>
       )}
 
@@ -460,7 +473,7 @@ export function ProfileTab({ token }: ProfileTabProps) {
           {DOC_TYPES.map(docType => {
             const doc = getDocForType(docType)
             const label = DOC_TYPE_LABELS[docType]
-            const status = getDocStatus(doc?.expiryDate)
+            const status = getDocStatus(doc?.expiryDate, doc?.uploadFailed)
             const preview = uploadPreview[docType]
             const isUploading = uploadingDoc === docType
             const wasUploaded = uploadSuccess[docType]
@@ -469,6 +482,7 @@ export function ProfileTab({ token }: ProfileTabProps) {
               normal: <Badge variant="success">正常</Badge>,
               expiring: <Badge variant="warning">即將到期</Badge>,
               expired: <Badge variant="danger">已過期</Badge>,
+              failed: <Badge variant="danger">上傳失敗</Badge>,
               none: <Badge variant="default">尚未上傳</Badge>,
             }
 
@@ -495,6 +509,9 @@ export function ProfileTab({ token }: ProfileTabProps) {
                     )}
                     {status === 'expiring' && (
                       <p className="text-[#B45309] font-medium">即將到期，請盡快更新</p>
+                    )}
+                    {status === 'failed' && (
+                      <p className="text-[#A32D2D] font-medium">上傳失敗，請重新上傳</p>
                     )}
                   </div>
                 ) : (

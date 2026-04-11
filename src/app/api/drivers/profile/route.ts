@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
       prisma.userDocument.findMany({
         where: {
           userId: user.id,
-          status: 'APPROVED',
+          status: { in: ['APPROVED', 'PENDING_REVIEW'] },
         },
         select: {
           id: true,
@@ -50,6 +50,7 @@ export async function GET(request: NextRequest) {
           fileUrl: true,
           expiryDate: true,
           status: true,
+          uploadFailed: true,
         },
         orderBy: { createdAt: 'desc' },
       }),
