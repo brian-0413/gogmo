@@ -5,13 +5,31 @@
 
 ---
 
-## 專案現況（2026-04-11）
+## 專案現況（2026-04-12）
 
 ### 最後 commit
 ```
-8e27abf feat: add profile tab to driver dashboard
+650173d fix: security & logic fixes
 ```
 落後 origin/main 0 個 commits。
+
+---
+
+## 目前開發階段：文件上傳改善 + 管理員後台完善（已完成）
+
+### [完成] 文件上傳改善（2026-04-11）
+**Commits**: `57a066a` → `becf669` → `650173d`
+**實作內容**：
+- **新命名格式**：Drive 資料夾 `{YYYYMMDD}-{車牌}-{姓名}`，檔案 `{車牌}-{姓名}-{文件類型}.{ext}`
+- **上傳失敗次數上限**：同一文件類型最多上傳 3 次，超過則拒絕並提示聯絡管理員
+- **管理員 Drive 測試區**：`/dashboard/admin/drive-test`，可上傳測試檔案至「🔧Drive上傳測試區」
+- **Admin 登入導向修正**：`auth-context.tsx` 加入 ADMIN 導向 `/dashboard/admin`
+- **Drive Test 導航連結**：管理員後台導航列加入「Drive 測試」連結
+- **Code Review 修復**：移除 raw error 暴露（drive-test upload）、移除搜尋無結果時錯誤回傳所有用戶的 fallback
+
+**QA 測試結果**：全部 53 個 Vitest 測試通過，所有主要頁面（首頁/登入/註冊/管理員/Drive測試/帳號審核）無 console 錯誤。
+
+**待關注**：`brian0413@gmail.com` 有 999,999,999 點測試儲值記錄（管理員於 4/11 執行），並非正常餘額。
 
 ---
 
@@ -397,6 +415,12 @@
 ## 修復歷史（重要）
 
 | Commit | 問題 | 修復方式 |
+|--------|------|---------||
+| `650173d` | Drive test 上傳 raw error 暴露；管理員搜尋無結果時回傳所有用戶 | 改通用錯誤訊息；移除錯誤的 fallback |
+| `becf669` | 管理員導航列缺少 Drive 測試連結 | 新增連結 + FolderOpen icon |
+| `57a066a` | 上傳失敗時未限制次數，司機可無限重試 | 同一類型失敗滿 3 次後拒絕上傳 |
+| (prior) | EAM0760 文件狀態顯示空白 | status='PENDING_REVIEW' 改為 'PENDING'（schema 無 PENDING_REVIEW） |
+| (prior) | REC2391 刪除失敗 | Transaction/Topup/SquadInvite/OrderTransfer 未一併刪除，加入 transaction |
 |--------|------|---------|
 | `92c035d` | 司機大廳過期行程不自動移除；接機/送機 Stats 分開顯示 | /api/orders 司機 OR 條件加入時間過濾；Stats 合併接機/送機，新增「未派出」顯示過期未派出數量 |
 | `87e3415` | 接單大廳過期行程不自動移除（scheduledTime < now 仍顯示） | 查詢時加入 scheduledTime >= now 過濾，影響 /api/orders 和 /api/drivers/events SSE |
@@ -441,7 +465,7 @@
 - **UI**: Tailwind CSS + 自定義元件（shadcn/ui 改造）
 - **Database**: PostgreSQL + Prisma ORM v7
 - **認證**: 自定義 JWT（無 NextAuth）
-- **部署**: Vercel
+- **部署**: Zeabur
 - **Supabase**: PostgreSQL（Transaction Pooler port 6543）
 
 ### 專案結構
@@ -518,6 +542,7 @@ PENDING → PUBLISHED → ASSIGNED → ACCEPTED → ARRIVED → IN_PROGRESS → 
 ## 測試帳號
 - **司機**: `driver1@test.com`
 - **派單方**: `dispatcher1@test.com`
+- **管理員**: `admin@goGMO.com` / `admin123`（需透過 DB 重設密碼）
 
 ---
 
