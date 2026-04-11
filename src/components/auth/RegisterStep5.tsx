@@ -27,6 +27,10 @@ export function RegisterStep5({ data, onChange, onSubmit, onBack }: RegisterStep
   const canSubmit = data.password.length >= 6 && data.password === data.confirmPassword && data.agreedToTerms && !loading
 
   const handleSubmit = async () => {
+    if (!data.password) { setError('請輸入密碼'); setLoading(false); return }
+    if (data.password.length < 6) { setError('密碼至少 6 個字元'); setLoading(false); return }
+    if (data.password !== data.confirmPassword) { setError('兩次密碼不符'); setLoading(false); return }
+    if (!data.agreedToTerms) { setError('請同意服務條款'); setLoading(false); return }
     setLoading(true)
     setError('')
     try {

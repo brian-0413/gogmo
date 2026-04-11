@@ -16,6 +16,9 @@ function getDriveService() {
   const key = process.env.GOOGLE_SERVICE_ACCOUNT_KEY
   if (!key) throw new Error('GOOGLE_SERVICE_ACCOUNT_KEY 未設定')
 
+  console.log('[DRIVE] GOOGLE_SERVICE_ACCOUNT_KEY is', key.length > 0 ? 'SET' : 'EMPTY')
+  console.log('[DRIVE] GOOGLE_DRIVE_ROOT_FOLDER_ID is', process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID ? 'SET' : 'EMPTY')
+
   const credentials = JSON.parse(key)
   const auth = new google.auth.GoogleAuth({
     credentials,
@@ -77,6 +80,7 @@ export async function uploadFileToDrive(
   buffer: Buffer,
 ): Promise<{ fileId: string; webViewLink: string; webContentLink: string }> {
   const drive = getDriveService()
+  console.log(`[DRIVE] Uploading "${fileName}" (${buffer.length} bytes, ${mimeType}) to folder ${folderId}`)
 
   // Check if file with same name exists (overwrite if so)
   const existing = await drive.files.list({

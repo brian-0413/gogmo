@@ -46,6 +46,7 @@ export async function POST(request: NextRequest) {
 
     // Basic validation
     if (!email || !password || !name || !phone || !role) {
+      console.error('[REGISTER] Missing required fields:', { email: !!email, password: !!password, name: !!name, phone: !!phone, role: !!role })
       return NextResponse.json<ApiResponse>(
         { success: false, error: '缺少必填欄位' },
         { status: 400 }
@@ -53,6 +54,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!['DRIVER', 'DISPATCHER'].includes(role)) {
+      console.error('[REGISTER] Invalid role:', role)
       return NextResponse.json<ApiResponse>(
         { success: false, error: '無效的角色' },
         { status: 400 }
@@ -60,6 +62,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (role === 'DRIVER' && !licensePlate) {
+      console.error('[REGISTER] Driver missing licensePlate')
       return NextResponse.json<ApiResponse>(
         { success: false, error: '司機必須提供車牌號碼' },
         { status: 400 }
@@ -87,11 +90,13 @@ export async function POST(request: NextRequest) {
 
     // Upload documents to Google Drive (if any) — failures do NOT block registration
     if (uploadedFiles.length > 0) {
+      console.log(`[REGISTER] Received ${uploadedFiles.length} files:`, uploadedFiles.map(f => `${f.type} (${f.file.name}, ${f.file.size} bytes)`))
       const { uploadFileToDrive, getOrCreateUserFolder, setFilePublic } = await import('@/lib/google-drive')
       const { prisma } = await import('@/lib/prisma')
 
       for (const { type, file } of uploadedFiles) {
         try {
+          console.log(`[REGISTER] Uploading ${type} to Google Drive...`)
           const driver = await prisma.driver.findUnique({ where: { userId: result.user!.id } })
           const dispatcher = await prisma.dispatcher.findUnique({ where: { userId: result.user!.id } })
           const plate = driver?.licensePlate || dispatcher?.companyName || result.user!.id
@@ -111,7 +116,9 @@ export async function POST(request: NextRequest) {
           if (!rootFolderId) throw new Error('GOOGLE_DRIVE_ROOT_FOLDER_ID 未設定')
 
           const folderId = await getOrCreateUserFolder(rootFolderId, result.user!.id, plate)
+          console.log(`[REGISTER] Created/retrieved folder: ${folderId}`)
           const uploaded = await uploadFileToDrive(folderId, fileName, file.type, buffer)
+          console.log(`[REGISTER] Uploaded file: ${uploaded.fileId} -> ${uploaded.webViewLink}`)
           await setFilePublic(uploaded.fileId)
 
           await prisma.userDocument.create({
@@ -129,7 +136,7 @@ export async function POST(request: NextRequest) {
             },
           })
         } catch (err) {
-          console.error(`文件上傳失敗 (${type}):`, err)
+          console.error(`[REGISTER] 文件上傳失敗 (${type}):`, err)
           const { prisma } = await import('@/lib/prisma')
           await prisma.userDocument.create({
             data: {
@@ -144,6 +151,8 @@ export async function POST(request: NextRequest) {
           })
         }
       }
+    } else {
+      console.log('[REGISTER] No files received for upload')
     }
 
     // Send verification email (async, don't await)
