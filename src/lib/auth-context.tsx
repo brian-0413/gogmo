@@ -117,7 +117,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.setItem('token', data.data.token)
         // Set auth cookie for SSE endpoint (EventSource can't set custom headers)
         document.cookie = `auth_token=${data.data.token}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Lax`
-        router.push(data.data.user.role === 'DRIVER' ? '/dashboard/driver' : '/dashboard/dispatcher')
+        const role = userData.success ? userData.data.role : data.data.user.role
+        router.push(role === 'DRIVER' ? '/dashboard/driver' : role === 'ADMIN' ? '/dashboard/admin' : '/dashboard/dispatcher')
         return { success: true }
       } else {
         return { success: false, error: data.error }

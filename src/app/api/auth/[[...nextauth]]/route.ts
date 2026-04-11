@@ -141,17 +141,23 @@ export async function POST(request: NextRequest) {
         } catch (err) {
           console.error(`[REGISTER] 文件上傳失敗 (${type}):`, err)
           const { prisma } = await import('@/lib/prisma')
-          await prisma.userDocument.create({
-            data: {
-              userId: result.user!.id,
-              type,
-              fileName: file.name,
-              mimeType: file.type,
-              sizeBytes: file.size,
-              status: 'PENDING',
-              uploadFailed: true,
-            },
+          // 檢查是否已達上傳失敗上限，超過則不建立記錄
+          const failedCount = await prisma.userDocument.count({
+            where: { userId: result.user!.id, type, uploadFailed: true },
           })
+          if (failedCount < 3) {
+            await prisma.userDocument.create({
+              data: {
+                userId: result.user!.id,
+                type,
+                fileName: file.name,
+                mimeType: file.type,
+                sizeBytes: file.size,
+                status: 'PENDING',
+                uploadFailed: true,
+              },
+            })
+          }
         }
       }
     } else {

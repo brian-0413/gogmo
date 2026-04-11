@@ -6,6 +6,7 @@ import { prisma } from '@/lib/prisma'
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'application/pdf']
 const MAX_SIZE = 5 * 1024 * 1024 // 5MB
+const MAX_UPLOAD_ATTEMPTS = 3 // 同一文件類型最多上傳次數
 const DOC_TYPE_FILE_NAME: Record<string, string> = {
   VEHICLE_REGISTRATION: '行照',
   DRIVER_LICENSE: '駕照',
@@ -36,6 +37,19 @@ export async function POST(request: NextRequest) {
   }
   if (file.size > MAX_SIZE) {
     return NextResponse.json<ApiResponse>({ success: false, error: '檔案需小於 5MB' }, { status: 400 })
+  }
+
+  // 檢查失敗次數，超過上限則拒絕（避免無限重試）
+  if (docType) {
+    const failedCount = await prisma.userDocument.count({
+      where: { userId: user.id, type: docType, uploadFailed: true },
+    })
+    if (failedCount >= MAX_UPLOAD_ATTEMPTS) {
+      return NextResponse.json<ApiResponse>(
+        { success: false, error: `此文件類型已失敗 ${MAX_UPLOAD_ATTEMPTS} 次，請聯絡管理員處理` },
+        { status: 400 }
+      )
+    }
   }
 
   // Get user's license plate and name (Driver or Dispatcher)
