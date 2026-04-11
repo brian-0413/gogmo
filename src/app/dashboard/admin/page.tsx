@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
 import { FeeConfigPanel } from '@/components/admin/FeeConfigPanel'
-import { Shield, LogOut, Plane, Settings, FileText, Users } from 'lucide-react'
+import { Shield, LogOut, Plane, Settings, FileText, Users, FolderOpen } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/Button'
 
@@ -75,6 +75,11 @@ export default function AdminDashboard() {
               className="px-4 py-2 text-sm rounded-full transition-colors flex items-center gap-2 bg-transparent text-[#717171] border border-[#DDDDDD] hover:bg-[#F7F7F7]">
               <Users className="w-3.5 h-3.5" />
               使用者管理
+            </Link>
+            <Link href="/dashboard/admin/drive-test"
+              className="px-4 py-2 text-sm rounded-full transition-colors flex items-center gap-2 bg-transparent text-[#717171] border border-[#DDDDDD] hover:bg-[#F7F7F7]">
+              <FolderOpen className="w-3.5 h-3.5" />
+              Drive 測試
             </Link>
           </div>
         </div>
