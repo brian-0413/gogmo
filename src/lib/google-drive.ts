@@ -12,7 +12,7 @@ export const DOC_TYPE_LABELS: Record<string, string> = {
 /**
  * Create Google Drive service instance using Service Account authentication
  */
-function getDriveService() {
+export function getDriveService() {
   const key = process.env.GOOGLE_SERVICE_ACCOUNT_KEY
   if (!key) throw new Error('GOOGLE_SERVICE_ACCOUNT_KEY 未設定')
 
