@@ -26,6 +26,7 @@ export async function uploadFileToDrive(
 
   const params = new URLSearchParams()
   params.append('action', 'upload')
+  params.append('devmode', 'true')
   params.append('fileName', fileName)
   params.append('mimeType', mimeType)
   params.append('fileData', base64)
@@ -37,21 +38,27 @@ export async function uploadFileToDrive(
     body: params.toString(),
   })
 
+  const text = await res.text()
   if (!res.ok) {
-    const text = await res.text()
     throw new Error(`Upload failed: ${res.status} ${text}`)
   }
 
-  const result = await res.json()
+  let result: { success: boolean; data?: { fileId: string; fileUrl?: string; webViewLink?: string; webContentLink?: string }; error?: string }
+  try {
+    result = JSON.parse(text)
+  } catch {
+    throw new Error(`Apps Script returned non-JSON: ${text.slice(0, 200)}`)
+  }
+
   if (!result.success) {
     throw new Error(result.error || 'Apps Script upload failed')
   }
 
-  console.log(`[DRIVE] Uploaded: ${result.data.fileId} -> ${result.data.fileUrl}`)
+  console.log(`[DRIVE] Uploaded: ${result.data!.fileId} -> ${result.data!.webViewLink || result.data!.fileUrl}`)
   return {
-    fileId: result.data.fileId,
-    webViewLink: result.data.webViewLink || result.data.fileUrl,
-    webContentLink: result.data.webContentLink || result.data.fileUrl,
+    fileId: result.data!.fileId,
+    webViewLink: result.data!.webViewLink || result.data!.fileUrl || '',
+    webContentLink: result.data!.webContentLink || result.data!.fileUrl || '',
   }
 }
 
@@ -68,6 +75,7 @@ export async function getOrCreateUserFolder(
   const folderName = `${date}-${licensePlate}-${name}`
 
   const params = new URLSearchParams()
+  params.append('devmode', 'true')
   params.append('action', 'createFolder')
   params.append('folderName', folderName)
   params.append('parentFolderId', parentFolderId)
@@ -78,13 +86,19 @@ export async function getOrCreateUserFolder(
     body: params.toString(),
   })
 
-  const result = await res.json()
+  const text = await res.text()
+  let result: { success: boolean; data?: { folderId: string }; error?: string }
+  try {
+    result = JSON.parse(text)
+  } catch {
+    throw new Error(`Apps Script returned non-JSON: ${text.slice(0, 200)}`)
+  }
   if (!result.success) {
     throw new Error(result.error || 'Apps Script createFolder failed')
   }
 
-  console.log(`[DRIVE] Folder: ${folderName} -> ${result.data.folderId}`)
-  return result.data.folderId
+  console.log(`[DRIVE] Folder: ${folderName} -> ${result.data!.folderId}`)
+  return result.data!.folderId
 }
 
 /**
@@ -95,6 +109,7 @@ export async function getOrCreateTestFolder(parentFolderId: string): Promise<str
   const folderName = `🔧Drive上傳測試區-${date}`
 
   const params = new URLSearchParams()
+  params.append('devmode', 'true')
   params.append('action', 'createFolder')
   params.append('folderName', folderName)
   params.append('parentFolderId', parentFolderId)
@@ -105,13 +120,19 @@ export async function getOrCreateTestFolder(parentFolderId: string): Promise<str
     body: params.toString(),
   })
 
-  const result = await res.json()
+  const text = await res.text()
+  let result: { success: boolean; data?: { folderId: string }; error?: string }
+  try {
+    result = JSON.parse(text)
+  } catch {
+    throw new Error(`Apps Script returned non-JSON: ${text.slice(0, 200)}`)
+  }
   if (!result.success) {
     throw new Error(result.error || 'Apps Script createFolder failed')
   }
 
-  console.log(`[DRIVE] Test folder: ${folderName} -> ${result.data.folderId}`)
-  return result.data.folderId
+  console.log(`[DRIVE] Test folder: ${folderName} -> ${result.data!.folderId}`)
+  return result.data!.folderId
 }
 
 /**
