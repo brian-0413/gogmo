@@ -77,25 +77,12 @@ export async function POST(request: NextRequest) {
     const msg = err instanceof Error ? err.message : String(err)
     const type = err instanceof Error ? err.constructor.name : 'Error'
     console.error('[DRIVE-TEST] Upload error:', type, msg)
-    // Log the env vars status for diagnosis
-    console.log('[DRIVE-TEST] GOOGLE_SERVICE_ACCOUNT_KEY length:', process.env.GOOGLE_SERVICE_ACCOUNT_KEY?.length || 0)
-    console.log('[DRIVE-TEST] GOOGLE_DRIVE_ROOT_FOLDER_ID:', !!process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID)
-    // Try JSON.parse on the key here to diagnose
-    try {
-      const k = process.env.GOOGLE_SERVICE_ACCOUNT_KEY!
-      const hasNL = k.includes('\n')
-      console.log('[DRIVE-TEST] key has actual newlines:', hasNL)
-      if (hasNL) {
-        const normalized = k.replace(/\r?\n/g, '\\n')
-        JSON.parse(normalized)
-        console.log('[DRIVE-TEST] normalized JSON parse: OK')
-      } else {
-        JSON.parse(k)
-        console.log('[DRIVE-TEST] direct JSON parse: OK')
-      }
-    } catch (e) {
-      console.log('[DRIVE-TEST] JSON parse error:', e instanceof Error ? e.message : String(e))
+    // Enhanced diagnostics: show stack trace and key info
+    if (err instanceof Error) {
+      console.error('[DRIVE-TEST] Stack:', err.stack)
     }
+    console.log('[DRIVE-TEST] Buffer available:', typeof Buffer !== 'undefined')
+    console.log('[DRIVE-TEST] Buffer.from:', typeof Buffer?.from)
     return NextResponse.json<ApiResponse>({ success: false, error: `[${type}] ${msg}` }, { status: 500 })
   }
 }
