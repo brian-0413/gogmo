@@ -6,11 +6,12 @@ import { ProgressBar } from './ProgressBar'
 import { RegisterStep1 } from './RegisterStep1'
 import { RegisterStep2, type Step2Data } from './RegisterStep2'
 import { RegisterStep3, type Step3Data } from './RegisterStep3'
-import { RegisterStep4, type UploadedFile } from './RegisterStep4'
-import { RegisterStep5, type Step5Data } from './RegisterStep5'
+import { RegisterStep4Bank, type Step4BankData } from './RegisterStep4Bank'
+import { RegisterStep5, type UploadedFile } from './RegisterStep5'
+import { RegisterStep6, type Step6Data } from './RegisterStep6'
 
 export function RegisterWizard() {
-  const [step, setStep] = useState<1 | 2 | 3 | 4 | 5>(1)
+  const [step, setStep] = useState<1 | 2 | 3 | 4 | 5 | 6>(1)
   const [role, setRole] = useState<'DRIVER' | 'DISPATCHER' | null>(null)
   const [step2Data, setStep2Data] = useState<Step2Data>({
     name: '',
@@ -27,33 +28,54 @@ export function RegisterWizard() {
     carColor: '',
     vehicleSize: '',
   })
-  const [step5Data, setStep5Data] = useState<Step5Data>({
+  const [step4BankData, setStep4BankData] = useState<Step4BankData>({
+    bankCode: '',
+    bankAccount: '',
+  })
+  const [step5Files, setStep5Files] = useState<UploadedFile[]>([])
+  const [step6Data, setStep6Data] = useState<Step6Data>({
     password: '',
     confirmPassword: '',
     agreedToTerms: false,
   })
-  const [step4Files, setStep4Files] = useState<UploadedFile[]>([])
   const [submitting, setSubmitting] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
 
+  // 司機：6步；派單方：4步
+  const totalSteps = role === 'DISPATCHER' ? 4 : 6
+  const driverLabels = ['身份選擇', '基本資料', '車輛資料', '銀行資料', '文件上傳', '密碼設定']
+  const dispatcherLabels = ['身份選擇', '基本資料', '文件上傳', '密碼設定']
+  const progressLabels = role === 'DISPATCHER' ? dispatcherLabels : driverLabels
+
   const handleRoleSelect = (selectedRole: 'DRIVER' | 'DISPATCHER') => {
     setRole(selectedRole)
-    setStep4Files([])
+    setStep5Files([])
     setStep(2)
   }
 
   const handleStep2Next = () => setStep(3)
-  const handleStep3Next = () => setStep(4)
-  const handleStep4Next = () => setStep(5)
+
+  const handleStep3Next = () => {
+    if (role === 'DISPATCHER') {
+      setStep(5)
+    } else {
+      setStep(4)
+    }
+  }
+
+  const handleStep4BankNext = () => setStep(5)
+  const handleStep5Next = () => setStep(6)
+
   const handleBack = () => {
     if (step === 2) setStep(1)
     else if (step === 3) setStep(2)
-    else if (step === 4) {
-      setStep4Files([])
-      setStep(role === 'DISPATCHER' ? 2 : 3)
+    else if (step === 4) setStep(3)
+    else if (step === 5) {
+      if (role === 'DISPATCHER') setStep(3)
+      else setStep(4)
     }
-    else if (step === 5) setStep(4)
+    else if (step === 6) setStep(5)
   }
 
   const handleSubmit = async () => {
@@ -63,7 +85,7 @@ export function RegisterWizard() {
     try {
       const fd = new FormData()
       fd.append('email', step2Data.email)
-      fd.append('password', step5Data.password)
+      fd.append('password', step6Data.password)
       fd.append('name', step2Data.name)
       fd.append('phone', step2Data.phone)
       fd.append('role', role)
@@ -73,13 +95,14 @@ export function RegisterWizard() {
         fd.append('carColor', step3Data.carColor)
         fd.append('carBrand', step3Data.carBrand)
         fd.append('carModel', step3Data.carModel)
+        fd.append('bankCode', step4BankData.bankCode)
+        fd.append('bankAccount', step4BankData.bankAccount)
       } else {
         fd.append('companyName', step2Data.companyName || '')
         fd.append('taxId', step2Data.taxId || '')
         fd.append('contactPhone', step2Data.contactPhone || '')
       }
-      // Append uploaded files so auth route handles Drive upload directly
-      for (const { type, file } of step4Files) {
+      for (const { type, file } of step5Files) {
         fd.append(type, file)
       }
 
@@ -152,7 +175,7 @@ export function RegisterWizard() {
 
       <div className="flex items-center justify-center px-6 py-4">
         <div className="w-full max-w-md">
-          <ProgressBar currentStep={step} totalSteps={5} />
+          <ProgressBar currentStep={step} totalSteps={totalSteps} labels={progressLabels} />
 
           <div className="bg-white border border-[#DDDDDD] rounded-xl p-6 mt-2">
             {step === 1 && <RegisterStep1 onSelect={handleRoleSelect} />}
@@ -172,19 +195,27 @@ export function RegisterWizard() {
                 onBack={handleBack}
               />
             )}
-            {step === 4 && role && (
-              <RegisterStep4
-                role={role}
-                uploadedFiles={step4Files}
-                onChange={setStep4Files}
-                onNext={handleStep4Next}
+            {step === 4 && role === 'DRIVER' && (
+              <RegisterStep4Bank
+                data={step4BankData}
+                onChange={setStep4BankData}
+                onNext={handleStep4BankNext}
                 onBack={handleBack}
               />
             )}
-            {step === 5 && (
+            {step === 5 && role && (
               <RegisterStep5
-                data={step5Data}
-                onChange={setStep5Data}
+                role={role}
+                uploadedFiles={step5Files}
+                onChange={setStep5Files}
+                onNext={handleStep5Next}
+                onBack={handleBack}
+              />
+            )}
+            {step === 6 && (
+              <RegisterStep6
+                data={step6Data}
+                onChange={setStep6Data}
                 onSubmit={handleSubmit}
                 onBack={handleBack}
               />

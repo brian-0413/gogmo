@@ -15,6 +15,8 @@ interface User {
     status: string
     balance: number
     isPremium?: boolean
+    bankCode?: string | null
+    bankAccount?: string | null
   }
   dispatcher?: {
     id: string

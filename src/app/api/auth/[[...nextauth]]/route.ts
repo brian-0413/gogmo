@@ -15,6 +15,7 @@ export async function POST(request: NextRequest) {
     let email: string, password: string, name: string, phone: string, role: string
     let licensePlate = '', carType = '', carColor = '', companyName = ''
     let carBrand = '', carModel = '', taxId = '', contactPhone = ''
+    let bankCode = '', bankAccount = ''
     let uploadedFiles: { type: string; file: File }[] = []
 
     if (contentType.includes('multipart/form-data')) {
@@ -32,6 +33,8 @@ export async function POST(request: NextRequest) {
       carModel = (formData.get('carModel') as string) || ''
       taxId = (formData.get('taxId') as string) || ''
       contactPhone = (formData.get('contactPhone') as string) || ''
+      bankCode = (formData.get('bankCode') as string) || ''
+      bankAccount = (formData.get('bankAccount') as string) || ''
 
       // Collect document files
       const docTypes = ['VEHICLE_REGISTRATION', 'DRIVER_LICENSE', 'INSURANCE', 'ID_CARD', 'BUSINESS_REGISTRATION']
@@ -41,7 +44,7 @@ export async function POST(request: NextRequest) {
       }
     } else {
       const body = await request.json()
-      ;({ email, password, name, phone, role, licensePlate, carType, carColor, companyName, carBrand, carModel, taxId, contactPhone } = body)
+      ;({ email, password, name, phone, role, licensePlate, carType, carColor, companyName, carBrand, carModel, taxId, contactPhone, bankCode, bankAccount } = body)
     }
 
     // Basic validation
@@ -69,6 +72,23 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // 司機必須填寫銀行帳號
+    if (role === 'DRIVER' && (!bankCode || !bankAccount)) {
+      console.error('[REGISTER] Driver missing bankCode or bankAccount')
+      return NextResponse.json<ApiResponse>(
+        { success: false, error: '司機必須填寫銀行帳號' },
+        { status: 400 }
+      )
+    }
+
+    // 驗證銀行帳號格式（至少10碼，純數字）
+    if (role === 'DRIVER' && bankAccount && !/^\d{10,16}$/.test(bankAccount)) {
+      return NextResponse.json<ApiResponse>(
+        { success: false, error: '銀行帳號需為 10-16 碼純數字' },
+        { status: 400 }
+      )
+    }
+
     // Register user
     const result = await register(email, password, name, phone, role as 'DRIVER' | 'DISPATCHER', {
       licensePlate,
@@ -79,6 +99,8 @@ export async function POST(request: NextRequest) {
       carModel: carModel || '',
       taxId: taxId || '',
       contactPhone: contactPhone || '',
+      bankCode: bankCode || '',
+      bankAccount: bankAccount || '',
     })
 
     if (!result.success) {

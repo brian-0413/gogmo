@@ -111,6 +111,22 @@ export async function POST(
       )
     }
 
+    // 檢查帳號狀態
+    if (user.accountStatus !== 'ACTIVE') {
+      return NextResponse.json<ApiResponse>(
+        { success: false, error: '帳號尚未通過審核，請聯繫客服' },
+        { status: 403 }
+      )
+    }
+
+    // 檢查銀行帳號欄位（帳號啟用後的必要條件）
+    if (!user.driver.bankCode || !user.driver.bankAccount) {
+      return NextResponse.json<ApiResponse>(
+        { success: false, error: '請先至個人中心填寫銀行帳號，以開始接單' },
+        { status: 400 }
+      )
+    }
+
     const driverId = user.driver.id
     const newOrderTime = new Date(order.scheduledTime)
 

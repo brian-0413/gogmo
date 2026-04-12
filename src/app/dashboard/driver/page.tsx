@@ -246,6 +246,7 @@ export default function DriverDashboard() {
   const handleAcceptOrder = async (orderId: string, skipWarning = false) => {
     if (!token) return
     if (!user || user.accountStatus !== 'ACTIVE') { alert('帳號尚未通過審核，暫時無法接單'); return }
+    if (!user.driver?.bankCode || !user.driver?.bankAccount) { alert('請先至個人中心填寫銀行帳號，以開始接單'); return }
     const order = availableOrders.find(o => o.id === orderId)
     if (!order) return
     setActionLoading(orderId)
@@ -549,6 +550,24 @@ export default function DriverDashboard() {
       {showStatusBanner && statusMsg && (
         <div className="bg-[#3B82F6] text-white px-4 py-3 text-center text-sm font-medium z-30 relative">
           {statusMsg.icon} {statusMsg.message}
+        </div>
+      )}
+
+      {/* 銀行帳號未填寫橫幅（帳號已啟用但缺少銀行資料） */}
+      {user.accountStatus === 'ACTIVE' && (!user.driver?.bankCode || !user.driver?.bankAccount) && (
+        <div className="bg-[#FFF3E0] border-b border-[#FFE0B2] px-4 py-3 z-30 relative">
+          <div className="flex items-center justify-between max-w-7xl mx-auto">
+            <div>
+              <p className="text-[#B45309] text-sm font-medium">請填寫銀行帳號以開始接單</p>
+              <p className="text-[#B45309] text-xs opacity-75 mt-0.5">前往「個人中心」填寫銀行代碼與帳號</p>
+            </div>
+            <button
+              onClick={() => setActiveTab('profile')}
+              className="text-[#FF385C] text-sm font-medium hover:text-[#D70466] flex-shrink-0"
+            >
+              前往填寫 →
+            </button>
+          </div>
         </div>
       )}
 

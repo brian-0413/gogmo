@@ -70,6 +70,8 @@ export async function register(
     carModel?: string
     taxId?: string
     contactPhone?: string
+    bankCode?: string
+    bankAccount?: string
   }
 ): Promise<AuthResult> {
   try {
@@ -109,6 +111,8 @@ export async function register(
               balance: NEW_USER_BONUS, // 新用戶贈送點數
               carBrand: extraData.carBrand || null,
               carModel: extraData.carModel || null,
+              bankCode: extraData.bankCode || null,
+              bankAccount: extraData.bankAccount || null,
             },
           },
         }),
