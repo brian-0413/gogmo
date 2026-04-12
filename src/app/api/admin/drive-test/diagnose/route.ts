@@ -21,8 +21,12 @@ export async function GET(request: NextRequest) {
   result.hasRootFolderId = !!rootFolderId
   result.rootFolderId = rootFolderId || null
   result.nodeEnv = process.env.NODE_ENV
+  // Show raw key start (first 100 chars) to diagnose format issues
+  result.keyStart = key ? key.substring(0, 100) : null
+  result.keyContainsActualNL = key ? key.includes('\n') : false
 
   // 2. Try JSON.parse on the key
+  // Same normalization logic as google-drive.ts: Zeabur may store JSON with actual newlines
   try {
     const credentials = JSON.parse(key!)
     result.jsonParse = 'OK'
@@ -30,10 +34,28 @@ export async function GET(request: NextRequest) {
     result.projectId = credentials.project_id
     result.hasPrivateKey = !!credentials.private_key
     result.privateKeyStart = credentials.private_key?.substring(0, 30)
-  } catch (e) {
-    result.jsonParse = 'FAILED'
-    result.jsonError = e instanceof Error ? e.message : String(e)
-    return NextResponse.json<ApiResponse>({ success: false, data: result }, { status: 200 })
+  } catch (_) {
+    // Key has actual newlines — normalize and retry
+    if (key!.includes('\n')) {
+      try {
+        const normalized = key!.replace(/\r?\n/g, '\\n')
+        const credentials = JSON.parse(normalized)
+        result.jsonParse = 'OK_NORMALIZED'
+        result.clientEmail = credentials.client_email
+        result.projectId = credentials.project_id
+        result.hasPrivateKey = !!credentials.private_key
+        result.privateKeyStart = credentials.private_key?.substring(0, 30)
+        result.wasNormalized = true
+      } catch (_2) {
+        result.jsonParse = 'FAILED'
+        result.jsonError = 'Normalized JSON also failed: ' + (_2 instanceof Error ? _2.message : String(_2))
+        return NextResponse.json<ApiResponse>({ success: false, data: result }, { status: 200 })
+      }
+    } else {
+      result.jsonParse = 'FAILED'
+      result.jsonError = 'No actual newlines found, unknown parse error'
+      return NextResponse.json<ApiResponse>({ success: false, data: result }, { status: 200 })
+    }
   }
 
   // 3. Try creating Drive service
