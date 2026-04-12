@@ -25,21 +25,19 @@ export function getDriveService() {
   // 2. As actual newlines (Zeabur UI pastes the raw JSON with real line breaks).
   //    In this case, process.env contains actual newlines which break JSON.parse.
   //
-  // Strategy: Try JSON.parse directly first. If it fails and the key has actual
-  // newlines, normalize them to \n (JSON escape) and retry.
+  // Strategy: Try JSON.parse directly first. If it fails, check if the key has actual
+  // newlines (ASCII 10) and normalize them to \n escape sequences before retrying.
   let credentials
   try {
     credentials = JSON.parse(key)
   } catch (_) {
-    // Key has actual newlines (Zeabur multi-line format) — escape them to \n
-    const actualNL = '\n' // real newline, ASCII 10
-    const backslashN = '\\n' // two-char: backslash + letter n
-    const hasActualNewlines = key.includes(actualNL)
+    // Key has actual newlines (Zeabur multi-line format) — replace with \n escape
+    // Must check BEFORE any replacement to avoid false positives from \n→\n
+    const hasActualNewlines = key.includes('\n')
     if (hasActualNewlines) {
-      const escaped = key.replace(
-        new RegExp(actualNL.replace(/[\\^$*+?.()|[\]{}]/g, '\\$&'), 'g'),
-        backslashN,
-      )
+      // Replace actual newlines with \n escape sequence for JSON
+      // Handle both \n (Unix) and \r\n (Windows) line endings
+      const escaped = key.replace(/\r?\n/g, '\\n')
       console.log('[DRIVE] Normalized actual newlines in key (Zeabur multi-line format)')
       credentials = JSON.parse(escaped)
     } else {
