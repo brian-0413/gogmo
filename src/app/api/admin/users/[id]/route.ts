@@ -163,20 +163,33 @@ export async function DELETE(
     await prisma.$transaction(async (tx) => {
       if (target.role === 'DRIVER' && target.driver) {
         const driverId = target.driver.id
-        await tx.order.deleteMany({ where: { driverId } })
-        await tx.transaction.deleteMany({ where: { driverId } })
-        await tx.topup.deleteMany({ where: { driverId } })
-        await tx.squadInvite.deleteMany({ where: { driverId } })
+
+        // 1. 刪除該司機的所有轉單記錄（fromDriver + toDriver）
         await tx.orderTransfer.deleteMany({
           where: { OR: [{ fromDriverId: driverId }, { toDriverId: driverId }] },
         })
-        // Squad membership 是 Cascade（透過 Driver Cascade），不用手動刪
+
+        // 2. 刪除該司機的小隊邀請
+        await tx.squadInvite.deleteMany({ where: { driverId } })
+
+        // 3. 刪除該司機的加值記錄
+        await tx.topup.deleteMany({ where: { driverId } })
+
+        // 4. 刪除該司機的交易記錄
+        await tx.transaction.deleteMany({ where: { driverId } })
+
+        // 5. 該司機的訂單 driverId 設為 null（司機走了，訂單保留）
+        await tx.order.updateMany({
+          where: { driverId },
+          data: { driverId: null },
+        })
       }
       if (target.role === 'DISPATCHER' && target.dispatcher) {
         const dispatcherId = target.dispatcher.id
+        // 派單方的訂單全部刪除（派單方帳號刪除，相關訂單不再需要）
         await tx.order.deleteMany({ where: { dispatcherId } })
-        await tx.orderTransfer.deleteMany({ where: { toDriverId: dispatcherId } })
       }
+      // 最後刪除 User（含 Cascade 的 Driver/Dispatcher/Document 會自動刪除）
       await tx.user.delete({ where: { id } })
     })
   } catch (err) {
