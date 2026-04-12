@@ -150,6 +150,7 @@ export async function POST(request: NextRequest) {
               data: {
                 userId: result.user!.id,
                 type,
+                fileUrl: `upload-failed:${file.name}`,
                 fileName: file.name,
                 mimeType: file.type,
                 sizeBytes: file.size,

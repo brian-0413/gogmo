@@ -49,6 +49,14 @@ function getDriveService() {
  * name: user name
  * Returns: folderId
  */
+/**
+ * Escape special characters for Google Drive API query strings.
+ * Single quotes must be escaped as \' and backslashes as \\.
+ */
+function escapeDriveQuery(value: string): string {
+  return value.replace(/\\/g, '\\\\').replace(/'/g, "\\'")
+}
+
 export async function getOrCreateUserFolder(
   parentFolderId: string,
   userId: string,
@@ -57,7 +65,9 @@ export async function getOrCreateUserFolder(
 ): Promise<string> {
   const drive = getDriveService()
   const date = new Date().toISOString().slice(0, 10).replace(/-/g, '')
-  const folderName = `${date}-${licensePlate}-${name}`
+  const safePlate = escapeDriveQuery(licensePlate)
+  const safeName = escapeDriveQuery(name)
+  const folderName = `${date}-${safePlate}-${safeName}`
 
   // Check if folder already exists
   const res = await drive.files.list({
@@ -92,9 +102,11 @@ export async function getOrCreateUserFolder(
 export async function getOrCreateTestFolder(parentFolderId: string): Promise<string> {
   const drive = getDriveService()
   const testFolderName = '🔧Drive上傳測試區'
+  const safeName = escapeDriveQuery(testFolderName)
+  const safeParent = escapeDriveQuery(parentFolderId)
 
   const res = await drive.files.list({
-    q: `name='${testFolderName}' and '${parentFolderId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,
+    q: `name='${safeName}' and '${safeParent}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,
     fields: 'files(id, name)',
   })
 
@@ -134,8 +146,10 @@ export async function uploadFileToDrive(
   console.log(`[DRIVE] Uploading "${fileName}" (${buffer.length} bytes, ${mimeType}) to folder ${folderId}`)
 
   // Check if file with same name exists (overwrite if so)
+  const safeFileName = escapeDriveQuery(fileName)
+  const safeFolderId = escapeDriveQuery(folderId)
   const existing = await drive.files.list({
-    q: `name='${fileName}' and '${folderId}' in parents and trashed=false`,
+    q: `name='${safeFileName}' and '${safeFolderId}' in parents and trashed=false`,
     fields: 'files(id)',
   })
   const existingId = existing.data.files?.[0]?.id
