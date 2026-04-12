@@ -65,7 +65,7 @@ import { POST } from '@/app/api/drivers/documents/upload/route'
 
 const mockedPrisma = prisma as unknown as {
   driver: { findUnique: ReturnType<typeof vi.fn> }
-  userDocument: { create: ReturnType<typeof vi.fn> }
+  userDocument: { create: ReturnType<typeof vi.fn>; count: ReturnType<typeof vi.fn> }
 }
 const mockedGetUser = getUserFromToken as unknown as ReturnType<typeof vi.fn>
 
