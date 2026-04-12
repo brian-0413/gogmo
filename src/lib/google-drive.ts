@@ -167,11 +167,11 @@ export async function uploadFileToDrive(
   })
   const existingId = existing.data.files?.[0]?.id
 
-  // Upload using raw media body — compatible with all Node.js versions
-  // The Drive API accepts a Buffer/Uint8Array directly as the media body
+  // Convert buffer to base64 string — avoids all stream compatibility issues
+  const base64 = buffer.toString('base64')
   const media = {
     mimeType,
-    body: buffer,
+    body: base64,
   }
 
   if (existingId) {
