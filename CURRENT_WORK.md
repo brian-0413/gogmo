@@ -5,37 +5,26 @@
 
 ---
 
-## 專案現況（2026-04-12）
+## 專案現況（2026-04-13）
 
 ### 最後 commit
 ```
-f9a6b84 fix: Drive API query injection + registration fileUrl fallback
+6d5ad44 fix: 司機個人中心文件狀態顯示 — 註冊上傳文件正確呈現「待審核」
 ```
 落後 origin/main 0 個 commits。
 
 ---
 
-## 目前開發階段：Drive API 環境變數問題排查
+## 目前開發階段：文件上傳與 Drive API 整合（持續優化）
 
-### [進行中] Drive 上傳 500 錯誤排查（2026-04-12）
-**Commit**: `f9a6b84`
-**問題**：Drive API 上傳返回 500 錯誤（已確認，並非 400/401）
-**已修復**：
-- Drive API query injection 防護：`escapeDriveQuery()` 跳脫單引號和反斜槓
-- 註冊上傳失敗時缺少 `fileUrl` 欄位：已加入 `fileUrl: 'upload-failed:${file.name}'`
-- Drive test API raw error 暴露：已改通用訊息
-
-**待確認**：Zeabur 環境變數是否正確設定
-- `GOOGLE_SERVICE_ACCOUNT_KEY` — Google 服務帳號 JSON key
-- `GOOGLE_DRIVE_ROOT_FOLDER_ID` — Drive 根目錄 ID
-→ 請至 Zeabur Dashboard → 專案 → Environment Variables 確認
-
-**QA 結果（2026-04-12）**：
-- Production build: clean (0 errors/warnings)
-- Vitest: 53/53 tests passed
-- 頁面載入: 首頁 38ms，零 console errors
-- API: Admin APIs 200、Driver API 200、認證正確（401 unauth）
-- Drive 上傳: 仍 500（環境變數問題，非程式碼問題）
+### [完成] 司機個人中心文件狀態顯示修正（2026-04-13）
+**Commit**: `6d5ad44`
+**問題**：司機註冊時上傳的文件，在個人中心顯示「尚未上傳」
+**根本原因**：`ProfileTab.tsx` 的 `getDocForType()` 只檢查 `APPROVED` 和 `PENDING_REVIEW`，但註冊時建立的文件 status 為 `PENDING`
+**修復**：
+- `getDocForType()` 加入 `PENDING` 狀態查詢
+- 狀態徽章：PENDING/PENDING_REVIEW 顯示「待審核」（黃色），真正未上傳才顯示「尚未上傳」（灰色）
+- API `/api/drivers/profile` 本就包含 PENDING，純前端顯示修復
 
 
 
@@ -108,9 +97,18 @@ f9a6b84 fix: Drive API query injection + registration fileUrl fallback
 
 **規格文件**：`docs/squad-system.md`、`docs/superpowers/plans/2026-04-09-squad-system-v2.md`
 
-### [完成] Google Drive 文件儲存整合（2026-04-10）
-**Commits**: `30243a2` → `1ff328a` → `53ed354` → `dfe21a7` → `c1659c7` → `066ee5d` → `9864faf` → `0e21493` → `dc937a8`
-**功能概述**：將註冊流程的三證文件從本地磁碟改存 Google Drive，由服務帳號統一管理。
+### [完成] Google Drive 文件儲存整合（2026-04-10）+ Apps Script 修復（2026-04-12）
+**Commits**: `30243a2` → `1ff328a` → ... → `6d5ad44`
+**功能概述**：將註冊流程的三證文件從本地磁碟改存 Google Drive，透過 Google Apps Script Web App 作為上傳 proxy（繞過 Service Account storage quota 限制）。
+
+**Apps Script 最終修復（多層問題排查）**：
+- `doPost()` 函數 scope 問題：移除 wrapper，直接暴露頂層函數
+- JSON body 偵測：`e.postData.contents` 先嘗試 `JSON.parse()`，失敗才用 `e.parameter`
+- `Permission.VIEWER` → `DriveApp.Permission.VIEW`
+- 二進制檔案損壞：`createFile(name, content, mimeType)` 改為 `Utilities.newBlob()` + `createFile(blob)`
+- Base64 URL encoding：`+`→space, `/`→%XX → 改用 `Content-Type: application/json` body 避免 URL encode
+- 302 redirect 處理：Node.js fetch 手動跟隨 redirect 到 googleusercontent.com echo URL
+- Apps Script 部署需「Anyone」Execute as Me, 權限 ANYONE_WITH_LINK
 
 **實作內容**：
 - **服務帳號認證**：Google Cloud 服務帳號 + Drive API v3，無 OAuth 流程
@@ -438,6 +436,7 @@ f9a6b84 fix: Drive API query injection + registration fileUrl fallback
 
 | Commit | 問題 | 修復方式 |
 |--------|------|---------||
+| `6d5ad44` | 司機個人中心文件顯示「尚未上傳」（實際已上傳） | getDocForType() 加入 PENDING 狀態查詢 |
 | `f9a6b84` | Drive API query injection；註冊上傳失敗時 fileUrl 為 null | escapeDriveQuery() 防護；fileUrl fallback |
 | `650173d` | Drive test 上傳 raw error 暴露；管理員搜尋無結果時回傳所有用戶 | 改通用錯誤訊息；移除錯誤的 fallback |
 | `becf669` | 管理員導航列缺少 Drive 測試連結 | 新增連結 + FolderOpen icon |
