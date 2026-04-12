@@ -167,15 +167,11 @@ export async function uploadFileToDrive(
   })
   const existingId = existing.data.files?.[0]?.id
 
-  // Create a readable stream from buffer using PassThrough
-  // Compatible with all Node.js versions (Readable.from was removed in some builds)
-  const { Readable, PassThrough } = await import('stream')
-  const pass = new PassThrough()
-  pass.write(buffer)
-  pass.end()
+  // Upload using raw media body — compatible with all Node.js versions
+  // The Drive API accepts a Buffer/Uint8Array directly as the media body
   const media = {
     mimeType,
-    body: pass,
+    body: buffer,
   }
 
   if (existingId) {
