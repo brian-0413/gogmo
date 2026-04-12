@@ -9,13 +9,35 @@
 
 ### 最後 commit
 ```
-650173d fix: security & logic fixes
+f9a6b84 fix: Drive API query injection + registration fileUrl fallback
 ```
 落後 origin/main 0 個 commits。
 
 ---
 
-## 目前開發階段：文件上傳改善 + 管理員後台完善（已完成）
+## 目前開發階段：Drive API 環境變數問題排查
+
+### [進行中] Drive 上傳 500 錯誤排查（2026-04-12）
+**Commit**: `f9a6b84`
+**問題**：Drive API 上傳返回 500 錯誤（已確認，並非 400/401）
+**已修復**：
+- Drive API query injection 防護：`escapeDriveQuery()` 跳脫單引號和反斜槓
+- 註冊上傳失敗時缺少 `fileUrl` 欄位：已加入 `fileUrl: 'upload-failed:${file.name}'`
+- Drive test API raw error 暴露：已改通用訊息
+
+**待確認**：Zeabur 環境變數是否正確設定
+- `GOOGLE_SERVICE_ACCOUNT_KEY` — Google 服務帳號 JSON key
+- `GOOGLE_DRIVE_ROOT_FOLDER_ID` — Drive 根目錄 ID
+→ 請至 Zeabur Dashboard → 專案 → Environment Variables 確認
+
+**QA 結果（2026-04-12）**：
+- Production build: clean (0 errors/warnings)
+- Vitest: 53/53 tests passed
+- 頁面載入: 首頁 38ms，零 console errors
+- API: Admin APIs 200、Driver API 200、認證正確（401 unauth）
+- Drive 上傳: 仍 500（環境變數問題，非程式碼問題）
+
+
 
 ### [完成] 文件上傳改善（2026-04-11）
 **Commits**: `57a066a` → `becf669` → `650173d`
@@ -416,6 +438,7 @@
 
 | Commit | 問題 | 修復方式 |
 |--------|------|---------||
+| `f9a6b84` | Drive API query injection；註冊上傳失敗時 fileUrl 為 null | escapeDriveQuery() 防護；fileUrl fallback |
 | `650173d` | Drive test 上傳 raw error 暴露；管理員搜尋無結果時回傳所有用戶 | 改通用錯誤訊息；移除錯誤的 fallback |
 | `becf669` | 管理員導航列缺少 Drive 測試連結 | 新增連結 + FolderOpen icon |
 | `57a066a` | 上傳失敗時未限制次數，司機可無限重試 | 同一類型失敗滿 3 次後拒絕上傳 |
@@ -542,7 +565,7 @@ PENDING → PUBLISHED → ASSIGNED → ACCEPTED → ARRIVED → IN_PROGRESS → 
 ## 測試帳號
 - **司機**: `driver1@test.com`
 - **派單方**: `dispatcher1@test.com`
-- **管理員**: `admin@goGMO.com` / `admin123`（需透過 DB 重設密碼）
+- **管理員**: `admin@goGMO.com` / `admin123`（密碼已透過 DB 重設）
 
 ---
 
