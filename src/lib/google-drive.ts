@@ -153,7 +153,7 @@ export async function uploadFileToDrive(
   folderId: string,
   fileName: string,
   mimeType: string,
-  buffer: Buffer,
+  buffer: Buffer | Uint8Array,
 ): Promise<{ fileId: string; webViewLink: string; webContentLink: string }> {
   const drive = getDriveService()
   console.log(`[DRIVE] Uploading "${fileName}" (${buffer.length} bytes, ${mimeType}) to folder ${folderId}`)
@@ -167,11 +167,11 @@ export async function uploadFileToDrive(
   })
   const existingId = existing.data.files?.[0]?.id
 
-  // Create a readable stream from buffer
+  // Create a readable stream from buffer (wrap in array so it's a single chunk)
   const { Readable } = await import('stream')
   const media = {
     mimeType,
-    body: Readable.from(buffer),
+    body: Readable.from([buffer]),
   }
 
   if (existingId) {
