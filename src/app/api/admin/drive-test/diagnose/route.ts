@@ -21,9 +21,15 @@ export async function GET(request: NextRequest) {
   result.hasRootFolderId = !!rootFolderId
   result.rootFolderId = rootFolderId || null
   result.nodeEnv = process.env.NODE_ENV
-  // Show raw key start (first 100 chars) to diagnose format issues
+  // Show raw key snippets to diagnose format issues
   result.keyStart = key ? key.substring(0, 100) : null
   result.keyContainsActualNL = key ? key.includes('\n') : false
+  // Show chars at position 310-340 to find the bad escape at position 320
+  result.keyAround320 = key && key.length >= 340 ? key.substring(310, 340) : (key || null)
+  // Show the private_key field presence
+  result.keyHasPrivateKeyField = key ? key.includes('"private_key"') : false
+  // Show last 100 chars to see if key is truncated or corrupt at end
+  result.keyEnd = key ? key.substring(key.length - 100) : null
 
   // 2. Try JSON.parse on the key
   // Same normalization logic as google-drive.ts: Zeabur may store JSON with actual newlines
