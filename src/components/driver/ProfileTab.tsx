@@ -285,10 +285,15 @@ export function ProfileTab({ token }: ProfileTabProps) {
     setTopupLoading(false)
   }
 
-  // 優先取 APPROVED 的文件，若沒有才取 PENDING_REVIEW
+  // 優先取 APPROVED 的文件，若沒有才取 PENDING_REVIEW 或 PENDING
   const getDocForType = (docType: string) => {
     const docs = profile?.documents.filter(d => d.type === docType) ?? []
-    return docs.find(d => d.status === 'APPROVED') ?? docs.find(d => d.status === 'PENDING_REVIEW') ?? null
+    return (
+      docs.find(d => d.status === 'APPROVED') ??
+      docs.find(d => d.status === 'PENDING_REVIEW') ??
+      docs.find(d => d.status === 'PENDING') ??
+      null
+    )
   }
 
   const getBannerStatus = (): 'expired' | 'expiring' | 'failed' | null => {
@@ -483,7 +488,9 @@ export function ProfileTab({ token }: ProfileTabProps) {
               expiring: <Badge variant="warning">即將到期</Badge>,
               expired: <Badge variant="danger">已過期</Badge>,
               failed: <Badge variant="danger">上傳失敗</Badge>,
-              none: <Badge variant="default">尚未上傳</Badge>,
+              none: doc?.status === 'PENDING' ? <Badge variant="warning">待審核</Badge>
+                : doc?.status === 'PENDING_REVIEW' ? <Badge variant="warning">待審核</Badge>
+                : <Badge variant="default">尚未上傳</Badge>,
             }
 
             const showUploadButton = status !== 'normal' && !wasUploaded
