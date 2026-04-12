@@ -68,21 +68,18 @@ export async function POST(request: NextRequest) {
       const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
 
       const encryptData = encryptPayuni({
-        MerID: merId,
-        MerKey: merId,
-        Version: '1.0',
+        MerID:      merId,
+        MerKey:     merId,
+        Version:    '1.0',
         MerchantOrderNo: orderNo,
-        Amt: finalAmount,
-        TradeDesc: `司機加值 ${amount} 元（含3%手續費）`,
-        VACC: '1',
-        CardNo: '',
-        ExpireDate: '',
-        CVV2: '',
-        PayersName: driverWithUser?.user.name || user.name,
-        PayersEmail: user.email,
-        PayerPhone: user.phone,
-        NotifyURL: `${appUrl}/api/payuni/topup/notify`,
-        ReturnURL: `${appUrl}/dashboard/driver/topup/success`,
+        Amt:        finalAmount,
+        ProdDesc:   `司機加值 ${amount} 元（含3%手續費）`,
+        BuyerName:  driverWithUser?.user.name || user.name,
+        BuyerMail:  user.email,
+        BuyerPhone: user.phone,
+        ReturnURL:  `${appUrl}/dashboard/driver`,
+        NotifyURL:  `${appUrl}/api/payuni/topup/notify`,
+        CardInst:   '0',
       })
 
       return NextResponse.json<ApiResponse>({
