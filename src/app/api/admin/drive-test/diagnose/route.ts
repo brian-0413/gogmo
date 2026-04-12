@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getUserFromToken } from '@/lib/auth'
 import { ApiResponse } from '@/types'
 
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxuAYUk0IX_yUE5Igu3dk4sVeKtlCwHjVWtLdzhNuKMFf6JDv-iRpIc_K4kyBS0dt8pfQ/exec'
+const APPS_SCRIPT_URL = process.env.GOOGLE_APPS_SCRIPT_URL || 'https://script.google.com/macros/s/AKfycbxuAYUk0IX_yUE5Igu3dk4sVeKtlCwHjVWtLdzhNuKMFf6JDv-iRpIc_K4kyBS0dt8pfQ/exec'
 
 // GET /api/admin/drive-test/diagnose — 診斷 Drive API 設定問題
 export async function GET(request: NextRequest) {

@@ -7,8 +7,8 @@ export const DOC_TYPE_LABELS: Record<string, string> = {
   BUSINESS_REGISTRATION: '商業登記',
 }
 
-// Google Apps Script Web App URL（已部署的 Apps Script）
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxuAYUk0IX_yUE5Igu3dk4sVeKtlCwHjVWtLdzhNuKMFf6JDv-iRpIc_K4kyBS0dt8pfQ/exec'
+// Google Apps Script Web App URL（Zeabur 環境變數或 fallback）
+const APPS_SCRIPT_URL = process.env.GOOGLE_APPS_SCRIPT_URL || 'https://script.google.com/macros/s/AKfycbxuAYUk0IX_yUE5Igu3dk4sVeKtlCwHjVWtLdzhNuKMFf6JDv-iRpIc_K4kyBS0dt8pfQ/exec'
 
 /**
  * Upload file to Google Drive via Google Apps Script Web App

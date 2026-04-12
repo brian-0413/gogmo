@@ -40,10 +40,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json<ApiResponse>({ success: false, error: '無效的文件類型' }, { status: 400 })
     }
 
-    const rootFolderId = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID
-    if (!rootFolderId) {
-      return NextResponse.json<ApiResponse>({ success: false, error: 'GOOGLE_DRIVE_ROOT_FOLDER_ID 未設定' }, { status: 500 })
-    }
+    const rootFolderId = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID || '1QG9tF229aMvpd6kOHd-bl7MKK2YWbxNR'
 
     // 產生測試檔名：測試-{時間戳}-{原始檔名}
     const ext = file.name.split('.').pop() || 'bin'

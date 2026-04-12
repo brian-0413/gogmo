@@ -114,8 +114,7 @@ export async function POST(request: NextRequest) {
           const fileName = `${plate}-${userName}-${labelMap[type] || type}.${ext}`
           const buffer = Buffer.from(await file.arrayBuffer())
 
-          const rootFolderId = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID
-          if (!rootFolderId) throw new Error('GOOGLE_DRIVE_ROOT_FOLDER_ID 未設定')
+          const rootFolderId = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID || '1QG9tF229aMvpd6kOHd-bl7MKK2YWbxNR'
 
           // 新資料夾格式：{YYYYMMDD}-{車牌}-{姓名}
           const folderId = await getOrCreateUserFolder(rootFolderId, result.user!.id, plate, userName)

@@ -81,8 +81,7 @@ export async function POST(request: NextRequest) {
   let uploadFailed = false
 
   try {
-    const rootFolderId = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID
-    if (!rootFolderId) throw new Error('GOOGLE_DRIVE_ROOT_FOLDER_ID 未設定')
+    const rootFolderId = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID || '1QG9tF229aMvpd6kOHd-bl7MKK2YWbxNR'
 
     const folderId = await getOrCreateUserFolder(rootFolderId, user.id, licensePlate, userName)
     const result = await uploadFileToDrive(folderId, driveFileName, file.type, buffer)
