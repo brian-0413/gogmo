@@ -11,6 +11,30 @@ export const DOC_TYPE_LABELS: Record<string, string> = {
 const APPS_SCRIPT_URL = process.env.GOOGLE_APPS_SCRIPT_URL || 'https://script.google.com/macros/s/AKfycbxuAYUk0IX_yUE5Igu3dk4sVeKtlCwHjVWtLdzhNuKMFf6JDv-iRpIc_K4kyBS0dt8pfQ/exec'
 
 /**
+ * POST to Apps Script and follow the redirect to get the actual JSON response.
+ * Apps Script returns 302 with the JSON as a URL parameter; we follow it manually.
+ */
+async function appsScriptPost(payload: Record<string, string>): Promise<string> {
+  const res = await fetch(APPS_SCRIPT_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams(payload).toString(),
+  })
+
+  // Apps Script returns 302 redirect; follow it to get actual JSON
+  if (res.status === 302 || res.status === 301) {
+    const location = res.headers.get('location') || res.headers.get('Location')
+    if (!location) throw new Error('Apps Script redirect but no Location header')
+    // Follow the redirect to the echo URL
+    const echoRes = await fetch(location)
+    return await echoRes.text()
+  }
+
+  // Direct response (devmode bypasses redirect)
+  return await res.text()
+}
+
+/**
  * Upload file to Google Drive via Google Apps Script Web App
  * Apps Script 以用戶身份執行，繞過 Service Account storage quota 限制
  */
@@ -24,24 +48,13 @@ export async function uploadFileToDrive(
 
   const base64 = (Buffer.isBuffer(buffer) ? buffer : Buffer.from(buffer)).toString('base64')
 
-  const params = new URLSearchParams()
-  params.append('action', 'upload')
-  params.append('devmode', 'true')
-  params.append('fileName', fileName)
-  params.append('mimeType', mimeType)
-  params.append('fileData', base64)
-  params.append('folderId', folderId)
-
-  const res = await fetch(APPS_SCRIPT_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: params.toString(),
+  const text = await appsScriptPost({
+    action: 'upload',
+    fileName,
+    mimeType,
+    fileData: base64,
+    folderId,
   })
-
-  const text = await res.text()
-  if (!res.ok) {
-    throw new Error(`Upload failed: ${res.status} ${text}`)
-  }
 
   let result: { success: boolean; data?: { fileId: string; fileUrl?: string; webViewLink?: string; webContentLink?: string }; error?: string }
   try {
@@ -74,19 +87,12 @@ export async function getOrCreateUserFolder(
   const date = new Date().toISOString().slice(0, 10).replace(/-/g, '')
   const folderName = `${date}-${licensePlate}-${name}`
 
-  const params = new URLSearchParams()
-  params.append('devmode', 'true')
-  params.append('action', 'createFolder')
-  params.append('folderName', folderName)
-  params.append('parentFolderId', parentFolderId)
-
-  const res = await fetch(APPS_SCRIPT_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: params.toString(),
+  const text = await appsScriptPost({
+    action: 'createFolder',
+    folderName,
+    parentFolderId,
   })
 
-  const text = await res.text()
   let result: { success: boolean; data?: { folderId: string }; error?: string }
   try {
     result = JSON.parse(text)
@@ -97,7 +103,7 @@ export async function getOrCreateUserFolder(
     throw new Error(result.error || 'Apps Script createFolder failed')
   }
 
-  console.log(`[DRIVE] Folder: ${folderName} -> ${result.data!.folderId}`)
+  console.log(`[DRIVE] User folder: ${folderName} -> ${result.data!.folderId}`)
   return result.data!.folderId
 }
 
@@ -108,19 +114,12 @@ export async function getOrCreateTestFolder(parentFolderId: string): Promise<str
   const date = new Date().toISOString().slice(0, 10).replace(/-/g, '')
   const folderName = `🔧Drive上傳測試區-${date}`
 
-  const params = new URLSearchParams()
-  params.append('devmode', 'true')
-  params.append('action', 'createFolder')
-  params.append('folderName', folderName)
-  params.append('parentFolderId', parentFolderId)
-
-  const res = await fetch(APPS_SCRIPT_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: params.toString(),
+  const text = await appsScriptPost({
+    action: 'createFolder',
+    folderName,
+    parentFolderId,
   })
 
-  const text = await res.text()
   let result: { success: boolean; data?: { folderId: string }; error?: string }
   try {
     result = JSON.parse(text)
