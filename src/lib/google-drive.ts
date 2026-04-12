@@ -142,7 +142,7 @@ export async function getOrCreateTestFolder(parentFolderId: string): Promise<str
 }
 
 /**
- * Upload file to Google Drive
+ * Upload file to Google Drive using raw fetch — bypasses googleapis pipe() bug
  * folderId: target folder ID
  * fileName: file name (without path)
  * mimeType: MIME type
@@ -155,54 +155,119 @@ export async function uploadFileToDrive(
   mimeType: string,
   buffer: Buffer | Uint8Array,
 ): Promise<{ fileId: string; webViewLink: string; webContentLink: string }> {
-  const drive = getDriveService()
-  console.log(`[DRIVE] Uploading "${fileName}" (${buffer.length} bytes, ${mimeType}) to folder ${folderId}`)
+  const key = process.env.GOOGLE_SERVICE_ACCOUNT_KEY
+  if (!key) throw new Error('GOOGLE_SERVICE_ACCOUNT_KEY 未設定')
 
-  // Check if file with same name exists (overwrite if so)
-  const safeFileName = escapeDriveQuery(fileName)
-  const safeFolderId = escapeDriveQuery(folderId)
-  const existing = await drive.files.list({
-    q: `name='${safeFileName}' and '${safeFolderId}' in parents and trashed=false`,
-    fields: 'files(id)',
+  let credentials
+  try {
+    credentials = JSON.parse(key)
+  } catch (_) {
+    if (key.includes('\n')) {
+      credentials = JSON.parse(key.replace(/\r?\n/g, '\\n'))
+    } else {
+      throw new Error('Invalid JSON')
+    }
+  }
+
+  // Get access token from service account
+  const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+      assertion: await createJwt(credentials),
+    }),
   })
-  const existingId = existing.data.files?.[0]?.id
-
-  // Convert buffer to base64 string — avoids all stream compatibility issues
-  const base64 = buffer.toString('base64')
-  const media = {
-    mimeType,
-    body: base64,
+  if (!tokenRes.ok) {
+    const text = await tokenRes.text()
+    throw new Error(`Token request failed: ${tokenRes.status} ${text}`)
   }
+  const { access_token } = await tokenRes.json()
 
+  // Check if file exists (to overwrite)
+  const listRes = await fetch(
+    `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(`name='${fileName}' and '${folderId}' in parents and trashed=false`)}&fields=files(id)`,
+    { headers: { Authorization: `Bearer ${access_token}` } }
+  )
+  const listData = await listRes.json()
+  const existingId = listData.files?.[0]?.id
+
+  // Multipart metadata
+  const metadata = JSON.stringify({
+    name: fileName,
+    parents: [folderId],
+  })
+
+  // Build multipart request body
+  const boundary = 'boundary_' + Math.random().toString(36).slice(2)
+  const bodyParts: string[] = []
+
+  bodyParts.push(`--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${metadata}\r\n`)
+
+  const contentTypeHeader = `Content-Type: ${mimeType}\r\nContent-Length: ${buffer.length}`
+  bodyParts.push(`--${boundary}\r\n${contentTypeHeader}\r\n\r\n`)
+  bodyParts.push(Buffer.isBuffer(buffer) ? buffer.toString('binary') : Buffer.from(buffer).toString('binary'))
+  bodyParts.push(`\r\n--${boundary}--\r\n`)
+
+  const multipartBody = bodyParts.join('')
+  const fullLength = Buffer.byteLength(multipartBody, 'utf8')
+
+  let url: string, method: string
   if (existingId) {
-    // Overwrite existing file
-    const updated = await drive.files.update({
-      fileId: existingId,
-      requestBody: { name: fileName },
-      media,
-      fields: 'id, webViewLink, webContentLink',
-    })
-    return {
-      fileId: existingId,
-      webViewLink: updated.data.webViewLink!,
-      webContentLink: updated.data.webContentLink!,
-    }
+    url = `https://www.googleapis.com/upload/drive/v3/files/${existingId}?uploadType=multipart&fields=id,webViewLink,webContentLink`
+    method = 'PATCH'
   } else {
-    // Create new file
-    const created = await drive.files.create({
-      requestBody: {
-        name: fileName,
-        parents: [folderId],
-      },
-      media,
-      fields: 'id, webViewLink, webContentLink',
-    })
-    return {
-      fileId: created.data.id!,
-      webViewLink: created.data.webViewLink!,
-      webContentLink: created.data.webContentLink!,
-    }
+    url = 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,webViewLink,webContentLink'
+    method = 'POST'
   }
+
+  const uploadRes = await fetch(url, {
+    method,
+    headers: {
+      Authorization: `Bearer ${access_token}`,
+      'Content-Type': `multipart/related; boundary=${boundary}`,
+      'Content-Length': String(fullLength),
+    },
+    body: multipartBody,
+  })
+
+  if (!uploadRes.ok) {
+    const text = await uploadRes.text()
+    throw new Error(`Upload failed: ${uploadRes.status} ${text}`)
+  }
+
+  const result = await uploadRes.json()
+  return {
+    fileId: result.id,
+    webViewLink: result.webViewLink,
+    webContentLink: result.webContentLink,
+  }
+}
+
+/**
+ * Create a signed JWT for Google OAuth2 service account
+ */
+async function createJwt(credentials: Record<string, unknown>): Promise<string> {
+  const header = btoa(JSON.stringify({ alg: 'RS256', typ: 'JWT' }))
+  const now = Math.floor(Date.now() / 1000)
+  const claims = btoa(JSON.stringify({
+    iss: credentials.client_email,
+    scope: 'https://www.googleapis.com/auth/drive.file',
+    aud: 'https://oauth2.googleapis.com/token',
+    iat: now,
+    exp: now + 3600,
+  }))
+
+  const privateKey = (credentials.private_key as string).replace(/\\n/g, '\n')
+  const signingInput = `${header}.${claims}`
+
+  // Use Node.js native signing
+  const { createSign } = await import('crypto')
+  const signer = createSign('RSA-SHA256')
+  signer.update(signingInput)
+  signer.end()
+  const sig = signer.sign(privateKey, 'base64url')
+  return `${signingInput}.${sig}`
 }
 
 /**
