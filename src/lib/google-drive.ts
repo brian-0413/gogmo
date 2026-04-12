@@ -19,21 +19,36 @@ function getDriveService() {
   console.log('[DRIVE] GOOGLE_SERVICE_ACCOUNT_KEY is', key.length > 0 ? 'SET' : 'EMPTY')
   console.log('[DRIVE] GOOGLE_DRIVE_ROOT_FOLDER_ID is', process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID ? 'SET' : 'EMPTY')
 
-  // Zeabur may store literal \n as double-escaped \\n or actual newlines — normalize them
-  // Always try replace first, then parse (safest approach)
-  let normalizedKey = key.replace(/\\n/g, '\n')
-  if (normalizedKey !== key) {
-    console.log('[DRIVE] Normalized escaped newlines in key')
-  }
-
+  // Zeabur may store multi-line JSON in two ways:
+  // 1. As a single-line JSON with \n as two characters (backslash + n) — .env.local style.
+  //    JSON.parse handles this directly (the \n is a valid JSON escape sequence).
+  // 2. As actual newlines (Zeabur UI pastes the raw JSON with real line breaks).
+  //    In this case, process.env contains actual newlines which break JSON.parse.
+  //
+  // Strategy: Try JSON.parse directly first. If it fails and the key has actual
+  // newlines, normalize them to \n (JSON escape) and retry.
   let credentials
   try {
-    credentials = JSON.parse(normalizedKey)
-  } catch (e) {
-    console.error('[DRIVE] JSON parse failed after normalization:', e)
-    console.error('[DRIVE] Key preview:', normalizedKey.substring(0, 200))
-    throw new Error(`GOOGLE_SERVICE_ACCOUNT_KEY JSON 解析失敗: ${e}`)
+    credentials = JSON.parse(key)
+  } catch (_) {
+    // Key has actual newlines (Zeabur multi-line format) — escape them to \n
+    const actualNL = '\n' // real newline, ASCII 10
+    const backslashN = '\\n' // two-char: backslash + letter n
+    const hasActualNewlines = key.includes(actualNL)
+    if (hasActualNewlines) {
+      const escaped = key.replace(
+        new RegExp(actualNL.replace(/[\\^$*+?.()|[\]{}]/g, '\\$&'), 'g'),
+        backslashN,
+      )
+      console.log('[DRIVE] Normalized actual newlines in key (Zeabur multi-line format)')
+      credentials = JSON.parse(escaped)
+    } else {
+      throw new Error('Invalid JSON')
+    }
   }
+  console.log('[DRIVE] Service account:', credentials.client_email)
+  console.log('[DRIVE] Project:', credentials.project_id)
+
   const auth = new google.auth.GoogleAuth({
     credentials,
     scopes: ['https://www.googleapis.com/auth/drive.file'],

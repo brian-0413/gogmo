@@ -74,7 +74,13 @@ export async function POST(request: NextRequest) {
       },
     })
   } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
     console.error('[DRIVE-TEST] Upload error:', err)
+    // In development, include the error type to help diagnose. In production, sanitize.
+    const isDev = process.env.NODE_ENV !== 'production'
+    if (isDev) {
+      return NextResponse.json<ApiResponse>({ success: false, error: `上傳失敗: ${msg}` }, { status: 500 })
+    }
     return NextResponse.json<ApiResponse>({ success: false, error: '上傳失敗，請稍後再試' }, { status: 500 })
   }
 }
