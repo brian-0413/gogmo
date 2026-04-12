@@ -9,9 +9,38 @@
 
 ### 最後 commit
 ```
-6d5ad44 fix: 司機個人中心文件狀態顯示 — 註冊上傳文件正確呈現「待審核」
+c64ed8b fix: 修補測試檔案 mock 型別 — userDocument.count
 ```
 落後 origin/main 0 個 commits。
+
+---
+
+## 目前開發階段：銀行帳號必填 + PAYUNi 修正（已完成）
+
+### [完成] 銀行帳號列為註冊必填（司機專屬 Step 4）（2026-04-13）
+**Commits**: `da784e1`
+**規格文件**: `docs/superpowers/specs/2026-04-11-bank-account-mandatory-design.md`
+
+**實作內容**：
+- **新 Step 4（司機專屬）**：銀行帳戶填寫，置於 Step 3（車輛）和 Step 5（文件）之間
+- **銀行代碼下拉**：37 家台灣銀行（`src/lib/bank-codes.ts`）
+- **帳號格式**：純數字，自動去除前置零，最少 10 碼
+- **派單方流程不變**：跳過車輛+銀行，直接 Step 2（基本資料）→ Step 3（文件）→ Step 4（密碼）
+- **API 驗證**：`bankCode` 和 `bankAccount` 必填，格式不符（10-16 碼純數字）回 400 錯誤
+- **接單門控**：司機無銀行帳號時，`POST /api/orders/[id]/accept` 回 400 `請先至個人中心填寫銀行帳號`
+- **司機儀表板橫幅**：帳號已啟用但無銀行資料時，黃色橫幅提示「前往個人中心填寫銀行代碼與帳號」
+
+### [完成] PAYUNi 信用卡加值 API 欄位修正（2026-04-13）
+**Commit**: `0ccc392`
+**問題**：PAYUNi API 呼叫失敗，欄位名稱不正確
+**修復**：比對 GF 參考專案，修正欄位：
+- `TradeDesc` → `ProdDesc`
+- `PayersName` → `BuyerName`
+- `PayersEmail` → `BuyerMail`
+- `PayerPhone` → `BuyerPhone`
+- `VACC/CardNo/ExpireDate/CVV2` → 移除（這些欄位由 PAYUNi 支付頁填寫）
+- `CardInst` → `'0'`
+- `ReturnURL` → `/dashboard/driver`
 
 ---
 
@@ -436,6 +465,7 @@
 
 | Commit | 問題 | 修復方式 |
 |--------|------|---------||
+| `c64ed8b` | 測試檔案 TS 錯誤：userDocument.count 型別不存在 | mockPrisma.userDocument 型別加入 count 屬性 |
 | `6d5ad44` | 司機個人中心文件顯示「尚未上傳」（實際已上傳） | getDocForType() 加入 PENDING 狀態查詢 |
 | `f9a6b84` | Drive API query injection；註冊上傳失敗時 fileUrl 為 null | escapeDriveQuery() 防護；fileUrl fallback |
 | `650173d` | Drive test 上傳 raw error 暴露；管理員搜尋無結果時回傳所有用戶 | 改通用錯誤訊息；移除錯誤的 fallback |
