@@ -30,7 +30,28 @@ async function appsScriptPost(payload: Record<string, string>): Promise<string> 
     return await echoRes.text()
   }
 
-  // Direct response (devmode bypasses redirect)
+  // Direct response
+  return await res.text()
+}
+
+/**
+ * POST JSON payload to Apps Script and follow redirect for response.
+ * Used for large binary data (file uploads) to avoid URL-encoding corruption.
+ */
+async function appsScriptPostJson(payload: Record<string, string>): Promise<string> {
+  const res = await fetch(APPS_SCRIPT_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+
+  if (res.status === 302 || res.status === 301) {
+    const location = res.headers.get('location') || res.headers.get('Location')
+    if (!location) throw new Error('Apps Script redirect but no Location header')
+    const echoRes = await fetch(location)
+    return await echoRes.text()
+  }
+
   return await res.text()
 }
 
@@ -48,7 +69,7 @@ export async function uploadFileToDrive(
 
   const base64 = (Buffer.isBuffer(buffer) ? buffer : Buffer.from(buffer)).toString('base64')
 
-  const text = await appsScriptPost({
+  const text = await appsScriptPostJson({
     action: 'upload',
     fileName,
     mimeType,
