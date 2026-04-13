@@ -72,7 +72,7 @@ export function RegisterWizard() {
     else if (step === 3) setStep(2)
     else if (step === 4) setStep(3)
     else if (step === 5) {
-      if (role === 'DISPATCHER') setStep(3)
+      if (role === 'DISPATCHER') setStep(2)
       else setStep(4)
     }
     else if (step === 6) setStep(5)
