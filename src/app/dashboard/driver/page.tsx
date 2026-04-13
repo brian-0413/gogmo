@@ -623,126 +623,59 @@ export default function DriverDashboard() {
         </div>
       </header>
 
-      {/* Live indicator bar */}
-      <div className="relative z-10 bg-[#FAF8F5]/80 backdrop-blur-xl border-b border-[#E7E5E4] hidden md:block">
-        <div className="max-w-7xl mx-auto px-6 py-2.5">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-[#22C55E]/5 border border-[#22C55E]/20">
-              <Radio className="w-3 h-3 text-[#22C55E] animate-pulse" />
-              <span className="text-xs text-[#22C55E] font-medium font-mono-nums">即時接收新訂單</span>
-            </div>
-            <div className="h-px flex-1 bg-gradient-to-r from-[#E7E5E4] to-transparent" />
-            <div className="flex items-center gap-4 text-xs text-[#78716C] font-mono-nums">
-              <span>今日 <strong className="text-[#22C55E]">{balanceStats.todayOrders}</strong> 單</span>
-              <span className="w-px h-3 bg-[#E7E5E4]" />
-              <span>本週 <strong className="text-[#3B82F6]">{balanceStats.weekOrders}</strong> 單</span>
-            </div>
+      {/* 行動版：Header 右側餘額（md+ 以上 Header 已有豐富資訊） */}
+      <div className="md:hidden relative z-10 bg-[#FAF8F5]/90 border-b border-[#E7E5E4]">
+        <div className="px-3 py-2 flex items-center justify-between">
+          <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-[#22C55E]/5 border border-[#22C55E]/20">
+            <Radio className="w-3 h-3 text-[#22C55E] animate-pulse" />
+            <span className="text-[11px] text-[#22C55E] font-medium font-mono-nums">即時</span>
+          </div>
+          <div className="flex items-center gap-3 text-[12px] font-mono-nums text-[#78716C]">
+            <span>今<strong className="text-[#22C55E]">{balanceStats.todayOrders}</strong>單</span>
+            <span>週<strong className="text-[#3B82F6]">{balanceStats.weekOrders}</strong>單</span>
           </div>
         </div>
       </div>
 
-      {/* Tab Navigation */}
-      <div className="relative z-10 bg-[#FAF8F5]/80 backdrop-blur-xl border-b border-[#E7E5E4] sticky top-[64px] md:top-[108px]">
-        <div className="max-w-7xl mx-auto px-3 sm:px-6">
-          <div className="flex gap-0 overflow-x-auto pb-px -mx-3 sm:mx-0">
-            <button
-              onClick={() => setActiveTab('available')}
-              className={`flex items-center gap-2 px-5 py-3.5 text-sm font-medium border-b-2 transition-all duration-200 relative ${
-                activeTab === 'available'
-                  ? 'border-[#F59E0B] text-[#F59E0B]'
-                  : 'border-transparent text-[#78716C] hover:text-[#1C1917] hover:bg-[#F5F4F0]/50'
-              }`}
-            >
-              <ClipboardList className="w-4 h-4" />
-              接單大廳
-              <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-mono-nums bg-[#F59E0B]/10 text-[#F59E0B] border border-[#F59E0B]/20">
-                {filteredAvailableOrders.length}
-              </span>
-              {activeTab === 'available' && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#F59E0B]" style={{ boxShadow: '0 0 8px rgba(245,158,11,0.4)' }} />
-              )}
-            </button>
-            <button
-              onClick={() => setActiveTab('myorders')}
-              className={`flex items-center gap-2 px-5 py-3.5 text-sm font-medium border-b-2 transition-all duration-200 relative ${
-                activeTab === 'myorders'
-                  ? 'border-[#F59E0B] text-[#F59E0B]'
-                  : 'border-transparent text-[#78716C] hover:text-[#1C1917] hover:bg-[#F5F4F0]/50'
-              }`}
-            >
-              <FileText className="w-4 h-4" />
-              我的行程
-              <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-mono-nums bg-[#F5F4F0] text-[#78716C] border border-[#DDDDDD]">
-                {myOrders.length}
-              </span>
-              {activeTab === 'myorders' && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#F59E0B]" style={{ boxShadow: '0 0 8px rgba(245,158,11,0.4)' }} />
-              )}
-            </button>
-            <button
-              onClick={() => setActiveTab('balance')}
-              className={`flex items-center gap-2 px-5 py-3.5 text-sm font-medium border-b-2 transition-all duration-200 relative ${
-                activeTab === 'balance'
-                  ? 'border-[#F59E0B] text-[#F59E0B]'
-                  : 'border-transparent text-[#78716C] hover:text-[#1C1917] hover:bg-[#F5F4F0]/50'
-              }`}
-            >
-              <Wallet className="w-4 h-4" />
-              帳務中心
-              {activeTab === 'balance' && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#F59E0B]" style={{ boxShadow: '0 0 8px rgba(245,158,11,0.4)' }} />
-              )}
-            </button>
-            <button
-              onClick={() => setActiveTab('selfdispatch')}
-              className={`flex items-center gap-2 px-5 py-3.5 text-sm font-medium border-b-2 transition-all duration-200 relative ${
-                activeTab === 'selfdispatch'
-                  ? 'border-[#FF385C] text-[#FF385C]'
-                  : user?.driver?.isPremium
-                  ? 'border-transparent text-[#78716C] hover:text-[#1C1917] hover:bg-[#F5F4F0]/50'
-                  : 'border-transparent text-[#A8A29E] cursor-not-allowed'
-              }`}
-            >
-              <Sparkle className="w-4 h-4" />
-              小車頭
-              {activeTab === 'selfdispatch' && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#FF385C]" style={{ boxShadow: '0 0 8px rgba(255,56,92,0.4)' }} />
-              )}
-            </button>
-            <button
-              onClick={() => setActiveTab('squad')}
-              className={`flex items-center gap-2 px-5 py-3.5 text-sm font-medium border-b-2 transition-all duration-200 relative ${
-                activeTab === 'squad'
-                  ? 'border-[#F59E0B] text-[#F59E0B]'
-                  : 'border-transparent text-[#78716C] hover:text-[#1C1917] hover:bg-[#F5F4F0]/50'
-              }`}
-            >
-              <Users className="w-4 h-4" />
-              我的小隊
-              {activeTab === 'squad' && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#F59E0B]" style={{ boxShadow: '0 0 8px rgba(245,158,11,0.4)' }} />
-              )}
-            </button>
-            <button
-              onClick={() => setActiveTab('profile')}
-              className={`flex items-center gap-2 px-5 py-3.5 text-sm font-medium border-b-2 transition-all duration-200 relative ${
-                activeTab === 'profile'
-                  ? 'border-[#F59E0B] text-[#F59E0B]'
-                  : 'border-transparent text-[#78716C] hover:text-[#1C1917] hover:bg-[#F5F4F0]/50'
-              }`}
-            >
-              <Users className="w-4 h-4" />
-              個人中心
-              {activeTab === 'profile' && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#F59E0B]" style={{ boxShadow: '0 0 8px rgba(245,158,11,0.4)' }} />
-              )}
-            </button>
+      {/* Desktop 專用 Tab 導航（md 以上顯示於 Header 右側） */}
+      <div className="hidden md:block relative z-10 bg-[#FAF8F5]/80 border-b border-[#E7E5E4]">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex gap-0">
+            {[
+              { key: 'available' as Tab, icon: ClipboardList, label: '接單大廳', accent: '#F59E0B', badge: filteredAvailableOrders.length },
+              { key: 'myorders' as Tab, icon: FileText, label: '我的行程', accent: '#F59E0B', badge: myOrders.length },
+              { key: 'balance' as Tab, icon: Wallet, label: '帳務中心', accent: '#F59E0B', badge: null },
+              { key: 'selfdispatch' as Tab, icon: Sparkle, label: '小車頭', accent: '#FF385C', badge: null },
+              { key: 'squad' as Tab, icon: Users, label: '我的小隊', accent: '#F59E0B', badge: null },
+              { key: 'profile' as Tab, icon: Users, label: '個人中心', accent: '#F59E0B', badge: null },
+            ].map(({ key, icon: Icon, label, accent, badge }) => (
+              <button
+                key={key}
+                onClick={() => setActiveTab(key)}
+                className={`flex items-center gap-2 px-5 py-3.5 text-sm font-medium border-b-2 transition-all duration-200 relative ${
+                  activeTab === key
+                    ? `border-[${accent}] text-[${accent}]`
+                    : 'border-transparent text-[#78716C] hover:text-[#1C1917] hover:bg-[#F5F4F0]/50'
+                }`}
+              >
+                <Icon className="w-4 h-4" />
+                {label}
+                {badge !== null && (
+                  <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-mono-nums bg-[#F5F4F0] text-[#78716C] border border-[#DDDDDD]">
+                    {badge}
+                  </span>
+                )}
+                {activeTab === key && (
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5" style={{ backgroundColor: accent, boxShadow: `0 0 8px ${accent}66` }} />
+                )}
+              </button>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* Content */}
-      <main className="relative z-10 max-w-7xl mx-auto px-3 sm:px-6 py-4 sm:py-6">
+      {/* Content — 底部留 padding 避免被 Tab Bar 遮住 */}
+      <main className="relative z-10 max-w-7xl mx-auto px-3 sm:px-6 py-4 sm:py-6 pb-24 md:pb-6">
 
         {/* ===== AVAILABLE ORDERS ===== */}
         {activeTab === 'available' && (
@@ -1145,6 +1078,98 @@ export default function DriverDashboard() {
           />
         )}
       </main>
+
+      {/* ══════════════════════════════════════════════
+          Option C: 底部 Tab Bar（行動優先）
+          桌面版隱藏，行動版固定在底部
+      ══════════════════════════════════════════════ */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-[#E7E5E4] shadow-[0_-2px_16px_rgba(0,0,0,0.06)]">
+        <div className="flex h-[60px]">
+          {/* 接單大廳 */}
+          <button
+            onClick={() => setActiveTab('available')}
+            className="flex-1 flex flex-col items-center justify-center gap-0.5 relative"
+          >
+            <div className="relative">
+              <ClipboardList className={`w-5 h-5 ${activeTab === 'available' ? 'text-[#F59E0B]' : 'text-[#A8A29E]'}`} />
+              {filteredAvailableOrders.length > 0 && (
+                <span className="absolute -top-1.5 -right-2 min-w-[16px] h-4 px-1 rounded-full bg-[#F59E0B] text-white text-[10px] font-bold font-mono-nums flex items-center justify-center">
+                  {filteredAvailableOrders.length > 99 ? '99+' : filteredAvailableOrders.length}
+                </span>
+              )}
+            </div>
+            <span className={`text-[10px] font-medium ${activeTab === 'available' ? 'text-[#F59E0B]' : 'text-[#A8A29E]'}`}>
+              接單
+            </span>
+            {activeTab === 'available' && (
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full" style={{ backgroundColor: '#F59E0B' }} />
+            )}
+          </button>
+
+          {/* 我的行程 */}
+          <button
+            onClick={() => setActiveTab('myorders')}
+            className="flex-1 flex flex-col items-center justify-center gap-0.5 relative"
+          >
+            <div className="relative">
+              <FileText className={`w-5 h-5 ${activeTab === 'myorders' ? 'text-[#F59E0B]' : 'text-[#A8A29E]'}`} />
+              {myOrders.length > 0 && (
+                <span className="absolute -top-1.5 -right-2 min-w-[16px] h-4 px-1 rounded-full bg-[#F59E0B]/20 text-[#F59E0B] text-[10px] font-bold font-mono-nums flex items-center justify-center">
+                  {myOrders.length > 99 ? '99+' : myOrders.length}
+                </span>
+              )}
+            </div>
+            <span className={`text-[10px] font-medium ${activeTab === 'myorders' ? 'text-[#F59E0B]' : 'text-[#A8A29E]'}`}>
+              行程
+            </span>
+            {activeTab === 'myorders' && (
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full" style={{ backgroundColor: '#F59E0B' }} />
+            )}
+          </button>
+
+          {/* 帳務中心 */}
+          <button
+            onClick={() => setActiveTab('balance')}
+            className="flex-1 flex flex-col items-center justify-center gap-0.5 relative"
+          >
+            <Wallet className={`w-5 h-5 ${activeTab === 'balance' ? 'text-[#F59E0B]' : 'text-[#A8A29E]'}`} />
+            <span className={`text-[10px] font-medium ${activeTab === 'balance' ? 'text-[#F59E0B]' : 'text-[#A8A29E]'}`}>
+              帳務
+            </span>
+            {activeTab === 'balance' && (
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full" style={{ backgroundColor: '#F59E0B' }} />
+            )}
+          </button>
+
+          {/* 小車頭（Premium only） */}
+          <button
+            onClick={() => user?.driver?.isPremium ? setActiveTab('selfdispatch') : null}
+            className={`flex-1 flex flex-col items-center justify-center gap-0.5 relative ${!user?.driver?.isPremium ? 'opacity-40' : ''}`}
+          >
+            <Sparkle className={`w-5 h-5 ${activeTab === 'selfdispatch' ? 'text-[#FF385C]' : 'text-[#A8A29E]'}`} />
+            <span className={`text-[10px] font-medium ${activeTab === 'selfdispatch' ? 'text-[#FF385C]' : 'text-[#A8A29E]'}`}>
+              小車頭
+            </span>
+            {activeTab === 'selfdispatch' && (
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full" style={{ backgroundColor: '#FF385C' }} />
+            )}
+          </button>
+
+          {/* 我的小隊 / 更多 */}
+          <button
+            onClick={() => setActiveTab('squad')}
+            className="flex-1 flex flex-col items-center justify-center gap-0.5 relative"
+          >
+            <Users className={`w-5 h-5 ${activeTab === 'squad' ? 'text-[#F59E0B]' : 'text-[#A8A29E]'}`} />
+            <span className={`text-[10px] font-medium ${activeTab === 'squad' ? 'text-[#F59E0B]' : 'text-[#A8A29E]'}`}>
+              我的
+            </span>
+            {activeTab === 'squad' && (
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full" style={{ backgroundColor: '#F59E0B' }} />
+            )}
+          </button>
+        </div>
+      </nav>
     </div>
   )
 }
