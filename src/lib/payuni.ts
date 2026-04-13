@@ -17,6 +17,7 @@ export interface EncryptResult {
 export function encryptPayuni(data: Record<string, string | number | boolean>): EncryptResult {
   const merKey = process.env.PAYUNI_HASH_KEY || ""
   const merIV  = process.env.PAYUNI_HASH_IV  || ""
+  console.log("PAYUNI merKey length:", merKey.length, "merIV length:", merIV.length)
 
   // plaintext = http_build_query(all fields)
   const plaintext = httpBuildQuery(data)
