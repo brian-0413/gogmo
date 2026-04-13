@@ -135,10 +135,10 @@ function isValidTaiwanPhone(phone: string): boolean {
 function BotBubble({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex items-start gap-2">
-      <div className="w-7 h-7 rounded-full bg-[#FF385C] text-white flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
+      <div className="w-6 h-6 rounded-full bg-[#FF385C] text-white flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-0.5">
         G
       </div>
-      <div className="bg-[#F9F7F4] border border-[#EBEBEB] rounded-tr-xl rounded-br-xl rounded-tl-xl px-4 py-2.5 max-w-full text-[13px]">
+      <div className="flex-1 bg-[#F9F7F4] border border-[#EBEBEB] rounded-tr-xl rounded-br-xl rounded-tl-xl px-4 py-2 text-[13px]">
         {children}
       </div>
     </div>
