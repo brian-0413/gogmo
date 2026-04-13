@@ -1,73 +1,88 @@
-import crypto from "crypto";
+import crypto from "crypto"
 
-// ── 加密（官方格式）──────────────────────────────
-// EncryptInfo = hex( base64(密文) + ":::" + base64(GCM tag) )
-// HashInfo    = SHA256( key + EncryptInfo + iv )（大寫 hex）
+// ── URL-encoded query string（等同 PHP http_build_query）─────────────
+export function httpBuildQuery(data: Record<string, string | number | boolean>): string {
+  return Object.entries(data)
+    .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`)
+    .join("&")
+    .replace(/%20/g, "+") // 與 PHP http_build_query 一致：空格變 +
+}
 
+// ── 加密（與 PHP SDK PayuniApi::Encrypt 完全一致）───────────────────
 export interface EncryptResult {
-  EncryptInfo: string;
-  HashInfo: string;
+  EncryptInfo: string
+  HashInfo: string
 }
 
 export function encryptPayuni(data: Record<string, string | number | boolean>): EncryptResult {
-  const merKey = process.env.PAYUNI_HASH_KEY || "";
-  const merIV  = process.env.PAYUNI_HASH_IV  || "";
+  const merKey = process.env.PAYUNI_HASH_KEY || ""
+  const merIV  = process.env.PAYUNI_HASH_IV  || ""
 
-  const key = merKey;
-  const iv  = Buffer.from(merIV);
+  // plaintext = http_build_query(all fields)
+  const plaintext = httpBuildQuery(data)
+  console.log("PlainText:", plaintext)
 
-  // encodeURIComponent 等同 querystring.stringify，Next.js 環境相容
-  const plaintext = Object.entries(data)
-    .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`)
-    .join("&");
+  // AES-256-GCM：IV = 空字串（等同 PHP openssl_encrypt 不傳 IV）
+  const iv = Buffer.alloc(0)
 
-  console.log("PlainText:", plaintext);
+  const cipher = crypto.createCipheriv("aes-256-gcm", merKey, iv)
+  const encrypted = Buffer.concat([
+    cipher.update(plaintext, "utf8"),
+    cipher.final(),
+  ])
+  const tag = cipher.getAuthTag()
 
-  // AES-256-GCM 加密
-  const cipher = crypto.createCipheriv("aes-256-gcm", key, iv);
-  let cipherText = cipher.update(plaintext, "utf8", "base64");
-  cipherText += cipher.final("base64");
-  const tag = cipher.getAuthTag().toString("base64");
-
-  // 組合：hex( base64密文 + ":::" + base64tag )
-  const EncryptInfo = Buffer.from(`${cipherText}:::${tag}`)
+  // EncryptInfo = bin2hex( base64(ciphertext) + ":::" + base64(tag) )
+  const EncryptInfo = Buffer.concat([encrypted, Buffer.from(":::"), tag])
     .toString("hex")
-    .trim();
+    .trim()
 
-  // HashInfo = SHA256( key + EncryptInfo + iv )，大寫
+  // HashInfo = SHA256( merKey + EncryptInfo + merIV ), 大寫
   const HashInfo = crypto
     .createHash("sha256")
     .update(`${merKey}${EncryptInfo}${merIV}`)
     .digest("hex")
-    .toUpperCase();
+    .toUpperCase()
 
-  return { EncryptInfo, HashInfo };
+  return { EncryptInfo, HashInfo }
 }
 
-// ── 解密（官方格式）──────────────────────────────
+// ── 解密（與 PHP SDK PayuniApi::Decrypt 完全一致）───────────────────
 export function decryptPayuni(encryptStr: string): Record<string, string> {
-  const merKey = process.env.PAYUNI_HASH_KEY || "";
-  const merIV  = process.env.PAYUNI_HASH_IV  || "";
+  const merKey = process.env.PAYUNI_HASH_KEY || ""
+  const merIV  = process.env.PAYUNI_HASH_IV  || ""
 
-  const iv = Buffer.from(merIV);
+  // hex2bin 之後以 ::: 分割
+  const hexBytes = Buffer.from(encryptStr, "hex")
+  const [encryptDataHex, tagB64] = hexBytes.toString().split(":::")
+  const encryptData = Buffer.from(encryptDataHex, "base64")
+  const tag = Buffer.from(tagB64, "base64")
 
-  // hex 解碼後以 ::: 分割
-  const [encryptData, tag] = Buffer.from(encryptStr, "hex")
-    .toString()
-    .split(":::");
+  // AES-256-GCM：IV = 空字串
+  const iv = Buffer.alloc(0)
+  const decipher = crypto.createDecipheriv("aes-256-gcm", merKey, iv)
+  decipher.setAuthTag(tag)
 
-  const decipher = crypto.createDecipheriv("aes-256-gcm", merKey, iv);
-  decipher.setAuthTag(Buffer.from(tag, "base64"));
+  const decipherText = Buffer.concat([
+    decipher.update(encryptData),
+    decipher.final(),
+  ]).toString("utf8")
 
-  let decipherText = decipher.update(encryptData, "base64", "utf8");
-  decipherText += decipher.final("utf8");
-
-  return Object.fromEntries(new URLSearchParams(decipherText)) as Record<string, string>;
+  // parse_str 等價：&分隔 + decode
+  const result: Record<string, string> = {}
+  for (const pair of decipherText.split("&")) {
+    const idx = pair.indexOf("=")
+    if (idx < 0) continue
+    const key = decodeURIComponent(pair.slice(0, idx))
+    const val = decodeURIComponent(pair.slice(idx + 1))
+    result[key] = val
+  }
+  return result
 }
 
-// ── Endpoint ──────────────────────────────────────
+// ── Endpoint ─────────────────────────────────────────────────────
 export function getPayuniEndpoint(): string {
   return process.env.PAYUNI_ENV === "production"
     ? "https://api.payuni.com.tw/api/upp"
-    : "https://sandbox-api.payuni.com.tw/api/upp";
+    : "https://sandbox-api.payuni.com.tw/api/upp"
 }
