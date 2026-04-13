@@ -65,6 +65,14 @@ const DEFAULT_FORM: FormData = {
   notes: '',
 }
 
+// ============ Vehicle Types ============
+export const VEHICLE_TYPE_OPTIONS: { label: string; value: FormData['vehicleType'] }[] = [
+  { label: '5人座小車', value: 'small' },
+  { label: '5人座休旅車', value: 'suv' },
+  { label: '7人座', value: 'van9' },
+  { label: '9人座', value: 'van9' },
+]
+
 // ============ Labels ============
 const TRIP_MODE_LABELS: Record<string, string> = {
   pickup: '接機/船',
@@ -519,7 +527,12 @@ export function SelfDispatchChat({ token, onSuccess, onClose }: SelfDispatchChat
           {/* ===== STEP 4: Time only ===== */}
           {step === 4 && (
             <BotBubble>
-              <p>請選擇 <strong className="text-[#FF385C]">時間</strong>：</p>
+              <p>
+                請選擇 <strong className="text-[#FF385C]">時間</strong>：
+                <button onClick={() => setStep(3)} className="ml-3 text-[12px] text-[#717171] hover:text-[#FF385C] underline cursor-pointer bg-transparent border-none p-0">
+                  回上一步
+                </button>
+              </p>
               <div className="mt-2">
                 <InputField
                   type="time"
@@ -529,13 +542,7 @@ export function SelfDispatchChat({ token, onSuccess, onClose }: SelfDispatchChat
                   className="w-full max-w-full"
                 />
               </div>
-              <div className="flex gap-2 mt-2">
-                <button
-                  onClick={() => setStep(3)}
-                  className="flex-1 py-2 bg-white text-[#717171] border-2 border-[#DDDDDD] rounded-xl text-[13px] font-semibold cursor-pointer hover:border-[#FF385C] hover:text-[#FF385C]"
-                >
-                  回上一步
-                </button>
+              <div className="flex justify-end mt-2">
                 <button
                   onClick={() => {
                     if (form.scheduledTime) {
@@ -544,7 +551,7 @@ export function SelfDispatchChat({ token, onSuccess, onClose }: SelfDispatchChat
                     }
                   }}
                   disabled={!form.scheduledTime}
-                  className="flex-1 py-2 bg-[#FF385C] text-white border-2 border-[#FF385C] rounded-xl text-[13px] font-semibold cursor-pointer hover:bg-[#E83355] disabled:opacity-50"
+                  className="px-6 py-2 bg-[#FF385C] text-white border-2 border-[#FF385C] rounded-xl text-[13px] font-semibold cursor-pointer hover:bg-[#E83355] disabled:opacity-50"
                 >
                   下一步
                 </button>
@@ -600,9 +607,13 @@ export function SelfDispatchChat({ token, onSuccess, onClose }: SelfDispatchChat
           {step === 6 && (
             <BotBubble>
               <p>請選擇<strong className="text-[#FF385C]">車型</strong>：</p>
-              <OptGrid cols={3}>
-                {[['小車(5人)', 'small'], ['休旅(7人)', 'suv'], ['9人座', 'van9']].map(([label, vt]) => (
-                  <OptButton key={vt} label={label} onClick={() => { set({ vehicleType: vt as FormData['vehicleType'] }); addUser(label); setStep(7) }} />
+              <OptGrid cols={2}>
+                {VEHICLE_TYPE_OPTIONS.map(({ label, value }) => (
+                  <OptButton
+                    key={value}
+                    label={label}
+                    onClick={() => { set({ vehicleType: value }); addUser(label); setStep(7) }}
+                  />
                 ))}
               </OptGrid>
             </BotBubble>
