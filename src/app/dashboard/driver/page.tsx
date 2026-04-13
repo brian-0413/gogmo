@@ -1080,93 +1080,84 @@ export default function DriverDashboard() {
       </main>
 
       {/* ══════════════════════════════════════════════
-          Option C: 底部 Tab Bar（行動優先）
-          桌面版隱藏，行動版固定在底部
+          底部 Tab Bar（行動優先）
+          桌面版隱藏，固定在底部
+          參考 Vant / Apple HIG 設計標準
       ══════════════════════════════════════════════ */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-[#E7E5E4] shadow-[0_-2px_16px_rgba(0,0,0,0.06)]">
-        <div className="flex h-[60px]">
+      <nav
+        className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-[#E8E5E0]"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+      >
+        {/* iOS 底部指示線 */}
+        <div className="h-[3px] w-16 mx-auto bg-[#F59E0B] rounded-b-full" />
+        <div className="flex h-16">
           {/* 接單大廳 */}
           <button
             onClick={() => setActiveTab('available')}
-            className="flex-1 flex flex-col items-center justify-center gap-0.5 relative"
+            className="flex-1 flex flex-col items-center justify-center gap-1 relative"
           >
             <div className="relative">
-              <ClipboardList className={`w-5 h-5 ${activeTab === 'available' ? 'text-[#F59E0B]' : 'text-[#A8A29E]'}`} />
+              <ClipboardList className={`w-6 h-6 ${activeTab === 'available' ? 'text-[#F59E0B]' : 'text-[#71717A]'}`} />
               {filteredAvailableOrders.length > 0 && (
-                <span className="absolute -top-1.5 -right-2 min-w-[16px] h-4 px-1 rounded-full bg-[#F59E0B] text-white text-[10px] font-bold font-mono-nums flex items-center justify-center">
+                <span className="absolute -top-1 -right-1.5 min-w-[17px] h-[17px] px-0.5 rounded-full bg-[#F59E0B] text-white text-[10px] font-bold font-mono-nums flex items-center justify-center leading-none">
                   {filteredAvailableOrders.length > 99 ? '99+' : filteredAvailableOrders.length}
                 </span>
               )}
             </div>
-            <span className={`text-[10px] font-medium ${activeTab === 'available' ? 'text-[#F59E0B]' : 'text-[#A8A29E]'}`}>
+            <span className={`text-[11px] font-medium leading-none ${activeTab === 'available' ? 'text-[#F59E0B]' : 'text-[#71717A]'}`}>
               接單
             </span>
-            {activeTab === 'available' && (
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full" style={{ backgroundColor: '#F59E0B' }} />
-            )}
           </button>
 
           {/* 我的行程 */}
           <button
             onClick={() => setActiveTab('myorders')}
-            className="flex-1 flex flex-col items-center justify-center gap-0.5 relative"
+            className="flex-1 flex flex-col items-center justify-center gap-1 relative"
           >
             <div className="relative">
-              <FileText className={`w-5 h-5 ${activeTab === 'myorders' ? 'text-[#F59E0B]' : 'text-[#A8A29E]'}`} />
+              <FileText className={`w-6 h-6 ${activeTab === 'myorders' ? 'text-[#F59E0B]' : 'text-[#71717A]'}`} />
               {myOrders.length > 0 && (
-                <span className="absolute -top-1.5 -right-2 min-w-[16px] h-4 px-1 rounded-full bg-[#F59E0B]/20 text-[#F59E0B] text-[10px] font-bold font-mono-nums flex items-center justify-center">
+                <span className="absolute -top-1 -right-1.5 min-w-[17px] h-[17px] px-0.5 rounded-full bg-[#F59E0B]/20 text-[#F59E0B] text-[10px] font-bold font-mono-nums flex items-center justify-center leading-none">
                   {myOrders.length > 99 ? '99+' : myOrders.length}
                 </span>
               )}
             </div>
-            <span className={`text-[10px] font-medium ${activeTab === 'myorders' ? 'text-[#F59E0B]' : 'text-[#A8A29E]'}`}>
+            <span className={`text-[11px] font-medium leading-none ${activeTab === 'myorders' ? 'text-[#F59E0B]' : 'text-[#71717A]'}`}>
               行程
             </span>
-            {activeTab === 'myorders' && (
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full" style={{ backgroundColor: '#F59E0B' }} />
-            )}
           </button>
 
           {/* 帳務中心 */}
           <button
             onClick={() => setActiveTab('balance')}
-            className="flex-1 flex flex-col items-center justify-center gap-0.5 relative"
+            className="flex-1 flex flex-col items-center justify-center gap-1 relative"
           >
-            <Wallet className={`w-5 h-5 ${activeTab === 'balance' ? 'text-[#F59E0B]' : 'text-[#A8A29E]'}`} />
-            <span className={`text-[10px] font-medium ${activeTab === 'balance' ? 'text-[#F59E0B]' : 'text-[#A8A29E]'}`}>
+            <Wallet className={`w-6 h-6 ${activeTab === 'balance' ? 'text-[#F59E0B]' : 'text-[#71717A]'}`} />
+            <span className={`text-[11px] font-medium leading-none ${activeTab === 'balance' ? 'text-[#F59E0B]' : 'text-[#71717A]'}`}>
               帳務
             </span>
-            {activeTab === 'balance' && (
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full" style={{ backgroundColor: '#F59E0B' }} />
-            )}
           </button>
 
           {/* 小車頭（Premium only） */}
           <button
             onClick={() => user?.driver?.isPremium ? setActiveTab('selfdispatch') : null}
-            className={`flex-1 flex flex-col items-center justify-center gap-0.5 relative ${!user?.driver?.isPremium ? 'opacity-40' : ''}`}
+            className={`flex-1 flex flex-col items-center justify-center gap-1 relative ${!user?.driver?.isPremium ? 'opacity-40' : ''}`}
           >
-            <Sparkle className={`w-5 h-5 ${activeTab === 'selfdispatch' ? 'text-[#FF385C]' : 'text-[#A8A29E]'}`} />
-            <span className={`text-[10px] font-medium ${activeTab === 'selfdispatch' ? 'text-[#FF385C]' : 'text-[#A8A29E]'}`}>
+            <Sparkle className={`w-6 h-6 ${activeTab === 'selfdispatch' ? 'text-[#FF385C]' : 'text-[#71717A]'}`} />
+            <span className={`text-[11px] font-medium leading-none ${activeTab === 'selfdispatch' ? 'text-[#FF385C]' : 'text-[#71717A]'}`}>
               小車頭
             </span>
-            {activeTab === 'selfdispatch' && (
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full" style={{ backgroundColor: '#FF385C' }} />
-            )}
           </button>
 
-          {/* 我的小隊 / 更多 */}
+          {/* 我的小隊 */}
           <button
             onClick={() => setActiveTab('squad')}
-            className="flex-1 flex flex-col items-center justify-center gap-0.5 relative"
+            className="flex-1 flex flex-col items-center justify-center gap-1 relative"
           >
-            <Users className={`w-5 h-5 ${activeTab === 'squad' ? 'text-[#F59E0B]' : 'text-[#A8A29E]'}`} />
-            <span className={`text-[10px] font-medium ${activeTab === 'squad' ? 'text-[#F59E0B]' : 'text-[#A8A29E]'}`}>
+            <Users className={`w-6 h-6 ${activeTab === 'squad' ? 'text-[#F59E0B]' : 'text-[#71717A]'}`} />
+            <span className={`text-[11px] font-medium leading-none ${activeTab === 'squad' ? 'text-[#F59E0B]' : 'text-[#71717A]'}`}>
               我的
             </span>
-            {activeTab === 'squad' && (
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full" style={{ backgroundColor: '#F59E0B' }} />
-            )}
           </button>
         </div>
       </nav>
