@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>派單中心</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft JhengHei", "PingFang TC", sans-serif; background: #111; color: #fff; padding: 16px; }
+  h2 { text-align: center; color: #FF4D6A; margin: 0 0 4px; font-size: 18px; }
+  .subtitle { text-align: center; color: #888; font-size: 12px; margin: 0 0 16px; }
+  .section-title { font-size: 10px; font-weight: bold; color: #8A8A88; letter-spacing: 1px; text-transform: uppercase; margin: 0 0 8px 4px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .card-animate { animation: slideUp 0.3s ease-out; }
+</style>
+</head>
+<body>
+<h2>派單中心</h2>
+<p class="subtitle">預設值 → 貼單解析 → 審查上架</p>
+
+<!-- ========== 手機框架 ========== -->
+<div style="background: #0E0E10; border-radius: 16px; max-width: 420px; margin: 0 auto; overflow: hidden;">
+
+  <!-- ===== Header ===== -->
+  <div style="background: #191920; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #28282E;">
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <div style="width: 36px; height: 36px; background: #1E8449; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+      </div>
+      <div style="font-size: 15px; font-weight: bold; color: #E8E8E6;">好的車行</div>
+    </div>
+    <button style="background: #28282E; border: none; border-radius: 8px; padding: 6px 8px; cursor: pointer;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FF4D6A" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </div>
+
+  <!-- ===== 步驟指示器 ===== -->
+  <div style="padding: 14px 14px 0;">
+    <div style="display: flex; gap: 0; margin-bottom: 16px;">
+      <!-- Step 1: 預設值 -->
+      <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;">
+        <div style="width: 28px; height: 28px; background: #FF4D6A; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; color: white;">1</div>
+        <span style="font-size: 9px; color: #FF4D6A; font-weight: bold;">預設值</span>
+      </div>
+      <!-- 連接線 1→2 -->
+      <div style="flex: 1; height: 2px; background: #FF4D6A; margin-top: 13px;"></div>
+      <!-- Step 2: 解析 -->
+      <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;">
+        <div style="width: 28px; height: 28px; background: #FF4D6A; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; color: white;">2</div>
+        <span style="font-size: 9px; color: #FF4D6A; font-weight: bold;">解析</span>
+      </div>
+      <!-- 連接線 2→3 -->
+      <div style="flex: 1; height: 2px; background: #28282E; margin-top: 13px;"></div>
+      <!-- Step 3: 審查 -->
+      <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;">
+        <div style="width: 28px; height: 28px; background: #28282E; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; color: #6B6B6B;">3</div>
+        <span style="font-size: 9px; color: #6B6B6B;">審查上架</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 頁面內容 ===== -->
+  <div style="padding: 14px;">
+
+    <!-- ===== Step 1: 預設值設定 ===== -->
+    <div style="margin-bottom: 14px;">
+      <div class="section-title">第一步：設定預設值（適用於本批次所有訂單）</div>
+      <div style="background: #191920; border-radius: 12px; padding: 12px; border: 1px solid #28282E;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <!-- 日期 -->
+          <div>
+            <label style="font-size: 10px; color: #8A8A88; font-weight: bold; display: block; margin-bottom: 4px;">出發日期</label>
+            <div style="background: #141418; border: 1px solid #FF4D6A; border-radius: 8px; padding: 8px 10px; display: flex; align-items: center; justify-content: space-between;">
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8A8A88" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                <span style="font-size: 13px; color: #E8E8E6; font-weight: bold;">今天 (4/7)</span>
+              </div>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FF4D6A" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <!-- 日期下拉展開 -->
+            <div style="background: #191920; border: 1px solid #28282E; border-radius: 8px; margin-top: 4px; overflow: hidden;">
+              <div style="padding: 6px 10px; font-size: 12px; color: #FF4D6A; font-weight: bold; border-bottom: 1px solid #28282E; cursor: pointer;">今天 (4/7)</div>
+              <div style="padding: 6px 10px; font-size: 12px; color: #E8E8E6; border-bottom: 1px solid #28282E; cursor: pointer;">明天 (4/8)</div>
+              <div style="padding: 6px 10px; font-size: 12px; color: #E8E8E6; border-bottom: 1px solid #28282E; cursor: pointer;">4/9 (四)</div>
+              <div style="padding: 6px 10px; font-size: 12px; color: #E8E8E6; border-bottom: 1px solid #28282E; cursor: pointer;">4/10 (五)</div>
+              <div style="padding: 6px 10px; font-size: 12px; color: #E8E8E6; border-bottom: 1px solid #28282E; cursor: pointer;">4/11 (六)</div>
+              <div style="padding: 6px 10px; font-size: 12px; color: #E8E8E6; border-bottom: 1px solid #28282E; cursor: pointer;">4/12 (日)</div>
+              <div style="padding: 6px 10px; font-size: 12px; color: #E8E8E6; border-bottom: 1px solid #28282E; cursor: pointer;">4/13 (一)</div>
+              <div style="padding: 6px 10px; font-size: 12px; color: #E8E8E6; cursor: pointer; max-height: 120px; overflow-y: auto;">
+                <div style="padding: 3px 0;">4/14 (二)</div>
+                <div style="padding: 3px 0;">4/15 (三)</div>
+                <div style="padding: 3px 0; color: #6B6B6B;">4/16 (四)</div>
+                <div style="padding: 3px 0; color: #6B6B6B;">4/17 (五)</div>
+                <div style="padding: 3px 0; color: #6B6B6B;">4/18 (六)</div>
+                <div style="padding: 3px 0; color: #6B6B6B;">4/19 (日)</div>
+                <div style="padding: 3px 0; color: #6B6B6B;">4/20 (一)</div>
+              </div>
+            </div>
+          </div>
+          <!-- 車型 -->
+          <div>
+            <label style="font-size: 10px; color: #8A8A88; font-weight: bold; display: block; margin-bottom: 4px;">車型</label>
+            <div style="background: #141418; border: 1px solid #FF4D6A; border-radius: 8px; padding: 8px 10px; display: flex; align-items: center; justify-content: space-between;">
+              <span style="font-size: 13px; color: #E8E8E6; font-weight: bold;">小客車</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FF4D6A" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+          </div>
+        </div>
+        <!-- 車型選擇展開 -->
+        <div style="margin-top: 8px; display: flex; gap: 6px; flex-wrap: wrap;">
+          <span style="background: #FF4D6A; color: white; padding: 4px 12px; border-radius: 16px; font-size: 11px; font-weight: bold; cursor: pointer;">小客車</span>
+          <span style="background: #141418; color: #8A8A88; padding: 4px 12px; border-radius: 16px; font-size: 11px; font-weight: bold; cursor: pointer; border: 1px solid #28282E;">休旅車</span>
+          <span style="background: #141418; color: #8A8A88; padding: 4px 12px; border-radius: 16px; font-size: 11px; font-weight: bold; cursor: pointer; border: 1px solid #28282E;">9人座</span>
+          <span style="background: #141418; color: #8A8A88; padding: 4px 12px; border-radius: 16px; font-size: 11px; font-weight: bold; cursor: pointer; border: 1px solid #28282E;">任意</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== Step 2: 貼單輸入 ===== -->
+    <div style="margin-bottom: 14px;">
+      <div class="section-title">第二步：貼入車頭訊息（支援多筆）</div>
+      <div style="background: #191920; border-radius: 12px; padding: 12px; border: 1px solid #28282E;">
+        <textarea style="width: 100%; min-height: 120px; background: #141418; border: 1px solid #28282E; border-radius: 8px; padding: 10px; font-size: 13px; color: #E8E8E6; resize: none; font-family: inherit; line-height: 1.7;" placeholder="每行一筆，直接貼上即可">7:00 接到機場
+松機 8:00 送到福華飯店 1200
+TPE2 9:30 接到竹北 950
+桃機 11:00 送機到板橋 800</textarea>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
+          <span style="font-size: 10px; color: #6B6B6B;">每行一筆，已貼入 4 行</span>
+          <div style="display: flex; gap: 6px;">
+            <button style="background: #141418; border: 1px solid #28282E; border-radius: 8px; padding: 6px 12px; font-size: 11px; color: #8A8A88; cursor: pointer;">清除</button>
+            <button style="background: #FF4D6A; border: none; border-radius: 8px; padding: 6px 14px; font-size: 11px; font-weight: bold; color: white; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              AI 解析
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== AI 解析提示 ===== -->
+    <div style="background: #0E0E10; border: 1px solid #28282E; border-radius: 10px; padding: 12px; margin-bottom: 14px; display: flex; align-items: center; gap: 10px;">
+      <div style="width: 32px; height: 32px; background: #1A2820; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1E8449" stroke-width="2" style="animation: spin 2s linear infinite;"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+      </div>
+      <div>
+        <div style="font-size: 12px; color: #E8E8E6; font-weight: bold;">AI 解析中...</div>
+        <div style="font-size: 10px; color: #6B6B6B; margin-top: 2px;">正在分析 4 筆訂單，預計 3 秒</div>
+      </div>
+    </div>
+
+    <!-- ===== Step 3: 審查結果 ===== -->
+    <div style="margin-bottom: 14px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+        <div class="section-title" style="margin: 0;">第三步：審查上架（4筆）</div>
+        <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+          <input type="checkbox" checked style="accent-color: #FF4D6A; width: 14px; height: 14px;">
+          <span style="font-size: 11px; color: #8A8A88;">全選</span>
+        </label>
+      </div>
+
+      <!-- 審查卡片 1 -->
+      <div class="card-animate" style="background: #191920; border-radius: 12px; padding: 12px; margin-bottom: 8px; border: 1px solid #1E8449; border-left-width: 3px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <input type="checkbox" checked style="accent-color: #FF4D6A; width: 16px; height: 16px; flex-shrink: 0;">
+            <span style="background: #1A5276; color: white; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; font-family: monospace;">#20260407-0001</span>
+            <span style="background: #E6EFF8; color: #1A5276; padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: bold;">接機</span>
+            <span style="background: #E8F3EC; color: #1E8449; padding: 2px 6px; border-radius: 4px; font-size: 9px; font-weight: bold;">✓ 已解析</span>
+          </div>
+          <span style="background: #1E8449; color: white; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: bold;">待上架</span>
+        </div>
+        <!-- 路線 -->
+        <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
+          <div style="width: 8px; height: 8px; background: #FF4D6A; border-radius: 50%; flex-shrink: 0;"></div>
+          <span style="font-size: 13px; font-weight: bold; color: #E8E8E6; flex: 1;">松山機場</span>
+          <span style="font-size: 11px; color: #6B6B6B;">07:00</span>
+        </div>
+        <div style="padding-left: 3px; margin-bottom: 6px;">
+          <div style="width: 1px; height: 10px; background: #484846; margin-left: 3px;"></div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">
+          <div style="width: 8px; height: 8px; background: #484846; border-radius: 50%; border: 1px solid #484846; flex-shrink: 0;"></div>
+          <span style="font-size: 13px; font-weight: bold; color: #8A8A88; flex: 1;">台北福華大飯店</span>
+        </div>
+        <!-- 可編輯金額 -->
+        <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
+          <span style="font-size: 10px; color: #8A8A88;">金額</span>
+          <div style="background: #141418; border: 1px solid #FF4D6A; border-radius: 6px; padding: 4px 8px; display: flex; align-items: center; gap: 4px;">
+            <span style="font-size: 14px; font-weight: bold; color: #FF4D6A; font-family: monospace;">NT$</span>
+            <input value="1,200" style="background: transparent; border: none; outline: none; font-size: 14px; font-weight: bold; color: #FF4D6A; font-family: monospace; width: 60px;">
+          </div>
+        </div>
+        <!-- 備註 -->
+        <div style="display: flex; align-items: flex-start; gap: 6px;">
+          <span style="font-size: 10px; color: #8A8A88; flex-shrink: 0; margin-top: 4px;">備註</span>
+          <input value="乘客為商務旅客，行李較多" style="background: #141418; border: 1px solid #28282E; border-radius: 6px; padding: 4px 8px; font-size: 11px; color: #8A8A88; flex: 1; outline: none;">
+        </div>
+      </div>
+
+      <!-- 審查卡片 2 -->
+      <div class="card-animate" style="background: #191920; border-radius: 12px; padding: 12px; margin-bottom: 8px; border: 1px solid #1E8449; border-left-width: 3px; animation-delay: 0.05s;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <input type="checkbox" checked style="accent-color: #FF4D6A; width: 16px; height: 16px; flex-shrink: 0;">
+            <span style="background: #CA6F1E; color: white; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; font-family: monospace;">#20260407-0002</span>
+            <span style="background: #FDF3E7; color: #CA6F1E; padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: bold;">送機</span>
+            <span style="background: #E8F3EC; color: #1E8449; padding: 2px 6px; border-radius: 4px; font-size: 9px; font-weight: bold;">✓ 已解析</span>
+          </div>
+          <span style="background: #1E8449; color: white; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: bold;">待上架</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
+          <div style="width: 8px; height: 8px; background: #CA6F1E; border-radius: 50%; flex-shrink: 0;"></div>
+          <span style="font-size: 13px; font-weight: bold; color: #E8E8E6; flex: 1;">桃園機場第二航廈</span>
+          <span style="font-size: 11px; color: #6B6B6B;">09:30</span>
+        </div>
+        <div style="padding-left: 3px; margin-bottom: 6px;">
+          <div style="width: 1px; height: 10px; background: #484846; margin-left: 3px;"></div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">
+          <div style="width: 8px; height: 8px; background: #484846; border-radius: 50%; border: 1px solid #484846; flex-shrink: 0;"></div>
+          <span style="font-size: 13px; font-weight: bold; color: #8A8A88; flex: 1;">新竹縣竹北市</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
+          <span style="font-size: 10px; color: #8A8A88;">金額</span>
+          <div style="background: #141418; border: 1px solid #FF4D6A; border-radius: 6px; padding: 4px 8px; display: flex; align-items: center; gap: 4px;">
+            <span style="font-size: 14px; font-weight: bold; color: #FF4D6A; font-family: monospace;">NT$</span>
+            <input value="950" style="background: transparent; border: none; outline: none; font-size: 14px; font-weight: bold; color: #FF4D6A; font-family: monospace; width: 50px;">
+          </div>
+        </div>
+        <div style="display: flex; align-items: flex-start; gap: 6px;">
+          <span style="font-size: 10px; color: #8A8A88; flex-shrink: 0; margin-top: 4px;">備註</span>
+          <input placeholder="新增備註..." style="background: #141418; border: 1px solid #28282E; border-radius: 6px; padding: 4px 8px; font-size: 11px; color: #8A8A88; flex: 1; outline: none;">
+        </div>
+      </div>
+
+      <!-- 審查卡片 3 & 4 壓縮顯示 -->
+      <div style="background: #191920; border-radius: 12px; padding: 12px; margin-bottom: 8px; border: 1px solid #1E8449; border-left-width: 3px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <input type="checkbox" checked style="accent-color: #FF4D6A; width: 16px; height: 16px; flex-shrink: 0;">
+            <span style="background: #1A5276; color: white; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; font-family: monospace;">#20260407-0003</span>
+            <span style="background: #E6EFF8; color: #1A5276; padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: bold;">接機</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 4px;">
+            <span style="font-size: 13px; font-weight: bold; color: #FF4D6A; font-family: monospace;">NT$800</span>
+          </div>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div style="font-size: 11px; color: #8A8A88;">桃園機場 → 板橋火車站 · 11:00</div>
+          <span style="background: #E8F3EC; color: #1E8449; padding: 1px 6px; border-radius: 4px; font-size: 9px; font-weight: bold;">✓ 已解析</span>
+        </div>
+      </div>
+
+      <!-- 未解析需人工處理 -->
+      <div style="background: #191920; border-radius: 12px; padding: 12px; margin-bottom: 8px; border: 1px solid #CA6F1E; border-left-width: 3px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <input type="checkbox" style="accent-color: #FF4D6A; width: 16px; height: 16px; flex-shrink: 0;">
+            <span style="background: #28282E; color: #8A8A88; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; font-family: monospace;">--</span>
+            <span style="background: #FCE8E8; color: #922B21; padding: 2px 6px; border-radius: 4px; font-size: 9px; font-weight: bold;">⚠ 待處理</span>
+          </div>
+        </div>
+        <div style="background: #141418; border-radius: 6px; padding: 6px 8px; margin-bottom: 6px;">
+          <span style="font-size: 10px; color: #6B6B6B;">原文：</span>
+          <span style="font-size: 11px; color: #8A8A88;">7:00 接到機場</span>
+        </div>
+        <div style="display: flex; gap: 4px;">
+          <button style="flex: 1; background: #141418; border: 1px solid #28282E; border-radius: 6px; padding: 5px; font-size: 10px; color: #8A8A88; cursor: pointer;">忽略</button>
+          <button style="flex: 2; background: #1A2820; border: 1px solid #1E8449; border-radius: 6px; padding: 5px; font-size: 10px; color: #1E8449; font-weight: bold; cursor: pointer;">手動填寫</button>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- ===== 底部浮動按鈕 ===== -->
+  <div style="position: sticky; bottom: 0; background: linear-gradient(to top, #0E0E10 80%, transparent); padding: 12px 14px 14px;">
+    <button style="width: 100%; background: #FF4D6A; border: none; border-radius: 12px; padding: 14px; font-size: 15px; font-weight: bold; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+      上架已選訂單（3筆）
+    </button>
+  </div>
+
+  <!-- ===== 底部 Tab Bar ===== -->
+  <div style="background: #191920; padding: 8px 4px; border-top: 1px solid #28282E;">
+    <div style="display: flex; gap: 2px;">
+      <div style="flex: 1; display: flex; flex-direction: column; align-items: center; padding: 8px 4px;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6B6B6B" stroke-width="2" style="margin-bottom: 3px;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span style="font-size: 9px; color: #6B6B6B;">行控</span>
+      </div>
+      <div style="flex: 1; display: flex; flex-direction: column; align-items: center; padding: 8px 4px; border-radius: 10px; background: #1A2820;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1E8449" stroke-width="2" style="margin-bottom: 3px;"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        <span style="font-size: 9px; color: #1E8449; font-weight: bold;">派單</span>
+      </div>
+      <div style="flex: 1; display: flex; flex-direction: column; align-items: center; padding: 8px 4px;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6B6B6B" stroke-width="2" style="margin-bottom: 3px;"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        <span style="font-size: 9px; color: #6B6B6B;">帳務</span>
+      </div>
+      <div style="flex: 1; display: flex; flex-direction: column; align-items: center; padding: 8px 4px;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6B6B6B" stroke-width="2" style="margin-bottom: 3px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span style="font-size: 9px; color: #6B6B6B;">訊息</span>
+      </div>
+      <div style="flex: 1; display: flex; flex-direction: column; align-items: center; padding: 8px 4px;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6B6B6B" stroke-width="2" style="margin-bottom: 3px;"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+        <span style="font-size: 9px; color: #6B6B6B;">車商</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div style="margin-top: 16px; padding: 12px; background: #1A2820; border-radius: 10px; border: 1px solid #28B463; max-width: 420px; margin-left: auto; margin-right: auto;">
+  <p style="font-size: 13px; color: #28B463; margin: 0 0 6px 0;"><strong>派單中心設計要點</strong></p>
+  <ul style="font-size: 12px; color: #28B463; margin: 0; padding-left: 1.2rem;">
+    <li>三步驟流程：<strong>預設值</strong>（日期/車型）→ <strong>貼單解析</strong>（支援多筆批次）→ <strong>審查上架</strong>（逐筆編輯）</li>
+    <li>預設值：日期（下拉選單，今天起算14天）+ 車型，適用於整批訂單</li>
+    <li>貼單：每行一筆，直接貼上，AI 批次解析</li>
+    <li>審查頁：逐筆卡片含<strong>勾選 / 金額編輯 / 備註編輯</strong>，已解析顯示綠色✓</li>
+    <li>解析失敗：顯示原文 + 「忽略」/「手動填寫」選項</li>
+    <li>底部浮動按鈕：「上架已選訂單（N筆）」</li>
+    <li>上架後自動跳轉行控中心，可見新訂單</li>
+  </ul>
+</div>
+</body>
+</html>

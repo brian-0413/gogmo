@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>帳務中心 — C 方案配色</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft JhengHei", "PingFang TC", sans-serif; background: #111; color: #fff; padding: 16px; margin: 0; }
+  h2 { text-align: center; color: #FF4D6A; margin: 0 0 4px; font-size: 18px; }
+  .subtitle { text-align: center; color: #888; font-size: 12px; margin: 0 0 16px; }
+</style>
+</head>
+<body>
+<h2>帳務中心 — C 方案配色</h2>
+<p class="subtitle">玫瑰金屬調：#FBF9F5 象牙白 + #FF4D6A 玫瑰粉 / 夜間模式</p>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; max-width: 900px; margin: 0 auto;">
+
+  <!-- ============ 司機端（淺色） ============ -->
+  <div>
+    <div style="font-size: 12px; font-weight: bold; color: #FF4D6A; margin-bottom: 8px;">司機端 · 淺色</div>
+    <div style="background: #FBF9F5; border-radius: 14px; padding: 12px;">
+      <!-- Header -->
+      <div style="background: white; border-radius: 12px; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 4px rgba(0,0,0,0.05); margin-bottom: 8px; border: 1px solid #E0D8CE;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <div style="width: 32px; height: 32px; background: #FF4D6A; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+          </div>
+          <div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="font-size: 14px; font-weight: bold; color: #1A1A1A;">王小明</span>
+              <span style="background: #FDF2F4; color: #922B21; padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: bold;">Premium</span>
+            </div>
+            <div style="font-size: 11px; color: #6B6B6B;">ABC-1234 · 休旅車</div>
+          </div>
+        </div>
+        <div style="background: #922B21; color: white; padding: 5px 12px; border-radius: 10px; font-size: 13px; font-weight: bold; font-family: monospace;">1,250 點</div>
+      </div>
+
+      <!-- 日期搜尋 -->
+      <div style="background: white; border-radius: 14px; padding: 10px 12px; margin-bottom: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); border: 1px solid #E0D8CE;">
+        <div style="display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap;">
+          <div style="flex: 1; min-width: 90px;">
+            <div style="font-size: 10px; color: #6B6B6B; margin-bottom: 2px;">起始日期</div>
+            <input type="date" value="2026-03-09" style="width: 100%; padding: 6px 8px; border: 1px solid #D9D2C8; border-radius: 8px; font-size: 12px; font-family: monospace; color: #1A1A1A; background: #FBF9F5; box-sizing: border-box;">
+          </div>
+          <div style="flex: 1; min-width: 90px;">
+            <div style="font-size: 10px; color: #6B6B6B; margin-bottom: 2px;">結束日期</div>
+            <input type="date" value="2026-04-07" style="width: 100%; padding: 6px 8px; border: 1px solid #D9D2C8; border-radius: 8px; font-size: 12px; font-family: monospace; color: #1A1A1A; background: #FBF9F5; box-sizing: border-box;">
+          </div>
+          <button style="background: #FF4D6A; color: white; border: none; border-radius: 8px; padding: 7px 12px; font-size: 12px; font-weight: bold; cursor: pointer;">搜尋</button>
+        </div>
+        <div style="font-size: 10px; color: #9E9E9E; margin-top: 4px;">最多搜尋 180 天內的記錄</div>
+      </div>
+
+      <!-- 週結算 -->
+      <div style="background: white; border-radius: 14px; padding: 14px; margin-bottom: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); border: 1px solid #E0D8CE;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <button style="background: none; border: none; font-size: 16px; color: #6B6B6B; cursor: pointer; padding: 4px;">‹</button>
+          <div style="text-align: center;">
+            <div style="font-size: 13px; font-weight: bold; color: #1A1A1A;">本週結算</div>
+            <div style="font-size: 11px; color: #6B6B6B;">3/30 (一) — 4/5 (日)</div>
+          </div>
+          <button style="background: none; border: none; font-size: 16px; color: #6B6B6B; cursor: pointer; padding: 4px;">›</button>
+        </div>
+        <!-- 金額模式 -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+          <div style="text-align: center; padding: 10px; background: #F3EDE5; border-radius: 10px;">
+            <div style="font-size: 10px; color: #6B6B6B; margin-bottom: 2px;">總金額</div>
+            <div style="font-size: 18px; font-weight: bold; color: #1A1A1A; font-family: monospace;">NT$4,800</div>
+          </div>
+          <div style="text-align: center; padding: 10px; background: #E8F3EC; border-radius: 10px;">
+            <div style="font-size: 10px; color: #6B6B6B; margin-bottom: 2px;">已入帳</div>
+            <div style="font-size: 18px; font-weight: bold; color: #1E8449; font-family: monospace;">NT$3,200</div>
+          </div>
+          <div style="text-align: center; padding: 10px; background: #FDF3E7; border-radius: 10px;">
+            <div style="font-size: 10px; color: #6B6B6B; margin-bottom: 2px;">未入帳</div>
+            <div style="font-size: 18px; font-weight: bold; color: #CA6F1E; font-family: monospace;">NT$1,600</div>
+          </div>
+        </div>
+        <div style="text-align: center; margin-top: 6px;">
+          <span style="font-size: 10px; color: #9E9E9E; background: #F3EDE5; padding: 3px 10px; border-radius: 12px;">← 滑動切換趟數 →</span>
+        </div>
+      </div>
+
+      <!-- 趟次明細 -->
+      <div style="background: white; border-radius: 14px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); overflow: hidden; border: 1px solid #E0D8CE;">
+        <div style="padding: 10px 12px; border-bottom: 1px solid #E0D8CE;">
+          <div style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FF4D6A" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+              <span style="font-size: 13px; font-weight: bold; color: #1A1A1A;">本週趟次</span>
+              <span style="background: #FF4D6A; color: white; padding: 1px 6px; border-radius: 4px; font-size: 10px; font-weight: bold;">2</span>
+            </div>
+            <span style="font-size: 14px; font-weight: bold; color: #FF4D6A; font-family: monospace;">NT$2,400</span>
+          </div>
+        </div>
+        <div style="padding: 0 12px 10px;">
+          <div style="background: #FAFAFA; border-radius: 10px; padding: 8px 10px; margin-top: 8px; border: 1px solid #E0D8CE;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+              <span style="background: #FF4D6A; color: white; padding: 1px 5px; border-radius: 4px; font-size: 10px; font-weight: bold; font-family: monospace;">#20260405-0001</span>
+              <span style="background: #E8F3EC; color: #1E8449; padding: 1px 6px; border-radius: 4px; font-size: 10px; font-weight: bold;">已入帳</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div style="font-size: 11px; color: #6B6B6B;">4/5 · 14:00 · 好的車行</div>
+              <span style="font-size: 14px; font-weight: bold; color: #FF4D6A; font-family: monospace;">NT$1,200</span>
+            </div>
+          </div>
+          <div style="background: #FAFAFA; border-radius: 10px; padding: 8px 10px; margin-top: 6px; border: 1px solid #E0D8CE; border-left: 3px solid #CA6F1E;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+              <span style="background: #FF4D6A; color: white; padding: 1px 5px; border-radius: 4px; font-size: 10px; font-weight: bold; font-family: monospace;">#20260406-0001</span>
+              <span style="background: #FDF3E7; color: #CA6F1E; padding: 1px 6px; border-radius: 4px; font-size: 10px; font-weight: bold;">未入帳</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div style="font-size: 11px; color: #6B6B6B;">4/6 · 14:00 · 好的車行</div>
+              <span style="font-size: 14px; font-weight: bold; color: #FF4D6A; font-family: monospace;">NT$1,200</span>
+            </div>
+            <div style="margin-top: 6px; border-top: 1px solid #E0D8CE; padding-top: 6px;">
+              <div style="display: flex; justify-content: space-between; font-size: 11px; color: #6B6B6B;">
+                <span>實得 NT$1,140</span>
+                <span style="color: #9E9E9E;">平台抽 5%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 歷史折疊 -->
+        <div style="padding: 10px 12px; border-top: 1px solid #E0D8CE;">
+          <div style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6B6B6B" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+              <span style="font-size: 13px; font-weight: bold; color: #6B6B6B;">歷史記錄（往前180天）</span>
+              <span style="background: #F3EDE5; color: #6B6B6B; padding: 1px 6px; border-radius: 4px; font-size: 10px; font-weight: bold;">12</span>
+            </div>
+            <span style="font-size: 14px; font-weight: bold; color: #6B6B6B; font-family: monospace;">NT$28,600</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 司機端（夜間） ============ -->
+  <div>
+    <div style="font-size: 12px; font-weight: bold; color: #FF4D6A; margin-bottom: 8px;">司機端 · 夜間模式</div>
+    <div style="background: #0E0E10; border-radius: 14px; padding: 12px;">
+      <!-- Header -->
+      <div style="background: #191920; border-radius: 12px; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 4px rgba(0,0,0,0.3); margin-bottom: 8px; border: 1px solid #28282E;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <div style="width: 32px; height: 32px; background: #FF4D6A; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+          </div>
+          <div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="font-size: 14px; font-weight: bold; color: #E8E8E6;">王小明</span>
+              <span style="background: #2A1A1E; color: #FF7090; padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: bold;">Premium</span>
+            </div>
+            <div style="font-size: 11px; color: #8A8A88;">ABC-1234 · 休旅車</div>
+          </div>
+        </div>
+        <div style="background: #922B21; color: white; padding: 5px 12px; border-radius: 10px; font-size: 13px; font-weight: bold; font-family: monospace;">1,250 點</div>
+      </div>
+
+      <!-- 日期搜尋 -->
+      <div style="background: #191920; border-radius: 14px; padding: 10px 12px; margin-bottom: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.3); border: 1px solid #28282E;">
+        <div style="display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap;">
+          <div style="flex: 1; min-width: 90px;">
+            <div style="font-size: 10px; color: #8A8A88; margin-bottom: 2px;">起始日期</div>
+            <input type="date" value="2026-03-09" style="width: 100%; padding: 6px 8px; border: 1px solid #28282E; border-radius: 8px; font-size: 12px; font-family: monospace; color: #E8E8E6; background: #141418; box-sizing: border-box;">
+          </div>
+          <div style="flex: 1; min-width: 90px;">
+            <div style="font-size: 10px; color: #8A8A88; margin-bottom: 2px;">結束日期</div>
+            <input type="date" value="2026-04-07" style="width: 100%; padding: 6px 8px; border: 1px solid #28282E; border-radius: 8px; font-size: 12px; font-family: monospace; color: #E8E8E6; background: #141418; box-sizing: border-box;">
+          </div>
+          <button style="background: #FF4D6A; color: white; border: none; border-radius: 8px; padding: 7px 12px; font-size: 12px; font-weight: bold; cursor: pointer;">搜尋</button>
+        </div>
+        <div style="font-size: 10px; color: #484846; margin-top: 4px;">最多搜尋 180 天內的記錄</div>
+      </div>
+
+      <!-- 週結算 -->
+      <div style="background: #191920; border-radius: 14px; padding: 14px; margin-bottom: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.3); border: 1px solid #28282E;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <button style="background: none; border: none; font-size: 16px; color: #8A8A88; cursor: pointer; padding: 4px;">‹</button>
+          <div style="text-align: center;">
+            <div style="font-size: 13px; font-weight: bold; color: #E8E8E6;">本週結算</div>
+            <div style="font-size: 11px; color: #8A8A88;">3/30 (一) — 4/5 (日)</div>
+          </div>
+          <button style="background: none; border: none; font-size: 16px; color: #8A8A88; cursor: pointer; padding: 4px;">›</button>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+          <div style="text-align: center; padding: 10px; background: #202028; border-radius: 10px;">
+            <div style="font-size: 10px; color: #8A8A88; margin-bottom: 2px;">總金額</div>
+            <div style="font-size: 18px; font-weight: bold; color: #E8E8E6; font-family: monospace;">NT$4,800</div>
+          </div>
+          <div style="text-align: center; padding: 10px; background: #1A2820; border-radius: 10px;">
+            <div style="font-size: 10px; color: #8A8A88; margin-bottom: 2px;">已入帳</div>
+            <div style="font-size: 18px; font-weight: bold; color: #28B463; font-family: monospace;">NT$3,200</div>
+          </div>
+          <div style="text-align: center; padding: 10px; background: #282018; border-radius: 10px;">
+            <div style="font-size: 10px; color: #8A8A88; margin-bottom: 2px;">未入帳</div>
+            <div style="font-size: 18px; font-weight: bold; color: #E67E22; font-family: monospace;">NT$1,600</div>
+          </div>
+        </div>
+        <div style="text-align: center; margin-top: 6px;">
+          <span style="font-size: 10px; color: #484846; background: #202028; padding: 3px 10px; border-radius: 12px;">← 滑動切換趟數 →</span>
+        </div>
+      </div>
+
+      <!-- 趟次明細 -->
+      <div style="background: #191920; border-radius: 14px; box-shadow: 0 1px 4px rgba(0,0,0,0.3); overflow: hidden; border: 1px solid #28282E;">
+        <div style="padding: 10px 12px; border-bottom: 1px solid #28282E;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FF4D6A" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+              <span style="font-size: 13px; font-weight: bold; color: #E8E8E6;">本週趟次</span>
+              <span style="background: #FF4D6A; color: white; padding: 1px 6px; border-radius: 4px; font-size: 10px; font-weight: bold;">2</span>
+            </div>
+            <span style="font-size: 14px; font-weight: bold; color: #FF4D6A; font-family: monospace;">NT$2,400</span>
+          </div>
+        </div>
+        <div style="padding: 0 12px 10px;">
+          <div style="background: #1A1B22; border-radius: 10px; padding: 8px 10px; margin-top: 8px; border: 1px solid #28282E;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+              <span style="background: #FF4D6A; color: white; padding: 1px 5px; border-radius: 4px; font-size: 10px; font-weight: bold; font-family: monospace;">#20260405-0001</span>
+              <span style="background: #1A2820; color: #28B463; padding: 1px 6px; border-radius: 4px; font-size: 10px; font-weight: bold;">已入帳</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div style="font-size: 11px; color: #8A8A88;">4/5 · 14:00 · 好的車行</div>
+              <span style="font-size: 14px; font-weight: bold; color: #FF4D6A; font-family: monospace;">NT$1,200</span>
+            </div>
+          </div>
+          <div style="background: #1A1B22; border-radius: 10px; padding: 8px 10px; margin-top: 6px; border: 1px solid #28282E; border-left: 3px solid #E67E22;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+              <span style="background: #FF4D6A; color: white; padding: 1px 5px; border-radius: 4px; font-size: 10px; font-weight: bold; font-family: monospace;">#20260406-0001</span>
+              <span style="background: #282018; color: #E67E22; padding: 1px 6px; border-radius: 4px; font-size: 10px; font-weight: bold;">未入帳</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div style="font-size: 11px; color: #8A8A88;">4/6 · 14:00 · 好的車行</div>
+              <span style="font-size: 14px; font-weight: bold; color: #FF4D6A; font-family: monospace;">NT$1,200</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="padding: 10px 12px; border-top: 1px solid #28282E;">
+          <div style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8A8A88" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+              <span style="font-size: 13px; font-weight: bold; color: #8A8A88;">歷史記錄（往前180天）</span>
+              <span style="background: #202028; color: #8A8A88; padding: 1px 6px; border-radius: 4px; font-size: 10px; font-weight: bold;">12</span>
+            </div>
+            <span style="font-size: 14px; font-weight: bold; color: #8A8A88; font-family: monospace;">NT$28,600</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div style="margin-top: 16px; padding: 12px; background: #1A2820; border-radius: 10px; border: 1px solid #28B463;">
+  <p style="font-size: 13px; color: #28B463; margin: 0 0 6px 0;"><strong>C 方案 · 玫瑰金屬調</strong></p>
+  <ul style="font-size: 12px; color: #28B463; margin: 0; padding-left: 1.2rem;">
+    <li>主色：#FF4D6A 玫瑰粉（夜間：#FF7090）</li>
+    <li>背景：#FBF9F5 象牙白（夜間：#0E0E10）</li>
+    <li>輔色：#1A5276 深藍（夜間：#5DADE2）</li>
+    <li>成功：#1E8449（夜間：#28B463）</li>
+    <li>警告：#CA6F1E（夜間：#E67E22）</li>
+    <li>強調：#922B21 暗玫瑰（夜間：同）</li>
+    <li>夜間模式降低藍光，適合駕駛時使用</li>
+  </ul>
+</div>
+</body>
+</html>

@@ -1,0 +1,132 @@
+<h2>司機端卡片 — 三種版面配置方案</h2>
+<p class="subtitle">解決「中間太擁擠」的問題</p>
+
+<div class="section" style="margin-top: 1rem;">
+  <p class="label">問題</p>
+  <p style="margin-top: 0.5rem; color: #717171; font-size: 13px;">金額、按鈕、展開提示全部擠在卡片中央，視覺重心不穩</p>
+</div>
+
+<div class="cards" style="grid-template-columns: 1fr;">
+  <!-- Option A: 金額靠右 -->
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-body">
+      <h3>A. 金額靠右 + 按鈕全寬</h3>
+      <p style="color: #717171; font-size: 13px;">金額移到右側，與日期同一個視覺區塊，按鈕拉滿全寬</p>
+      <div style="background: #FAF7F2; border-radius: 16px; padding: 16px; margin-top: 12px; font-size: 13px;">
+        <!-- 第一行：種類 + 肯驛（靠左）| 日期時間（靠右） -->
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+          <div style="display: flex; gap: 6px;">
+            <span style="background: #E6F1FB; color: #0C447C; padding: 5px 12px; border-radius: 10px; font-size: 14px; font-weight: bold;">接機</span>
+            <span style="background: #F4EFE9; color: #717171; padding: 5px 12px; border-radius: 10px; font-size: 14px; font-weight: bold;">休旅車</span>
+          </div>
+          <div style="text-align: right;">
+            <div style="font-size: 16px; font-weight: bold; color: #222;">4/6 (一)</div>
+            <div style="font-size: 18px; font-weight: bold; color: #222; font-family: monospace;">14:30</div>
+          </div>
+        </div>
+        <!-- 起訖點 -->
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+          <div style="width: 12px; height: 12px; background: #FF385C; border-radius: 50%; flex-shrink: 0;"></div>
+          <span style="font-size: 18px; font-weight: bold; color: #222; flex: 1;">桃園機場第二航廈</span>
+          <span style="color: #DDD; font-size: 18px;">→</span>
+          <span style="font-size: 18px; font-weight: bold; color: #222; flex: 1; text-align: right;">新北市新莊區</span>
+          <div style="width: 12px; height: 12px; background: #DDD; border-radius: 50%; flex-shrink: 0;"></div>
+        </div>
+        <!-- 金額靠右 + 按鈕全寬 -->
+        <div style="margin-bottom: 14px;">
+          <span style="font-size: 32px; font-weight: bold; color: #FF385C; font-family: monospace; display: block; text-align: right;">NT$1,200</span>
+        </div>
+        <button style="background: #FF385C; color: white; border: none; border-radius: 12px; padding: 12px; font-size: 16px; font-weight: bold; width: 100%; margin-bottom: 8px; cursor: pointer;">立即接單</button>
+        <div style="text-align: center; font-size: 11px; color: #B0B0B0;">乘客 / 航班 / 備註 — 點擊展開</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Option B: 三層次分明 -->
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-body">
+      <h3>B. 三層次分明（推薦）</h3>
+      <p style="color: #717171; font-size: 13px;">起訖點 → 金額(大+居中) → 按鈕 → 展開提示，四層拉開層次感</p>
+      <div style="background: #FAF7F2; border-radius: 16px; padding: 16px; margin-top: 12px; font-size: 13px;">
+        <!-- 第一行：種類 + 日期時間 -->
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+          <div style="display: flex; gap: 6px;">
+            <span style="background: #E6F1FB; color: #0C447C; padding: 5px 12px; border-radius: 10px; font-size: 14px; font-weight: bold;">接機</span>
+            <span style="background: #F4EFE9; color: #717171; padding: 5px 12px; border-radius: 10px; font-size: 14px; font-weight: bold;">休旅車</span>
+          </div>
+          <div style="text-align: right;">
+            <div style="font-size: 16px; font-weight: bold; color: #222;">4/6 (一)</div>
+            <div style="font-size: 18px; font-weight: bold; color: #222; font-family: monospace;">14:30</div>
+          </div>
+        </div>
+        <!-- 起訖點 -->
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+          <div style="width: 12px; height: 12px; background: #FF385C; border-radius: 50%; flex-shrink: 0;"></div>
+          <span style="font-size: 18px; font-weight: bold; color: #222; flex: 1;">桃園機場第二航廈</span>
+          <span style="color: #DDD; font-size: 18px;">→</span>
+          <span style="font-size: 18px; font-weight: bold; color: #222; flex: 1; text-align: right;">新北市新莊區</span>
+          <div style="width: 12px; height: 12px; background: #DDD; border-radius: 50%; flex-shrink: 0;"></div>
+        </div>
+        <!-- 金額 大+居中 -->
+        <div style="text-align: center; margin-bottom: 16px;">
+          <span style="font-size: 36px; font-weight: bold; color: #FF385C; font-family: monospace;">NT$1,200</span>
+        </div>
+        <!-- 按鈕 -->
+        <div style="text-align: center; margin-bottom: 16px;">
+          <button style="background: #FF385C; color: white; border: none; border-radius: 12px; padding: 12px 32px; font-size: 16px; font-weight: bold; cursor: pointer;">立即接單</button>
+        </div>
+        <!-- 展開提示 淡化 -->
+        <div style="text-align: center; font-size: 11px; color: #B0B0B0;">點擊查看乘客、航班、備註</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Option C: 展開區放卡片外 -->
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-body">
+      <h3>C. 展開提示移出卡片底部</h3>
+      <p style="color: #717171; font-size: 13px;">卡片本身只留起訖點、金額、日期、按鈕，展開提示變成按鈕下方的灰字</p>
+      <div style="background: #FAF7F2; border-radius: 16px; padding: 16px; margin-top: 12px; font-size: 13px;">
+        <!-- 第一行：種類 + 日期時間 -->
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+          <div style="display: flex; gap: 6px;">
+            <span style="background: #E6F1FB; color: #0C447C; padding: 5px 12px; border-radius: 10px; font-size: 14px; font-weight: bold;">接機</span>
+            <span style="background: #F4EFE9; color: #717171; padding: 5px 12px; border-radius: 10px; font-size: 14px; font-weight: bold;">休旅車</span>
+          </div>
+          <div style="text-align: right;">
+            <div style="font-size: 16px; font-weight: bold; color: #222;">4/6 (一)</div>
+            <div style="font-size: 18px; font-weight: bold; color: #222; font-family: monospace;">14:30</div>
+          </div>
+        </div>
+        <!-- 起訖點 -->
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+          <div style="width: 12px; height: 12px; background: #FF385C; border-radius: 50%; flex-shrink: 0;"></div>
+          <span style="font-size: 18px; font-weight: bold; color: #222; flex: 1;">桃園機場第二航廈</span>
+          <span style="color: #DDD; font-size: 18px;">→</span>
+          <span style="font-size: 18px; font-weight: bold; color: #222; flex: 1; text-align: right;">新北市新莊區</span>
+          <div style="width: 12px; height: 12px; background: #DDD; border-radius: 50%; flex-shrink: 0;"></div>
+        </div>
+        <!-- 金額 -->
+        <div style="text-align: center; margin-bottom: 14px;">
+          <span style="font-size: 34px; font-weight: bold; color: #FF385C; font-family: monospace;">NT$1,200</span>
+        </div>
+        <!-- 按鈕 -->
+        <div style="text-align: center; margin-bottom: 6px;">
+          <button style="background: #FF385C; color: white; border: none; border-radius: 12px; padding: 12px 32px; font-size: 16px; font-weight: bold; cursor: pointer;">立即接單</button>
+        </div>
+      </div>
+      <!-- 展開提示移出卡片 -->
+      <div style="text-align: center; font-size: 11px; color: #B0B0B0; margin-top: 4px; padding: 6px 0;">▼ 乘客、航班、備註</div>
+    </div>
+  </div>
+</div>
+
+<div style="margin-top: 16px; padding: 12px; background: #FFF3E0; border-radius: 10px; border: 1px solid #FFE0B2;">
+  <p style="font-size: 13px; color: #92400E; margin: 0;">
+    <strong>我的推薦：B</strong> — 四層視覺層次，起訖點→金額(最大)→按鈕→展開，淡化的展開提示讓卡片看起來更精緻
+  </p>
+</div>
+
+<style>
+.card-body h3 { margin: 0 0 4px 0; color: #0C447C; }
+</style>

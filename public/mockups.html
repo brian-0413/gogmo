@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mockup 總覽 — goGMO 機場接送派單平台</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #FAF8F5;
+    --card: #FFFFFF;
+    --border: #DDDDDD;
+    --text: #222222;
+    --text-sub: #717171;
+    --accent: #FF385C;
+    --accent2: #0C447C;
+    --tag-bg: #F4EFE9;
+    --adopted: #008A05;
+    --stub: #B0B0B0;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    padding: 2rem;
+  }
+
+  h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+  }
+  .subtitle {
+    color: var(--text-sub);
+    font-size: 0.9rem;
+    margin-bottom: 2rem;
+  }
+
+  .category {
+    margin-bottom: 3rem;
+  }
+  .category-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--accent2);
+    border-bottom: 2px solid var(--accent2);
+    padding-bottom: 0.3rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .category-title .count {
+    background: var(--accent2);
+    color: white;
+    font-size: 0.75rem;
+    padding: 0.1rem 0.5rem;
+    border-radius: 999px;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 1rem;
+  }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: box-shadow 0.2s;
+    display: flex;
+    flex-direction: column;
+  }
+  .card:hover {
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  }
+
+  .card-header {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+  .card-num {
+    background: var(--accent);
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.2rem 0.5rem;
+    border-radius: 6px;
+    white-space: nowrap;
+  }
+  .card-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    flex: 1;
+  }
+  .card-badge {
+    font-size: 0.65rem;
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .badge-adopted {
+    background: #E8F5E8;
+    color: var(--adopted);
+  }
+  .badge-stub {
+    background: #F7F7F7;
+    color: var(--stub);
+  }
+
+  .preview {
+    width: 100%;
+    height: 220px;
+    border: none;
+    display: block;
+  }
+
+  .card-footer {
+    padding: 0.5rem 1rem;
+    font-size: 0.75rem;
+    color: var(--text-sub);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--tag-bg);
+  }
+  .card-footer .path {
+    font-family: 'SF Mono', 'Consolas', monospace;
+    font-size: 0.65rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 70%;
+  }
+  .card-footer .lines {
+    white-space: nowrap;
+    font-size: 0.65rem;
+  }
+
+  .note {
+    background: #FFF8E1;
+    border: 1px solid #FFE082;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    font-size: 0.8rem;
+    color: #5D4037;
+    margin-bottom: 2rem;
+  }
+
+  .legend {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.75rem;
+    color: var(--text-sub);
+    margin-bottom: 2rem;
+  }
+  .legend span::before {
+    content: '';
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+    margin-right: 4px;
+    vertical-align: middle;
+  }
+  .legend .adopted::before { background: #E8F5E8; border: 1px solid #008A05; }
+  .legend .stub::before { background: #F7F7F7; border: 1px solid #B0B0B0; }
+
+  @media (max-width: 600px) {
+    .grid { grid-template-columns: 1fr; }
+    body { padding: 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<h1>Mockup 總覽</h1>
+<p class="subtitle">goGMO 機場接送派單平台 — 所有 UI Mockup 索引（共 41 個）</p>
+
+<div class="legend">
+  <span class="adopted">已實作</span>
+  <span class="stub">草稿/未實作</span>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- 1. 小車頭 SelfDispatchChat 對話式發單 -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="category">
+  <div class="category-title">
+    小車頭 SelfDispatchChat 對話式發單
+    <span class="count">4 個</span>
+  </div>
+  <div class="grid">
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-num">M-01</span>
+        <span class="card-title">小車頭專區 — 表單分組設計</span>
+        <span class="card-badge badge-stub">草稿</span>
+      </div>
+      <iframe class="preview" src="/mockups/01-form-layout.html"></iframe>
+      <div class="card-footer">
+        <span class="path">.superpowers/brainstorm/01-form-layout.html</span>
+        <span class="lines">131 行</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-num">M-02</span>
+        <span class="card-title">小車頭專區 — 對話式設計</span>
+        <span class="card-badge badge-stub">草稿</span>
+      </div>
+      <iframe class="preview" src="/mockups/02-chat-flow.html"></iframe>
+      <div class="card-footer">
+        <span class="path">.superpowers/brainstorm/02-chat-flow.html</span>
+        <span class="lines">281 行</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-num">M-03</span>
+        <span class="card-title">小車頭專區 — 完整對話流程（14 步）</span>
+        <span class="card-badge badge-adopted">已實作</span>
+      </div>
+      <iframe class="preview" src="/mockups/03-full-chat.html"></iframe>
+      <div class="card-footer">
+        <span class="path">.superpowers/brainstorm/03-full-chat.html</span>
+        <span class="lines">382 行</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-num">M-04</span>
+        <span class="card-title">小車頭 Chat UI Mockup（最終版）</span>
+        <span class="card-badge badge-adopted">已實作</span>
+      </div>
+      <iframe class="preview" src="/mockups/self-dispatch-mockup.html"></iframe>
+      <div class="card-footer">
+        <span class="path">self-dispatch-mockup.html</span>
+        <span class="lines">847 行</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- 2. 首頁 Landing Page -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="category">
+  <div class="category-title">
+    首頁 Landing Page
+    <span class="count">8 個</span>
+  </div>
+  <div class="grid">
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-num">M-05</span>
+        <span class="card-title">Landing A — 滑動堆疊式</span>
+        <span class="card-badge badge-stub">未實作</span>
+      </div>
+      <iframe class="preview" src="/mockups/landing-a-hero-stacked.html"></iframe>
+      <div class="card-footer">
+        <span class="path">...landing-mockups/landing-a-hero-stacked.html</span>
+        <span class="lines">190 行</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-num">M-06</span>
+        <span class="card-title">Landing B — 分欄對比式</span>
+        <span class="card-badge badge-stub">未實作</span>
+      </div>
+      <iframe class="preview" src="/mockups/landing-b-split-contrast.html"></iframe>
+      <div class="card-footer">
+        <span class="path">...landing-mockups/landing-b-split-contrast.html</span>
+        <span class="lines">207 行</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-num">M-07</span>
+        <span class="card-title">Landing B v2 — 分欄對比式（調整版）</span>
+        <span class="card-badge badge-stub">未實作</span>
+      </div>
+      <iframe class="preview" src="/mockups/landing-b-v2-split-contrast.html"></iframe>
+      <div class="card-footer">
+        <span class="path">...landing-mockups/landing-b-v2-split-contrast.html</span>
+        <span class="lines">231 行</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-num">M-08</span>
+        <span class="card-title">Landing B v3 — Hero 動態輪播版</span>
+        <span class="card-badge badge-stub">未實作</span>
+      </div>
+      <iframe class="preview" src="/mockups/landing-b-v3-hero-carousel.html"></iframe>
+      <div class="card-footer">
+        <span class="path">...landing-mockups/landing-b-v3-hero-carousel.html</span>
+        <span class="lines">307 行</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-num">M-09</span>
+        <span class="card-title">Landing B v4 — 滑出滑入輪播版</span>
+        <span class="card-badge badge-stub">未實作</span>
+      </div>
+      <iframe class="preview" src="/mockups/landing-b-v4-slide-animation.html"></iframe>
+      <div class="card-footer">
+        <span class="path">...landing-mockups/landing-b-v4-slide-animation.html</span>
+        <span class="lines">334 行</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-num">M-10</span>
+        <span class="card-title">Landing B v5 — A/B 分區輪播</span>
+        <span class="card-badge badge-stub">未實作</span>
+      </div>
+      <iframe class="preview" src="/mockups/landing-b-v5-split-ab.html"></iframe>
+      <div class="card-footer">
+        <span class="path">...landing-mockups/landing-b-v5-split-ab.html</span>
+        <span class="lines">424 行</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-num">M-11</span>
+        <span class="card-title">Landing B v6 — 圓角卡片配色組（最終版）</span>
+        <span class="card-badge badge-adopted">已實作</span>
+      </div>
+      <iframe class="preview" src="/mockups/landing-b-v6-rounded-cards.html"></iframe>
+      <div class="card-footer">
+        <span class="path">...landing-mockups/landing-b-v6-rounded-cards.html</span>
+        <span class="lines">580 行</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-num">M-12</span>
+        <span class="card-title">Landing C — 報紙編排式</span>
+        <span class="card-badge badge-stub">未實作</span>
+      </div>
+      <iframe class="preview" src="/mockups/landing-c-editorial-alternating.html"></iframe>
+      <div class="card-footer">
+        <span class="path">...landing-mockups/landing-c-editorial-alternating.html</span>
+        <span class="lines">227 行</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- 3. 司機端 — 卡片版面與架構 -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="category">
+  <div class="category-title">
+    司機端 — 卡片版面與架構
+    <span class="count">7 個</span>
+  </div>
+  <div class="grid">
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-num">M-13</span>
+        <span class="card-title">司機端 — 頁面架構</span>
+        <span class="card-badge badge-adopted">已實作</span>
+      </div>
+      <iframe class="preview" src="/mockups/page-architecture.html"></iframe>
+      <div class="card-footer">
+        <span class="path">...11288-.../content/page-architecture.html</span>
+        <span class="lines">205 行</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-num">M-14</span>
+        <span class="card-title">司機端 — 全 Tab 總覽</span>
+        <span class="card-badge badge-adopted">已實作</span>
+      </div>
+      <iframe class="preview" src="/mockups/all-tabs-overview.html"></iframe>
+      <div class="card-footer">
+        <span class="path">...11288-.../content/all-tabs-overview.html</span>
+        <span class="lines">146 行</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-num">M-15</span>
+        <span class="card-title">司機端 — 卡片設計 v1</span>
+        <span class="card-badge badge-adopted">已實作</span>
+      </div>
+      <iframe class="preview" src="/mockups/card-designs.html"></iframe>
+      <div class="card-footer">
+        <span class="path">...11288-.../content/card-designs.html</span>
+        <span class="lines">150 行</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-num">M-16</span>
+        <span class="card-title">司機端 — 卡片設計 v2</span>
+        <span class="card-badge badge-adopted">已實作</span>
+      </div>
+      <iframe class="preview" src="/mockups/card-designs-v2.html"></iframe>
+      <div class="card-footer">
+        <span class="path">...11288-.../content/card-designs-v2.html</span>
+        <span class="lines">168 行</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-num">M-17</span>
+        <span class="card-title">司機端 — 卡片設計 v3</span>
+        <span class="card-badge badge-adopted">已實作</span>
+      </div>
+      <iframe class="preview" src="/mockups/card-designs-v3.html"></iframe>
+      <div class="card-footer">
+        <span class="path">...11288-.../content/card-designs-v3.html</span>
+        <span class="lines">159 行</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-num">M-18</span>
+        <span class="card-title">司機端 — 版面選項</span>
+        <span class="card-badge badge-adopted">已實作</span>
+      </div>
+      <iframe class="preview" src="/mockups/driver-layout-options.html"></iframe>
+      <div class="card-footer">
+        <span class="path">...11288-.../content/driver-layout-options.html</span>
+        <span class="lines">132 行</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-num">M-19</span>
+        <span class="card-title">司機端 — 版面最終版</span>
+        <span class="card-badge badge-adopted">已實作</span>
+      </div>
+      <iframe class="preview" src="/mockups/driver-layout-final.html"></iframe>
+      <div class="card-footer">
+        <span class="path">...11288-.../content/driver-layout-final.html</span>
+        <span class="lines">71 行</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- 4. 司機端 — 各 Tab 詳細頁面 -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="category">
+  <div class="category-title">
+    司機端 — 各 Tab 詳細頁面
+    <span class="count">9 個</span>
+  </div>
+  <div class="grid">
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-num">M-20</span>
+        <span class="card-title">司機端總覽 v1</span>
+        <span class="card-badge badge-adopted">已實作</span>
+      </div>
+      <iframe class="preview" src="/mockups/overview.html"></iframe>
+      <div class="card-footer">
+        <span class="path">...11424-.../content/overview.html</span>
+        <span class="lines">144 行</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-num">M-21</span>
+        <span class="card-title">司機端總覽 v2</span>
+        <span class="card-badge badge-adopted">已實作</span>
+      </div>
+      <iframe class="preview" src="/mockups/overview-v2.html"></iframe>
+      <div class="card-footer">
+        <span class="path">...11424-.../content/overview-v2.html</span>
+        <span class="lines">136 行</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-num">M-22</span>
+        <span class="card-title">司機端 — 接單大廳 v1</span>
+        <span class="card-badge badge-adopted">已實作</span>
+      </div>
+      <iframe class="preview" src="/mockups/driver-lobby.html"></iframe>
+      <div class="card-footer">
+        <span class="path">...11471-.../content/driver-lobby.html</span>
+        <span class="lines">177 行</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-num">M-23</span>
+        <span class="card-title">司機端 — 接單大廳 v2</span>
+        <span class="card-badge badge-adopted">已實作</span>
+      </div>
+      <iframe class="preview" src="/mockups/driver-lobby-v2.html"></iframe>
+      <div class="card-footer">
+        <span class="path">...11471-.../content/driver-lobby-v2.html</span>
+        <span class="lines">176 行</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-num">M-24</span>
+        <span class="card-title">司機端 — 我的行程</span>
+        <span class="card-badge badge-adopted">已實作</span>
+      </div>
+      <iframe class="preview" src="/mockups/driver-my-orders.html"></iframe>
+      <div class="card-footer">
+        <span class="path">...11471-.../content/driver-my-orders.html</span>
+        <span class="lines">249 行</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-num">M-25</span>
+        <span class="card-title">司機端 — 智慧排班</span>
+        <span class="card-badge badge-adopted">已實作</span>
+      </div>
+      <iframe class="preview" src="/mockups/driver-smart-scheduling.html"></iframe>
+      <div class="card-footer">
+        <span class="path">...11471-.../content/driver-smart-scheduling.html</span>
+        <span class="lines">211 行</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-num">M-26</span>
+        <span class="card-title">司機端 — 訊息中心</span>
+        <span class="card-badge badge-adopted">已實作</span>
+      </div>
+      <iframe class="preview" src="/mockups/driver-messages.html"></iframe>
+      <div class="card-footer">
+        <span class="path">...11565-.../content/driver-messages.html</span>
+        <span class="lines">332 行</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-num">M-27</span>
+        <span class="card-title">司機端 — 個人資料</span>
+        <span class="card-badge badge-adopted">已實作</span>
+      </div>
+      <iframe class="preview" src="/mockups/driver-profile.html"></iframe>
+      <div class="card-footer">
+        <span class="path">...11565-.../content/driver-profile.html</span>
+        <span class="lines">265 行</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-num">M-28</span>
+        <span class="card-title">司機端 — 智慧排單流程 Sheet</span>
+        <span class="card-badge badge-adopted">已實作</span>
+      </div>
+      <iframe class="preview" src="/mockups/driver-smart-schedule-sheet.html"></iframe>
+      <div class="card-footer">
+        <span class="path">...11565-.../content/driver-smart-schedule-sheet.html</span>
+        <span class="lines">660 行</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- 5. 派單方端 -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="category">
+  <div class="category-title">
+    派單方端
+    <span class="count">7 個</span>
+  </div>
+  <div class="grid">
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-num">M-29</span>
+        <span class="card-title">派單方 — 行控中心</span>
+        <span class="card-badge badge-adopted">已實作</span>
+      </div>
+      <iframe class="preview" src="/mockups/dispatcher-fleet-control.html"></iframe>
+      <div class="card-footer">
+        <span class="path">...11565-.../content/dispatcher-fleet-control.html</span>
+        <span class="lines">383 行</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-num">M-30</span>
+        <span class="card-title">派單方 — 發單流程</span>
+        <span class="card-badge badge-adopted">已實作</span>
+      </div>
+      <iframe class="preview" src="/mockups/dispatcher-order-creation.html"></iframe>
+      <div class="card-footer">
+        <span class="path">...11565-.../content/dispatcher-order-creation.html</span>
+        <span class="lines">327 行</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-num">M-31</span>
+        <span class="card-title">派單方 — 公司資料</span>
+        <span class="card-badge badge-adopted">已實作</span>
+      </div>
+      <iframe class="preview" src="/mockups/dispatcher-company-profile.html"></iframe>
+      <div class="card-footer">
+        <span class="path">...11565-.../content/dispatcher-company-profile.html</span>
+        <span class="lines">169 行</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-num">M-32</span>
+        <span class="card-title">派單方 — 訊息中心</span>
+        <span class="card-badge badge-adopted">已實作</span>
+      </div>
+      <iframe class="preview" src="/mockups/dispatcher-messages.html"></iframe>
+      <div class="card-footer">
+        <span class="path">...11565-.../content/dispatcher-messages.html</span>
+        <span class="lines">307 行</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-num">M-33</span>
+        <span class="card-title">派單方 — 帳務中心 v1</span>
+        <span class="card-badge badge-adopted">已實作</span>
+      </div>
+      <iframe class="preview" src="/mockups/settlement-center.html"></iframe>
+      <div class="card-footer">
+        <span class="path">...11565-.../content/settlement-center.html</span>
+        <span class="lines">192 行</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-num">M-34</span>
+        <span class="card-title">派單方 — 帳務中心 v2</span>
+        <span class="card-badge badge-adopted">已實作</span>
+      </div>
+      <iframe class="preview" src="/mockups/settlement-center-v2.html"></iframe>
+      <div class="card-footer">
+        <span class="path">...11565-.../content/settlement-center-v2.html</span>
+        <span class="lines">289 行</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-num">M-35</span>
+        <span class="card-title">派單方 — 帳務中心 C 方案配色</span>
+        <span class="card-badge badge-adopted">已實作</span>
+      </div>
+      <iframe class="preview" src="/mockups/settlement-center-c.html"></iframe>
+      <div class="card-footer">
+        <span class="path">...11565-.../content/settlement-center-c.html</span>
+        <span class="lines">271 行</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- 6. 全域配色 -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="category">
+  <div class="category-title">
+    全域配色與系統設計
+    <span class="count">4 個</span>
+  </div>
+  <div class="grid">
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-num">M-36</span>
+        <span class="card-title">配色方案比較</span>
+        <span class="card-badge badge-adopted">已實作</span>
+      </div>
+      <iframe class="preview" src="/mockups/color-schemes.html"></iframe>
+      <div class="card-footer">
+        <span class="path">...11565-.../content/color-schemes.html</span>
+        <span class="lines">338 行</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-num">M-37</span>
+        <span class="card-title">司機端總覽（舊版）</span>
+        <span class="card-badge badge-stub">草稿</span>
+      </div>
+      <iframe class="preview" src="/mockups/overview-v2.html"></iframe>
+      <div class="card-footer">
+        <span class="path">...11471-.../content/overview-v2.html</span>
+        <span class="lines">135 行</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-num">M-38</span>
+        <span class="card-title">派單方 — 帳務中心（早期版）</span>
+        <span class="card-badge badge-stub">草稿</span>
+      </div>
+      <iframe class="preview" src="/mockups/settlement-center.html"></iframe>
+      <div class="card-footer">
+        <span class="path">...11471-.../content/settlement-center.html</span>
+        <span class="lines">285 行</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-num">M-39</span>
+        <span class="card-title">Brainstorm Index</span>
+        <span class="card-badge badge-stub">索引</span>
+      </div>
+      <iframe class="preview" src="/mockups/index.html"></iframe>
+      <div class="card-footer">
+        <span class="path">.superpowers/brainstorm/index.html</span>
+        <span class="lines">92 行</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- 7. 早期 Brainstorm 草稿 -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="category">
+  <div class="category-title">
+    早期 Brainstorm 草稿
+    <span class="count">3 個</span>
+  </div>
+  <div class="grid">
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-num">M-40</span>
+        <span class="card-title">Brainstorm 01-intro</span>
+        <span class="card-badge badge-stub">草稿</span>
+      </div>
+      <iframe class="preview" src="/mockups/01-intro.html"></iframe>
+      <div class="card-footer">
+        <span class="path">...2345-.../content/01-intro.html</span>
+        <span class="lines">25 行</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-num">M-41</span>
+        <span class="card-title">Brainstorm 01-intro</span>
+        <span class="card-badge badge-stub">草稿</span>
+      </div>
+      <iframe class="preview" src="/mockups/01-intro.html"></iframe>
+      <div class="card-footer">
+        <span class="path">...2430-.../content/01-intro.html</span>
+        <span class="lines">27 行</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-num">M-42</span>
+        <span class="card-title">Brainstorm 01-intro</span>
+        <span class="card-badge badge-stub">草稿</span>
+      </div>
+      <iframe class="preview" src="/mockups/01-intro.html"></iframe>
+      <div class="card-footer">
+        <span class="path">...2462-.../content/01-intro.html</span>
+        <span class="lines">17 行</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="note">
+  💡 直接在瀏覽器中開啟本頁即可預覽所有 mockup。<br>
+  編號格式：M-01 ~ M-42，未實作（草稿）共有 12 個，已實作 30 個。
+</div>
+
+</body>
+</html>

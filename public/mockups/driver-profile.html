@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>司機端個人資料</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft JhengHei", "PingFang TC", sans-serif; background: #111; color: #fff; padding: 16px; }
+  h2 { text-align: center; color: #FF4D6A; margin: 0 0 4px; font-size: 18px; }
+  .subtitle { text-align: center; color: #888; font-size: 12px; margin: 0 0 16px; }
+  .section-title { font-size: 10px; font-weight: bold; color: #8A8A88; letter-spacing: 1px; text-transform: uppercase; margin: 0 0 8px 4px; }
+</style>
+</head>
+<body>
+<h2>司機端個人資料</h2>
+<p class="subtitle">夜間模式在 Header · 三大區塊：基本資料 / 會員中心 / 文件</p>
+
+<!-- ========== 手機框架 ========== -->
+<div style="background: #0E0E10; border-radius: 16px; max-width: 420px; margin: 0 auto; overflow: hidden;">
+
+  <!-- ===== Header（含夜間模式按鈕）===== -->
+  <div style="background: #191920; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #28282E;">
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <div style="width: 40px; height: 40px; background: #FF4D6A; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: bold; color: white;">王</div>
+      <div>
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <span style="font-size: 15px; font-weight: bold; color: #E8E8E6;">王小明</span>
+          <span style="background: #F0EBF8; color: #922B21; padding: 2px 6px; border-radius: 4px; font-size: 9px; font-weight: bold;">Premium</span>
+        </div>
+        <div style="font-size: 11px; color: #8A8A88;">ABC-1234 · 休旅車</div>
+      </div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <div style="background: #922B21; color: white; padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: bold; font-family: monospace;">1,250 點</div>
+      <!-- 夜間模式切換 -->
+      <button id="themeBtn" onclick="toggleTheme()" style="background: #28282E; border: none; border-radius: 8px; padding: 6px 8px; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FF4D6A" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <span style="font-size: 10px; color: #8A8A88;">夜間</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ===== 頁面內容 ===== -->
+  <div style="padding: 14px;">
+
+    <!-- ===== 區塊一：會員中心 ===== -->
+    <div style="margin-bottom: 16px;">
+      <div class="section-title">會員中心</div>
+      <div style="background: #191920; border-radius: 14px; padding: 14px; border: 1px solid #28282E;">
+
+        <!-- 等級 + 點數 -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="width: 44px; height: 44px; background: #2A1A1E; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid #FF4D6A;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF4D6A" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            </div>
+            <div>
+              <div style="font-size: 15px; font-weight: bold; color: #E8E8E6;">Premium 會員</div>
+              <div style="font-size: 11px; color: #8A8A88;">到期日：2026/07/06</div>
+            </div>
+          </div>
+          <button style="background: #F0EBF8; color: #922B21; border: none; border-radius: 8px; padding: 6px 12px; font-size: 11px; font-weight: bold; cursor: pointer;">續訂</button>
+        </div>
+
+        <!-- 點數餘額 -->
+        <div style="background: #141418; border-radius: 12px; padding: 12px; margin-bottom: 10px; border: 1px solid #28282E;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <div style="font-size: 12px; color: #8A8A88;">點數餘額</div>
+            <div style="font-size: 20px; font-weight: bold; color: #FF4D6A; font-family: monospace;">1,250</div>
+          </div>
+          <div style="height: 4px; background: #28282E; border-radius: 2px; margin-bottom: 6px;">
+            <div style="height: 4px; width: 25%; background: #FF4D6A; border-radius: 2px;"></div>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 10px; color: #484846;">
+            <span>距離 Premium 目標：3,750 點</span>
+            <span>25%</span>
+          </div>
+        </div>
+
+        <!-- 充值 + 升級按鈕 -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+          <button style="background: #FF4D6A; color: white; border: none; border-radius: 10px; padding: 10px; font-size: 13px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            充值點數
+          </button>
+          <button style="background: #2A1A1E; color: #FF7090; border: 1px solid #FF4D6A; border-radius: 10px; padding: 10px; font-size: 13px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FF7090" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            升級 Premium
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== 區塊二：基本資料 ===== -->
+    <div style="margin-bottom: 16px;">
+      <div class="section-title">基本資料</div>
+      <div style="background: #191920; border-radius: 14px; padding: 14px; border: 1px solid #28282E;">
+
+        <!-- 頭像 + 姓名 -->
+        <div style="display: flex; gap: 14px; margin-bottom: 14px; align-items: center;">
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 6px;">
+            <div style="width: 60px; height: 60px; background: #FF4D6A; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: bold; color: white; cursor: pointer;">王</div>
+            <div style="font-size: 10px; color: #6B6B6B; text-align: center;">點擊更換<br>（非必須）</div>
+          </div>
+          <div style="flex: 1;">
+            <div style="font-size: 10px; color: #6B6B6B; margin-bottom: 2px;">姓名</div>
+            <div style="background: #0E0E10; border: 1px solid #28282E; border-radius: 8px; padding: 8px 10px; font-size: 13px; color: #8A8A88; margin-bottom: 8px;">王小明 <span style="font-size: 10px; color: #484846;">（由客服協助修改）</span></div>
+            <div style="font-size: 10px; color: #484846;">車牌：ABC-1234 <span style="color: #484846;">（由客服協助修改）</span></div>
+          </div>
+        </div>
+
+        <!-- 可編輯欄位 -->
+        <div style="border-top: 1px solid #28282E; padding-top: 12px;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            <div>
+              <div style="font-size: 10px; color: #6B6B6B; margin-bottom: 2px;">聯絡電話 <span style="color: #FF4D6A;">*</span></div>
+              <div style="background: #141418; border: 1px solid #FF4D6A; border-radius: 8px; padding: 8px 10px; font-size: 13px; color: #E8E8E6; display: flex; justify-content: space-between; align-items: center;">
+                <span>0912-345-678</span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6B6B6B" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              </div>
+            </div>
+            <div>
+              <div style="font-size: 10px; color: #6B6B6B; margin-bottom: 2px;">Line ID（選填）</div>
+              <div style="background: #141418; border: 1px solid #28282E; border-radius: 8px; padding: 8px 10px; font-size: 13px; color: #484846; display: flex; justify-content: space-between; align-items: center;">
+                <span>尚未設定</span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6B6B6B" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              </div>
+            </div>
+          </div>
+          <div style="font-size: 10px; color: #484846; margin-top: 8px;">車牌、廠牌、車型、座椅數請聯繫客服修改（需同步更新行照）</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== 區塊三：文件管理 ===== -->
+    <div style="margin-bottom: 16px;">
+      <div class="section-title">文件管理</div>
+      <div style="background: #191920; border-radius: 14px; padding: 14px; border: 1px solid #28282E;">
+
+        <!-- 提示 -->
+        <div style="background: #141418; border-radius: 10px; padding: 10px 12px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; border: 1px solid #28282E;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5DADE2" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <div style="font-size: 11px; color: #8A8A88; line-height: 1.5;">三證為帳號啟用必要條件<br><span style="color: #CA6F1E;">逾期或過期皆無法接單</span></div>
+        </div>
+
+        <!-- 職業小型車駕照 -->
+        <div style="background: #141418; border-radius: 12px; padding: 12px; margin-bottom: 8px; border: 1px solid #28282E; display: flex; gap: 10px; align-items: center;">
+          <div style="width: 48px; height: 48px; background: #1A1B22; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 1px solid #28282E;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF4D6A" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+          </div>
+          <div style="flex: 1;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+              <span style="font-size: 13px; font-weight: bold; color: #E8E8E6;">職業小型車駕照</span>
+              <span style="background: #1A2820; color: #28B463; padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: bold;">有效</span>
+            </div>
+            <div style="font-size: 11px; color: #8A8A88;">有效期至：2027/06/15</div>
+          </div>
+          <button style="background: #28282E; border: none; border-radius: 8px; padding: 6px 10px; font-size: 11px; color: #8A8A88; cursor: pointer;">查看</button>
+        </div>
+
+        <!-- R車行照（30天內到期） -->
+        <div style="background: #141418; border-radius: 12px; padding: 12px; margin-bottom: 8px; border: 1px solid #CA6F1E; display: flex; gap: 10px; align-items: center;">
+          <div style="width: 48px; height: 48px; background: #282018; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 1px solid #CA6F1E;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#CA6F1E" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+          </div>
+          <div style="flex: 1;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+              <span style="font-size: 13px; font-weight: bold; color: #E8E8E6;">R車行照</span>
+              <span style="background: #282018; color: #E67E22; padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: bold;">30天後到期</span>
+            </div>
+            <div style="font-size: 11px; color: #E67E22;">有效期至：2026/05/06 ⚠️</div>
+          </div>
+          <button style="background: #28282E; border: none; border-radius: 8px; padding: 6px 10px; font-size: 11px; color: #8A8A88; cursor: pointer;">更新</button>
+        </div>
+
+        <!-- 乘客責任險 -->
+        <div style="background: #141418; border-radius: 12px; padding: 12px; border: 1px solid #28282E; display: flex; gap: 10px; align-items: center;">
+          <div style="width: 48px; height: 48px; background: #1A1B22; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 1px solid #28282E;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF4D6A" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <div style="flex: 1;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+              <span style="font-size: 13px; font-weight: bold; color: #E8E8E6;">乘客責任險</span>
+              <span style="background: #1A2820; color: #28B463; padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: bold;">有效</span>
+            </div>
+            <div style="font-size: 11px; color: #8A8A88;">有效期至：2027/03/01 · NT$500萬（含）以上</div>
+          </div>
+          <button style="background: #28282E; border: none; border-radius: 8px; padding: 6px 10px; font-size: 11px; color: #8A8A88; cursor: pointer;">查看</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== 區塊四：其他設定 ===== -->
+    <div style="margin-bottom: 16px;">
+      <div class="section-title">其他</div>
+      <div style="background: #191920; border-radius: 14px; overflow: hidden; border: 1px solid #28282E;">
+        <div style="padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #28282E; cursor: pointer;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8A8A88" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            <span style="font-size: 13px; color: #E8E8E6;">推播通知設定</span>
+          </div>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#484846" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+        <div style="padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #28282E; cursor: pointer;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8A8A88" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            <span style="font-size: 13px; color: #E8E8E6;">隱私權政策</span>
+          </div>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#484846" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+        <div style="padding: 12px 14px; cursor: pointer;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#E74C3C" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            <span style="font-size: 13px; color: #E74C3C;">登出</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ===== 底部 Tab Bar ===== -->
+  <div style="background: #191920; padding: 8px 4px; border-top: 1px solid #28282E;">
+    <div style="display: flex; gap: 2px;">
+      <div style="flex: 1; display: flex; flex-direction: column; align-items: center; padding: 8px 4px;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6B6B6B" stroke-width="2" style="margin-bottom: 3px;"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        <span style="font-size: 9px; color: #6B6B6B;">接單</span>
+      </div>
+      <div style="flex: 1; display: flex; flex-direction: column; align-items: center; padding: 8px 4px;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6B6B6B" stroke-width="2" style="margin-bottom: 3px;"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span style="font-size: 9px; color: #6B6B6B;">行程</span>
+      </div>
+      <div style="flex: 1; display: flex; flex-direction: column; align-items: center; padding: 8px 4px;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6B6B6B" stroke-width="2" style="margin-bottom: 3px;"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        <span style="font-size: 9px; color: #6B6B6B;">帳務</span>
+      </div>
+      <div style="flex: 1; display: flex; flex-direction: column; align-items: center; padding: 8px 4px;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6B6B6B" stroke-width="2" style="margin-bottom: 3px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span style="font-size: 9px; color: #6B6B6B;">訊息</span>
+      </div>
+      <div style="flex: 1; display: flex; flex-direction: column; align-items: center; padding: 8px 4px; border-radius: 10px; background: #2A1A1E;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF4D6A" stroke-width="2" style="margin-bottom: 3px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span style="font-size: 9px; color: #FF4D6A; font-weight: bold;">我的</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- 分隔 -->
+<div style="text-align: center; margin: 20px 0; font-size: 12px; color: #484846;">─── 說明 ───</div>
+
+<div style="background: #1A2820; border-radius: 10px; padding: 12px; border: 1px solid #28B463; max-width: 420px; margin: 0 auto;">
+  <p style="font-size: 13px; color: #28B463; margin: 0 0 6px 0;"><strong>個人資料頁設計要點</strong></p>
+  <ul style="font-size: 12px; color: #28B463; margin: 0; padding-left: 1.2rem;">
+    <li><strong>Header</strong>：夜間模式按鈕（月亮 icon），任何頁面都能快速切換</li>
+    <li><strong>會員中心</strong>：Premium 等級顯示、點數餘額 + 進度條、充值/升級按鈕</li>
+    <li><strong>基本資料</strong>：頭像（非必須）/ 姓名 / 車牌 — 僅電話、Line ID 可自行編輯；其餘由客服協助修改</li>
+    <li><strong>文件管理</strong>：職業小型車駕照 / R車行照 / 乘客責任險 500萬（含）以上，含照片和有效日期</li>
+    <li><strong>三證審核</strong>：三證為帳號啟用必要條件，逾期或過期皆無法接單，到期前 30 天警告（橙）</li>
+    <li><strong>其他</strong>：推播設定、隱私政策、登出</li>
+  </ul>
+</div>
+</body>
+</html>

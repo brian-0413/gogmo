@@ -1,0 +1,71 @@
+<h2>司機端卡片 — B + C 混合版</h2>
+<p class="subtitle">四層次分明 + 展開提示移出卡片底部</p>
+
+<div class="cards" style="grid-template-columns: 1fr;">
+  <div class="card" data-choice="final" onclick="toggleSelect(this)">
+    <div class="card-body">
+      <h3>司機端卡片 — 定案版</h3>
+      <p style="color: #717171; font-size: 13px;">結合 B 的四層次 + C 的展開提示外移</p>
+      <div style="background: #FAF7F2; border-radius: 16px; padding: 16px; margin-top: 12px; font-size: 13px;">
+        <!-- 第一行：種類 + 日期時間 -->
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+          <div style="display: flex; gap: 6px;">
+            <span style="background: #E6F1FB; color: #0C447C; padding: 5px 12px; border-radius: 10px; font-size: 14px; font-weight: bold;">接機</span>
+            <span style="background: #F4EFE9; color: #717171; padding: 5px 12px; border-radius: 10px; font-size: 14px; font-weight: bold;">休旅車</span>
+            <span style="background: #F3E8FF; color: #6B21A8; padding: 5px 12px; border-radius: 10px; font-size: 14px; font-weight: bold;">肯驛</span>
+          </div>
+          <div style="text-align: right;">
+            <div style="font-size: 16px; font-weight: bold; color: #222;">4/6 (一)</div>
+            <div style="font-size: 20px; font-weight: bold; color: #222; font-family: monospace;">14:30</div>
+          </div>
+        </div>
+        <!-- 起訖點 -->
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+          <div style="width: 12px; height: 12px; background: #FF385C; border-radius: 50%; flex-shrink: 0;"></div>
+          <span style="font-size: 18px; font-weight: bold; color: #222; flex: 1;">桃園機場第二航廈</span>
+          <span style="color: #DDD; font-size: 18px;">→</span>
+          <span style="font-size: 18px; font-weight: bold; color: #222; flex: 1; text-align: right;">新北市新莊區</span>
+          <div style="width: 12px; height: 12px; background: #DDD; border-radius: 50%; flex-shrink: 0;"></div>
+        </div>
+        <!-- 金額 -->
+        <div style="text-align: center; margin-bottom: 16px;">
+          <span style="font-size: 36px; font-weight: bold; color: #FF385C; font-family: monospace;">NT$1,200</span>
+        </div>
+        <!-- 按鈕 -->
+        <div style="text-align: center; margin-bottom: 4px;">
+          <button style="background: #FF385C; color: white; border: none; border-radius: 12px; padding: 12px 32px; font-size: 16px; font-weight: bold; cursor: pointer;">立即接單</button>
+        </div>
+      </div>
+      <!-- 展開提示移出卡片 -->
+      <div style="text-align: center; font-size: 11px; color: #B0B0B0; margin-top: 6px; padding: 6px 0;">▼ 乘客、航班、備註</div>
+    </div>
+  </div>
+</div>
+
+<div style="margin-top: 16px;">
+  <h3 style="font-size: 15px; margin-bottom: 12px;">三種角色卡片 — 定案摘要</h3>
+  <div style="display: flex; flex-direction: column; gap: 10px;">
+    <div style="background: #F4EFE9; border-radius: 12px; padding: 12px;">
+      <div style="font-size: 13px; font-weight: bold; color: #FF385C; margin-bottom: 4px;">首頁卡片</div>
+      <div style="font-size: 12px; color: #717171;">單號 + 狀態 → 種類 → 起訖點(17px加粗同行) → 日期 + 金額(26px)</div>
+    </div>
+    <div style="background: #E6F1FB; border-radius: 12px; padding: 12px;">
+      <div style="font-size: 13px; font-weight: bold; color: #0C447C; margin-bottom: 4px;">司機端卡片</div>
+      <div style="font-size: 12px; color: #717171;">種類+肯驛 → 起訖點(18px同行) → 金額(36px) → 按鈕 → ▼展開(卡片外)</div>
+    </div>
+    <div style="background: #E8F5E8; border-radius: 12px; padding: 12px;">
+      <div style="font-size: 13px; font-weight: bold; color: #008A05; margin-bottom: 4px;">派單方卡片 ✓</div>
+      <div style="font-size: 12px; color: #717171;">單號 → 進度條(最顯眼) → 司機資訊 → 起訖點 → 金額</div>
+    </div>
+  </div>
+</div>
+
+<div style="margin-top: 16px; padding: 12px; background: #E8F5E8; border-radius: 10px; border: 1px solid #C8E6C9;">
+  <p style="font-size: 13px; color: #2E7D32; margin: 0;">
+    <strong>共同語言：</strong>圓角 16-20px · 柔和陰影 · 米白背景襯托 · font-mono-nums 等寬數字
+  </p>
+</div>
+
+<style>
+.card-body h3 { margin: 0 0 4px 0; }
+</style>

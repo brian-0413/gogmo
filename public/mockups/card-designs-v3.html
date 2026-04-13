@@ -1,0 +1,159 @@
+<h2>行程卡片 — 三種角色，三種設計重點</h2>
+<p class="subtitle">點擊各卡片了解設計差異</p>
+
+<div class="section" style="margin-top: 1.5rem;">
+  <p class="label">本版修正</p>
+  <ul style="margin-top: 0.5rem; color: #717171; font-size: 13px; padding-left: 1.2rem;">
+    <li>首頁：起訖點放大加粗、同行顯示</li>
+    <li>司機端：起訖點同行 → 日期時間右上角 → 金額更大 → 接單按鈕置中底部</li>
+    <li>派單方：進度條最顯眼 ✓</li>
+  </ul>
+</div>
+
+<div class="cards">
+  <!-- Card 1: 首頁 (吸引力導向) -->
+  <div class="card" data-choice="homepage" onclick="toggleSelect(this)">
+    <div class="card-body">
+      <h3 style="color: #FF385C;">首頁 — 吸引力導向</h3>
+      <p style="color: #717171; font-size: 13px;">目標：讓未註冊司機看到豐富的訂單機會</p>
+      <div style="background: #FAF7F2; border-radius: 16px; padding: 16px; margin-top: 12px; font-size: 13px;">
+        <!-- Mock card -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+          <span style="background: #FF385C; color: white; padding: 6px 12px; border-radius: 8px; font-weight: bold; font-size: 14px;">#20260406-0042</span>
+          <span style="background: #FCEBEB; color: #A32D2D; padding: 4px 10px; border-radius: 8px; font-size: 12px;">待接單</span>
+        </div>
+        <div style="margin-bottom: 8px;">
+          <span style="background: #E6F1FB; color: #0C447C; padding: 4px 10px; border-radius: 8px; font-size: 13px; font-weight: bold; margin-right: 4px;">接機</span>
+          <span style="background: #F4EFE9; color: #717171; padding: 4px 10px; border-radius: 8px; font-size: 13px; font-weight: bold;">休旅車</span>
+        </div>
+        <!-- 起訖點同行、放大加粗 -->
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+          <div style="width: 10px; height: 10px; background: #FF385C; border-radius: 50%; flex-shrink: 0;"></div>
+          <span style="font-size: 17px; font-weight: bold; color: #222; flex: 1;">桃園機場</span>
+          <span style="color: #DDD; font-size: 18px;">→</span>
+          <span style="font-size: 17px; font-weight: bold; color: #222; flex: 1; text-align: right;">台北市大安區</span>
+          <div style="width: 10px; height: 10px; background: #DDD; border-radius: 50%; flex-shrink: 0;"></div>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+          <span style="font-size: 14px; color: #717171;">4/6 (一) 14:30</span>
+          <span style="font-size: 26px; font-weight: bold; color: #FF385C; font-family: monospace;">NT$1,200</span>
+        </div>
+        <div style="font-size: 12px; color: #B0B0B0; text-align: center; padding-top: 6px; border-top: 1px solid #EBEBEB;">
+          乘客 / 航班 / 備註 — 點擊展開
+        </div>
+      </div>
+      <div style="margin-top: 12px; padding: 10px; background: #F4EFE9; border-radius: 12px; font-size: 13px;">
+        <strong>重點：</strong>單號 + 狀態 → 種類 → 起訖點(17px加粗同行) → 日期 + 金額(26px)
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 2: 司機端 (決策導向) - 最終修正版 -->
+  <div class="card" data-choice="driver" onclick="toggleSelect(this)">
+    <div class="card-body">
+      <h3 style="color: #0C447C;">司機端 — 決策導向</h3>
+      <p style="color: #717171; font-size: 13px;">目標：讓司機快速判斷「要不要接這單」</p>
+      <div style="background: #FAF7F2; border-radius: 16px; padding: 16px; margin-top: 12px; font-size: 13px;">
+        <!-- 第一行：種類 + 肯驛（靠左）| 日期時間（右上角） -->
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+          <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+            <span style="background: #E6F1FB; color: #0C447C; padding: 5px 12px; border-radius: 10px; font-size: 14px; font-weight: bold;">接機</span>
+            <span style="background: #F4EFE9; color: #717171; padding: 5px 12px; border-radius: 10px; font-size: 14px; font-weight: bold;">休旅車</span>
+            <span style="background: #F3E8FF; color: #6B21A8; padding: 5px 12px; border-radius: 10px; font-size: 14px; font-weight: bold;">肯驛</span>
+          </div>
+          <!-- 日期時間 右上角 -->
+          <div style="text-align: right;">
+            <div style="font-size: 16px; font-weight: bold; color: #222;">4/6 (一)</div>
+            <div style="font-size: 18px; font-weight: bold; color: #222; font-family: monospace;">14:30</div>
+          </div>
+        </div>
+        <!-- 第二行：起訖點同行 -->
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 14px;">
+          <div style="width: 12px; height: 12px; background: #FF385C; border-radius: 50%; flex-shrink: 0;"></div>
+          <span style="font-size: 18px; font-weight: bold; color: #222; flex: 1;">桃園機場第二航廈</span>
+          <span style="color: #DDD; font-size: 18px;">→</span>
+          <span style="font-size: 18px; font-weight: bold; color: #222; flex: 1; text-align: right;">新北市新莊區</span>
+          <div style="width: 12px; height: 12px; background: #DDD; border-radius: 50%; flex-shrink: 0;"></div>
+        </div>
+        <!-- 第三行：金額更大 -->
+        <div style="text-align: center; margin-bottom: 14px;">
+          <span style="font-size: 34px; font-weight: bold; color: #FF385C; font-family: monospace;">NT$1,200</span>
+        </div>
+        <!-- 第四行：接單按鈕置中 -->
+        <div style="text-align: center;">
+          <button style="background: #FF385C; color: white; border: none; border-radius: 12px; padding: 12px 32px; font-size: 16px; font-weight: bold; cursor: pointer;">立即接單</button>
+        </div>
+        <div style="margin-top: 8px; font-size: 12px; color: #B0B0B0; text-align: center;">
+          乘客 / 航班 / 備註 — 點擊展開
+        </div>
+      </div>
+      <div style="margin-top: 12px; padding: 10px; background: #F4EFE9; border-radius: 12px; font-size: 13px;">
+        <strong>重點：</strong>種類 → 起訖點(18px加粗同行) → 金額(34px) → 接單按鈕置中
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 3: 派單方 (管理導向) - 完美版 -->
+  <div class="card" data-choice="dispatcher" onclick="toggleSelect(this)">
+    <div class="card-body">
+      <h3 style="color: #008A05;">派單方 — 管理導向 ✓</h3>
+      <p style="color: #717171; font-size: 13px;">目標：一眼掌握所有訂單狀態，便於管理</p>
+      <div style="background: #FAF7F2; border-radius: 16px; padding: 16px; margin-top: 12px; font-size: 13px;">
+        <!-- 單號 -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <span style="background: #FF385C; color: white; padding: 6px 12px; border-radius: 8px; font-weight: bold; font-size: 14px;">#20260406-0042</span>
+          <span style="font-size: 14px; color: #717171;">4/6 14:30 · 7人座</span>
+        </div>
+        <!-- 進度條 - 最顯眼 -->
+        <div style="background: white; border-radius: 12px; padding: 12px; margin-bottom: 10px; border: 1px solid #E5DDD3;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+            <span style="font-size: 12px; font-weight: bold; color: #717171;">行程序度</span>
+            <span style="font-size: 12px; color: #008A05; font-weight: bold;">已抵達</span>
+          </div>
+          <div style="display: flex; gap: 4px; align-items: center;">
+            <div style="flex: 1; height: 8px; background: #008A05; border-radius: 4px;"></div>
+            <div style="flex: 1; height: 8px; background: #008A05; border-radius: 4px;"></div>
+            <div style="flex: 1; height: 8px; background: #008A05; border-radius: 4px;"></div>
+            <div style="flex: 1; height: 8px; background: #E0E0E0; border-radius: 4px;"></div>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-top: 4px;">
+            <span style="font-size: 10px; color: #008A05;">開始</span>
+            <span style="font-size: 10px; color: #008A05;">抵達</span>
+            <span style="font-size: 10px; color: #717171;">客上</span>
+            <span style="font-size: 10px; color: #717171;">客下</span>
+          </div>
+        </div>
+        <!-- 司機資訊 -->
+        <div style="background: #F4EFE9; border-radius: 10px; padding: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="background: #222; color: white; padding: 3px 8px; border-radius: 6px; font-size: 12px; font-weight: bold;">ABC-1234</span>
+            <span style="font-size: 14px; font-weight: bold; color: #222;">王師傅</span>
+          </div>
+          <span style="font-size: 13px; color: #717171;">2人 / 3行李</span>
+        </div>
+        <!-- 起訖點 -->
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+          <span style="font-size: 15px; font-weight: bold; color: #222;">桃園機場</span>
+          <span style="color: #DDD; font-size: 16px;">→</span>
+          <span style="font-size: 15px; font-weight: bold; color: #222;">新北市新莊區</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-size: 13px; color: #717171;">BR283 · 肯驛</span>
+          <span style="font-size: 22px; font-weight: bold; color: #FF385C; font-family: monospace;">NT$1,500</span>
+        </div>
+      </div>
+      <div style="margin-top: 12px; padding: 10px; background: #F8FFF8; border-radius: 12px; font-size: 13px; border: 1px solid #C8E6C9;">
+        <strong style="color: #2E7D32;">✓ 派單方卡片已定案</strong> — 單號 → 進度條(最顯眼) → 司機資訊 → 起訖點 → 金額
+      </div>
+    </div>
+  </div>
+</div>
+
+<div style="margin-top: 24px; padding: 16px; background: #E8F5E8; border-radius: 12px; border: 1px solid #C8E6C9;">
+  <p style="font-size: 14px; font-weight: bold; color: #2E7D32; margin-bottom: 6px;">共同設計語言</p>
+  <p style="font-size: 13px; color: #388E3C; margin: 0;">圓角 16-20px · 柔和陰影 · Accordion 展開 · 米白背景襯托卡片 · 統一字重層次</p>
+</div>
+
+<style>
+.card-body h3 { margin: 0 0 4px 0; }
+</style>

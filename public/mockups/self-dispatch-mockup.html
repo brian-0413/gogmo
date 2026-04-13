@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>小車頭 Chat UI Mockup</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: #F0EDE8;
+  min-height: 100vh;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 30px 20px;
+}
+.wrapper { width: 420px; }
+
+.phone-frame {
+  background: white;
+  border-radius: 40px;
+  overflow: hidden;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.12);
+  margin-bottom: 20px;
+}
+.status-bar {
+  background: #FF385C;
+  padding: 8px 28px 6px;
+  display: flex;
+  justify-content: space-between;
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+}
+.status-icons { display: flex; gap: 4px; align-items: center; }
+.chat-header {
+  background: #FF385C;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.header-avatar {
+  width: 40px; height: 40px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 800;
+  font-size: 18px;
+}
+.header-info { color: white; }
+.header-title { font-size: 16px; font-weight: 700; }
+.header-sub { font-size: 11px; opacity: 0.8; }
+.chat-body {
+  padding: 16px;
+  max-height: 680px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.bubble-wrap { display: flex; align-items: flex-start; gap: 8px; animation: fadeIn 0.25s ease; }
+.bubble-bot { flex: 1; }
+.bubble-user-wrap { display: flex; justify-content: flex-end; }
+.bubble-user { max-width: 75%; }
+.bot-avatar {
+  width: 28px; height: 28px;
+  background: #FF385C;
+  border-radius: 50%;
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.bot-content {
+  background: #F9F7F4;
+  border: 1px solid #EBEBEB;
+  border-radius: 4px 18px 18px 18px;
+  padding: 12px 14px;
+  animation: slideIn 0.25s ease;
+}
+.bot-text { font-size: 14px; color: #222; line-height: 1.5; }
+.bot-text strong { color: #FF385C; }
+.bot-options { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.opt-btn {
+  padding: 7px 14px;
+  border-radius: 20px;
+  border: 1.5px solid #DDDDDD;
+  background: white;
+  color: #222;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.opt-btn:hover { border-color: #FF385C; color: #FF385C; }
+.opt-btn.selected { background: #FFF3F5; border-color: #FF385C; color: #FF385C; }
+.opt-btn.suggest {
+  background: #FF385C;
+  color: white;
+  border-color: #FF385C;
+}
+.opt-btn.suggest:hover { background: #E83355; }
+.user-content {
+  background: #FF385C;
+  color: white;
+  border-radius: 18px 4px 18px 18px;
+  padding: 8px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  animation: slideInRight 0.25s ease;
+}
+/* Input inside bubble */
+.bubble-input {
+  width: 100%;
+  padding: 9px 12px;
+  border: 2px solid #DDDDDD;
+  border-radius: 14px;
+  font-size: 14px;
+  outline: none;
+  margin-top: 10px;
+  transition: border-color 0.15s;
+}
+.bubble-input:focus { border-color: #FF385C; }
+.bubble-input-row {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+}
+.bubble-input-row input[type="date"] { width: 60%; }
+.bubble-input-row input[type="time"] { width: 40%; }
+.bubble-input-row input {
+  padding: 9px 12px;
+  border: 2px solid #DDDDDD;
+  border-radius: 14px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.bubble-input-row input:focus { border-color: #FF385C; }
+.bubble-input-row input[type="date"] { flex: 1; }
+.bubble-input-row input[type="time"] { flex: 1; }
+/* Shortcut row */
+.shortcuts {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+.shortcut {
+  padding: 4px 12px;
+  border-radius: 14px;
+  border: 1.5px solid #DDDDDD;
+  background: white;
+  color: #717171;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.shortcut:hover { border-color: #FF385C; color: #FF385C; }
+/* Submit button */
+.submit-btn {
+  width: 100%;
+  padding: 10px;
+  background: #FF385C;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: background 0.15s;
+}
+.submit-btn:hover { background: #E83355; }
+.submit-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.submit-btn.small {
+  padding: 9px 16px;
+  width: auto;
+  margin-top: 0;
+  flex-shrink: 0;
+}
+/* Money box */
+.money-box {
+  background: #FFF3F5;
+  border: 1px solid #FFE0E9;
+  border-radius: 12px;
+  padding: 10px;
+  margin-top: 10px;
+}
+.money-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.money-row span { font-size: 12px; color: #717171; font-weight: 600; min-width: 64px; }
+.money-row input {
+  flex: 1;
+  padding: 8px 10px;
+  border: 2px solid #DDDDDD;
+  border-radius: 10px;
+  font-size: 14px;
+  outline: none;
+}
+.money-row input:focus { border-color: #FF385C; }
+.money-result {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: #FF385C;
+  color: white;
+  border-radius: 10px;
+  font-weight: 700;
+}
+.money-result span:last-child { font-size: 18px; }
+.warning {
+  margin-top: 6px;
+  padding: 6px 10px;
+  background: #FCEBEB;
+  border: 1px solid #E24B4A;
+  border-radius: 8px;
+  color: #E24B4A;
+  font-size: 12px;
+}
+/* Contact row */
+.contact-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+.contact-row input {
+  flex: 1;
+  padding: 9px 12px;
+  border: 2px solid #DDDDDD;
+  border-radius: 14px;
+  font-size: 14px;
+  outline: none;
+}
+.contact-row input:focus { border-color: #FF385C; }
+/* Fee mode cards */
+.fee-cards { display: flex; gap: 8px; margin-top: 10px; }
+.fee-card {
+  flex: 1;
+  border: 2px solid #DDDDDD;
+  border-radius: 14px;
+  padding: 12px 8px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s;
+  background: white;
+}
+.fee-card:hover { border-color: #FF385C; }
+.fee-card.selected { border-color: #FF385C; background: #FFF3F5; }
+.fee-card .big { font-size: 20px; font-weight: 800; color: #FF385C; }
+.fee-card .label { font-size: 13px; font-weight: 700; color: #222; margin-top: 2px; }
+.fee-card .desc { font-size: 10px; color: #717171; margin-top: 3px; line-height: 1.3; }
+/* Luggage chips */
+.luggage-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: #F4EFE9;
+  border: 1px solid #DDDDDD;
+  border-radius: 20px;
+  font-size: 12px;
+  color: #222;
+}
+.chip-x { color: #A8A29E; font-size: 10px; cursor: pointer; }
+/* Two-btn row */
+.two-btn-row { display: flex; gap: 8px; margin-top: 10px; }
+.two-btn-row button {
+  flex: 1;
+  padding: 9px;
+  border-radius: 14px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  border: 2px solid;
+  transition: all 0.15s;
+}
+.two-btn-row .btn-confirm {
+  background: #FF385C;
+  color: white;
+  border-color: #FF385C;
+}
+.two-btn-row .btn-confirm:hover { background: #E83355; }
+.two-btn-row .btn-more {
+  background: white;
+  color: #222;
+  border-color: #DDDDDD;
+}
+.two-btn-row .btn-more:hover { border-color: #FF385C; color: #FF385C; }
+/* Summary */
+.summary-box {
+  background: #F9F7F4;
+  border: 1px solid #EBEBEB;
+  border-radius: 12px;
+  padding: 12px;
+  margin-top: 10px;
+}
+.summary-title {
+  font-size: 10px;
+  font-weight: 700;
+  color: #FF385C;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 8px;
+}
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 5px 0;
+  border-bottom: 1px solid #EBEBEB;
+  font-size: 12px;
+}
+.summary-row:last-child { border-bottom: none; }
+.summary-row span:first-child { color: #717171; }
+.summary-row span:last-child { font-weight: 600; color: #222; }
+.summary-row.accent span:last-child { color: #FF385C; }
+/* Step indicator */
+.step-indicator {
+  padding: 12px 16px 14px;
+  text-align: center;
+  border-top: 1px solid #F0EDE8;
+  background: white;
+}
+.step-track {
+  display: flex;
+  gap: 2px;
+  margin-bottom: 5px;
+}
+.step-dot {
+  flex: 1;
+  height: 3px;
+  border-radius: 2px;
+  background: #EBEBEB;
+}
+.step-dot.done { background: #FF385C; }
+.step-dot.active { background: #FFB3C1; }
+.step-label { font-size: 10px; color: #A8A29E; font-weight: 500; }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(-8px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(8px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+/* Page info */
+.page-info {
+  text-align: center;
+  color: #717171;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.page-info strong { color: #222; }
+</style>
+</head>
+<body>
+
+<div class="wrapper">
+
+<!-- SCREEN 1: Step 1-2 -->
+<div class="phone-frame">
+  <div class="status-bar"><span>9:41</span><div class="status-icons">&#9633;&#9633;&#9633;</div></div>
+  <div class="chat-header">
+    <div class="header-avatar">G</div>
+    <div class="header-info"><div class="header-title">goGMO 小車頭</div><div class="header-sub">Premium 司機專屬發單</div></div>
+  </div>
+  <div class="chat-body">
+    <!-- Step 1: Trip Mode -->
+    <div class="bubble-wrap">
+      <div class="bot-avatar">G</div>
+      <div class="bubble-bot">
+        <div class="bot-content">
+          <div class="bot-text">您好！請問是 <strong>接機/船</strong> 還是 <strong>送機/船</strong>？</div>
+          <div class="bot-options">
+            <button class="opt-btn">接機/船</button>
+            <button class="opt-btn suggest">送機/船</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="bubble-user-wrap">
+      <div class="bubble-user">送機/船</div>
+    </div>
+    <!-- Step 2: Pickup Place -->
+    <div class="bubble-wrap">
+      <div class="bot-avatar">G</div>
+      <div class="bubble-bot">
+        <div class="bot-content">
+          <div class="bot-text">好的！請選擇 <strong>上車地點</strong>：</div>
+          <div class="bot-options">
+            <button class="opt-btn">桃園機場</button>
+            <button class="opt-btn">松山機場</button>
+            <button class="opt-btn">清泉崗</button>
+            <button class="opt-btn">小港</button>
+            <button class="opt-btn">基隆港</button>
+            <button class="opt-btn">其他</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="bubble-user-wrap">
+      <div class="bubble-user">桃園機場</div>
+    </div>
+    <!-- Step 3: Date only -->
+    <div class="bubble-wrap">
+      <div class="bot-avatar">G</div>
+      <div class="bubble-bot">
+        <div class="bot-content">
+          <div class="bot-text">已設定為【<strong>送機</strong>】！請選擇 <strong>日期</strong>：</div>
+          <div class="bubble-input-row">
+            <input type="date" value="2026-04-09" style="width:100%">
+          </div>
+          <div class="shortcuts">
+            <button class="shortcut">今天</button>
+            <button class="shortcut">明天</button>
+            <button class="shortcut">後天</button>
+          </div>
+          <button class="submit-btn">下一步</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="step-indicator">
+    <div class="step-track">
+      <div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot active"></div>
+      <div class="step-dot"></div><div class="step-dot"></div><div class="step-dot"></div>
+      <div class="step-dot"></div><div class="step-dot"></div><div class="step-dot"></div>
+      <div class="step-dot"></div><div class="step-dot"></div><div class="step-dot"></div>
+      <div class="step-dot"></div>
+    </div>
+    <div class="step-label">步驟 3 / 13</div>
+  </div>
+</div>
+<p class="page-info"><strong>流程示意 1/7</strong> — 步驟 1-3：類型 → 上車地點 → 日期（時間分開問）</p>
+
+<!-- SCREEN 2: Time + Flight -->
+<div class="phone-frame" style="margin-top:30px;">
+  <div class="status-bar"><span>9:41</span><div class="status-icons">&#9633;&#9633;&#9633;</div></div>
+  <div class="chat-header">
+    <div class="header-avatar">G</div>
+    <div class="header-info"><div class="header-title">goGMO 小車頭</div><div class="header-sub">Premium 司機專屬發單</div></div>
+  </div>
+  <div class="chat-body">
+    <!-- History: steps 1-2 -->
+    <div class="bubble-wrap">
+      <div class="bot-avatar">G</div>
+      <div class="bubble-bot">
+        <div class="bot-content">
+          <div class="bot-text">您好！請問是 <strong>接機/船</strong> 還是 <strong>送機/船</strong>？</div>
+          <div class="bot-options">
+            <button class="opt-btn">接機/船</button>
+            <button class="opt-btn suggest">送機/船</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="bubble-user-wrap"><div class="bubble-user">送機/船</div></div>
+    <div class="bubble-wrap">
+      <div class="bot-avatar">G</div>
+      <div class="bubble-bot">
+        <div class="bot-content">
+          <div class="bot-text">好的！請選擇 <strong>上車地點</strong>：</div>
+          <div class="bot-options">
+            <button class="opt-btn">桃園機場</button>
+            <button class="opt-btn">松山機場</button>
+            <button class="opt-btn">清泉崗</button>
+            <button class="opt-btn">小港</button>
+            <button class="opt-btn">基隆港</button>
+            <button class="opt-btn">其他</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="bubble-user-wrap"><div class="bubble-user">桃園機場</div></div>
+    <!-- Step 3: Date result -->
+    <div class="bubble-wrap">
+      <div class="bot-avatar">G</div>
+      <div class="bubble-bot">
+        <div class="bot-content">
+          <div class="bot-text">已設定為【<strong>送機</strong>】！請選擇 <strong>日期</strong>：</div>
+          <div class="bubble-input-row">
+            <input type="date" value="2026-04-09">
+          </div>
+          <div class="shortcuts">
+            <button class="shortcut">今天</button>
+            <button class="shortcut">明天</button>
+            <button class="shortcut">後天</button>
+          </div>
+          <button class="submit-btn">下一步</button>
+        </div>
+      </div>
+    </div>
+    <div class="bubble-user-wrap"><div class="bubble-user">2026/04/09</div></div>
+    <!-- Step 4: Time only -->
+    <div class="bubble-wrap">
+      <div class="bot-avatar">G</div>
+      <div class="bubble-bot">
+        <div class="bot-content">
+          <div class="bot-text">請選擇 <strong>時間</strong>：</div>
+          <div class="bubble-input-row">
+            <input type="time" value="14:30" style="width:100%">
+          </div>
+          <button class="submit-btn">下一步</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="step-indicator">
+    <div class="step-track">
+      <div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot done"></div>
+      <div class="step-dot active"></div><div class="step-dot"></div><div class="step-dot"></div>
+      <div class="step-dot"></div><div class="step-dot"></div><div class="step-dot"></div>
+      <div class="step-dot"></div><div class="step-dot"></div><div class="step-dot"></div>
+      <div class="step-dot"></div>
+    </div>
+    <div class="step-label">步驟 4 / 13</div>
+  </div>
+</div>
+<p class="page-info"><strong>流程示意 2/7</strong> — 步驟 4：時間（24小時制，單一輸入框）</p>
+
+<!-- SCREEN 3: Flight -->
+<div class="phone-frame" style="margin-top:30px;">
+  <div class="status-bar"><span>9:41</span><div class="status-icons">&#9633;&#9633;&#9633;</div></div>
+  <div class="chat-header">
+    <div class="header-avatar">G</div>
+    <div class="header-info"><div class="header-title">goGMO 小車頭</div><div class="header-sub">Premium 司機專屬發單</div></div>
+  </div>
+  <div class="chat-body">
+    <!-- Step 5: Flight number (送機 = 選填) -->
+    <div class="bubble-wrap">
+      <div class="bot-avatar">G</div>
+      <div class="bubble-bot">
+        <div class="bot-content">
+          <div class="bot-text">請輸入<strong>航班號碼</strong>（接機必填，送機選填）：</div>
+          <div class="bubble-input-row">
+            <input type="text" placeholder="例如：BR 32" style="width:100%">
+            <button class="submit-btn small">下一步</button>
+          </div>
+          <button class="shortcut" style="margin-top:6px;">略過</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="step-indicator">
+    <div class="step-track">
+      <div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot done"></div>
+      <div class="step-dot done"></div><div class="step-dot active"></div><div class="step-dot"></div>
+      <div class="step-dot"></div><div class="step-dot"></div><div class="step-dot"></div>
+      <div class="step-dot"></div><div class="step-dot"></div><div class="step-dot"></div>
+      <div class="step-dot"></div>
+    </div>
+    <div class="step-label">步驟 5 / 13</div>
+  </div>
+</div>
+<p class="page-info"><strong>流程示意 3/7</strong> — 步驟 5：航班號碼（送機=選填，可略過）</p>
+
+<!-- SCREEN 4: Vehicle -->
+<div class="phone-frame" style="margin-top:30px;">
+  <div class="status-bar"><span>9:41</span><div class="status-icons">&#9633;&#9633;&#9633;</div></div>
+  <div class="chat-header">
+    <div class="header-avatar">G</div>
+    <div class="header-info"><div class="header-title">goGMO 小車頭</div><div class="header-sub">Premium 司機專屬發單</div></div>
+  </div>
+  <div class="chat-body">
+    <div class="bubble-wrap">
+      <div class="bot-avatar">G</div>
+      <div class="bubble-bot">
+        <div class="bot-content">
+          <div class="bot-text">請選擇<strong>車型</strong>：</div>
+          <div class="bot-options">
+            <button class="opt-btn suggest">小車(5人)</button>
+            <button class="opt-btn">休旅(7人)</button>
+            <button class="opt-btn">9人座</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="bubble-user-wrap"><div class="bubble-user">小車(5人)</div></div>
+    <!-- Step 6: Passenger -->
+    <div class="bubble-wrap">
+      <div class="bot-avatar">G</div>
+      <div class="bubble-bot">
+        <div class="bot-content">
+          <div class="bot-text">請問<strong>乘客數</strong>？</div>
+          <div class="bot-options">
+            <button class="opt-btn">1人</button>
+            <button class="opt-btn">2人</button>
+            <button class="opt-btn suggest">3人</button>
+            <button class="opt-btn">4人</button>
+            <button class="opt-btn">5人</button>
+            <button class="opt-btn">6人</button>
+            <button class="opt-btn">7人</button>
+            <button class="opt-btn">8人</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="step-indicator">
+    <div class="step-track">
+      <div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot done"></div>
+      <div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot active"></div>
+      <div class="step-dot"></div><div class="step-dot"></div><div class="step-dot"></div>
+      <div class="step-dot"></div><div class="step-dot"></div><div class="step-dot"></div>
+      <div class="step-dot"></div>
+    </div>
+    <div class="step-label">步驟 6 / 13</div>
+  </div>
+</div>
+<p class="page-info"><strong>流程示意 4/7</strong> — 步驟 5-6：車型 + 乘客數</p>
+
+<!-- SCREEN 5: Luggage loop -->
+<div class="phone-frame" style="margin-top:30px;">
+  <div class="status-bar"><span>9:41</span><div class="status-icons">&#9633;&#9633;&#9633;</div></div>
+  <div class="chat-header">
+    <div class="header-avatar">G</div>
+    <div class="header-info"><div class="header-title">goGMO 小車頭</div><div class="header-sub">Premium 司機專屬發單</div></div>
+  </div>
+  <div class="chat-body">
+    <div class="bubble-wrap">
+      <div class="bot-avatar">G</div>
+      <div class="bubble-bot">
+        <div class="bot-content">
+          <div class="bot-text">請問有什麼<strong>行李尺寸</strong>？</div>
+          <div class="bot-options">
+            <button class="opt-btn">胖胖箱</button>
+            <button class="opt-btn">28吋</button>
+            <button class="opt-btn">24吋</button>
+            <button class="opt-btn">20吋</button>
+            <button class="opt-btn">其他</button>
+            <button class="opt-btn suggest">無行李</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="bubble-user-wrap"><div class="bubble-user">24吋</div></div>
+    <!-- Quantity -->
+    <div class="bubble-wrap">
+      <div class="bot-avatar">G</div>
+      <div class="bubble-bot">
+        <div class="bot-content">
+          <div class="bot-text">選擇了【<strong>24吋</strong>】，請問有幾件？</div>
+          <div class="bot-options">
+            <button class="opt-btn">1件</button>
+            <button class="opt-btn suggest">2件</button>
+            <button class="opt-btn">3件</button>
+            <button class="opt-btn">4件</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="bubble-user-wrap"><div class="bubble-user">2件</div></div>
+    <!-- Confirm -->
+    <div class="bubble-wrap">
+      <div class="bot-avatar">G</div>
+      <div class="bubble-bot">
+        <div class="bot-content">
+          <div class="bot-text">已加入【<strong>24吋 x 2件</strong>】</div>
+          <div class="two-btn-row">
+            <button class="btn-confirm">確定，沒了</button>
+            <button class="btn-more">+ 還有其他尺寸</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="step-indicator">
+    <div class="step-track">
+      <div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot done"></div>
+      <div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot done"></div>
+      <div class="step-dot active"></div><div class="step-dot"></div><div class="step-dot"></div>
+      <div class="step-dot"></div><div class="step-dot"></div><div class="step-dot"></div>
+      <div class="step-dot"></div>
+    </div>
+    <div class="step-label">步驟 7 / 13</div>
+  </div>
+</div>
+<p class="page-info"><strong>流程示意 5/7</strong> — 步驟 7：行李 Loop（尺寸→數量→確認）</p>
+
+<!-- SCREEN 6: Location + Contact + Fee -->
+<div class="phone-frame" style="margin-top:30px;">
+  <div class="status-bar"><span>9:41</span><div class="status-icons">&#9633;&#9633;&#9633;</div></div>
+  <div class="chat-header">
+    <div class="header-avatar">G</div>
+    <div class="header-info"><div class="header-title">goGMO 小車頭</div><div class="header-sub">Premium 司機專屬發單</div></div>
+  </div>
+  <div class="chat-body">
+    <!-- Step 8: Location -->
+    <div class="bubble-wrap">
+      <div class="bot-avatar">G</div>
+      <div class="bubble-bot">
+        <div class="bot-content">
+          <div class="bot-text">已設定【<strong>桃園機場</strong> ← 送機】</div>
+          <div class="bot-text" style="margin-top:6px;">請填寫<strong>上車地點</strong>：</div>
+          <input type="text" class="bubble-input" placeholder="輸入地址或地點">
+          <button class="submit-btn">下一步</button>
+        </div>
+      </div>
+    </div>
+    <div class="bubble-user-wrap"><div class="bubble-user">台北市大安區復興南路</div></div>
+    <!-- Step 9: Contact -->
+    <div class="bubble-wrap">
+      <div class="bot-avatar">G</div>
+      <div class="bubble-bot">
+        <div class="bot-content">
+          <div class="bot-text">請輸入<strong>聯絡人</strong>和<strong>電話</strong>：</div>
+          <div class="contact-row">
+            <input type="text" placeholder="姓名" style="width:40%">
+            <input type="text" placeholder="電話" style="width:60%">
+          </div>
+          <button class="submit-btn">下一步</button>
+        </div>
+      </div>
+    </div>
+    <div class="bubble-user-wrap"><div class="bubble-user">王小明 0933456789</div></div>
+    <!-- Step 10: Fee Mode -->
+    <div class="bubble-wrap">
+      <div class="bot-avatar">G</div>
+      <div class="bubble-bot">
+        <div class="bot-content">
+          <div class="bot-text">請選擇<strong>費用模式</strong>：</div>
+          <div class="fee-cards">
+            <div class="fee-card selected">
+              <div class="big">轉</div>
+              <div class="label">客下轉帳</div>
+              <div class="desc">派單人已收錢，直接匯給司機</div>
+            </div>
+            <div class="fee-card">
+              <div class="big">現</div>
+              <div class="label">代收現金</div>
+              <div class="desc">司機收現後，回金傭金給派單人</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="step-indicator">
+    <div class="step-track">
+      <div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot done"></div>
+      <div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot done"></div>
+      <div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot active"></div>
+      <div class="step-dot"></div><div class="step-dot"></div><div class="step-dot"></div>
+      <div class="step-dot"></div>
+    </div>
+    <div class="step-label">步驟 10 / 13</div>
+  </div>
+</div>
+<p class="page-info"><strong>流程示意 6/7</strong> — 步驟 8-10：地點 + 聯絡人 + 費用模式</p>
+
+<!-- SCREEN 7: Money + Summary -->
+<div class="phone-frame" style="margin-top:30px;">
+  <div class="status-bar"><span>9:41</span><div class="status-icons">&#9633;&#9633;&#9633;</div></div>
+  <div class="chat-header">
+    <div class="header-avatar">G</div>
+    <div class="header-info"><div class="header-title">goGMO 小車頭</div><div class="header-sub">Premium 司機專屬發單</div></div>
+  </div>
+  <div class="chat-body">
+    <!-- Step 11: Amount - transfer mode -->
+    <div class="bubble-wrap">
+      <div class="bot-avatar">G</div>
+      <div class="bubble-bot">
+        <div class="bot-content">
+          <div class="bot-text">選擇了 <strong>客下轉帳</strong>，請輸入司機實拿金額：</div>
+          <div class="money-box">
+            <div class="money-row">
+              <span>司機實拿</span>
+              <input type="text" placeholder="輸入金額">
+            </div>
+          </div>
+          <button class="submit-btn">下一步</button>
+        </div>
+      </div>
+    </div>
+    <div class="bubble-user-wrap"><div class="bubble-user">NT$ 1,200</div></div>
+    <!-- Step 12: Special needs + notes -->
+    <div class="bubble-wrap">
+      <div class="bot-avatar">G</div>
+      <div class="bubble-bot">
+        <div class="bot-content">
+          <div class="bot-text">請選擇<strong>特殊需求</strong>（可複選）：</div>
+          <div class="bot-options">
+            <button class="opt-btn">舉牌</button>
+            <button class="opt-btn suggest">安全座椅</button>
+            <button class="opt-btn">其他</button>
+          </div>
+          <input type="text" class="bubble-input" placeholder="備註（選填）">
+          <button class="submit-btn">下一步</button>
+        </div>
+      </div>
+    </div>
+    <!-- Step 13: Summary -->
+    <div class="bubble-wrap">
+      <div class="bot-avatar">G</div>
+      <div class="bubble-bot">
+        <div class="bot-content">
+          <div class="bot-text">即將發單上架，請確認：</div>
+          <div class="summary-box">
+            <div class="summary-title">發單摘要</div>
+            <div class="summary-row"><span>類型</span><span>送機</span></div>
+            <div class="summary-row"><span>航班</span><span>BR 32</span></div>
+            <div class="summary-row"><span>時間</span><span>2026/04/09 14:30</span></div>
+            <div class="summary-row"><span>上車</span><span>台北市大安區復興南路</span></div>
+            <div class="summary-row"><span>目的地</span><span>桃園機場</span></div>
+            <div class="summary-row"><span>車型</span><span>小車(5人)</span></div>
+            <div class="summary-row"><span>乘客/行李</span><span>3人 / 24吋 x 2件</span></div>
+            <div class="summary-row"><span>費用模式</span><span>客下轉帳</span></div>
+            <div class="summary-row accent"><span>司機實拿</span><span>NT$1,200</span></div>
+          </div>
+          <button class="submit-btn" style="background:#E83355;">確認發單上架</button>
+          <button class="submit-btn" style="background:white;color:#FF385C;border:2px solid #FF385C;margin-top:6px;">重新填寫</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="step-indicator">
+    <div class="step-track">
+      <div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot done"></div>
+      <div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot done"></div>
+      <div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot done"></div>
+      <div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot active"></div>
+      <div class="step-dot"></div>
+    </div>
+    <div class="step-label">步驟 13 / 13</div>
+  </div>
+</div>
+<p class="page-info"><strong>流程示意 7/7</strong> — 步驟 11-13：金額 + 特殊需求 + 摘要確認</p>
+
+</div>
+</body>
+</html>

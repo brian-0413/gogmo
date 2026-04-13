@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>配色方案比較</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #111; color: #fff; padding: 20px; }
+  h1 { text-align: center; margin-bottom: 8px; font-size: 20px; }
+  p.sub { text-align: center; color: #888; font-size: 13px; margin-bottom: 24px; }
+  .scheme-label { font-size: 11px; font-weight: bold; color: #888; margin: 12px 0 6px; padding-left: 4px; letter-spacing: 1px; text-transform: uppercase; }
+  .scheme-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; max-width: 1200px; margin: 0 auto; }
+  .scheme-card { border-radius: 16px; overflow: hidden; background: #1a1a1a; }
+  .scheme-header { padding: 16px; text-align: center; border-bottom: 1px solid #333; }
+  .scheme-header h2 { font-size: 16px; margin-bottom: 4px; }
+  .scheme-header p { font-size: 12px; color: #888; }
+
+  /* Each scheme's theme variables */
+  .s1-light { --bg: #FAF7F2; --bg2: #F4EFE9; --primary: #FF385C; --primary-dark: #CC2E4A; --text: #222; --text2: #717171; --text3: #B0B0B0; --surface: #fff; --surface2: #F4EFE9; --border: #E8E0D8; --accent: #0C447C; --success: #008A05; --warn: #B45309; --error: #C41E3A; --mono: monospace; }
+  .s2-light { --bg: #F8F5F0; --bg2: #EDE8E0; --primary: #E8546A; --primary-dark: #B83A4F; --text: #1C1C1E; --text2: #636366; --text3: #AEAEB2; --surface: #fff; --surface2: #F0ECE6; --border: #D9D2C8; --accent: #1B4F72; --success: #007A3D; --warn: #C47A0F; --error: #B0282A; --mono: monospace; }
+  .s3-light { --bg: #FBF9F5; --bg2: #F3EDE5; --primary: #FF4D6A; --primary-dark: #D9364F; --text: #1A1A1A; --text2: #6B6B6B; --text3: #9E9E9E; --surface: #fff; --surface2: #F3EDE5; --border: #E0D8CE; --accent: #1A5276; --success: #1E8449; --warn: #CA6F1E; --error: #922B21; --mono: monospace; }
+
+  .s1-dark { --bg: #0D0D0D; --bg2: #151515; --primary: #FF385C; --primary-dark: #FF6B82; --text: #F0EFEC; --text2: #9A9A98; --text3: #5C5C5A; --surface: #1C1C1C; --surface2: #232323; --border: #2E2E2E; --accent: #5B9BD5; --success: #2ECC71; --warn: #F39C12; --error: #E74C3C; --mono: monospace; }
+  .s2-dark { --bg: #0F1012; --bg2: #161820; --primary: #E8546A; --primary-dark: #FF7A8A; --text: #ECEDEA; --text2: #8E8E8C; --text3: #50504E; --surface: #1A1B22; --surface2: #20222A; --border: #2A2A34; --accent: #4A90C4; --success: #27AE60; --warn: #E67E22; --error: #C0392B; --mono: monospace; }
+  .s3-dark { --bg: #0E0E10; --bg2: #141418; --primary: #FF4D6A; --primary-dark: #FF7090; --text: #E8E8E6; --text2: #8A8A88; --text3: #484846; --surface: #191920; --surface2: #202028; --border: #28282E; --accent: #5DADE2; --success: #28B463; --warn: #E67E22; --error: #E74C3C; --mono: monospace; }
+
+  .light-preview, .dark-preview { padding: 16px; }
+  .light-preview { background: var(--bg); min-height: 280px; }
+  .dark-preview { background: var(--bg); min-height: 280px; }
+
+  /* Color swatches */
+  .swatch-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+  .swatch { flex: 1; min-width: 48px; text-align: center; }
+  .swatch-color { height: 36px; border-radius: 8px; margin-bottom: 4px; }
+  .swatch-label { font-size: 9px; color: var(--text2); font-weight: 500; }
+
+  /* Preview components */
+  .prev-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .prev-name { font-size: 14px; font-weight: bold; color: var(--text); }
+  .prev-badge { background: var(--primary); color: white; padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; }
+  .prev-pts { background: var(--surface); border: 1px solid var(--border); padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: bold; color: var(--text); font-family: var(--mono); }
+
+  .prev-card { background: var(--surface); border-radius: 14px; padding: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 8px; border: 1px solid var(--border); }
+  .prev-card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .prev-order-no { background: var(--primary); color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; font-family: var(--mono); }
+  .prev-status { padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: bold; }
+  .status-accepted { background: #FFF3E0; color: var(--warn); }
+  .status-done { background: #E8F5E8; color: var(--success); }
+  .prev-type { font-size: 11px; color: var(--primary); font-weight: bold; margin-bottom: 2px; }
+  .prev-route { font-size: 15px; font-weight: bold; color: var(--text); margin-bottom: 8px; }
+  .prev-amount { text-align: center; font-size: 28px; font-weight: bold; color: var(--primary); font-family: var(--mono); margin-bottom: 8px; }
+  .prev-btn-row { display: flex; gap: 6px; }
+  .prev-btn { flex: 1; padding: 8px; border-radius: 10px; font-size: 12px; font-weight: bold; border: none; cursor: pointer; }
+  .prev-btn-primary { background: var(--accent); color: white; }
+  .prev-btn-secondary { background: var(--bg2); color: var(--text); border: 1px solid var(--border); }
+
+  .prev-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+  .prev-stat { background: var(--surface2); border-radius: 10px; padding: 8px; text-align: center; }
+  .prev-stat-label { font-size: 10px; color: var(--text2); margin-bottom: 2px; }
+  .prev-stat-val { font-size: 18px; font-weight: bold; color: var(--text); font-family: var(--mono); }
+  .prev-stat-val.green { color: var(--success); }
+  .prev-stat-val.orange { color: var(--warn); }
+
+  .prev-tab-bar { display: flex; gap: 4px; margin-top: 12px; }
+  .prev-tab { flex: 1; padding: 8px 4px; border-radius: 8px; font-size: 11px; font-weight: bold; text-align: center; }
+  .prev-tab.active { background: var(--primary); color: white; }
+  .prev-tab.inactive { background: var(--surface2); color: var(--text2); }
+
+  .divider { height: 1px; background: var(--border); margin: 12px 0; }
+
+  /* Dark mode text adjustments */
+  .dark-preview .swatch-label { color: #aaa; }
+  .dark-preview .status-accepted { background: rgba(243,156,18,0.2); }
+  .dark-preview .status-done { background: rgba(46,204,113,0.2); }
+  .dark-preview .prev-stat { background: var(--surface2); }
+  .dark-preview .prev-btn-secondary { background: var(--surface2); border-color: var(--border); }
+</style>
+</head>
+<body>
+<h1>配色方案比較</h1>
+<p class="sub">上：淺色模式｜下：夜間模式（司機開車專用）</p>
+
+<div class="scheme-grid">
+
+<!-- 方案A：經典暖調 -->
+<div class="scheme-card">
+  <div class="scheme-header">
+    <h2>A. 經典暖調</h2>
+    <p>#FAF7F2 米黃 + #FF385C 桃紅</p>
+  </div>
+
+  <div class="light-preview s1-light">
+    <div class="swatch-row">
+      <div class="swatch"><div class="swatch-color" style="background:#FAF7F2; border:1px solid #E8E0D8;"></div><div class="swatch-label">背景 #FAF7F2</div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#FF385C;"></div><div class="swatch-label">主色 #FF385C</div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#0C447C;"></div><div class="swatch-label">輔色 #0C447C</div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#C41E3A;"></div><div class="swatch-label">強調 #C41E3A</div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#008A05;"></div><div class="swatch-label">成功 #008A05</div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#B45309;"></div><div class="swatch-label">警告 #B45309</div></div>
+    </div>
+    <div class="prev-stats">
+      <div class="prev-stat"><div class="prev-stat-label">總金額</div><div class="prev-stat-val">NT$4,800</div></div>
+      <div class="prev-stat"><div class="prev-stat-label">已入帳</div><div class="prev-stat-val green">NT$3,200</div></div>
+      <div class="prev-stat"><div class="prev-stat-label">未入帳</div><div class="prev-stat-val orange">NT$1,600</div></div>
+    </div>
+    <div class="prev-card">
+      <div class="prev-card-top">
+        <span class="prev-order-no">#20260405-0001</span>
+        <span class="prev-status status-accepted">已接單</span>
+      </div>
+      <div class="prev-type">接機</div>
+      <div class="prev-route">桃園機場 → 新北市新莊</div>
+      <div class="prev-amount">NT$1,200</div>
+      <div class="prev-btn-row">
+        <button class="prev-btn prev-btn-primary">開始</button>
+        <button class="prev-btn prev-btn-secondary">退單</button>
+      </div>
+    </div>
+    <div class="prev-tab-bar">
+      <div class="prev-tab active">接單</div>
+      <div class="prev-tab inactive">行程</div>
+      <div class="prev-tab inactive">帳務</div>
+      <div class="prev-tab inactive">訊息</div>
+      <div class="prev-tab inactive">我的</div>
+    </div>
+  </div>
+
+  <div class="dark-preview s1-dark">
+    <div class="swatch-row">
+      <div class="swatch"><div class="swatch-color" style="background:#0D0D0D; border:1px solid #2E2E2E;"></div><div class="swatch-label">背景 #0D0D0D</div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#FF385C;"></div><div class="swatch-label">主色 #FF385C</div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#5B9BD5;"></div><div class="swatch-label">輔色 #5B9BD5</div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#2ECC71;"></div><div class="swatch-label">成功 #2ECC71</div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#F39C12;"></div><div class="swatch-label">警告 #F39C12</div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#E74C3C;"></div><div class="swatch-label">錯誤 #E74C3C</div></div>
+    </div>
+    <div class="prev-stats">
+      <div class="prev-stat"><div class="prev-stat-label">總金額</div><div class="prev-stat-val">NT$4,800</div></div>
+      <div class="prev-stat"><div class="prev-stat-label">已入帳</div><div class="prev-stat-val green">NT$3,200</div></div>
+      <div class="prev-stat"><div class="prev-stat-label">未入帳</div><div class="prev-stat-val orange">NT$1,600</div></div>
+    </div>
+    <div class="prev-card">
+      <div class="prev-card-top">
+        <span class="prev-order-no">#20260405-0001</span>
+        <span class="prev-status status-accepted">已接單</span>
+      </div>
+      <div class="prev-type">接機</div>
+      <div class="prev-route">桃園機場 → 新北市新莊</div>
+      <div class="prev-amount">NT$1,200</div>
+      <div class="prev-btn-row">
+        <button class="prev-btn prev-btn-primary">開始</button>
+        <button class="prev-btn prev-btn-secondary">退單</button>
+      </div>
+    </div>
+    <div class="prev-tab-bar">
+      <div class="prev-tab active">接單</div>
+      <div class="prev-tab inactive">行程</div>
+      <div class="prev-tab inactive">帳務</div>
+      <div class="prev-tab inactive">訊息</div>
+      <div class="prev-tab inactive">我的</div>
+    </div>
+  </div>
+</div>
+
+<!-- 方案B：都會沉穩 -->
+<div class="scheme-card">
+  <div class="scheme-header">
+    <h2>B. 都會沉穩</h2>
+    <p>柔玫瑰 + 深藏青，低對比舒適</p>
+  </div>
+
+  <div class="light-preview s2-light">
+    <div class="swatch-row">
+      <div class="swatch"><div class="swatch-color" style="background:#F8F5F0; border:1px solid #D9D2C8;"></div><div class="swatch-label">背景 #F8F5F0</div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#E8546A;"></div><div class="swatch-label">主色 #E8546A</div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#1B4F72;"></div><div class="swatch-label">輔色 #1B4F72</div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#B0282A;"></div><div class="swatch-label">強調 #B0282A</div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#007A3D;"></div><div class="swatch-label">成功 #007A3D</div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#C47A0F;"></div><div class="swatch-label">警告 #C47A0F</div></div>
+    </div>
+    <div class="prev-stats">
+      <div class="prev-stat"><div class="prev-stat-label">總金額</div><div class="prev-stat-val">NT$4,800</div></div>
+      <div class="prev-stat"><div class="prev-stat-label">已入帳</div><div class="prev-stat-val green">NT$3,200</div></div>
+      <div class="prev-stat"><div class="prev-stat-label">未入帳</div><div class="prev-stat-val orange">NT$1,600</div></div>
+    </div>
+    <div class="prev-card">
+      <div class="prev-card-top">
+        <span class="prev-order-no">#20260405-0001</span>
+        <span class="prev-status status-accepted">已接單</span>
+      </div>
+      <div class="prev-type">接機</div>
+      <div class="prev-route">桃園機場 → 新北市新莊</div>
+      <div class="prev-amount">NT$1,200</div>
+      <div class="prev-btn-row">
+        <button class="prev-btn prev-btn-primary">開始</button>
+        <button class="prev-btn prev-btn-secondary">退單</button>
+      </div>
+    </div>
+    <div class="prev-tab-bar">
+      <div class="prev-tab active">接單</div>
+      <div class="prev-tab inactive">行程</div>
+      <div class="prev-tab inactive">帳務</div>
+      <div class="prev-tab inactive">訊息</div>
+      <div class="prev-tab inactive">我的</div>
+    </div>
+  </div>
+
+  <div class="dark-preview s2-dark">
+    <div class="swatch-row">
+      <div class="swatch"><div class="swatch-color" style="background:#0F1012; border:1px solid #2A2A34;"></div><div class="swatch-label">背景 #0F1012</div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#E8546A;"></div><div class="swatch-label">主色 #E8546A</div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#4A90C4;"></div><div class="swatch-label">輔色 #4A90C4</div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#27AE60;"></div><div class="swatch-label">成功 #27AE60</div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#E67E22;"></div><div class="swatch-label">警告 #E67E22</div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#C0392B;"></div><div class="swatch-label">錯誤 #C0392B</div></div>
+    </div>
+    <div class="prev-stats">
+      <div class="prev-stat"><div class="prev-stat-label">總金額</div><div class="prev-stat-val">NT$4,800</div></div>
+      <div class="prev-stat"><div class="prev-stat-label">已入帳</div><div class="prev-stat-val green">NT$3,200</div></div>
+      <div class="prev-stat"><div class="prev-stat-label">未入帳</div><div class="prev-stat-val orange">NT$1,600</div></div>
+    </div>
+    <div class="prev-card">
+      <div class="prev-card-top">
+        <span class="prev-order-no">#20260405-0001</span>
+        <span class="prev-status status-accepted">已接單</span>
+      </div>
+      <div class="prev-type">接機</div>
+      <div class="prev-route">桃園機場 → 新北市新莊</div>
+      <div class="prev-amount">NT$1,200</div>
+      <div class="prev-btn-row">
+        <button class="prev-btn prev-btn-primary">開始</button>
+        <button class="prev-btn prev-btn-secondary">退單</button>
+      </div>
+    </div>
+    <div class="prev-tab-bar">
+      <div class="prev-tab active">接單</div>
+      <div class="prev-tab inactive">行程</div>
+      <div class="prev-tab inactive">帳務</div>
+      <div class="prev-tab inactive">訊息</div>
+      <div class="prev-tab inactive">我的</div>
+    </div>
+  </div>
+</div>
+
+<!-- 方案C：玫瑰金屬 -->
+<div class="scheme-card">
+  <div class="scheme-header">
+    <h2>C. 玫瑰金屬</h2>
+    <p>玫瑰粉 + 深藍灰，現代質感</p>
+  </div>
+
+  <div class="light-preview s3-light">
+    <div class="swatch-row">
+      <div class="swatch"><div class="swatch-color" style="background:#FBF9F5; border:1px solid #E0D8CE;"></div><div class="swatch-label">背景 #FBF9F5</div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#FF4D6A;"></div><div class="swatch-label">主色 #FF4D6A</div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#1A5276;"></div><div class="swatch-label">輔色 #1A5276</div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#922B21;"></div><div class="swatch-label">強調 #922B21</div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#1E8449;"></div><div class="swatch-label">成功 #1E8449</div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#CA6F1E;"></div><div class="swatch-label">警告 #CA6F1E</div></div>
+    </div>
+    <div class="prev-stats">
+      <div class="prev-stat"><div class="prev-stat-label">總金額</div><div class="prev-stat-val">NT$4,800</div></div>
+      <div class="prev-stat"><div class="prev-stat-label">已入帳</div><div class="prev-stat-val green">NT$3,200</div></div>
+      <div class="prev-stat"><div class="prev-stat-label">未入帳</div><div class="prev-stat-val orange">NT$1,600</div></div>
+    </div>
+    <div class="prev-card">
+      <div class="prev-card-top">
+        <span class="prev-order-no">#20260405-0001</span>
+        <span class="prev-status status-accepted">已接單</span>
+      </div>
+      <div class="prev-type">接機</div>
+      <div class="prev-route">桃園機場 → 新北市新莊</div>
+      <div class="prev-amount">NT$1,200</div>
+      <div class="prev-btn-row">
+        <button class="prev-btn prev-btn-primary">開始</button>
+        <button class="prev-btn prev-btn-secondary">退單</button>
+      </div>
+    </div>
+    <div class="prev-tab-bar">
+      <div class="prev-tab active">接單</div>
+      <div class="prev-tab inactive">行程</div>
+      <div class="prev-tab inactive">帳務</div>
+      <div class="prev-tab inactive">訊息</div>
+      <div class="prev-tab inactive">我的</div>
+    </div>
+  </div>
+
+  <div class="dark-preview s3-dark">
+    <div class="swatch-row">
+      <div class="swatch"><div class="swatch-color" style="background:#0E0E10; border:1px solid #28282E;"></div><div class="swatch-label">背景 #0E0E10</div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#FF4D6A;"></div><div class="swatch-label">主色 #FF4D6A</div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#5DADE2;"></div><div class="swatch-label">輔色 #5DADE2</div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#28B463;"></div><div class="swatch-label">成功 #28B463</div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#E67E22;"></div><div class="swatch-label">警告 #E67E22</div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#E74C3C;"></div><div class="swatch-label">錯誤 #E74C3C</div></div>
+    </div>
+    <div class="prev-stats">
+      <div class="prev-stat"><div class="prev-stat-label">總金額</div><div class="prev-stat-val">NT$4,800</div></div>
+      <div class="prev-stat"><div class="prev-stat-label">已入帳</div><div class="prev-stat-val green">NT$3,200</div></div>
+      <div class="prev-stat"><div class="prev-stat-label">未入帳</div><div class="prev-stat-val orange">NT$1,600</div></div>
+    </div>
+    <div class="prev-card">
+      <div class="prev-card-top">
+        <span class="prev-order-no">#20260405-0001</span>
+        <span class="prev-status status-accepted">已接單</span>
+      </div>
+      <div class="prev-type">接機</div>
+      <div class="prev-route">桃園機場 → 新北市新莊</div>
+      <div class="prev-amount">NT$1,200</div>
+      <div class="prev-btn-row">
+        <button class="prev-btn prev-btn-primary">開始</button>
+        <button class="prev-btn prev-btn-secondary">退單</button>
+      </div>
+    </div>
+    <div class="prev-tab-bar">
+      <div class="prev-tab active">接單</div>
+      <div class="prev-tab inactive">行程</div>
+      <div class="prev-tab inactive">帳務</div>
+      <div class="prev-tab inactive">訊息</div>
+      <div class="prev-tab inactive">我的</div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<p class="sub" style="margin-top: 20px;">夜間模式設計原則：低對比、低亮度、減少藍光，適合駕駛時降低眼睛疲勞</p>
+
+<script>
+// Quick toggle for side-by-side comparison
+document.querySelectorAll('.scheme-card').forEach(card => {
+  card.addEventListener('click', () => {
+    card.classList.toggle('expanded');
+  });
+});
+</script>
+</body>
+</html>

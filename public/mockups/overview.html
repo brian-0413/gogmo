@@ -1,0 +1,144 @@
+<h2>全貌 Overview — 司機端 + 派單方端</h2>
+<p class="subtitle">確認 Header 設計，以及雙方 Tab 架構</p>
+
+<div class="section" style="margin-top: 1.5rem;">
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+    <!-- Driver Header -->
+    <div style="background: #F4EFE9; border-radius: 12px; padding: 14px;">
+      <div style="font-size: 12px; font-weight: bold; color: #0C447C; margin-bottom: 8px;">司機端 Header</div>
+      <div style="background: white; border-radius: 10px; padding: 10px; display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <div style="width: 32px; height: 32px; background: #FF385C; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+            <span style="color: white; font-size: 14px;">✈</span>
+          </div>
+          <div>
+            <div style="font-size: 14px; font-weight: bold; color: #222;">王小明</div>
+            <div style="font-size: 11px; color: #717171;">ABC-1234</div>
+          </div>
+        </div>
+        <div style="background: #222; color: white; padding: 6px 12px; border-radius: 10px; font-size: 13px; font-weight: bold; font-family: monospace;">1,250 點</div>
+      </div>
+    </div>
+    <!-- Dispatcher Header -->
+    <div style="background: #F4EFE9; border-radius: 12px; padding: 14px;">
+      <div style="font-size: 12px; font-weight: bold; color: #008A05; margin-bottom: 8px;">派單方 Header</div>
+      <div style="background: white; border-radius: 10px; padding: 10px; display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <div style="width: 32px; height: 32px; background: #008A05; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+            <span style="color: white; font-size: 14px;">🏢</span>
+          </div>
+          <div style="font-size: 14px; font-weight: bold; color: #222;">好的車行</div>
+        </div>
+        <div style="font-size: 12px; color: #717171;">派單方</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 1.5rem;">
+  <h3 style="font-size: 14px; margin-bottom: 12px;">司機端 — 底部 Tab Bar</h3>
+  <div style="background: white; border-radius: 12px; padding: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+    <div style="display: flex; gap: 4px;">
+      <div style="flex: 1; display: flex; flex-direction: column; align-items: center; padding: 8px 4px;">
+        <div style="width: 24px; height: 24px; background: #FF385C; border-radius: 50%; margin-bottom: 4px;"></div>
+        <span style="font-size: 10px; color: #FF385C; font-weight: bold;">接單大廳</span>
+      </div>
+      <div style="flex: 1; display: flex; flex-direction: column; align-items: center; padding: 8px 4px;">
+        <div style="width: 24px; height: 24px; background: #F4EFE9; border-radius: 50%; margin-bottom: 4px;"></div>
+        <span style="font-size: 10px; color: #717171;">我的行程</span>
+      </div>
+      <div style="flex: 1; display: flex; flex-direction: column; align-items: center; padding: 8px 4px;">
+        <div style="width: 24px; height: 24px; background: #F4EFE9; border-radius: 50%; margin-bottom: 4px;"></div>
+        <span style="font-size: 10px; color: #717171;">帳務中心</span>
+      </div>
+      <div style="flex: 1; display: flex; flex-direction: column; align-items: center; padding: 8px 4px;">
+        <div style="width: 24px; height: 24px; background: #F4EFE9; border-radius: 50%; margin-bottom: 4px;"></div>
+        <span style="font-size: 10px; color: #717171;">訊息</span>
+      </div>
+      <div style="flex: 1; display: flex; flex-direction: column; align-items: center; padding: 8px 4px;">
+        <div style="width: 24px; height: 24px; background: #F4EFE9; border-radius: 50%; margin-bottom: 4px;"></div>
+        <span style="font-size: 10px; color: #717171;">個人</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 1.5rem;">
+  <h3 style="font-size: 14px; margin-bottom: 12px;">派單方端 — 左側 Tab Bar（桌面模式）</h3>
+  <div style="display: flex; gap: 12px;">
+    <div style="width: 120px; flex-shrink: 0; background: white; border-radius: 12px; padding: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+      <div style="display: flex; flex-direction: column; gap: 4px;">
+        <div style="background: #008A05; color: white; padding: 10px 12px; border-radius: 8px; font-size: 12px; font-weight: bold;">行控中心</div>
+        <div style="padding: 10px 12px; border-radius: 8px; font-size: 12px; color: #717171; background: #F4EFE9;">派單中心</div>
+        <div style="padding: 10px 12px; border-radius: 8px; font-size: 12px; color: #717171; background: #F4EFE9;">帳務中心</div>
+        <div style="padding: 10px 12px; border-radius: 8px; font-size: 12px; color: #717171; background: #F4EFE9;">訊息中心</div>
+        <div style="padding: 10px 12px; border-radius: 8px; font-size: 12px; color: #717171; background: #F4EFE9;">車商資料</div>
+      </div>
+    </div>
+    <div style="flex: 1; background: white; border-radius: 12px; padding: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+      <div style="font-size: 11px; color: #B0B0B0; margin-bottom: 8px;">派單方內容區</div>
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">
+        <div style="background: #FCEBEB; border-radius: 8px; padding: 10px; text-align: center;">
+          <div style="font-size: 20px; font-weight: bold; color: #A32D2D;">12</div>
+          <div style="font-size: 10px; color: #717171;">待接單</div>
+        </div>
+        <div style="background: #FFF3E0; border-radius: 8px; padding: 10px; text-align: center;">
+          <div style="font-size: 20px; font-weight: bold; color: #B45309;">5</div>
+          <div style="font-size: 10px; color: #717171;">已接單</div>
+        </div>
+        <div style="background: #E6F1FB; border-radius: 8px; padding: 10px; text-align: center;">
+          <div style="font-size: 20px; font-weight: bold; color: #0C447C;">3</div>
+          <div style="font-size: 10px; color: #717171;">行進中</div>
+        </div>
+        <div style="background: #E8F5E8; border-radius: 8px; padding: 10px; text-align: center;">
+          <div style="font-size: 20px; font-weight: bold; color: #008A05;">48</div>
+          <div style="font-size: 10px; color: #717171;">已完成</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div style="margin-top: 16px; padding: 12px; background: #E6F1FB; border-radius: 10px; border: 1px solid #C2DBF5;">
+  <p style="font-size: 13px; color: #0C447C; margin: 0;">
+    <strong>設計共識：</strong>司機端底部 Tab Bar（手機） · 派單方左側 Tab Bar（桌面）
+  </p>
+</div>
+
+<div style="margin-top: 16px;">
+  <h3 style="font-size: 14px; margin-bottom: 10px;">接下來逐個討論的順序</h3>
+  <div style="display: flex; flex-direction: column; gap: 8px;">
+    <div style="background: #F4EFE9; border-radius: 10px; padding: 10px 12px; display: flex; align-items: center; gap: 8px;">
+      <span style="background: #FF385C; color: white; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: bold;">1</span>
+      <span style="font-size: 13px; color: #222;">司機端 — 接單大廳</span>
+    </div>
+    <div style="background: #F4EFE9; border-radius: 10px; padding: 10px 12px; display: flex; align-items: center; gap: 8px;">
+      <span style="background: #FF385C; color: white; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: bold;">2</span>
+      <span style="font-size: 13px; color: #222;">司機端 — 我的行程（行事曆 + 智慧配單 + 已接行程）</span>
+    </div>
+    <div style="background: #F4EFE9; border-radius: 10px; padding: 10px 12px; display: flex; align-items: center; gap: 8px;">
+      <span style="background: #FF385C; color: white; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: bold;">3</span>
+      <span style="font-size: 13px; color: #222;">司機端 — 帳務中心</span>
+    </div>
+    <div style="background: #F4EFE9; border-radius: 10px; padding: 10px 12px; display: flex; align-items: center; gap: 8px;">
+      <span style="background: #FF385C; color: white; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: bold;">4</span>
+      <span style="font-size: 13px; color: #222;">司機端 — 訊息中心 + 個人資料</span>
+    </div>
+    <div style="background: #E8F5E8; border-radius: 10px; padding: 10px 12px; display: flex; align-items: center; gap: 8px;">
+      <span style="background: #008A05; color: white; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: bold;">5</span>
+      <span style="font-size: 13px; color: #222;">派單方 — 行控中心</span>
+    </div>
+    <div style="background: #E8F5E8; border-radius: 10px; padding: 10px 12px; display: flex; align-items: center; gap: 8px;">
+      <span style="background: #008A05; color: white; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: bold;">6</span>
+      <span style="font-size: 13px; color: #222;">派單方 — 派單中心、訊息中心</span>
+    </div>
+    <div style="background: #E8F5E8; border-radius: 10px; padding: 10px 12px; display: flex; align-items: center; gap: 8px;">
+      <span style="background: #008A05; color: white; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: bold;">7</span>
+      <span style="font-size: 13px; color: #222;">派單方 — 帳務中心（日期搜尋 + Excel下載）</span>
+    </div>
+    <div style="background: #E8F5E8; border-radius: 10px; padding: 10px 12px; display: flex; align-items: center; gap: 8px;">
+      <span style="background: #008A05; color: white; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: bold;">8</span>
+      <span style="font-size: 13px; color: #222;">派單方 — 車商資料</span>
+    </div>
+  </div>
+</div>

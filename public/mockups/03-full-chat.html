@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>小車頭專區 — 完整對話流程</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans TC', sans-serif; background: #FAF8F5; color: #222222; line-height: 1.6; padding: 20px 12px 40px; }
+  .container { max-width: 480px; margin: 0 auto; }
+
+  /* Phone frame */
+  .phone { background: white; border: 1px solid #DDDDDD; border-radius: 24px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08); }
+  .phone-header { background: #FF385C; color: white; padding: 14px 20px; display: flex; align-items: center; gap: 12px; }
+  .phone-header .icon { width: 32px; height: 32px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+  .phone-header .title { font-size: 15px; font-weight: 700; }
+  .phone-header .sub { font-size: 11px; opacity: 0.8; }
+  .phone-body { padding: 16px; min-height: 500px; }
+
+  /* Progress */
+  .progress { display: flex; gap: 3px; margin-bottom: 16px; }
+  .progress-dot { height: 3px; flex: 1; border-radius: 2px; background: #EBEBEB; }
+  .progress-dot.done { background: #FF385C; }
+  .progress-dot.current { background: #FFB3C1; }
+
+  /* Chat */
+  .chat { display: flex; flex-direction: column; gap: 10px; }
+  .bubble-bot { display: flex; align-items: flex-start; gap: 8px; }
+  .bubble-bot .avatar { width: 28px; height: 28px; border-radius: 50%; background: #FF385C; color: white; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+  .bubble-bot .msg { background: #F9F7F4; border: 1px solid #EBEBEB; border-radius: 14px 14px 14px 4px; padding: 10px 14px; max-width: 100%; font-size: 13px; }
+  .bubble-bot .msg p { margin-bottom: 6px; }
+  .bubble-bot .msg p:last-child { margin-bottom: 0; }
+  .bubble-bot .msg strong { color: #FF385C; }
+
+  .bubble-user { display: flex; justify-content: flex-end; }
+  .bubble-user .msg { background: #FF385C; color: white; border-radius: 14px 14px 4px 14px; padding: 10px 14px; max-width: 75%; font-size: 13px; font-weight: 600; }
+
+  /* Options grid */
+  .opt-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-top: 6px; }
+  .opt-grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-top: 6px; }
+  .opt-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 6px; }
+  .opt-grid4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 5px; margin-top: 6px; }
+  .opt-btn { padding: 8px 4px; border-radius: 10px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.15s; border: 2px solid; text-align: center; line-height: 1.2; }
+  .opt-btn.pink { background: #FF385C; color: white; border-color: #FF385C; }
+  .opt-btn.outline { background: white; color: #222222; border-color: #DDDDDD; }
+  .opt-btn.outline:hover { border-color: #FF385C; color: #FF385C; }
+  .opt-btn.outline.selected { background: #FFF3F5; border-color: #FF385C; color: #FF385C; }
+  .opt-btn.large { padding: 10px 6px; font-size: 13px; }
+
+  /* Input row */
+  .input-row { display: flex; gap: 6px; margin-top: 8px; }
+  .input-row input { flex: 1; padding: 8px 10px; border: 2px solid #DDDDDD; border-radius: 10px; font-size: 13px; font-family: inherit; outline: none; background: white; }
+  .input-row input:focus { border-color: #FF385C; }
+  .input-row .send-btn { padding: 8px 14px; background: #FF385C; color: white; border: none; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; }
+
+  /* Date/Time */
+  .datetime-row { display: flex; gap: 6px; margin-top: 6px; }
+  .datetime-row input { flex: 1; padding: 8px 10px; border: 2px solid #DDDDDD; border-radius: 10px; font-size: 13px; font-family: inherit; outline: none; background: white; }
+  .datetime-row input:focus { border-color: #FF385C; }
+
+  /* Mode cards */
+  .mode-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 6px; }
+  .mode-card { border: 2px solid #DDDDDD; border-radius: 14px; padding: 12px 8px; cursor: pointer; text-align: center; transition: all 0.15s; }
+  .mode-card:hover { border-color: #FF385C; }
+  .mode-card.selected { border-color: #FF385C; background: #FFF3F5; }
+  .mode-card .icon { font-size: 16px; font-weight: 800; color: #FF385C; }
+  .mode-card .name { font-size: 12px; font-weight: 700; margin-top: 2px; }
+  .mode-card .desc { font-size: 10px; color: #717171; margin-top: 2px; }
+
+  /* Money input */
+  .money-box { background: #FFF3F5; border: 1px solid #FFE0E9; border-radius: 12px; padding: 10px; margin-top: 6px; }
+  .money-row { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+  .money-row:last-child { margin-bottom: 0; }
+  .money-row label { font-size: 12px; font-weight: 600; color: #717171; white-space: nowrap; min-width: 64px; }
+  .money-row input { flex: 1; padding: 6px 8px; border: 2px solid #DDDDDD; border-radius: 8px; font-size: 13px; font-family: inherit; outline: none; background: white; }
+  .money-row input:focus { border-color: #FF385C; }
+  .money-row .prefix { font-size: 13px; color: #717171; }
+  .money-result { display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; background: #FF385C; color: white; border-radius: 8px; margin-top: 8px; font-size: 12px; font-weight: 700; }
+  .money-result .amount { font-size: 18px; font-weight: 800; }
+
+  /* Luggage loop */
+  .luggage-list { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+  .luggage-chip { display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; background: #F4EFE9; border: 1px solid #DDDDDD; border-radius: 20px; font-size: 11px; }
+  .luggage-chip .remove { color: #A8A29E; cursor: pointer; }
+
+  /* Summary */
+  .summary { background: #F9F7F4; border: 1px solid #EBEBEB; border-radius: 14px; padding: 12px; margin-top: 6px; }
+  .summary-title { font-size: 11px; font-weight: 700; color: #FF385C; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+  .summary-row { display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px solid #EBEBEB; font-size: 12px; }
+  .summary-row:last-child { border-bottom: none; }
+  .summary-row .key { color: #717171; }
+  .summary-row .val { font-weight: 600; }
+  .summary-row .val.accent { color: #FF385C; }
+
+  .submit-btn { width: 100%; padding: 12px; background: #FF385C; color: white; border: none; border-radius: 12px; font-size: 14px; font-weight: 700; cursor: pointer; margin-top: 10px; }
+  .submit-btn:hover { background: #E83355; }
+
+  /* Type auto-update indicator */
+  .type-chip { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; background: #FF385C; color: white; border-radius: 20px; font-size: 12px; font-weight: 700; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<!-- Phone Frame -->
+<div class="phone">
+  <div class="phone-header">
+    <div class="icon">G</div>
+    <div>
+      <div class="title">goGMO 小車頭</div>
+      <div class="sub">Premium 司機專屬發單</div>
+    </div>
+  </div>
+  <div class="phone-body">
+
+    <!-- Progress -->
+    <div class="progress">
+      <div class="progress-dot done"></div>
+      <div class="progress-dot done"></div>
+      <div class="progress-dot current"></div>
+      <div class="progress-dot"></div>
+      <div class="progress-dot"></div>
+      <div class="progress-dot"></div>
+      <div class="progress-dot"></div>
+      <div class="progress-dot"></div>
+      <div class="progress-dot"></div>
+      <div class="progress-dot"></div>
+      <div class="progress-dot"></div>
+      <div class="progress-dot"></div>
+    </div>
+
+    <div class="chat">
+
+      <!-- Q: 接機/送機 -->
+      <div class="bubble-bot">
+        <div class="avatar">G</div>
+        <div class="msg">
+          <p>您好！請問是 <strong>接機/船</strong> 還是 <strong>送機/船</strong>？</p>
+          <div class="opt-grid2">
+            <button class="opt-btn pink large">接 機 / 船</button>
+            <button class="opt-btn outline large">送 機 / 船</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="bubble-user"><div class="msg">接機/船</div></div>
+
+      <!-- Q: 機場選擇 -->
+      <div class="bubble-bot">
+        <div class="avatar">G</div>
+        <div class="msg">
+          <p>好的！請選擇 <strong>上車地點</strong>：</p>
+          <div class="opt-grid">
+            <button class="opt-btn pink">桃園機場</button>
+            <button class="opt-btn outline">松山機場</button>
+            <button class="opt-btn outline">清泉崗機場</button>
+            <button class="opt-btn outline">小港機場</button>
+            <button class="opt-btn outline">基隆港</button>
+            <button class="opt-btn outline">其他</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="bubble-user"><div class="msg">桃園機場</div></div>
+
+      <!-- Bot: Type auto-updated -->
+      <div class="bubble-bot">
+        <div class="avatar">G</div>
+        <div class="msg">
+          <p>已設定為 <strong>接機</strong>！請填寫航班日期和時間：</p>
+          <div class="datetime-row">
+            <input type="date" value="2026-04-08" />
+            <input type="time" value="15:30" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Q: 航班（接機必填） -->
+      <div class="bubble-bot">
+        <div class="avatar">G</div>
+        <div class="msg">
+          <p>請輸入 <strong>航班號碼</strong>（必填）：</p>
+          <div class="input-row">
+            <input type="text" placeholder="例如：BR 32" value="BR 32" />
+            <button class="send-btn">下一步</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Q: 車型 -->
+      <div class="bubble-bot">
+        <div class="avatar">G</div>
+        <div class="msg">
+          <p>請選擇 <strong>車型</strong>：</p>
+          <div class="opt-grid3">
+            <button class="opt-btn outline">小車(5人)</button>
+            <button class="opt-btn pink">休旅(7人)</button>
+            <button class="opt-btn outline">9人座</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Q: 乘客數 -->
+      <div class="bubble-bot">
+        <div class="avatar">G</div>
+        <div class="msg">
+          <p>請問 <strong>乘客數</strong>？</p>
+          <div class="opt-grid4">
+            <button class="opt-btn outline">1人</button>
+            <button class="opt-btn pink">2人</button>
+            <button class="opt-btn outline">3人</button>
+            <button class="opt-btn outline">4人</button>
+            <button class="opt-btn outline">5人</button>
+            <button class="opt-btn outline">6人</button>
+            <button class="opt-btn outline">7人</button>
+            <button class="opt-btn outline">8人</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Q: 行李 Loop -->
+      <div class="bubble-bot">
+        <div class="avatar">G</div>
+        <div class="msg">
+          <p>請問有什麼<strong>行李尺寸</strong>？</p>
+          <div class="opt-grid">
+            <button class="opt-btn outline">胖胖箱</button>
+            <button class="opt-btn outline">28吋</button>
+            <button class="opt-btn outline">24吋</button>
+            <button class="opt-btn pink">20吋</button>
+            <button class="opt-btn outline">其他</button>
+            <button class="opt-btn outline">無行李</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bot: 行李數量 -->
+      <div class="bubble-bot">
+        <div class="avatar">G</div>
+        <div class="msg">
+          <p>選擇了 <strong>24吋</strong>，請問有幾件？</p>
+          <div class="opt-grid3">
+            <button class="opt-btn pink">1件</button>
+            <button class="opt-btn outline">2件</button>
+            <button class="opt-btn outline">3件</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bot: 更多行李？ -->
+      <div class="bubble-bot">
+        <div class="avatar">G</div>
+        <div class="msg">
+          <p>已加入 <strong>24吋 × 1</strong></p>
+          <div class="luggage-list">
+            <div class="luggage-chip">24吋 x 1 <span class="remove">x</span></div>
+          </div>
+          <div class="opt-grid2" style="margin-top:8px">
+            <button class="opt-btn pink">確定，沒了</button>
+            <button class="opt-btn outline">+ 還有其他尺寸</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Q: 目的地 -->
+      <div class="bubble-bot">
+        <div class="avatar">G</div>
+        <div class="msg">
+          <p>已設定 <strong>桃園機場 → 接機</strong></p>
+          <p style="margin-top:6px">請填寫<strong>目的地</strong>：</p>
+          <div class="input-row">
+            <input type="text" placeholder="輸入地址或地點" value="新竹火車站" />
+            <button class="send-btn">下一步</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Q: 聯絡人 -->
+      <div class="bubble-bot">
+        <div class="avatar">G</div>
+        <div class="msg">
+          <p>請輸入<strong>聯絡人</strong>和<strong>電話</strong>：</p>
+          <div class="input-row">
+            <input type="text" placeholder="姓名" value="王小明" />
+            <input type="tel" placeholder="電話" value="0912-345-678" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Q: 費用模式 -->
+      <div class="bubble-bot">
+        <div class="avatar">G</div>
+        <div class="msg">
+          <p>請選擇<strong>費用模式</strong>：</p>
+          <div class="mode-cards">
+            <div class="mode-card selected">
+              <div class="icon">轉</div>
+              <div class="name">客下轉帳</div>
+              <div class="desc">派單人已收錢，直接匯給司機</div>
+            </div>
+            <div class="mode-card">
+              <div class="icon">現</div>
+              <div class="name">代收現金</div>
+              <div class="desc">司機收現後，回金傭金給派單人</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 代收模式展開 -->
+      <div class="bubble-bot">
+        <div class="avatar">G</div>
+        <div class="msg">
+          <p>選擇了 <strong>代收現金</strong>模式，請填寫：</p>
+          <div class="money-box">
+            <div class="money-row">
+              <label>代收金額</label>
+              <div style="flex:1;display:flex;align-items:center;gap:4px">
+                <span class="prefix">NT$</span>
+                <input type="number" value="2200" style="flex:1" />
+              </div>
+            </div>
+            <div class="money-row">
+              <label>回金給派單</label>
+              <div style="flex:1;display:flex;align-items:center;gap:4px">
+                <span class="prefix">NT$</span>
+                <input type="number" value="200" style="flex:1" />
+              </div>
+            </div>
+            <div class="money-result">
+              <span>司機實拿</span>
+              <span class="amount">NT$2,000</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Q: 備註 -->
+      <div class="bubble-bot">
+        <div class="avatar">G</div>
+        <div class="msg">
+          <p>請選擇<strong>特殊需求</strong>（可複選）：</p>
+          <div class="opt-grid" style="margin-top:6px">
+            <button class="opt-btn outline selected">舉牌</button>
+            <button class="opt-btn outline">安全座椅</button>
+            <button class="opt-btn outline">其他</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Summary -->
+      <div class="summary">
+        <div class="summary-title">發單摘要</div>
+        <div class="summary-row"><span class="key">類型</span><span class="val">接機</span></div>
+        <div class="summary-row"><span class="key">航班</span><span class="val">BR 32</span></div>
+        <div class="summary-row"><span class="key">時間</span><span class="val">2026/04/08 15:30</span></div>
+        <div class="summary-row"><span class="key">上車</span><span class="val">桃園機場</span></div>
+        <div class="summary-row"><span class="key">目的地</span><span class="val">新竹火車站</span></div>
+        <div class="summary-row"><span class="key">車型</span><span class="val">休旅(7人)</span></div>
+        <div class="summary-row"><span class="key">乘客/行李</span><span class="val">2人 / 24吋×1</span></div>
+        <div class="summary-row"><span class="key">費用模式</span><span class="val">代收現金</span></div>
+        <div class="summary-row"><span class="key">代收</span><span class="val">NT$2,200</span></div>
+        <div class="summary-row"><span class="key">回金</span><span class="val">NT$200</span></div>
+        <div class="summary-row"><span class="key">司機實拿</span><span class="val accent">NT$2,000</span></div>
+        <div class="summary-row"><span class="key">特殊</span><span class="val">舉牌</span></div>
+      </div>
+
+      <button class="submit-btn">確認發單上架</button>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button class="submit-btn" style="background:white;color:#FF385C;border:2px solid #FF385C;font-size:13px">我要修改</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Legend -->
+<div style="max-width:480px;margin:16px auto 0;font-size:12px;color:#A8A29E;text-align:center">
+  手機尺寸示意 · 純視覺 mockup
+</div>
+</body>
+</html>
