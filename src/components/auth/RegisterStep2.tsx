@@ -76,6 +76,8 @@ export function RegisterStep2({ role, data, onChange, onNext }: RegisterStep2Pro
             {field('companyName', '公司名稱', 'text', '請輸入公司或車隊名稱')}
             {field('contactPhone', '聯絡電話', 'tel', '例：02-xxxx-xxxx')}
             {field('email', 'Email', 'email', '請輸入 Email')}
+            {field('name', '負責人姓名', 'text', '請輸入負責人姓名')}
+            {field('phone', '負責人手機', 'tel', '0912-345-678')}
             <div className="space-y-1">
               <label className="text-[11px] text-[#717171] font-normal">統一編號（選填）</label>
               <input

@@ -98,6 +98,8 @@ export function RegisterWizard() {
         fd.append('bankCode', step4BankData.bankCode)
         fd.append('bankAccount', step4BankData.bankAccount)
       } else {
+        fd.append('name', step2Data.name)
+        fd.append('phone', step2Data.phone)
         fd.append('companyName', step2Data.companyName || '')
         fd.append('taxId', step2Data.taxId || '')
         fd.append('contactPhone', step2Data.contactPhone || '')
