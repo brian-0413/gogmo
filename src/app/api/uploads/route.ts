@@ -52,9 +52,10 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  // Get user's license plate and name (Driver or Dispatcher)
+  // Get user's role, license plate and name (Driver or Dispatcher)
   const driver = await prisma.driver.findUnique({ where: { userId: user.id } })
   const dispatcher = await prisma.dispatcher.findUnique({ where: { userId: user.id } })
+  const role = driver ? 'DRIVER' : 'DISPATCHER'
   const licensePlate = driver?.licensePlate || dispatcher?.companyName || user.id
   const userName = user.name
 
@@ -71,9 +72,12 @@ export async function POST(request: NextRequest) {
   let uploadFailed = false
 
   try {
-    const rootFolderId = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID || '1QG9tF229aMvpd6kOHd-bl7MKK2YWbxNR'
+    // 依角色選擇父資料夾：司機用 DRIVER_FOLDER_ID，派單方用 DISPATCHER_FOLDER_ID
+    const roleFolderId = role === 'DRIVER'
+      ? (process.env.GOOGLE_DRIVE_DRIVER_FOLDER_ID || '1QG9tF229aMvpd6kOHd-bl7MKK2YWbxNR')
+      : (process.env.GOOGLE_DRIVE_DISPATCHER_FOLDER_ID || '1ZcVPCvi5f5qbF1W6g86q1BOCy8qMDt9e')
 
-    const folderId = await getOrCreateUserFolder(rootFolderId, user.id, licensePlate, userName)
+    const folderId = await getOrCreateUserFolder(roleFolderId, user.id, licensePlate, userName)
     const result = await uploadFileToDrive(folderId, driveFileName, file.type, buffer)
     await setFilePublic(result.fileId)
 
