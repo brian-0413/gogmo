@@ -77,6 +77,9 @@ export function RegisterWizard() {
 
   const handleSubmit = async () => {
     if (!role) return
+    console.log('[REGISTER] handleSubmit called')
+    console.log('[REGISTER] step2Data:', JSON.stringify({ email: step2Data.email, name: step2Data.name, phone: step2Data.phone }))
+    console.log('[REGISTER] step6Data:', JSON.stringify({ passwordLength: step6Data.password.length, agreedToTerms: step6Data.agreedToTerms }))
     setSubmitting(true)
     setError('')
     try {
@@ -103,10 +106,13 @@ export function RegisterWizard() {
         fd.append(type, file)
       }
 
+      console.log('[REGISTER] About to fetch /api/auth')
+      console.log('[REGISTER] FormData fields:', [...fd.entries()].map(e => `${e[0]}: ${e[1] instanceof File ? 'File(' + e[1].name + ')' : e[1]}`))
       const res = await fetch('/api/auth', {
         method: 'POST',
         body: fd,
       })
+      console.log('[REGISTER] Response status:', res.status)
       const data = await res.json()
       console.log('[REGISTER] API response:', JSON.stringify(data))
       if (!data.success) {
@@ -177,6 +183,11 @@ export function RegisterWizard() {
           <ProgressBar currentStep={step} totalSteps={totalSteps} labels={progressLabels} />
 
           <div className="bg-white border border-[#DDDDDD] rounded-xl p-6 mt-2">
+            {error && (
+              <div className="mb-4 bg-[#FCEBEB] border border-[#F5C6C6] text-[#E24B4A] px-4 py-3 rounded-lg text-sm text-center">
+                {error}
+              </div>
+            )}
             {step === 1 && <RegisterStep1 onSelect={handleRoleSelect} />}
             {step === 2 && role && (
               <RegisterStep2
