@@ -56,13 +56,7 @@ export function RegisterWizard() {
 
   const handleStep2Next = () => setStep(3)
 
-  const handleStep3Next = () => {
-    if (role === 'DISPATCHER') {
-      setStep(4)
-    } else {
-      setStep(4)
-    }
-  }
+  const handleStep3Next = () => setStep(4)
 
   const handleStep4BankNext = () => setStep(5)
   const handleStep5Next = () => setStep(6)
@@ -70,9 +64,9 @@ export function RegisterWizard() {
   const handleBack = () => {
     if (step === 2) setStep(1)
     else if (step === 3) setStep(2)
-    else if (step === 4) setStep(3)
-    else if (step === 5) setStep(4)
-    else if (step === 6) setStep(5)
+    else if (step === 4) setStep(role === 'DISPATCHER' ? 3 : 3)
+    else if (step === 5) setStep(role === 'DISPATCHER' ? 3 : 4)
+    else if (step === 6) setStep(role === 'DISPATCHER' ? 3 : 5)
   }
 
   const handleSubmit = async () => {
