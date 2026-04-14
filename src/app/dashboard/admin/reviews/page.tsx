@@ -57,6 +57,7 @@ export default function AdminReviewsPage() {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<'DRIVER' | 'DISPATCHER'>('DRIVER')
   const [users, setUsers] = useState<UserInfo[]>([])
+  const [pendingCounts, setPendingCounts] = useState({ DRIVER: 0, DISPATCHER: 0 })
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [rejectingUser, setRejectingUser] = useState<string | null>(null)
@@ -81,6 +82,11 @@ export default function AdminReviewsPage() {
       .then(d => {
         if (d.success) {
           setUsers(d.data.users)
+          // 更新另一個 tab 的待審核數（如果存在）
+          setPendingCounts(prev => ({
+            ...prev,
+            [activeTab]: d.data.count ?? d.data.users.length,
+          }))
           // 初始化到期日狀態
           const expiryMap: Record<string, string> = {}
           d.data.users.forEach((u: UserInfo) => {
@@ -201,11 +207,11 @@ export default function AdminReviewsPage() {
         <div className="flex gap-2 mb-6">
           <button onClick={() => setActiveTab('DRIVER')}
             className={`px-4 py-2 rounded-lg text-sm font-medium ${activeTab === 'DRIVER' ? 'bg-[#0C447C] text-white' : 'bg-white border border-[#DDDDDD] text-[#717171]'}`}>
-            司機待審核 ({users.length})
+            司機待審核 ({pendingCounts.DRIVER})
           </button>
           <button onClick={() => setActiveTab('DISPATCHER')}
             className={`px-4 py-2 rounded-lg text-sm font-medium ${activeTab === 'DISPATCHER' ? 'bg-[#FF385C] text-white' : 'bg-white border border-[#DDDDDD] text-[#717171]'}`}>
-            派單方待審核 ({users.length})
+            派單方待審核 ({pendingCounts.DISPATCHER})
           </button>
         </div>
 
