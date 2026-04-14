@@ -136,10 +136,12 @@ export async function POST(request: NextRequest) {
           const fileName = `${plate}-${userName}-${labelMap[type] || type}.${ext}`
           const buffer = Buffer.from(await file.arrayBuffer())
 
-          const rootFolderId = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID || '1QG9tF229aMvpd6kOHd-bl7MKK2YWbxNR'
+          const roleFolderId = driver
+            ? (process.env.GOOGLE_DRIVE_DRIVER_FOLDER_ID || '1QG9tF229aMvpd6kOHd-bl7MKK2YWbxNR')
+            : (process.env.GOOGLE_DRIVE_DISPATCHER_FOLDER_ID || '1ZcVPCvi5f5qbF1W6g86q1BOCy8qMDt9e')
 
           // 新資料夾格式：{YYYYMMDD}-{車牌}-{姓名}
-          const folderId = await getOrCreateUserFolder(rootFolderId, result.user!.id, plate, userName)
+          const folderId = await getOrCreateUserFolder(roleFolderId, result.user!.id, plate, userName)
           console.log(`[REGISTER] Created/retrieved folder: ${folderId}`)
           const uploaded = await uploadFileToDrive(folderId, fileName, file.type, buffer)
           console.log(`[REGISTER] Uploaded file: ${uploaded.fileId} -> ${uploaded.webViewLink}`)
