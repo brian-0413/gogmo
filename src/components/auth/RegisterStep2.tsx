@@ -32,6 +32,8 @@ export function RegisterStep2({ role, data, onChange, onNext }: RegisterStep2Pro
       if (!data.contactPhone?.trim()) newErrors.contactPhone = '請填寫聯絡電話'
       if (!data.email.trim()) newErrors.email = '請填寫 Email'
       else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) newErrors.email = 'Email 格式不正確'
+      if (!data.name?.trim()) newErrors.name = '請填寫負責人姓名'
+      if (!data.phone?.trim()) newErrors.phone = '請填寫負責人手機'
     }
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
