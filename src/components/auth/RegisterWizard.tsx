@@ -42,10 +42,10 @@ export function RegisterWizard() {
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
 
-  // 司機：6步；派單方：4步
-  const totalSteps = role === 'DISPATCHER' ? 4 : 6
+  // 統一 6 步流程，Step 3/4 對派單方顯示文件上傳/密碼
+  const totalSteps = 6
   const driverLabels = ['身份選擇', '基本資料', '車輛資料', '銀行資料', '文件上傳', '密碼設定']
-  const dispatcherLabels = ['身份選擇', '基本資料', '文件上傳', '密碼設定']
+  const dispatcherLabels = ['身份選擇', '基本資料', '文件上傳', '密碼設定', '', '']
   const progressLabels = role === 'DISPATCHER' ? dispatcherLabels : driverLabels
 
   const handleRoleSelect = (selectedRole: 'DRIVER' | 'DISPATCHER') => {
@@ -71,10 +71,7 @@ export function RegisterWizard() {
     if (step === 2) setStep(1)
     else if (step === 3) setStep(2)
     else if (step === 4) setStep(3)
-    else if (step === 5) {
-      if (role === 'DISPATCHER') setStep(2)
-      else setStep(4)
-    }
+    else if (step === 5) setStep(4)
     else if (step === 6) setStep(5)
   }
 
@@ -212,7 +209,7 @@ export function RegisterWizard() {
                 onBack={handleBack}
               />
             )}
-            {step === 5 && role && (
+            {step === 5 && role === 'DRIVER' && (
               <RegisterStep5
                 role={role}
                 uploadedFiles={step5Files}
