@@ -108,13 +108,15 @@ export function RegisterWizard() {
         body: fd,
       })
       const data = await res.json()
+      console.log('[REGISTER] API response:', JSON.stringify(data))
       if (!data.success) {
         setError(data.error || '註冊失敗')
         setSubmitting(false)
         return
       }
-
+      console.log('[REGISTER] About to call setSuccess(true)')
       setSuccess(true)
+      console.log('[REGISTER] setSuccess called, now waiting...')
     } catch { setError('網路錯誤') }
     setSubmitting(false)
   }
