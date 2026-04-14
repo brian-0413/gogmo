@@ -187,7 +187,7 @@ export function RegisterWizard() {
                 onNext={handleStep2Next}
               />
             )}
-            {step === 3 && (
+            {step === 3 && role === 'DRIVER' && (
               <RegisterStep3
                 data={step3Data}
                 onChange={setStep3Data}
