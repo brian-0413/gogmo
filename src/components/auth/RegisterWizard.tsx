@@ -58,7 +58,7 @@ export function RegisterWizard() {
 
   const handleStep3Next = () => {
     if (role === 'DISPATCHER') {
-      setStep(5)
+      setStep(4)
     } else {
       setStep(4)
     }
@@ -192,6 +192,15 @@ export function RegisterWizard() {
                 data={step3Data}
                 onChange={setStep3Data}
                 onNext={handleStep3Next}
+                onBack={handleBack}
+              />
+            )}
+            {step === 3 && role === 'DISPATCHER' && (
+              <RegisterStep5
+                role={role}
+                uploadedFiles={step5Files}
+                onChange={setStep5Files}
+                onNext={handleStep5Next}
                 onBack={handleBack}
               />
             )}
