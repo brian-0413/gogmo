@@ -39,6 +39,7 @@ function OrderCard({ order, onAccept, onView, onTransferRequest, onCancel, showA
   const vehicle: VehicleType = order.vehicle || 'any'
   const urgency = getTimeUrgency(order.scheduledTime)
   const [notesExpanded, setNotesExpanded] = useState(false)
+  const [compactNotesExpanded, setCompactNotesExpanded] = useState(false)
   const notes = order.notes || order.note || order.rawText
   const orderNo = formatOrderNo(scheduledDate, order.orderSeq)
   const typeBadgeColor = TYPE_COLORS[orderType]
@@ -74,17 +75,34 @@ function OrderCard({ order, onAccept, onView, onTransferRequest, onCancel, showA
             {TYPE_LABELS[orderType]}
           </span>
         </div>
-        <div className="flex items-start gap-1.5 text-xs text-[#717171] mb-2">
-          <div className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ backgroundColor: typeBadgeColor.bg === '#F4EFE9' ? '#DDDDDD' : typeBadgeColor.bg }} />
-          <span className="truncate">{order.pickupLocation}</span>
-          <span className="text-[#B0B0B0] flex-shrink-0">→</span>
-          <div className="w-1.5 h-1.5 rounded-full bg-[#DDDDDD] mt-1.5 flex-shrink-0" />
-          <span className="truncate">{order.dropoffLocation}</span>
+        <div className="flex flex-col gap-0.5 text-xs text-[#717171] mb-2 min-w-0">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <div className="w-1.5 h-1.5 rounded-full mt-0.5 flex-shrink-0" style={{ backgroundColor: typeBadgeColor.bg === '#F4EFE9' ? '#DDDDDD' : typeBadgeColor.bg }} />
+            <span className="truncate min-w-0 text-[13px]">{order.pickupLocation}</span>
+          </div>
+          <div className="flex items-center gap-1.5 min-w-0">
+            <div className="w-1.5 h-1.5 rounded-full bg-[#DDDDDD] mt-0.5 flex-shrink-0" />
+            <span className="truncate min-w-0 text-[13px]">{order.dropoffLocation}</span>
+          </div>
         </div>
         {notes && (
-          <div className="text-xs text-[#717171] italic bg-[#F4EFE9] p-1.5 rounded truncate">
-            {notes}
-          </div>
+          compactNotesExpanded ? (
+            <button
+              onClick={() => setCompactNotesExpanded(false)}
+              className="w-full text-left text-xs text-[#717171] italic bg-[#F4EFE9] p-1.5 rounded leading-relaxed"
+            >
+              {notes}
+              <span className="ml-1 text-[#B45309] not-italic font-medium">▲</span>
+            </button>
+          ) : (
+            <button
+              onClick={() => setCompactNotesExpanded(true)}
+              className="w-full text-left text-xs text-[#717171] italic bg-[#F4EFE9] p-1.5 rounded truncate"
+              aria-label="展開備註"
+            >
+              {notes}
+            </button>
+          )
         )}
       </div>
     )
@@ -218,7 +236,7 @@ function OrderCard({ order, onAccept, onView, onTransferRequest, onCancel, showA
               )}
               {onAccept && order.status === 'PUBLISHED' && (
                 <Button variant="primary" size="sm" onClick={() => onAccept(order.id)}
-                  className="flex-1 py-3 sm:py-auto text-[15px] sm:text-sm font-bold tracking-wide">
+                  className="flex-1 py-3 font-bold tracking-wide text-[15px]">
                   立即接單
                 </Button>
               )}
