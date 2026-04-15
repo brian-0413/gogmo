@@ -13,115 +13,96 @@
 - **發現者**: D
 - **問題**: .env.local 暴露 Supabase/ANTHROPIC_API_KEY/GOOGLE_SERVICE_KEY/RESEND_API_KEY/JWT_SECRET
 - **現況**: `.gitignore` 已含 `.env*`，新檔案不受影響
-- **殘餘風險**: Git 歷史中仍有 `.env.local`，需 repo 管理員執行以下步驟：
-  - [ ] 執行 `git filter-repo --path .env.local --invert-paths` 從歷史移除
+- **殘餘風險**: Git 歷史中仍有 `.env.local`，需 repo 管理員執行：
+  - [ ] `git filter-repo --path .env.local --invert-paths`
   - [ ] 更換所有已暴露的 keys
-  - [ ] Force push（需通知團隊）
+  - [ ] Force push
 
 ### 2. [已修復 commit] render 中呼叫 new Date() 造成效能問題
-- **發現者**: A
-- **檔案**: src/app/dashboard/driver/page.tsx
-- **Commit**: `d7bf23d fix: driver/page render 中移除 new Date() 改用 state，解決效能問題`
-- **修復方式**: 移除 render 中的 new Date()，改用 currentTime state + useEffect 定時更新
+- **Commit**: `d7bf23d`
+- **修復**: 改用 currentTime state + useEffect 每秒更新
 
 ### 3. [已修復 commit] ProgressBar.tsx Runtime Error
-- **Commit**: `642ff21 fix: 修復 ProgressBar Runtime Error / PAYUNi notify 原子性 / 轉單費率顯示`
-- **修復方式**: isLitNext 從檔案底部移至頂部
+- **Commit**: `642ff21`
+- **修復**: isLitNext 從檔案底部移至頂部
 
 ### 4. [已修復 commit] PAYUNi notify 缺原子性
-- **Commit**: `642ff21`（同上）
-- **修復方式**: 3 個 DB 操作包進 `prisma.$transaction()`
+- **Commit**: `642ff21`
+- **修復**: 3 個 DB 操作包進 `prisma.$transaction()`
 
 ### 5. [已修復 commit] 費率顯示 5%→3%
-- **Commit**: `642ff21`（同上）
-- **修復方式**: driver/page.tsx 轉單費率文字 "5%" → "3%"
+- **Commit**: `642ff21`
+- **修復**: driver/page.tsx 轉單費率文字修正
 
 ---
 
-## 🟡 高優先（High Priority）
+## 🟡 高優先（High Priority）— 全部完成
 
-6. [已修復] 速率限制器非緒程安全
-   - **修復方式**: rate-limit.ts 改用 UUID-per-request 模式，api-utils.ts 新增 requestId 參數
-   - **相關檔案**: src/lib/rate-limit.ts, src/lib/api-utils.ts
-7. [已修復] SSE EventSource 非緒程安全
-   - **修復方式**: 移除 in-memory driverLastCheckMap，改用 Driver.lastSseCheckAt DB 欄位追蹤最後檢查時間
-   - **相關檔案**: src/app/api/drivers/events/route.ts, prisma/schema.prisma（新增 lastSseCheckAt 欄位）
-8. [已修復] Settlement API 無分頁限制
-   - **修復方式**: 加入 take/skip 參數，最大 100。移除多餘的 allOrders 查詢，保留 totalCount
-   - **相關檔案**: src/app/api/dispatchers/settlement/route.ts
-9. [已修復] N+1 查詢：admin/users 在 JS 層過濾
-   - **修復方式**: 搜尋時將 licensePlate 和 companyName 過濾移至 Prisma where.OR 子句
-   - **相關檔案**: src/app/api/admin/users/route.ts
-10. [已修復] LLM 解析無輸入長度限制
-    - **修復方式**: parseBatchOrdersLLM 在呼叫 LLM 前檢查文字長度，超過 2000 字元截斷
-    - **相關檔案**: src/lib/ai.ts
-11. [已修復] 司機餘額可能變成負數
-    - **修復方式**: cancel/route.ts 扣款前檢查 balance >= cancelFee，不足則拋錯誤
-    - **相關檔案**: src/app/api/orders/[id]/cancel/route.ts
-12. [已修復] 訂單刪除缺少擁有權驗證
-    - **修復方式**: DELETE handler 在刪除前驗證 `order.dispatcherId === user.dispatcher.id`
-    - **相關檔案**: src/app/api/orders/[id]/route.ts
-13. [已修復] cancel/route.ts 扣款錯誤訊息傳遞
-    - **修復方式**: catch 區段區分「點數不足」錯誤與其他錯誤，回傳正確的 400 狀態碼
-    - **相關檔案**: src/app/api/orders/[id]/cancel/route.ts
+| # | 問題 | 修復方式 | Commit |
+|---|------|---------|--------|
+| 6 | 速率限制器非緒程安全 | UUID-per-request 模式 | `9da66d9` |
+| 7 | SSE EventSource 非緒程安全 | 改用 Driver.lastSseCheckAt DB 欄位 | `9da66d9` |
+| 8 | Settlement API 無分頁 | take/skip, max 100 | `9da66d9` |
+| 9 | N+1：admin/users JS層過濾 | 移至 Prisma where.OR | `9da66d9` |
+| 10 | LLM 解析無輸入長度限制 | 2000 字元截斷 | `9da66d9` |
+| 11 | 司機餘額可能變成負數 | transaction 中檢查 balance | `9da66d9` |
+| 12 | 訂單刪除缺少擁有權驗證 | DELETE 前驗證 dispatcherId | `9da66d9` |
+| 13 | cancel 扣款錯誤訊息傳遞 | 區分「點數不足」錯誤，400 狀態 | `9da66d9` |
 
 ---
 
 ## 🟠 中優先（Medium Priority）
 
-13. [待處理] 現有測試覆蓋率僅 12%
-14. [待處理] console.log 殘留 30+ 處
-15. [已完成] README.md 完全過期
-    - Commit: `d520d7f docs: 更新README.md反映實際專案狀態`
-    - 更新內容：技術棧、核心功能（依實際實作）、專案結構（依實際檔案）、開發規範、測試帳號、商業邏輯
-16. [已完成] CURRENT_WORK.md 落後 HEAD
-    - Commit: `23216fb docs: 更新CURRENT_WORK.md（2026-04-16 ABCD審查+新功能立項）`
-    - 新增「今日開發（2026-04-16）」區塊，記錄24個問題分類、已修復項目、新功能立項
-17. [待處理] .env.example 不完整
-18. [待處理] Prisma migration 可能有 orphan
-19. [待處理] 空 catch {} 吃掉錯誤
-20. [待處理] 衝突接單警告可被繞過
+| # | 問題 | 狀態 | Commit |
+|---|------|------|--------|
+| 13 | 測試覆蓋率僅 12% | 🔄 進行中（C） | — |
+| 14 | console.log 殘留 30+ 處 | ✅ 已修復 | `5add310` |
+| 15 | README.md 過期 | ✅ 已完成 | `d520d7f` |
+| 16 | CURRENT_WORK.md 落後 | ✅ 已完成 | `23216fb` |
+| 17 | .env.example 不完整 | ⏳ 待處理 | — |
+| 18 | Prisma migration orphan | ⏳ 待處理 | — |
+| 19 | 空 catch {} 吃掉錯誤 | ✅ 已修復 | `5add310` |
+| 20 | 衝突接單警告可被繞過 | ✅ 已修復 | `5add310` |
 
 ---
 
-## 🟢 低優先（Low Priority）
+## 🟢 低優先（Long-term）
 
-21. [待處理] Button/Card component 有冗餘 variant
-22. [待處理] 狀態映射邏輯重複定義
-23. [待處理] 未使用的 import
-24. [待處理] Commit message 風格不一致
+21. [⏳ 待處理] Button/Card component 冗餘 variant
+22. [⏳ 待處理] 狀態映射邏輯重複定義
+23. [⏳ 待處理] 未使用的 import
+24. [⏳ 待處理] Commit message 風格不一致
 
 ---
 
 ## 新功能：司機接單窗口（QR 貴賓預訂）
 
-**已 commit**: `2b35ace` — 規格文件完成
-**實作狀態**: 未開始
-**規格檔案**: `docs/superpowers/specs/2026-04-16-driver-qr-order-design.md`
+- **規格 commit**: `2b35ace`
+- **實作狀態**: 未開始
+- **規格檔案**: `docs/superpowers/specs/2026-04-16-driver-qr-order-design.md`
 
 ---
 
-## 今日 checkpoint（2026-04-16）
+## 今日完整 commits（2026-04-16）
 
-### 已完成
-- [x] Commit 規格文件（QR貴賓單 + 客戶資料庫）— `2b35ace`
-- [x] Commit 緊急修復（ProgressBar / PAYUNi原子性 / 費率顯示 / new Date()）— `642ff21`, `d7bf23d`
-- [x] CURRENT_WORK.md 更新（D）— `23216fb`
-- [x] README.md 更新（D）— `d520d7f`
-- [x] ACTION_LOG.md 更新（D）— 本次更新
+```
+9da66d9  fix: 修復7個高優先後端問題（緒程安全/分頁/驗證/N+1等）
+5add310  fix: 清理console.log/空catch/衝突警告繞過問題
+2b42b8f  docs: 更新ACTION_LOG.md進度（緊急修復完成+中優先更新）
+d520d7f  docs: 更新README.md反映實際專案狀態
+23216fb  docs: 更新CURRENT_WORK.md（2026-04-16 ABCD審查+新功能立項）
+d7bf23d  fix: driver/page render 中移除 new Date() 改用 state，解決效能問題
+642ff21  fix: 修復 ProgressBar Runtime Error / PAYUNi notify 原子性 / 轉單費率顯示
+2b35ace  docs: 建立司機接單窗口(QR貴賓預訂)設計規格
+```
 
-### 緊急待修復（其餘工程師負責）
-- [ ] 速率限制器緒程安全（B）
-- [ ] SSE EventSource 緒程安全（B）
-- [ ] Settlement API 分頁（B）
-- [ ] N+1 admin/users（B）
-- [ ] LLM 輸入長度限制（B）
-- [ ] 司機餘額防負數（B）
-- [ ] 訂單刪除擁有權驗證（A/B）
+---
 
-### 中優先待處理
-- [ ] console.log 清理（A）
-- [ ] .env.example 補充完整（D）
-- [ ] 空 catch 修復（A）
-- [ ] 衝突接單警告（A）
-- [ ] 測試覆蓋策略（C）
+## 待完成（2026-04-16 下半天）
+
+- [ ] C: 測試覆蓋策略文件 + 示範測試
+- [ ] .env.example 補充完整
+- [ ] Prisma migration orphan 檢查
+- [ ] 低優先 4 項（長期）
+- [ ] GitHub .env.local 歷史清除（需管理員）
+- [ ] 司機接單窗口實作（新功能）
