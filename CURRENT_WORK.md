@@ -13,59 +13,80 @@
 
 | 等級 | 數量 | 狀態 |
 |------|------|------|
-| 緊急（Immediate） | 5 | 3 已修復 commit，2 待 commit |
-| 高優先（High Priority） | 7 | 待修復 |
-| 中優先（Medium Priority） | 8 | 待處理 |
+| 緊急（Immediate） | 5 | 全部已修復 commit |
+| 高優先（High Priority） | 7 | 全部已修復 commit |
+| 中優先（Medium Priority） | 8 | 大部分完成，2 項由 D 處理 |
 | 低優先（Low Priority） | 4 | 待處理 |
 
 ### 已修復（緊急）
 
-- **ProgressBar Runtime Error**（Commit 待執行）
-  - `src/components/driver/ProgressBar.tsx`：isLitNext 函式從檔案底部移至頂部，修正渲染時變數未定義問題
-- **PAYUNi notify 原子性**（Commit 待執行）
-  - `src/app/api/payuni/topup/notify/route.ts`：3 個 DB 操作包進 `prisma.$transaction()`
-- **轉單費率顯示**（Commit 待執行）
-  - `src/app/dashboard/driver/page.tsx`：轉單費率文字 "5%" 改為 "3%"
+- **ProgressBar Runtime Error**：`src/components/driver/ProgressBar.tsx`：`isLitNext` 函式從檔案底部移至頂部，修正渲染時變數未定義問題（Commit: `642ff21`）
+- **PAYUNi notify 原子性**：`src/app/api/payuni/topup/notify/route.ts`：3 個 DB 操作包進 `prisma.$transaction()`（Commit: `642ff21`）
+- **轉單費率顯示 5%→3%**：`src/app/dashboard/driver/page.tsx`（Commit: `642ff21`）
+- **render 中呼叫 new Date()**：改用 currentTime state + useEffect 每秒更新（Commit: `d7bf23d`）
 
-### 高優先待修復
+### 高優先已修復
 
-| # | 問題 | 負責 |
-|---|------|------|
-| 6 | 速率限制器非緒程安全 | B |
-| 7 | SSE EventSource 非緒程安全 | B |
-| 8 | Settlement API 無分頁限制 | B |
-| 9 | N+1 查詢：admin/users 在 JS 層過濾 | B |
-| 10 | LLM 解析無輸入長度限制 | B |
-| 11 | 司機餘額可能變成負數 | B |
-| 12 | 訂單刪除缺少擁有權驗證 | A/B |
+| # | 問題 | 修復方式 | Commit |
+|---|------|---------|--------|
+| 6 | 速率限制器非緒程安全 | UUID-per-request 模式 | `9da66d9` |
+| 7 | SSE EventSource 非緒程安全 | 改用 Driver.lastSseCheckAt DB 欄位 | `9da66d9` |
+| 8 | Settlement API 無分頁限制 | take/skip, max 100 | `9da66d9` |
+| 9 | N+1：admin/users JS層過濾 | 移至 Prisma where.OR | `9da66d9` |
+| 10 | LLM 解析無輸入長度限制 | 2000 字元截斷 | `9da66d9` |
+| 11 | 司機餘額可能變成負數 | transaction 中檢查 balance | `9da66d9` |
+| 12 | 訂單刪除缺少擁有權驗證 | DELETE 前驗證 dispatcherId | `9da66d9` |
 
-### 中優先待處理
+### 中優先已處理
 
-| # | 問題 | 負責 |
-|---|------|------|
-| 13 | 現有測試覆蓋率僅 12% | C |
-| 14 | console.log 殘留 30+ 處 | A |
-| 15 | README.md 完全過期 | D |
-| 16 | CURRENT_WORK.md 落後 HEAD | D |
-| 17 | .env.example 不完整 | D |
-| 18 | Prisma migration 可能有 orphan | B |
-| 19 | 空 catch {} 吃掉錯誤 | A |
-| 20 | 衝突接單警告可被繞過 | A |
+| # | 問題 | 負責 | 狀態 |
+|---|------|------|------|
+| 13 | 現有測試覆蓋率僅 12% | C | 進行中 |
+| 14 | console.log 殘留 30+ 處 | A | 已修復 (`5add310`) |
+| 15 | README.md 完全過期 | D | 已完成 (`d520d7f`) |
+| 16 | CURRENT_WORK.md 落後 HEAD | D | 已完成 (`23216fb`) |
+| 17 | .env.example 不完整 | D | **本輪由 D 補全** |
+| 18 | Prisma migration orphan | B/D | **本輪由 D 檢查（見下方）** |
+| 19 | 空 catch {} 吃掉錯誤 | A | 已修復 (`5add310`) |
+| 20 | 衝突接單警告可被繞過 | A | 已修復 (`5add310`) |
 
-### 新功能立項：司機接單窗口（QR 貴賓預訂）
+### Prisma Migration 檢查結果
 
-**規格文件**：`docs/superpowers/specs/2026-04-16-driver-qr-order-design.md`
-**Commit**：`2b35ace`
-**實作狀態**：未開始
+**3 個 migration 狀態**：全部正常（已套用至 DB）
+- `20260404000000_add_order_timestamps`：orders 新增 startedAt/arrivedAt/pickedUpAt
+- `20260410000000_add_gdrive_fields_to_user_document`：user_documents 新增 driveFileId/driveFolderId/uploadFailed
+- `20260411000000_add_document_expiry_date`：user_documents 新增 expiryDate
 
-功能概述：派單方產生 QR code，貴賓掃描後直接預訂，系統自動帶入客戶資料庫中的常用乘客資訊。
+**Schema vs DB Drift（無 migration 紀錄但 schema 有欄位）**：以下欄位在 schema.prisma 中存在，但 DB 可能尚未建立對應的 table/column：
+- Driver.isPremium、lastSseCheckAt、lastConflictAcceptAt
+- Order.isSelfPublish
+- Driver.bonusPoints（Squad system）
+- Transaction.topupId
+- Squad、SquadMember、SquadInvite、OrderTransfer、Topup、DriverPricing、DriverCustomer
 
-### 待 commit（可一起）
+**建議**：由 B 執行 `prisma migrate dev` 或補建 migration 確認 drift，若有 drift 補建並 apply
 
-- [ ] Commit ProgressBar.tsx 修復
-- [ ] Commit PAYUNi notify 原子性
-- [ ] Commit 費率顯示修正
-- [ ] Commit 移除 render 中的 new Date()
+### 新功能：司機接單窗口（QR 貴賓預訂）
+
+**規格文件**：`docs/superpowers/specs/2026-04-16-driver-qr-order-design.md`（Commit: `2b35ace`）
+**實作狀態**：規劃中
+
+**功能概述**：Premium 司機專屬 QR code，貴賓掃描後直接預訂，系統自動帶入客戶資料庫中的常用乘客資訊。
+
+**實作規劃**：
+
+| 里程碑 | 負責 | 預計完成 |
+|--------|------|----------|
+| 後端：Prisma schema 擴充 + API 端點 | B | 待排程 |
+| 前端：司機端報價設定 + 客戶資料庫 | A | 待排程 |
+| 前端：客人 QR 落地頁（/book/[driverId]） | A | 待排程 |
+| QA 測試驗證 | C | 待排程 |
+| 文件更新 | D | 待排程 |
+
+**新 DB Model**：
+- `DriverPricing`：司機車型報價（carType + price + enabled）
+- `DriverCustomer`：司機客戶名單（name + phone + commonPickup/dropoff + notes）
+- `Order` 新增欄位：`isQROrder`、`originalDriverId`、`qrPrice`
 
 ---
 
@@ -126,7 +147,7 @@ c64ed8b fix: 修補測試檔案 mock 型別 — userDocument.count
 **實作內容**：
 - **新命名格式**：Drive 資料夾 `{YYYYMMDD}-{車牌}-{姓名}`，檔案 `{車牌}-{姓名}-{文件類型}.{ext}`
 - **上傳失敗次數上限**：同一文件類型最多上傳 3 次，超過則拒絕並提示聯絡管理員
-- **管理員 Drive 測試區**：`/dashboard/admin/drive-test`，可上傳測試檔案至「🔧Drive上傳測試區」
+- **管理員 Drive 測試區**：`/dashboard/admin/drive-test`，可上傳測試檔案至「Drive上傳測試區」
 - **Admin 登入導向修正**：`auth-context.tsx` 加入 ADMIN 導向 `/dashboard/admin`
 - **Drive Test 導航連結**：管理員後台導航列加入「Drive 測試」連結
 - **Code Review 修復**：移除 raw error 暴露（drive-test upload）、移除搜尋無結果時錯誤回傳所有用戶的 fallback
@@ -417,6 +438,7 @@ c64ed8b fix: 修補測試檔案 mock 型別 — userDocument.count
 - `/api/orders/[id]/accept` 接單時主動檢查衝突
 - 接機後自由時間：scheduledTime + (尖峰150分 / 一般120分)
 - 送機後自由時間：scheduledTime + 60分
+- 尖峰時段：07:00-09:00 / 16:00-18:00
 - 新單必須在自由時間後 45 分鐘才能接
 - 衝突時 API 直接拒絕（400），前端 alert 顯示「需等到 XX:XX 之後才能接」
 - transaction 內再次檢查，防止 race condition
@@ -512,7 +534,7 @@ c64ed8b fix: 修補測試檔案 mock 型別 — userDocument.count
 
 ### [完成] 「車頭」正名為「派單方」
 - 所有 UI 文字、程式碼變數、檔案路徑全面替換
-- Commit: `7ff773f refactor: 全面將「車頭」正名為「派單方"`
+- Commit: `7ff773f refactor: 全面將「車頭」正名為「派單方」`
 
 ### [完成] 全域暖米白配色
 - 主題色：`bg-[#FAF7F2]`（暖米白背景）
@@ -537,7 +559,7 @@ c64ed8b fix: 修補測試檔案 mock 型別 — userDocument.count
 | `57a066a` | 上傳失敗時未限制次數，司機可無限重試 | 同一類型失敗滿 3 次後拒絕上傳 |
 | (prior) | EAM0760 文件狀態顯示空白 | status='PENDING_REVIEW' 改為 'PENDING'（schema 無 PENDING_REVIEW） |
 | (prior) | REC2391 刪除失敗 | Transaction/Topup/SquadInvite/OrderTransfer 未一併刪除，加入 transaction |
-|--------|------|---------|
+|--------|------|---------||
 | `92c035d` | 司機大廳過期行程不自動移除；接機/送機 Stats 分開顯示 | /api/orders 司機 OR 條件加入時間過濾；Stats 合併接機/送機，新增「未派出」顯示過期未派出數量 |
 | `87e3415` | 接單大廳過期行程不自動移除（scheduledTime < now 仍顯示） | 查詢時加入 scheduledTime >= now 過濾，影響 /api/orders 和 /api/drivers/events SSE |
 | `c6cbff8` | 接機觸發推薦1721送機單（時間邏輯錯誤）；t3以錯誤時間判斷尖峰；無3小時上限；跨日比較導致隔日單錯誤入選；無t4行政區行車時間 | 統一尖峰時段06:30-09:30/16:00-19:00；t3以落地時間t1判斷；t4查表取次生活圈行車時間；t1+3小時過濾；地理距離排序取3張 |
