@@ -1,68 +1,46 @@
+/**
+ * PUT    /api/drivers/pricing/[id] — 更新車型報價
+ * DELETE /api/drivers/pricing/[id] — 刪除車型報價
+ */
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
 import { getUserFromToken } from '@/lib/auth'
-import { ApiResponse } from '@/types'
+import { prisma } from '@/lib/prisma'
 
-// PUT /api/drivers/pricing/[id] - Update pricing entry
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+type RouteParams = { params: Promise<{ id: string }> }
+
+// PUT /api/drivers/pricing/[id]
+export async function PUT(req: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params
-    const token = request.headers.get('Authorization')?.replace('Bearer ', '')
-    if (!token) {
-      return NextResponse.json<ApiResponse>(
-        { success: false, error: '未授權' },
-        { status: 401 }
-      )
+    const token = req.headers.get('Authorization')?.replace('Bearer ', '')
+    const user = token ? await getUserFromToken(token) : null
+    if (!user || user.role !== 'DRIVER') {
+      return NextResponse.json({ success: false, error: '未授權' }, { status: 401 })
+    }
+    if (!user.driver) {
+      return NextResponse.json({ success: false, error: '找不到司機資料' }, { status: 404 })
     }
 
-    const user = await getUserFromToken(token)
-    if (!user || user.role !== 'DRIVER' || !user.driver) {
-      return NextResponse.json<ApiResponse>(
-        { success: false, error: '找不到司機資料' },
-        { status: 404 }
-      )
+    const existing = await prisma.driverPricing.findUnique({ where: { id } })
+    if (!existing) {
+      return NextResponse.json({ success: false, error: '找不到定價資料' }, { status: 404 })
+    }
+    if (existing.driverId !== user.driver.id) {
+      return NextResponse.json({ success: false, error: '無權限修改他人的定價' }, { status: 403 })
     }
 
-    const pricing = await prisma.driverPricing.findUnique({ where: { id } })
-    if (!pricing) {
-      return NextResponse.json<ApiResponse>(
-        { success: false, error: '找不到該報價' },
-        { status: 404 }
-      )
-    }
+    const body = await req.json()
+    const { price, enabled } = body
 
-    if (pricing.driverId !== user.driver.id) {
-      return NextResponse.json<ApiResponse>(
-        { success: false, error: '無權修改此報價' },
-        { status: 403 }
-      )
-    }
-
-    const body = await request.json()
     const updateData: Record<string, unknown> = {}
-
-    if (body.price !== undefined) {
-      if (body.price < 0 || body.price > 50000) {
-        return NextResponse.json<ApiResponse>(
-          { success: false, error: '價格必須在 0 - 50000 元之間' },
-          { status: 400 }
-        )
+    if (price !== undefined) {
+      if (typeof price !== 'number' || price < 0) {
+        return NextResponse.json({ success: false, error: '價格需為正數' }, { status: 400 })
       }
-      updateData.price = body.price
+      updateData.price = price
     }
-
-    if (body.enabled !== undefined) {
-      updateData.enabled = body.enabled
-    }
-
-    if (Object.keys(updateData).length === 0) {
-      return NextResponse.json<ApiResponse>(
-        { success: false, error: '沒有要更新的欄位' },
-        { status: 400 }
-      )
+    if (enabled !== undefined) {
+      updateData.enabled = enabled
     }
 
     const updated = await prisma.driverPricing.update({
@@ -70,82 +48,37 @@ export async function PUT(
       data: updateData,
     })
 
-    return NextResponse.json<ApiResponse>({
-      success: true,
-      data: updated,
-    })
-  } catch (error) {
-    console.error('Update pricing error:', error)
-    return NextResponse.json<ApiResponse>(
-      { success: false, error: '伺服器錯誤' },
-      { status: 500 }
-    )
+    return NextResponse.json({ success: true, data: updated })
+  } catch {
+    return NextResponse.json({ success: false, error: '伺服器錯誤' }, { status: 500 })
   }
 }
 
-// DELETE /api/drivers/pricing/[id] - Delete pricing entry
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+// DELETE /api/drivers/pricing/[id]
+export async function DELETE(req: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params
-    const token = request.headers.get('Authorization')?.replace('Bearer ', '')
-    if (!token) {
-      return NextResponse.json<ApiResponse>(
-        { success: false, error: '未授權' },
-        { status: 401 }
-      )
+    const token = req.headers.get('Authorization')?.replace('Bearer ', '')
+    const user = token ? await getUserFromToken(token) : null
+    if (!user || user.role !== 'DRIVER') {
+      return NextResponse.json({ success: false, error: '未授權' }, { status: 401 })
+    }
+    if (!user.driver) {
+      return NextResponse.json({ success: false, error: '找不到司機資料' }, { status: 404 })
     }
 
-    const user = await getUserFromToken(token)
-    if (!user || user.role !== 'DRIVER' || !user.driver) {
-      return NextResponse.json<ApiResponse>(
-        { success: false, error: '找不到司機資料' },
-        { status: 404 }
-      )
+    const existing = await prisma.driverPricing.findUnique({ where: { id } })
+    if (!existing) {
+      return NextResponse.json({ success: false, error: '找不到定價資料' }, { status: 404 })
     }
-
-    const pricing = await prisma.driverPricing.findUnique({ where: { id } })
-    if (!pricing) {
-      return NextResponse.json<ApiResponse>(
-        { success: false, error: '找不到該報價' },
-        { status: 404 }
-      )
-    }
-
-    if (pricing.driverId !== user.driver.id) {
-      return NextResponse.json<ApiResponse>(
-        { success: false, error: '無權刪除此報價' },
-        { status: 403 }
-      )
-    }
-
-    // Check if there are pending QR orders for this vehicle type
-    const pendingOrders = await prisma.order.findFirst({
-      where: {
-        driverId: user.driver.id,
-        vehicle: pricing.vehicleType,
-        isQROrder: true,
-        status: { in: ['ASSIGNED', 'ACCEPTED', 'IN_PROGRESS', 'ARRIVED', 'PICKED_UP'] },
-      },
-    })
-
-    if (pendingOrders) {
-      return NextResponse.json<ApiResponse>(
-        { success: false, error: `尚有待處理的 ${pricing.vehicleType} 車型 QR 訂單，無法刪除` },
-        { status: 400 }
-      )
+    if (existing.driverId !== user.driver.id) {
+      return NextResponse.json({ success: false, error: '無權限刪除他人的定價' }, { status: 403 })
     }
 
     await prisma.driverPricing.delete({ where: { id } })
 
-    return NextResponse.json<ApiResponse>({ success: true })
-  } catch (error) {
-    console.error('Delete pricing error:', error)
-    return NextResponse.json<ApiResponse>(
-      { success: false, error: '伺服器錯誤' },
-      { status: 500 }
-    )
+    return NextResponse.json({ success: true, data: { id } })
+  } catch {
+    return NextResponse.json({ success: false, error: '伺服器錯誤' }, { status: 500 })
   }
 }

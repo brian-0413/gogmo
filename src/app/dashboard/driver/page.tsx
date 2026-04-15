@@ -13,6 +13,8 @@ import { SquadTab } from '@/components/driver/SquadTab'
 import { ProfileTab } from '@/components/driver/ProfileTab'
 import { SelfDispatchChat } from '@/components/driver/SelfDispatchChat'
 import { TransferRequestForm } from '@/components/driver/TransferRequestForm'
+import { QRPricingPanel } from '@/components/driver/QRPricingPanel'
+import { DriverCustomers } from '@/components/driver/DriverCustomers'
 import type { BalanceData } from '@/components/driver/SettlementTab'
 import { format, parseISO, startOfDay, startOfWeek, isSameDay } from 'date-fns'
 import { formatOrderNo } from '@/lib/utils'
@@ -105,6 +107,8 @@ export default function DriverDashboard() {
   const [scheduleConfirming, setScheduleConfirming] = useState(false)
   // 小車頭 Tab 狀態
   const [showSelfDispatch, setShowSelfDispatch] = useState(false)
+  // QR 小車頭子面板狀態: 'qr' | 'pricing' | 'customers'
+  const [qrSubTab, setQrSubTab] = useState<'qr' | 'pricing' | 'customers'>('qr')
   // 目前時間（避免 render 中建立 new Date）
   const [currentTime, setCurrentTime] = useState(new Date())
   const [, setTick] = useState(0)
@@ -1052,18 +1056,73 @@ export default function DriverDashboard() {
                 onClose={() => setShowSelfDispatch(false)}
               />
             ) : (
-              <div className="text-center py-20 bg-white border border-[#DDDDDD] rounded-2xl">
-                <div className="w-16 h-16 rounded-2xl bg-[#FFF3E0] border border-[#F59E0B]/20 flex items-center justify-center mx-auto mb-4">
-                  <Sparkle className="w-8 h-8 text-[#F59E0B]" />
+              <div>
+                {/* 小車頭功能選擇 */}
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  <button
+                    onClick={() => setShowSelfDispatch(true)}
+                    className="bg-white border border-[#DDDDDD] rounded-xl p-5 text-center hover:border-[#FF385C] hover:shadow-[0_2px_12px_rgba(255,53,92,0.1)] transition-all"
+                  >
+                    <div className="w-12 h-12 rounded-xl bg-[#FFF3E0] border border-[#F59E0B]/20 flex items-center justify-center mx-auto mb-3">
+                      <Sparkle className="w-6 h-6 text-[#F59E0B]" />
+                    </div>
+                    <p className="text-[14px] font-bold text-[#222222]">自行發單</p>
+                    <p className="text-[12px] text-[#717171] mt-1">將空車時間發布到接單大廳</p>
+                  </button>
+                  <button
+                    onClick={() => setQrSubTab('qr')}
+                    className="bg-white border border-[#DDDDDD] rounded-xl p-5 text-center hover:border-[#FF385C] hover:shadow-[0_2px_12px_rgba(255,53,92,0.1)] transition-all"
+                  >
+                    <div className="w-12 h-12 rounded-xl bg-[#FFF3E0] border border-[#F59E0B]/20 flex items-center justify-center mx-auto mb-3">
+                      <Sparkle className="w-6 h-6 text-[#FF385C]" />
+                    </div>
+                    <p className="text-[14px] font-bold text-[#222222]">QR 貴賓單</p>
+                    <p className="text-[12px] text-[#717171] mt-1">分享連結讓貴賓直接預訂</p>
+                  </button>
                 </div>
-                <p className="text-[#222222] text-lg font-medium mb-2">小車頭 — 自行發單上架</p>
-                <p className="text-[#717171] text-sm mb-6">將您的空車時間發布到接單大廳，讓派單方看到您的車</p>
-                <button
-                  onClick={() => setShowSelfDispatch(true)}
-                  className="px-6 py-3 bg-[#FF385C] text-white text-[15px] font-bold rounded-xl hover:bg-[#E83355] transition-colors"
-                >
-                  開始發單
-                </button>
+
+                {/* QR 貴賓單面板（3 子面板） */}
+                <div>
+                  {/* 子面板 Tab */}
+                  <div className="flex gap-1 p-1 bg-[#F4EFE9] border border-[#DDDDDD] rounded-xl mb-4">
+                    {[
+                      { key: 'qr' as const, label: '我的 QR 單' },
+                      { key: 'pricing' as const, label: '報價設定' },
+                      { key: 'customers' as const, label: '客戶資料庫' },
+                    ].map(tab => (
+                      <button
+                        key={tab.key}
+                        onClick={() => setQrSubTab(tab.key)}
+                        className={`flex-1 py-2.5 text-[13px] font-bold rounded-lg transition-all ${
+                          qrSubTab === tab.key
+                            ? 'bg-white text-[#FF385C] shadow-sm border border-[#DDDDDD]'
+                            : 'text-[#717171] hover:text-[#222222]'
+                        }`}
+                      >
+                        {tab.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* 子面板內容 */}
+                  {qrSubTab === 'qr' && (
+                    <QRPricingPanel
+                      token={token}
+                      driverId={user.driver?.id || ''}
+                      licensePlate={driverProfile?.licensePlate || ''}
+                    />
+                  )}
+                  {qrSubTab === 'pricing' && (
+                    <QRPricingPanel
+                      token={token}
+                      driverId={user.driver?.id || ''}
+                      licensePlate={driverProfile?.licensePlate || ''}
+                    />
+                  )}
+                  {qrSubTab === 'customers' && (
+                    <DriverCustomers token={token} />
+                  )}
+                </div>
               </div>
             )}
           </div>

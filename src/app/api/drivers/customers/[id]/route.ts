@@ -1,189 +1,109 @@
+/**
+ * GET    /api/drivers/customers/[id] — 取得單一客戶
+ * PUT    /api/drivers/customers/[id] — 更新客戶資料
+ * DELETE /api/drivers/customers/[id] — 刪除客戶
+ */
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
 import { getUserFromToken } from '@/lib/auth'
-import { ApiResponse } from '@/types'
+import { prisma } from '@/lib/prisma'
 
-// GET /api/drivers/customers/[id] - Get single customer
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+type RouteParams = { params: Promise<{ id: string }> }
+
+// GET /api/drivers/customers/[id]
+export async function GET(req: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params
-    const token = request.headers.get('Authorization')?.replace('Bearer ', '')
-    if (!token) {
-      return NextResponse.json<ApiResponse>(
-        { success: false, error: '未授權' },
-        { status: 401 }
-      )
+    const token = req.headers.get('Authorization')?.replace('Bearer ', '')
+    const user = token ? await getUserFromToken(token) : null
+    if (!user || user.role !== 'DRIVER') {
+      return NextResponse.json({ success: false, error: '未授權' }, { status: 401 })
     }
-
-    const user = await getUserFromToken(token)
-    if (!user || user.role !== 'DRIVER' || !user.driver) {
-      return NextResponse.json<ApiResponse>(
-        { success: false, error: '找不到司機資料' },
-        { status: 404 }
-      )
+    if (!user.driver) {
+      return NextResponse.json({ success: false, error: '找不到司機資料' }, { status: 404 })
     }
 
     const customer = await prisma.driverCustomer.findUnique({ where: { id } })
     if (!customer) {
-      return NextResponse.json<ApiResponse>(
-        { success: false, error: '找不到該客戶' },
-        { status: 404 }
-      )
+      return NextResponse.json({ success: false, error: '找不到客戶資料' }, { status: 404 })
     }
-
     if (customer.driverId !== user.driver.id) {
-      return NextResponse.json<ApiResponse>(
-        { success: false, error: '無權查看此客戶' },
-        { status: 403 }
-      )
+      return NextResponse.json({ success: false, error: '無權限查看他人的客戶' }, { status: 403 })
     }
 
-    return NextResponse.json<ApiResponse>({
-      success: true,
-      data: customer,
-    })
-  } catch (error) {
-    console.error('Get customer error:', error)
-    return NextResponse.json<ApiResponse>(
-      { success: false, error: '伺服器錯誤' },
-      { status: 500 }
-    )
+    return NextResponse.json({ success: true, data: customer })
+  } catch {
+    return NextResponse.json({ success: false, error: '伺服器錯誤' }, { status: 500 })
   }
 }
 
-// PUT /api/drivers/customers/[id] - Update customer
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+// PUT /api/drivers/customers/[id]
+export async function PUT(req: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params
-    const token = request.headers.get('Authorization')?.replace('Bearer ', '')
-    if (!token) {
-      return NextResponse.json<ApiResponse>(
-        { success: false, error: '未授權' },
-        { status: 401 }
-      )
+    const token = req.headers.get('Authorization')?.replace('Bearer ', '')
+    const user = token ? await getUserFromToken(token) : null
+    if (!user || user.role !== 'DRIVER') {
+      return NextResponse.json({ success: false, error: '未授權' }, { status: 401 })
+    }
+    if (!user.driver) {
+      return NextResponse.json({ success: false, error: '找不到司機資料' }, { status: 404 })
     }
 
-    const user = await getUserFromToken(token)
-    if (!user || user.role !== 'DRIVER' || !user.driver) {
-      return NextResponse.json<ApiResponse>(
-        { success: false, error: '找不到司機資料' },
-        { status: 404 }
-      )
+    const existing = await prisma.driverCustomer.findUnique({ where: { id } })
+    if (!existing) {
+      return NextResponse.json({ success: false, error: '找不到客戶資料' }, { status: 404 })
+    }
+    if (existing.driverId !== user.driver.id) {
+      return NextResponse.json({ success: false, error: '無權限修改他人的客戶' }, { status: 403 })
     }
 
-    const customer = await prisma.driverCustomer.findUnique({ where: { id } })
-    if (!customer) {
-      return NextResponse.json<ApiResponse>(
-        { success: false, error: '找不到該客戶' },
-        { status: 404 }
-      )
-    }
+    const body = await req.json()
+    const { name, phone, commonPickup, commonDropoff, preferredVehicle, notes } = body
 
-    if (customer.driverId !== user.driver.id) {
-      return NextResponse.json<ApiResponse>(
-        { success: false, error: '無權修改此客戶' },
-        { status: 403 }
-      )
-    }
-
-    const body = await request.json()
     const updateData: Record<string, unknown> = {}
-
-    const allowedFields = ['name', 'phone', 'commonPickup', 'commonDropoff', 'preferredVehicle', 'notes']
-    for (const field of allowedFields) {
-      if (body[field] !== undefined) {
-        updateData[field] = typeof body[field] === 'string' ? body[field].trim() : body[field]
-      }
-    }
-
-    if (Object.keys(updateData).length === 0) {
-      return NextResponse.json<ApiResponse>(
-        { success: false, error: '沒有要更新的欄位' },
-        { status: 400 }
-      )
-    }
-
-    // Validate preferredVehicle
-    if (body.preferredVehicle !== undefined) {
-      const validVehicles = ['small', 'suv', 'van9', null]
-      if (!validVehicles.includes(body.preferredVehicle)) {
-        return NextResponse.json<ApiResponse>(
-          { success: false, error: `車型無效：${body.preferredVehicle}` },
-          { status: 400 }
-        )
-      }
-    }
+    if (name !== undefined) updateData.name = name.trim()
+    if (phone !== undefined) updateData.phone = phone.trim()
+    if (commonPickup !== undefined) updateData.commonPickup = commonPickup?.trim() || null
+    if (commonDropoff !== undefined) updateData.commonDropoff = commonDropoff?.trim() || null
+    if (preferredVehicle !== undefined) updateData.preferredVehicle = preferredVehicle || null
+    if (notes !== undefined) updateData.notes = notes?.trim() || null
 
     const updated = await prisma.driverCustomer.update({
       where: { id },
       data: updateData,
     })
 
-    return NextResponse.json<ApiResponse>({
-      success: true,
-      data: updated,
-    })
-  } catch (error) {
-    console.error('Update customer error:', error)
-    return NextResponse.json<ApiResponse>(
-      { success: false, error: '伺服器錯誤' },
-      { status: 500 }
-    )
+    return NextResponse.json({ success: true, data: updated })
+  } catch {
+    return NextResponse.json({ success: false, error: '伺服器錯誤' }, { status: 500 })
   }
 }
 
-// DELETE /api/drivers/customers/[id] - Delete customer
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+// DELETE /api/drivers/customers/[id]
+export async function DELETE(req: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params
-    const token = request.headers.get('Authorization')?.replace('Bearer ', '')
-    if (!token) {
-      return NextResponse.json<ApiResponse>(
-        { success: false, error: '未授權' },
-        { status: 401 }
-      )
+    const token = req.headers.get('Authorization')?.replace('Bearer ', '')
+    const user = token ? await getUserFromToken(token) : null
+    if (!user || user.role !== 'DRIVER') {
+      return NextResponse.json({ success: false, error: '未授權' }, { status: 401 })
+    }
+    if (!user.driver) {
+      return NextResponse.json({ success: false, error: '找不到司機資料' }, { status: 404 })
     }
 
-    const user = await getUserFromToken(token)
-    if (!user || user.role !== 'DRIVER' || !user.driver) {
-      return NextResponse.json<ApiResponse>(
-        { success: false, error: '找不到司機資料' },
-        { status: 404 }
-      )
+    const existing = await prisma.driverCustomer.findUnique({ where: { id } })
+    if (!existing) {
+      return NextResponse.json({ success: false, error: '找不到客戶資料' }, { status: 404 })
     }
-
-    const customer = await prisma.driverCustomer.findUnique({ where: { id } })
-    if (!customer) {
-      return NextResponse.json<ApiResponse>(
-        { success: false, error: '找不到該客戶' },
-        { status: 404 }
-      )
-    }
-
-    if (customer.driverId !== user.driver.id) {
-      return NextResponse.json<ApiResponse>(
-        { success: false, error: '無權刪除此客戶' },
-        { status: 403 }
-      )
+    if (existing.driverId !== user.driver.id) {
+      return NextResponse.json({ success: false, error: '無權限刪除他人的客戶' }, { status: 403 })
     }
 
     await prisma.driverCustomer.delete({ where: { id } })
 
-    return NextResponse.json<ApiResponse>({ success: true })
-  } catch (error) {
-    console.error('Delete customer error:', error)
-    return NextResponse.json<ApiResponse>(
-      { success: false, error: '伺服器錯誤' },
-      { status: 500 }
-    )
+    return NextResponse.json({ success: true, data: { id } })
+  } catch {
+    return NextResponse.json({ success: false, error: '伺服器錯誤' }, { status: 500 })
   }
 }
