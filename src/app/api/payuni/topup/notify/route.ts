@@ -59,36 +59,34 @@ export async function POST(request: NextRequest) {
       return new NextResponse('OK')
     }
 
-    // 更新 Topup status
-    await prisma.topup.update({
-      where: { id: topup.id },
-      data: {
-        status: 'paid',
-        paidAt: new Date(),
-        payuniTradeNo: TradeNo || '',
-      },
-    })
-
-    // 更新 Driver balance
-    await prisma.driver.update({
-      where: { id: topup.driverId },
-      data: {
-        balance: { increment: topup.amount },
-      },
-    })
-
-    // 建立 Transaction
-    await prisma.transaction.create({
-      data: {
-        driverId: topup.driverId,
-        topupId: topup.id,
-        amount: topup.amount,
-        type: 'RECHARGE',
-        status: 'SETTLED',
-        settledAt: new Date(),
-        description: `信用卡加值（${TradeAmt}元，含3%手續費）`,
-      },
-    })
+    // 更新 Topup status、Driver balance、Transaction 記錄（原子性操作）
+    await prisma.$transaction([
+      prisma.topup.update({
+        where: { id: topup.id },
+        data: {
+          status: 'paid',
+          paidAt: new Date(),
+          payuniTradeNo: TradeNo || '',
+        },
+      }),
+      prisma.driver.update({
+        where: { id: topup.driverId },
+        data: {
+          balance: { increment: topup.amount },
+        },
+      }),
+      prisma.transaction.create({
+        data: {
+          driverId: topup.driverId,
+          topupId: topup.id,
+          amount: topup.amount,
+          type: 'RECHARGE',
+          status: 'SETTLED',
+          settledAt: new Date(),
+          description: `信用卡加值（${TradeAmt}元，含3%手續費）`,
+        },
+      }),
+    ])
 
     console.log(`[PAYUNI] Topup ${topup.id} completed: +${topup.amount} to driver ${topup.driverId}`)
 

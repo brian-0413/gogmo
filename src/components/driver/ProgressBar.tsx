@@ -37,6 +37,11 @@ function isStepNext(currentStatus: CurrentStatus, step: ProgressStep): boolean {
   return stepIndex === currentIndex + 1
 }
 
+function isLitNext(step: ProgressStep | undefined, currentStatus: CurrentStatus): boolean {
+  if (!step) return false
+  return isStepLit(currentStatus, step)
+}
+
 interface ProgressBarProps {
   status: string
   size?: 'sm' | 'md'
@@ -92,9 +97,4 @@ export function ProgressBar({ status, size = 'md', showLabel = true, animateNext
       })}
     </div>
   )
-}
-
-function isLitNext(step: ProgressStep | undefined, currentStatus: CurrentStatus): boolean {
-  if (!step) return false
-  return isStepLit(currentStatus, step)
 }

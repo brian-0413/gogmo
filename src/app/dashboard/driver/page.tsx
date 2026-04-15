@@ -105,6 +105,10 @@ export default function DriverDashboard() {
   const [scheduleConfirming, setScheduleConfirming] = useState(false)
   // 小車頭 Tab 狀態
   const [showSelfDispatch, setShowSelfDispatch] = useState(false)
+  // 目前時間（避免 render 中建立 new Date）
+  const [currentTime, setCurrentTime] = useState(new Date())
+  const [, setTick] = useState(0)
+
   // 請求小隊支援對話框
   const [transferDialog, setTransferDialog] = useState<{ open: boolean; orderId: string | null; order: Order | null }>({
     open: false,
@@ -1001,7 +1005,7 @@ export default function DriverDashboard() {
                         <div className="text-[11px] text-[#717171] px-1">
                           <span className="text-[#0C447C]">請求支援</span>
                           <span className="mx-1">：</span>
-                          轉單費 5%（約 NT${Math.floor(order.price * TRANSFER_FEE_RATE).toLocaleString()}）
+                          轉單費 3%（約 NT${Math.floor(order.price * TRANSFER_FEE_RATE).toLocaleString()}）
                           <span className="mx-2 text-[#DDDDDD]">|</span>
                           <span className="text-[#E24B4A]">直接退單</span>
                           <span className="mx-1">：</span>
