@@ -355,12 +355,18 @@ export async function parseBatchOrdersLLM(
     throw new Error('ANTHROPIC_API_KEY 未設定')
   }
 
+  // 輸入長度限制：超過 2000 字元截斷，避免 LLM API 錯誤或超費
+  const MAX_INPUT_LENGTH = 2000
+  const truncatedText = text.length > MAX_INPUT_LENGTH
+    ? text.substring(0, MAX_INPUT_LENGTH) + '\n[內容過長已截斷]'
+    : text
+
   const defaultDate = defaults.date || new Date().toISOString().split('T')[0]
   const systemPrompt = SYSTEM_PROMPT.replace('{DEFAULT_DATE}', defaultDate)
 
   const userMessage = `請解析以下訂單訊息：
 
-${text}
+${truncatedText}
 
 日期：${defaultDate}
 種類：${defaults.type ? defaults.type : '（未指定）'}

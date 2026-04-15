@@ -74,7 +74,11 @@ export async function POST(
 
       if (!driver) throw new Error('找不到司機資料')
 
-      // 扣退單費（可能變負數）
+      // 扣退單費前檢查餘額是否足夠，防止變成負數
+      if (driver.balance < cancelFee) {
+        throw new Error(`點數不足，需要 ${cancelFee} 點`)
+      }
+
       const newBalance = driver.balance - cancelFee
 
       await tx.driver.update({
@@ -115,6 +119,13 @@ export async function POST(
       },
     })
   } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    if (message.includes('點數不足')) {
+      return NextResponse.json<ApiResponse>(
+        { success: false, error: message },
+        { status: 400 }
+      )
+    }
     console.error('Cancel order error:', error)
     return NextResponse.json<ApiResponse>(
       { success: false, error: '伺服器錯誤' },

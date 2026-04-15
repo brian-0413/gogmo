@@ -26,36 +26,34 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const startDate = searchParams.get('startDate')
     const endDate = searchParams.get('endDate')
+    // 分頁：take/skip，限制最大 100
+    const take = Math.min(parseInt(searchParams.get('take') || '50', 10), 100)
+    const skip = parseInt(searchParams.get('skip') || '0', 10)
 
-    // Build date filter for createdAt
-    const createdAtFilter: Record<string, unknown> = {}
-    if (startDate) createdAtFilter.gte = new Date(startDate + 'T00:00:00')
-    if (endDate) createdAtFilter.lte = new Date(endDate + 'T23:59:59')
-
-    // Get ALL orders in date range (for total count)
-    const allOrders = await prisma.order.findMany({
-      where: {
-        dispatcherId: user.dispatcher?.id,
-        ...(Object.keys(createdAtFilter).length > 0 ? { createdAt: createdAtFilter } : {}),
-      },
-    })
-
-    // Get completed orders for transfer list
+    // Build date filter for completedAt
     const completedAtFilter: Record<string, unknown> = {}
     if (startDate) completedAtFilter.gte = new Date(startDate + 'T00:00:00')
     if (endDate) completedAtFilter.lte = new Date(endDate + 'T23:59:59')
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const completedWhere: any = {
+      dispatcherId: user.dispatcher?.id,
+      status: 'COMPLETED',
+      ...(Object.keys(completedAtFilter).length > 0 ? { completedAt: completedAtFilter } : {}),
+    }
+
+    // Get total count for pagination metadata
+    const totalCount = await prisma.order.count({ where: completedWhere })
+
     const orders = await prisma.order.findMany({
-      where: {
-        dispatcherId: user.dispatcher?.id,
-        status: 'COMPLETED',
-        ...(Object.keys(completedAtFilter).length > 0 ? { completedAt: completedAtFilter } : {}),
-      },
+      where: completedWhere,
       include: {
         driver: { include: { user: true, transactions: true } },
         transactions: true,
       },
       orderBy: { completedAt: 'desc' },
+      take,
+      skip,
     })
 
     // Count pending transfer orders
@@ -127,6 +125,13 @@ export async function GET(request: NextRequest) {
       success: true,
       data: {
         completedOrdersCount: orders.length,
+        totalCount,
+        pagination: {
+          take,
+          skip,
+          total: totalCount,
+          hasMore: skip + orders.length < totalCount,
+        },
         totalAmount,
         pendingCount: pendingOrders.length,
         pendingAmount,

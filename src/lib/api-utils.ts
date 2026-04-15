@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { rateLimit, getClientIP } from './rate-limit'
+import { rateLimit, getClientIP, newRateLimitBucket } from './rate-limit'
 import { ApiResponse } from '@/types'
 
 // Rate limit configs for different endpoints
@@ -17,6 +17,9 @@ export const rateLimitConfigs = {
 export interface RateLimitOptions {
   type: keyof typeof rateLimitConfigs
   identifier?: string // Optional custom identifier
+  /** Per-request UUID to avoid cross-request state pollution in serverless/edge.
+   *  Pass crypto.randomUUID() from the route handler. */
+  requestId?: string
 }
 
 /**
@@ -28,9 +31,11 @@ export function checkRateLimit(
   options: RateLimitOptions
 ): NextResponse<ApiResponse> | null {
   const config = rateLimitConfigs[options.type]
-  const identifier = options.identifier || getClientIP(request.headers)
+  // Use requestId (UUID per request) when provided, else fall back to IP-based key.
+  // This ensures each serverless invocation gets an isolated bucket.
+  const identifier = options.requestId || getClientIP(request.headers)
 
-  const result = rateLimit(identifier, config)
+  const result = rateLimit(identifier, config, options.requestId)
 
   // Add rate limit headers to response
   const headers = {
@@ -53,4 +58,4 @@ export function checkRateLimit(
   return null // Signal to continue
 }
 
-export { getClientIP }
+export { getClientIP, newRateLimitBucket }

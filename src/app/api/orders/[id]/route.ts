@@ -361,6 +361,14 @@ export async function DELETE(
       )
     }
 
+    // 擁有權驗證：只有建立此訂單的派單方才能刪除
+    if (order.dispatcherId !== user.dispatcher?.id) {
+      return NextResponse.json<ApiResponse>(
+        { success: false, error: '您無權刪除此訂單' },
+        { status: 403 }
+      )
+    }
+
     if (order.status !== 'PUBLISHED') {
       return NextResponse.json<ApiResponse>(
         { success: false, error: '只能刪除已發布的訂單' },

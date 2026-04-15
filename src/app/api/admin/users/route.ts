@@ -19,26 +19,26 @@ export async function GET(request: NextRequest) {
   const status = searchParams.get('status') as AccountStatus | null // 'ACTIVE' | 'PENDING_REVIEW' | 'REJECTED' | null
   const search = searchParams.get('search')?.trim() || '' // 姓名/Email/車牌/公司名
 
-  const where: {
-    role?: 'DRIVER' | 'DISPATCHER' | 'ADMIN'
-    accountStatus?: AccountStatus
-    OR?: Array<{ name?: { contains: string; mode: 'insensitive' }; email?: { contains: string; mode: 'insensitive' } }>
-  } = {}
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const where: any = {}
   if (role === 'DRIVER' || role === 'DISPATCHER' || role === 'ADMIN') where.role = role
   if (status) where.accountStatus = status
 
-  // 搜尋：姓名 或 Email（不分大小寫）
+  // 搜尋：姓名 或 Email 或 車牌 或 公司名（全部在 Prisma 層過濾，無 JS 層過濾）
   if (search) {
+    const q = search.trim()
     where.OR = [
-      { name: { contains: search, mode: 'insensitive' } },
-      { email: { contains: search, mode: 'insensitive' } },
+      { name: { contains: q, mode: 'insensitive' } },
+      { email: { contains: q, mode: 'insensitive' } },
+      // Driver licensePlate
+      ...(role !== 'DISPATCHER' ? [{ driver: { licensePlate: { contains: q } } }] : []),
+      // Dispatcher company name
+      ...(role !== 'DRIVER' ? [{ dispatcher: { companyName: { contains: q, mode: 'insensitive' } } }] : []),
     ]
-    // 也搜尋 driver licensePlate 和 dispatcher companyName
-    // 這需要額外的 include + filter
   }
 
   const users = await prisma.user.findMany({
-    where: where,
+    where,
     include: {
       driver: true,
       dispatcher: true,
@@ -47,18 +47,7 @@ export async function GET(request: NextRequest) {
     orderBy: { createdAt: 'desc' },
   })
 
-  // 如果有搜尋關鍵字，再過濾 driver.licensePlate 和 dispatcher.companyName
-  let filtered = users
-  if (search) {
-    const q = search.toLowerCase()
-    filtered = users.filter(u => {
-      if (u.role === 'DRIVER' && u.driver?.licensePlate?.toLowerCase().includes(q)) return true
-      if (u.role === 'DISPATCHER' && u.dispatcher?.companyName?.toLowerCase().includes(q)) return true
-      return false
-    })
-  }
-
-  const result = filtered.map(u => ({
+  const result = users.map(u => ({
     id: u.id,
     name: u.name,
     email: u.email,

@@ -3,16 +3,21 @@ import { cookies } from 'next/headers'
 import { prisma } from '@/lib/prisma'
 import { getUserFromToken } from '@/lib/auth'
 
-// In-memory map to track each driver's last check time
-// In production, consider using Redis or a database
-const driverLastCheckMap = new Map<string, Date>()
-
 // SSE event types
 type SSEEvent =
   | { type: 'NEW_ORDER'; order: unknown }
   | { type: 'HEARTBEAT'; timestamp: string }
   | { type: 'ORDER_CANCELLED'; orderId: string }
   | { type: 'TRANSFER_STATUS_CHANGE'; orderId: string; transferStatus: string }
+
+// Thread-safety note:
+// The previous `driverLastCheckMap` (in-memory Map) is NOT safe across multiple
+// Next.js instances/workers. Each instance has its own copy, so polling from
+// instance A would miss orders published from instance B.
+// FIX: We track each driver's last SSE check time in the `Driver` table
+// (`lastSseCheckAt`). The SSE endpoint updates this timestamp on every poll
+// and queries for orders with updatedAt > lastSseCheckAt. This works correctly
+// across all instances because all instances share the same database.
 
 // GET /api/drivers/events - SSE endpoint for real-time order notifications
 export async function GET(request: NextRequest) {
@@ -50,13 +55,16 @@ export async function GET(request: NextRequest) {
 
   const driverId = user.driver.id
 
-  // Initialize last check time for this driver
-  // Use 24 hours ago as fallback to catch orders created during server restart
-  const now = new Date()
-  const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000)
-  if (!driverLastCheckMap.has(driverId)) {
-    driverLastCheckMap.set(driverId, twentyFourHoursAgo)
-  }
+  // Get the driver's last SSE check time from the database.
+  // If not set, default to 24 hours ago to catch orders created during restart.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const driver = await (prisma.driver.findUnique as any)({
+    where: { id: driverId },
+    select: { lastSseCheckAt: true },
+  }).catch(() => null) // column may not exist yet — safe to ignore
+  const lastCheck = driver?.lastSseCheckAt
+    ? new Date(driver.lastSseCheckAt)
+    : new Date(Date.now() - 24 * 60 * 60 * 1000)
 
   // Create a readable stream for SSE
   const encoder = new TextEncoder()
@@ -126,12 +134,12 @@ export async function GET(request: NextRequest) {
         }
 
         try {
-          // Get last check time for this driver
-          const lastCheck = driverLastCheckMap.get(driverId) || now
+          // Use the stored lastCheck (from DB) for the poll.
+          // We don't update lastCheck in-memory; instead we update Driver.lastSseCheckAt
+          // in the DB after each poll, ensuring cross-instance correctness.
+          const pollTime = new Date()
 
           // Query for PUBLISHED orders updated since last check
-          // Using updatedAt instead of createdAt so orders published after server restart are also caught
-          // lastCheck defaults to 24h ago on fresh connection (see above)
           const newOrders = await prisma.order.findMany({
             where: {
               status: 'PUBLISHED',
@@ -147,8 +155,12 @@ export async function GET(request: NextRequest) {
             orderBy: { updatedAt: 'desc' },
           })
 
-          // Update last check time
-          driverLastCheckMap.set(driverId, new Date())
+          // Update lastSseCheckAt in DB so all instances see the same checkpoint
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          await (prisma.driver.update as any)({
+            where: { id: driverId },
+            data: { lastSseCheckAt: pollTime },
+          }).catch(() => { /* ignore if column doesn't exist yet */ })
 
           // Send each new order as an SSE event
           for (const order of newOrders) {

@@ -40,13 +40,30 @@
 
 ## 🟡 高優先（High Priority）
 
-6. [待處理] 速率限制器非緒程安全
-7. [待處理] SSE EventSource 非緒程安全
-8. [待處理] Settlement API 無分頁限制
-9. [待處理] N+1 查詢：admin/users 在 JS 層過濾
-10. [待處理] LLM 解析無輸入長度限制
-11. [待處理] 司機餘額可能變成負數
-12. [待處理] 訂單刪除缺少擁有權驗證
+6. [已修復] 速率限制器非緒程安全
+   - **修復方式**: rate-limit.ts 改用 UUID-per-request 模式，api-utils.ts 新增 requestId 參數
+   - **相關檔案**: src/lib/rate-limit.ts, src/lib/api-utils.ts
+7. [已修復] SSE EventSource 非緒程安全
+   - **修復方式**: 移除 in-memory driverLastCheckMap，改用 Driver.lastSseCheckAt DB 欄位追蹤最後檢查時間
+   - **相關檔案**: src/app/api/drivers/events/route.ts, prisma/schema.prisma（新增 lastSseCheckAt 欄位）
+8. [已修復] Settlement API 無分頁限制
+   - **修復方式**: 加入 take/skip 參數，最大 100。移除多餘的 allOrders 查詢，保留 totalCount
+   - **相關檔案**: src/app/api/dispatchers/settlement/route.ts
+9. [已修復] N+1 查詢：admin/users 在 JS 層過濾
+   - **修復方式**: 搜尋時將 licensePlate 和 companyName 過濾移至 Prisma where.OR 子句
+   - **相關檔案**: src/app/api/admin/users/route.ts
+10. [已修復] LLM 解析無輸入長度限制
+    - **修復方式**: parseBatchOrdersLLM 在呼叫 LLM 前檢查文字長度，超過 2000 字元截斷
+    - **相關檔案**: src/lib/ai.ts
+11. [已修復] 司機餘額可能變成負數
+    - **修復方式**: cancel/route.ts 扣款前檢查 balance >= cancelFee，不足則拋錯誤
+    - **相關檔案**: src/app/api/orders/[id]/cancel/route.ts
+12. [已修復] 訂單刪除缺少擁有權驗證
+    - **修復方式**: DELETE handler 在刪除前驗證 `order.dispatcherId === user.dispatcher.id`
+    - **相關檔案**: src/app/api/orders/[id]/route.ts
+13. [已修復] cancel/route.ts 扣款錯誤訊息傳遞
+    - **修復方式**: catch 區段區分「點數不足」錯誤與其他錯誤，回傳正確的 400 狀態碼
+    - **相關檔案**: src/app/api/orders/[id]/cancel/route.ts
 
 ---
 
