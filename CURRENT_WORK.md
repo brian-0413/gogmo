@@ -5,6 +5,70 @@
 
 ---
 
+## 今日開發（2026-04-16）
+
+### ABCD 團隊全面代碼審查完成
+
+共發現 **24 個問題**，已分類如下：
+
+| 等級 | 數量 | 狀態 |
+|------|------|------|
+| 緊急（Immediate） | 5 | 3 已修復 commit，2 待 commit |
+| 高優先（High Priority） | 7 | 待修復 |
+| 中優先（Medium Priority） | 8 | 待處理 |
+| 低優先（Low Priority） | 4 | 待處理 |
+
+### 已修復（緊急）
+
+- **ProgressBar Runtime Error**（Commit 待執行）
+  - `src/components/driver/ProgressBar.tsx`：isLitNext 函式從檔案底部移至頂部，修正渲染時變數未定義問題
+- **PAYUNi notify 原子性**（Commit 待執行）
+  - `src/app/api/payuni/topup/notify/route.ts`：3 個 DB 操作包進 `prisma.$transaction()`
+- **轉單費率顯示**（Commit 待執行）
+  - `src/app/dashboard/driver/page.tsx`：轉單費率文字 "5%" 改為 "3%"
+
+### 高優先待修復
+
+| # | 問題 | 負責 |
+|---|------|------|
+| 6 | 速率限制器非緒程安全 | B |
+| 7 | SSE EventSource 非緒程安全 | B |
+| 8 | Settlement API 無分頁限制 | B |
+| 9 | N+1 查詢：admin/users 在 JS 層過濾 | B |
+| 10 | LLM 解析無輸入長度限制 | B |
+| 11 | 司機餘額可能變成負數 | B |
+| 12 | 訂單刪除缺少擁有權驗證 | A/B |
+
+### 中優先待處理
+
+| # | 問題 | 負責 |
+|---|------|------|
+| 13 | 現有測試覆蓋率僅 12% | C |
+| 14 | console.log 殘留 30+ 處 | A |
+| 15 | README.md 完全過期 | D |
+| 16 | CURRENT_WORK.md 落後 HEAD | D |
+| 17 | .env.example 不完整 | D |
+| 18 | Prisma migration 可能有 orphan | B |
+| 19 | 空 catch {} 吃掉錯誤 | A |
+| 20 | 衝突接單警告可被繞過 | A |
+
+### 新功能立項：司機接單窗口（QR 貴賓預訂）
+
+**規格文件**：`docs/superpowers/specs/2026-04-16-driver-qr-order-design.md`
+**Commit**：`2b35ace`
+**實作狀態**：未開始
+
+功能概述：派單方產生 QR code，貴賓掃描後直接預訂，系統自動帶入客戶資料庫中的常用乘客資訊。
+
+### 待 commit（可一起）
+
+- [ ] Commit ProgressBar.tsx 修復
+- [ ] Commit PAYUNi notify 原子性
+- [ ] Commit 費率顯示修正
+- [ ] Commit 移除 render 中的 new Date()
+
+---
+
 ## 專案現況（2026-04-13）
 
 ### 最後 commit
