@@ -161,8 +161,8 @@ export const defaultDriverUser = createDriverUser()
 
 /** 無銀行帳號的司機（接單門檻失敗） */
 export const driverWithoutBank = createDriverUser({
-  bankCode: null,
-  bankAccount: null,
+  bankCode: undefined,
+  bankAccount: undefined,
 })
 
 /** 帳號未啟用的司機 */

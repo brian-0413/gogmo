@@ -171,6 +171,8 @@ model Driver {
   transfersIn     OrderTransfer[] @relation("TransferTo")
   squadInvites    SquadInvite[]
   topups          Topup[]
+  pricing         DriverPricing[]
+  customers       DriverCustomer[]
 
   @@map("drivers")
 }
@@ -264,9 +266,14 @@ model Order {
   // Relations
   transactions     Transaction[]
   isLocked        Boolean         @default(false)
+  isQROrder       Boolean         @default(false)
+  originalDriverId String?         // 原司機 ID（QR單外派後仍可追溯）
+  qrPrice         Int?            // QR單的報價（建立時鎖定）
+
   transfers       OrderTransfer[]
 
   @@index([status])
+  @@index([isLocked])
   @@index([driverId])
   @@index([dispatcherId])
   @@index([scheduledTime])
@@ -362,4 +369,36 @@ model Topup {
 
   @@index([driverId])
   @@map("topups")
+}
+
+model DriverPricing {
+  id          String   @id @default(cuid())
+  driverId    String
+  vehicleType String   // "small" | "suv" | "van9"
+  price       Int      // NT$
+  enabled     Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  driver      Driver   @relation(fields: [driverId], references: [id], onDelete: Cascade)
+
+  @@unique([driverId, vehicleType])
+  @@map("driver_pricing")
+}
+
+model DriverCustomer {
+  id               String    @id @default(cuid())
+  driverId         String
+  name             String
+  phone            String
+  commonPickup     String?
+  commonDropoff    String?
+  preferredVehicle String?   // "small" | "suv" | "van9"
+  notes            String?
+  createdAt        DateTime  @default(now())
+  lastOrderAt      DateTime?
+  driver           Driver    @relation(fields: [driverId], references: [id], onDelete: Cascade)
+
+  @@unique([driverId, phone])
+  @@index([driverId])
+  @@map("driver_customers")
 }
