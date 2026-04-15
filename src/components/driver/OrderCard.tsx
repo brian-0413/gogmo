@@ -59,10 +59,17 @@ function OrderCard({ order, onAccept, onView, onTransferRequest, onCancel, onDis
     return (
       <div className="bg-white border border-[#DDDDDD] rounded-xl p-3 hover:shadow-[0_2px_12px_rgba(0,0,0,0.08)] transition-all duration-200">
         {/* 顯眼單號標籤 */}
-        <div className="flex items-center justify-between mb-2">
-          <span className="inline-flex items-center px-2 py-1 bg-[#FF385C] text-white text-[13px] font-bold font-mono-nums rounded tracking-wider select-all">
-            #{orderNo}
-          </span>
+        <div className="flex items-center justify-between mb-2 flex-wrap gap-1">
+          <div className="flex items-center gap-1">
+            <span className="inline-flex items-center px-2 py-1 bg-[#FF385C] text-white text-[13px] font-bold font-mono-nums rounded tracking-wider select-all">
+              #{orderNo}
+            </span>
+            {order.isQROrder && (
+              <span className="inline-flex items-center px-1.5 py-0.5 text-[11px] font-bold font-mono-nums rounded bg-[#1C1917] text-[#E8A855]">
+                QR
+              </span>
+            )}
+          </div>
           <OrderStatusBadge status={order.status} />
         </div>
         <div className="flex items-center gap-2 mb-2">
@@ -237,7 +244,7 @@ function OrderCard({ order, onAccept, onView, onTransferRequest, onCancel, onDis
         {/* Actions */}
         {showActions && (
           <div className="flex flex-col gap-2 pt-2 border-t border-[#EBEBEB]">
-            {/* 第一列：PUBLISHED 接單 / 查看詳情 */}
+            {/* 第一列：PUBLISHED 接單 / ASSIGNED QR 單派到接單大廳 / 查看詳情 */}
             <div className="flex gap-2">
               {onView && (
                 <Button variant="outline" size="sm" onClick={() => onView(order.id)}
@@ -252,6 +259,98 @@ function OrderCard({ order, onAccept, onView, onTransferRequest, onCancel, onDis
                 </Button>
               )}
             </div>
+
+            {/* ASSIGNED QR 單：派到接單大廳 */}
+            {order.isQROrder && order.status === 'ASSIGNED' && onDispatchToHall && (
+              <div className="mt-1">
+                {!showDispatchForm ? (
+                  <button
+                    onClick={() => setShowDispatchForm(true)}
+                    className="w-full py-2.5 bg-[#0C447C] text-white text-[14px] font-bold rounded-lg hover:bg-[#0a3a6e] transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Send className="w-4 h-4" />
+                    派到接單大廳
+                  </button>
+                ) : (
+                  <div className="bg-[#FFF3E0] border border-[#F59E0B]/30 rounded-xl p-4 space-y-3">
+                    <p className="text-[12px] font-bold text-[#B45309]">派到接單大廳</p>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[12px] font-semibold text-[#717171] whitespace-nowrap">實收金額</span>
+                      <div className="flex items-center gap-1 flex-1">
+                        <span className="text-[13px] text-[#717171]">NT$</span>
+                        <input
+                          type="text"
+                          inputMode="decimal"
+                          value={dispatchCashCollected}
+                          onChange={e => {
+                            const digits = e.target.value.replace(/[^\d]/g, '')
+                            setDispatchCashCollected(digits)
+                          }}
+                          placeholder={String(order.qrPrice ?? order.price)}
+                          className="flex-1 px-2 py-1.5 border-2 border-[#DDDDDD] rounded-lg text-[13px] outline-none focus:border-[#F59E0B] bg-white"
+                        />
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[12px] font-semibold text-[#717171] whitespace-nowrap">回金金額</span>
+                      <div className="flex items-center gap-1 flex-1">
+                        <span className="text-[13px] text-[#717171]">NT$</span>
+                        <input
+                          type="text"
+                          inputMode="decimal"
+                          value={dispatchCommissionReturn}
+                          onChange={e => {
+                            const digits = e.target.value.replace(/[^\d]/g, '')
+                            setDispatchCommissionReturn(digits)
+                          }}
+                          placeholder="0"
+                          className="flex-1 px-2 py-1.5 border-2 border-[#DDDDDD] rounded-lg text-[13px] outline-none focus:border-[#F59E0B] bg-white"
+                        />
+                      </div>
+                    </div>
+                    {dispatchCashCollected && (
+                      <div className="px-3 py-2 bg-[#0C447C] text-white rounded-lg text-center">
+                        <span className="text-[12px] font-bold">外派後您實拿：</span>
+                        <span className="text-[18px] font-extrabold ml-1">
+                          NT$ {Math.max(0, parseInt(dispatchCashCollected || '0') - parseInt(dispatchCommissionReturn || '0')).toLocaleString()}
+                        </span>
+                      </div>
+                    )}
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          setShowDispatchForm(false)
+                          setDispatchCashCollected('')
+                          setDispatchCommissionReturn('')
+                        }}
+                        className="flex-1 py-2 bg-white border border-[#DDDDDD] text-[#717171] text-[13px] font-bold rounded-lg hover:border-[#FF385C] hover:text-[#FF385C] transition-colors"
+                      >
+                        取消
+                      </button>
+                      <button
+                        onClick={async () => {
+                          const cash = parseInt(dispatchCashCollected || '0')
+                          const commission = parseInt(dispatchCommissionReturn || '0')
+                          if (cash <= 0) { alert('請填寫實收金額'); return }
+                          setDispatching(true)
+                          const ok = await onDispatchToHall(order.id, cash, commission)
+                          setDispatching(false)
+                          if (ok) {
+                            setShowDispatchForm(false)
+                            setDispatchCashCollected('')
+                            setDispatchCommissionReturn('')
+                          }
+                        }}
+                        disabled={dispatching}
+                        className="flex-1 py-2 bg-[#FF385C] text-white text-[13px] font-bold rounded-lg hover:bg-[#E83355] disabled:opacity-60 transition-colors"
+                      >
+                        {dispatching ? '送出中...' : '確認外派'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
             {/* ACCEPTED 狀態：執行行程 / 小隊支援 / 退單 */}
             {order.status === 'ACCEPTED' && (
               <>

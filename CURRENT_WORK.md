@@ -69,7 +69,7 @@
 ### 新功能：司機接單窗口（QR 貴賓預訂）
 
 **規格文件**：`docs/superpowers/specs/2026-04-16-driver-qr-order-design.md`（Commit: `2b35ace`）
-**實作狀態**：規劃中
+**實作狀態**：✅ 前端完成（本次 commit）
 
 **功能概述**：Premium 司機專屬 QR code，貴賓掃描後直接預訂，系統自動帶入客戶資料庫中的常用乘客資訊。
 
@@ -77,11 +77,12 @@
 
 | 里程碑 | 負責 | 預計完成 |
 |--------|------|----------|
-| 後端：Prisma schema 擴充 + API 端點 | B | 待排程 |
-| 前端：司機端報價設定 + 客戶資料庫 | A | 待排程 |
-| 前端：客人 QR 落地頁（/book/[driverId]） | A | 待排程 |
+| 後端：Prisma schema 擴充 + API 端點 | B | ✅ (`c8a8db5`) |
+| 前端：司機端報價設定 + 客戶資料庫 + 小車頭整合 | A | ✅ (本次 commit) |
+| 前端：客人 QR 落地頁（/book/[driverId]）+ QROrderChat | A | ✅ (本次 commit) |
+| 前端：OrderCard QR 標籤 + 派到大廳功能 | A | ✅ (本次 commit) |
 | QA 測試驗證 | C | 待排程 |
-| 文件更新 | D | 待排程 |
+| 文件更新 | D | ✅ (各 commit) |
 
 **新 DB Model**：
 - `DriverPricing`：司機車型報價（carType + price + enabled）

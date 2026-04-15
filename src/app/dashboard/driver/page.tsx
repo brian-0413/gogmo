@@ -382,6 +382,32 @@ export default function DriverDashboard() {
     setTransferReason('')
   }
 
+  const handleDispatchToHall = async (orderId: string, cashCollected: number, commissionReturn: number): Promise<boolean> => {
+    if (!token) return false
+    try {
+      const res = await fetch(`/api/orders/${orderId}/dispatch`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ cashCollected, commissionReturn }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        alert('已派到接單大廳')
+        await fetchOrders()
+        return true
+      } else {
+        alert(data.error || '派到大廳失敗')
+        return false
+      }
+    } catch {
+      alert('網路錯誤')
+      return false
+    }
+  }
+
   const handleCheckMatch = async () => {
     if (!token) return
     setMatchLoading(true)
@@ -769,7 +795,7 @@ export default function DriverDashboard() {
                   <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
                     {filteredAvailableOrders.map((order, index) => (
                       <div key={order.id} className="animate-cardEntry" style={{ animationDelay: `${Math.min(index * 40, 400)}ms` }}>
-                        <OrderCard order={order} onAccept={handleAcceptOrder} showActions={true} isNew={true} />
+                        <OrderCard order={order} onAccept={handleAcceptOrder} onDispatchToHall={handleDispatchToHall} showActions={true} isNew={true} />
                       </div>
                     ))}
                   </div>
@@ -988,7 +1014,7 @@ export default function DriverDashboard() {
                       onClick={() => router.push(`/dashboard/driver/order/${order.id}`)}
                       className="cursor-pointer"
                     >
-                      <OrderCard order={order} showActions={true} compact={true} onTransferRequest={handleTransferRequest} onCancel={handleCancelOrder} transferLoading={actionLoading} />
+                      <OrderCard order={order} showActions={true} compact={true} onTransferRequest={handleTransferRequest} onCancel={handleCancelOrder} onDispatchToHall={handleDispatchToHall} transferLoading={actionLoading} />
                     </div>
                     {order.status === 'ACCEPTED' && (
                       <div className="mt-2 flex flex-col gap-2">
