@@ -109,6 +109,14 @@ export default function DriverDashboard() {
   const [currentTime, setCurrentTime] = useState(new Date())
   const [, setTick] = useState(0)
 
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date())
+      setTick(t => t + 1)
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [])
+
   // 請求小隊支援對話框
   const [transferDialog, setTransferDialog] = useState<{ open: boolean; orderId: string | null; order: Order | null }>({
     open: false,
@@ -586,8 +594,8 @@ export default function DriverDashboard() {
               <div>
                 <span className="text-[#1C1917] font-bold tracking-tight text-lg">司機專區</span>
                 <div className="flex items-center gap-3 text-[10px] text-[#78716C]">
-                  <span className="font-mono-nums">{new Date().toLocaleDateString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit' })}</span>
-                  <span className="font-mono-nums">{new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' })}</span>
+                  <span className="font-mono-nums">{currentTime.toLocaleDateString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit' })}</span>
+                  <span className="font-mono-nums">{currentTime.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' })}</span>
                 </div>
               </div>
             </Link>
