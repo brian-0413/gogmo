@@ -26,13 +26,13 @@ export async function POST(request: NextRequest) {
 
     // 解密
     const decrypted = decryptPayuni(encryptInfo)
-    console.log('[PAYUNI] Topup notify decrypted:', decrypted)
+    if (process.env.NODE_ENV !== 'production') console.log('[PAYUNI] Topup notify decrypted:', decrypted)
 
     const { Status, MerchantOrderNo, TradeAmt, TradeNo } = decrypted
 
     // Status === '1' 表示付款成功
     if (Status !== '1') {
-      console.log(`[PAYUNI] Topup trade ${MerchantOrderNo} status=${Status}, not success`)
+      if (process.env.NODE_ENV !== 'production') console.log(`[PAYUNI] Topup trade ${MerchantOrderNo} status=${Status}, not success`)
       return new NextResponse('OK')
     }
 
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
 
     // 已經處理過（防止重複通知）
     if (topup.status === 'paid') {
-      console.log(`[PAYUNI] Topup ${topup.id} already paid, skip`)
+      if (process.env.NODE_ENV !== 'production') console.log(`[PAYUNI] Topup ${topup.id} already paid, skip`)
       return new NextResponse('OK')
     }
 
@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
       }),
     ])
 
-    console.log(`[PAYUNI] Topup ${topup.id} completed: +${topup.amount} to driver ${topup.driverId}`)
+    if (process.env.NODE_ENV !== 'production') console.log(`[PAYUNI] Topup ${topup.id} completed: +${topup.amount} to driver ${topup.driverId}`)
 
     return new NextResponse('OK')
   } catch (error) {

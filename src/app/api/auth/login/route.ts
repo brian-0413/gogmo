@@ -26,14 +26,12 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    console.log('[AUTH LOGIN] Login request:', { account, role, hasPassword: !!password })
-
+    
     const result = role === 'DRIVER'
       ? await loginByPlate(account, password)
       : await login(account, password)
 
-    console.log('[AUTH LOGIN] Login result:', { success: result.success, error: result.error, hasToken: !!result.token })
-
+    
     if (!result.success) {
       return NextResponse.json<ApiResponse>(
         { success: false, error: result.error },

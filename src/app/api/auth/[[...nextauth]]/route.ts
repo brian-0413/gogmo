@@ -112,13 +112,13 @@ export async function POST(request: NextRequest) {
 
     // Upload documents to Google Drive (if any) — failures do NOT block registration
     if (uploadedFiles.length > 0) {
-      console.log(`[REGISTER] Received ${uploadedFiles.length} files:`, uploadedFiles.map(f => `${f.type} (${f.file.name}, ${f.file.size} bytes)`))
+      if (process.env.NODE_ENV !== 'production') console.log(`[REGISTER] Received ${uploadedFiles.length} files:`, uploadedFiles.map(f => `${f.type} (${f.file.name}, ${f.file.size} bytes)`))
       const { uploadFileToDrive, getOrCreateUserFolder, setFilePublic } = await import('@/lib/google-drive')
       const { prisma } = await import('@/lib/prisma')
 
       for (const { type, file } of uploadedFiles) {
         try {
-          console.log(`[REGISTER] Uploading ${type} to Google Drive...`)
+          if (process.env.NODE_ENV !== 'production') console.log(`[REGISTER] Uploading ${type} to Google Drive...`)
           const driver = await prisma.driver.findUnique({ where: { userId: result.user!.id } })
           const dispatcher = await prisma.dispatcher.findUnique({ where: { userId: result.user!.id } })
           const plate = driver?.licensePlate || dispatcher?.companyName || result.user!.id
@@ -142,9 +142,9 @@ export async function POST(request: NextRequest) {
 
           // 新資料夾格式：{YYYYMMDD}-{車牌}-{姓名}
           const folderId = await getOrCreateUserFolder(roleFolderId, result.user!.id, plate, userName)
-          console.log(`[REGISTER] Created/retrieved folder: ${folderId}`)
+          if (process.env.NODE_ENV !== 'production') console.log(`[REGISTER] Created/retrieved folder: ${folderId}`)
           const uploaded = await uploadFileToDrive(folderId, fileName, file.type, buffer)
-          console.log(`[REGISTER] Uploaded file: ${uploaded.fileId} -> ${uploaded.webViewLink}`)
+          if (process.env.NODE_ENV !== 'production') console.log(`[REGISTER] Uploaded file: ${uploaded.fileId} -> ${uploaded.webViewLink}`)
           await setFilePublic(uploaded.fileId)
 
           await prisma.userDocument.create({
@@ -185,12 +185,13 @@ export async function POST(request: NextRequest) {
         }
       }
     } else {
-      console.log('[REGISTER] No files received for upload')
+      if (process.env.NODE_ENV !== 'production') console.log('[REGISTER] No files received for upload')
     }
 
     // Send verification email (async, don't await)
     sendVerifyEmail(result.user!.id, email).catch(err => {
-      console.error('Failed to send verify email:', err)
+      // eslint-disable-next-line no-console
+      console.error('[REGISTER] Failed to send verify email:', err)
     })
 
     return NextResponse.json<ApiResponse>({
@@ -198,7 +199,8 @@ export async function POST(request: NextRequest) {
       data: { token: result.token, user: result.user },
     })
   } catch (error) {
-    console.error('Register error:', error)
+    // eslint-disable-next-line no-console
+    console.error('[REGISTER] Register error:', error)
     return NextResponse.json<ApiResponse>(
       { success: false, error: '伺服器錯誤' },
       { status: 500 }

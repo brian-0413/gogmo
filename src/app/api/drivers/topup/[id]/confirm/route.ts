@@ -85,7 +85,7 @@ export async function PUT(
       },
     })
 
-    console.log(`[TOPUP] Transfer topup ${topupId} confirmed by admin ${currentUser.id}: +${topup.amount} to driver ${topup.driverId}`)
+    if (process.env.NODE_ENV !== 'production') console.log(`[TOPUP] Transfer topup ${topupId} confirmed by admin ${currentUser.id}: +${topup.amount} to driver ${topup.driverId}`)
 
     return NextResponse.json<ApiResponse>({
       success: true,

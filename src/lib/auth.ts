@@ -154,14 +154,14 @@ export async function register(
 
 export async function login(email: string, password: string): Promise<AuthResult> {
   try {
-    console.log('[AUTH] Login attempt for:', email)
+    if (process.env.NODE_ENV !== 'production') console.log('[AUTH] Login attempt for:', email)
 
     const user = await prisma.user.findUnique({
       where: { email },
       include: { driver: true, dispatcher: true },
     })
 
-    console.log('[AUTH] User found:', user ? `yes (id=${user.id}, role=${user.role})` : 'no')
+    if (process.env.NODE_ENV !== 'production') console.log('[AUTH] User found:', user ? `yes (id=${user.id}, role=${user.role})` : 'no')
 
     if (!user) {
       return { success: false, error: '帳號或密碼錯誤' }
@@ -169,14 +169,14 @@ export async function login(email: string, password: string): Promise<AuthResult
 
     const isValid = await verifyPassword(password, user.password)
     if (!isValid) {
-      console.log('[AUTH] Password verification failed')
+      if (process.env.NODE_ENV !== 'production') console.log('[AUTH] Password verification failed')
       return { success: false, error: '帳號或密碼錯誤' }
     }
 
     let token: string
     try {
       token = generateToken({ userId: user.id, role: user.role })
-      console.log('[AUTH] Token generated successfully')
+      if (process.env.NODE_ENV !== 'production') console.log('[AUTH] Token generated successfully')
     } catch (tokenError) {
       console.error('[AUTH] Token generation failed:', tokenError)
       return { success: false, error: '伺服器設定錯誤，JWT_SECRET 可能未設定' }
@@ -277,14 +277,14 @@ export async function forgotPassword(
       if (!user) return { success: false, error: '車牌與 Email 不匹配' }
       const token = generateToken({ userId: user.id, role: 'RESET' }, '1h')
       const resetUrl = `${appUrl}/reset-password?token=${token}`
-      console.log(`[EMAIL] Reset link for ${email}: ${resetUrl}`)
+      if (process.env.NODE_ENV !== 'production') console.log(`[EMAIL] Reset link for ${email}: ${resetUrl}`)
       return { success: true }
     } else {
       const user = await prisma.user.findUnique({ where: { email: account, role: 'DISPATCHER' } })
       if (!user) return { success: false, error: '此 Email 未註冊' }
       const token = generateToken({ userId: user.id, role: 'RESET' }, '1h')
       const resetUrl = `${appUrl}/reset-password?token=${token}`
-      console.log(`[EMAIL] Reset link for ${email}: ${resetUrl}`)
+      if (process.env.NODE_ENV !== 'production') console.log(`[EMAIL] Reset link for ${email}: ${resetUrl}`)
       return { success: true }
     }
   } catch (error) {

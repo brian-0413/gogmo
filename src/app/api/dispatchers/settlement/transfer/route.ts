@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
 
     // 通知司機日誌（未來實作推播後串接）
     if (order.driver) {
-      console.log(`[TRANSFER] 派單方 ${user.dispatcher.companyName} 已標記轉帳完成 NT$${order.price} 給司機 ${order.driver.user.name}（${order.driver.licensePlate}）`)
+      if (process.env.NODE_ENV !== 'production') console.log(`[TRANSFER] 派單方 ${user.dispatcher.companyName} 已標記轉帳完成 NT$${order.price} 給司機 ${order.driver.user.name}（${order.driver.licensePlate}）`)
     }
 
     return NextResponse.json<ApiResponse>({

@@ -52,11 +52,11 @@ export async function POST(request: NextRequest) {
 
     // 上傳到測試資料夾
     const folderId = await getOrCreateTestFolder(rootFolderId)
-    console.log(`[DRIVE-TEST] Folder: ${folderId}, File: ${fileName}`)
+    if (process.env.NODE_ENV !== 'production') console.log(`[DRIVE-TEST] Folder: ${folderId}, File: ${fileName}`)
     const uploaded = await uploadFileToDrive(folderId, fileName, file.type, buffer)
     await setFilePublic(uploaded.fileId)
 
-    console.log(`[DRIVE-TEST] Uploaded: ${uploaded.fileId} -> ${uploaded.webViewLink}`)
+    if (process.env.NODE_ENV !== 'production') console.log(`[DRIVE-TEST] Uploaded: ${uploaded.fileId} -> ${uploaded.webViewLink}`)
 
     return NextResponse.json<ApiResponse>({
       success: true,
@@ -73,13 +73,19 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
     const type = err instanceof Error ? err.constructor.name : 'Error'
+    // eslint-disable-next-line no-console
     console.error('[DRIVE-TEST] Upload error:', type, msg)
     // Enhanced diagnostics: show stack trace and key info
     if (err instanceof Error) {
+      // eslint-disable-next-line no-console
       console.error('[DRIVE-TEST] Stack:', err.stack)
     }
-    console.log('[DRIVE-TEST] Buffer available:', typeof Buffer !== 'undefined')
-    console.log('[DRIVE-TEST] Buffer.from:', typeof Buffer?.from)
+    if (process.env.NODE_ENV !== 'production') {
+      // eslint-disable-next-line no-console
+      console.log('[DRIVE-TEST] Buffer available:', typeof Buffer !== 'undefined')
+      // eslint-disable-next-line no-console
+      console.log('[DRIVE-TEST] Buffer.from:', typeof Buffer?.from)
+    }
     return NextResponse.json<ApiResponse>({ success: false, error: `[${type}] ${msg}` }, { status: 500 })
   }
 }

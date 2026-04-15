@@ -157,6 +157,8 @@ model Driver {
   bankCode        String?      // 銀行代碼
   bankAccount     String?      // 銀行帳號
   isPremium        Boolean      @default(false) // Premium 司機可使用小車頭發單功能
+  lastSseCheckAt   DateTime?   // SSE 端點追蹤的最後檢查時間（跨實例安全）
+  lastConflictAcceptAt DateTime? // 衝突接單冷卻時間（防止連續繞過警告）
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
 

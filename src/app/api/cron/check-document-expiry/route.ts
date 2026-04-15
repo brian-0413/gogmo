@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
     for (const doc of expiredDocs) {
       const typeLabel = DOCUMENT_TYPE_LABELS[doc.type] ?? doc.type
 
-      console.log(`[check-document-expiry] 司機 ${doc.user.name}（${doc.user.email}）的文件已過期：${typeLabel}`)
+      if (process.env.NODE_ENV !== 'production') console.log(`[check-document-expiry] 司機 ${doc.user.name}（${doc.user.email}）的文件已過期：${typeLabel}`)
 
       await prisma.user.update({
         where: { id: doc.userId },

@@ -69,7 +69,7 @@ export async function POST(
 
   // TODO: Send notification email
   const action = body.action === 'approve' ? '已開通' : '未通過'
-  console.log(`[EMAIL] 帳號審核結果通知 ${targetUser.email}: ${action}`)
+  if (process.env.NODE_ENV !== 'production') console.log(`[EMAIL] 帳號審核結果通知 ${targetUser.email}: ${action}`)
 
   return NextResponse.json<ApiResponse>({
     success: true,

@@ -71,9 +71,6 @@ export function RegisterWizard() {
 
   const handleSubmit = async () => {
     if (!role) return
-    console.log('[REGISTER] handleSubmit called')
-    console.log('[REGISTER] step2Data:', JSON.stringify({ email: step2Data.email, name: step2Data.name, phone: step2Data.phone }))
-    console.log('[REGISTER] step6Data:', JSON.stringify({ passwordLength: step6Data.password.length, agreedToTerms: step6Data.agreedToTerms }))
     setSubmitting(true)
     setError('')
     try {
@@ -101,24 +98,17 @@ export function RegisterWizard() {
       for (const { type, file } of step5Files) {
         fd.append(type, file)
       }
-
-      console.log('[REGISTER] About to fetch /api/auth')
-      console.log('[REGISTER] FormData fields:', [...fd.entries()].map(e => `${e[0]}: ${e[1] instanceof File ? 'File(' + e[1].name + ')' : e[1]}`))
       const res = await fetch('/api/auth', {
         method: 'POST',
         body: fd,
       })
-      console.log('[REGISTER] Response status:', res.status)
       const data = await res.json()
-      console.log('[REGISTER] API response:', JSON.stringify(data))
       if (!data.success) {
         setError(data.error || '註冊失敗')
         setSubmitting(false)
         return
       }
-      console.log('[REGISTER] About to call setSuccess(true)')
       setSuccess(true)
-      console.log('[REGISTER] setSuccess called, now waiting...')
     } catch { setError('網路錯誤') }
     setSubmitting(false)
   }

@@ -65,7 +65,7 @@ export async function uploadFileToDrive(
   mimeType: string,
   buffer: Buffer | Uint8Array,
 ): Promise<{ fileId: string; webViewLink: string; webContentLink: string }> {
-  console.log(`[DRIVE] Uploading "${fileName}" (${buffer.length} bytes) via Apps Script`)
+  if (process.env.NODE_ENV !== 'production') console.log(`[DRIVE] Uploading "${fileName}" (${buffer.length} bytes) via Apps Script`)
 
   const base64 = (Buffer.isBuffer(buffer) ? buffer : Buffer.from(buffer)).toString('base64')
 
@@ -88,7 +88,7 @@ export async function uploadFileToDrive(
     throw new Error(result.error || 'Apps Script upload failed')
   }
 
-  console.log(`[DRIVE] Uploaded: ${result.data!.fileId} -> ${result.data!.webViewLink || result.data!.fileUrl}`)
+  if (process.env.NODE_ENV !== 'production') console.log(`[DRIVE] Uploaded: ${result.data!.fileId} -> ${result.data!.webViewLink || result.data!.fileUrl}`)
   return {
     fileId: result.data!.fileId,
     webViewLink: result.data!.webViewLink || result.data!.fileUrl || '',
@@ -124,7 +124,7 @@ export async function getOrCreateUserFolder(
     throw new Error(result.error || 'Apps Script createFolder failed')
   }
 
-  console.log(`[DRIVE] User folder: ${folderName} -> ${result.data!.folderId}`)
+  if (process.env.NODE_ENV !== 'production') console.log(`[DRIVE] User folder: ${folderName} -> ${result.data!.folderId}`)
   return result.data!.folderId
 }
 
@@ -151,7 +151,7 @@ export async function getOrCreateTestFolder(parentFolderId: string): Promise<str
     throw new Error(result.error || 'Apps Script createFolder failed')
   }
 
-  console.log(`[DRIVE] Test folder: ${folderName} -> ${result.data!.folderId}`)
+  if (process.env.NODE_ENV !== 'production') console.log(`[DRIVE] Test folder: ${folderName} -> ${result.data!.folderId}`)
   return result.data!.folderId
 }
 

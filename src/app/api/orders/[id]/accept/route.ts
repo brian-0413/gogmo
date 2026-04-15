@@ -6,6 +6,9 @@ import { PLATFORM_FEE_RATE } from '@/lib/constants'
 
 // ─── 衝突檢查 ─────────────────────────────────────────
 
+// 強制冷卻時間（毫秒）：衝突警告後需等待 10 秒才能再次接單
+const CONFLICT_COOLDOWN_MS = 10_000
+
 function isPickupType(type: string): boolean {
   return type === 'pickup' || type === 'pickup_boat'
 }
@@ -50,7 +53,8 @@ function buildWarning(conflictMsg: string | null): string {
   const lines = []
   if (conflictMsg) lines.push(conflictMsg)
   lines.push('1. 提醒您，接單之後退單，將收取訂單 10% 的手續費。')
-  lines.push('2. 請勿強接太緊繃的配趟，為了行車和荷包的安全，請謹慎接單。')
+  lines.push(`2. 請勿強接太緊繃的配趟，為了行車和荷包的安全，請謹慎接單。`)
+  lines.push(`3. 選擇繼續接單後，需等待 ${CONFLICT_COOLDOWN_MS / 1000} 秒冷卻才能成功。`)
   return lines.join('\n')
 }
 
@@ -169,6 +173,22 @@ export async function POST(
           })
         }
       }
+    } else {
+      // skipWarning=true 代表司機已確認警告，需檢查冷卻時間
+      const cooldown = await prisma.driver.findUnique({
+        where: { id: driverId },
+        select: { lastConflictAcceptAt: true },
+      })
+      if (cooldown?.lastConflictAcceptAt) {
+        const elapsed = Date.now() - new Date(cooldown.lastConflictAcceptAt).getTime()
+        if (elapsed < CONFLICT_COOLDOWN_MS) {
+          const remaining = Math.ceil((CONFLICT_COOLDOWN_MS - elapsed) / 1000)
+          return NextResponse.json<ApiResponse>(
+            { success: false, error: `冷卻中，請再等 ${remaining} 秒後再嘗試接單` },
+            { status: 429 }
+          )
+        }
+      }
     }
 
     // ─── Transaction ───────────────────────────────────
@@ -191,6 +211,14 @@ export async function POST(
           driver: { include: { user: true } },
         },
       })
+
+      // skipWarning=true 代表司機已確認警告，衝突接單後記錄冷卻時間
+      if (skipWarning) {
+        await tx.driver.update({
+          where: { id: driverId },
+          data: { lastConflictAcceptAt: new Date() },
+        })
+      }
 
       await tx.driver.update({
         where: { id: driverId },

@@ -18,9 +18,7 @@ export function encryptPayuni(data: Record<string, string | number | boolean>): 
     .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`)
     .join("&")
 
-  console.log("PAYUNI PlainText:", plaintext)
-  console.log("PAYUNI key length:", merKey.length, "iv length:", merIV.length)
-
+  
   // AES-256-GCM 加密（與 GF 實作一致）
   const cipher = crypto.createCipheriv("aes-256-gcm", key, iv)
   let cipherText = cipher.update(plaintext, "utf8", "base64")
