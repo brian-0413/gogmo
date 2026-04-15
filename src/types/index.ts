@@ -104,6 +104,8 @@ export interface Order {
   kenichiRequired?: boolean
   isSelfPublish?: boolean
   isQROrder?: boolean
+  originalDriverId?: string | null
+  qrPrice?: number | null
   parsedData?: unknown
 }
 
