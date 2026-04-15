@@ -103,6 +103,7 @@ export interface Order {
   driver?: Driver
   kenichiRequired?: boolean
   isSelfPublish?: boolean
+  isQROrder?: boolean
   parsedData?: unknown
 }
 

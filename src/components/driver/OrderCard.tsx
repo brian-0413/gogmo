@@ -4,7 +4,7 @@ import { OrderStatusBadge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { format, parseISO, differenceInMinutes } from 'date-fns'
 import { zhTW } from 'date-fns/locale'
-import { User, Package, FileText, ChevronDown, ChevronUp } from 'lucide-react'
+import { User, Package, FileText, ChevronDown, ChevronUp, Send } from 'lucide-react'
 import { useState } from 'react'
 import { formatOrderNo } from '@/lib/utils'
 import { TYPE_COLORS, VEHICLE_LABELS, TYPE_LABELS, TRANSFER_FEE_RATE } from '@/lib/constants'
@@ -18,6 +18,7 @@ interface OrderCardProps {
   onView?: (orderId: string) => void
   onTransferRequest?: (orderId: string, reason: string) => void
   onCancel?: (orderId: string) => void
+  onDispatchToHall?: (orderId: string, cashCollected: number, commissionReturn: number) => Promise<boolean>
   showActions?: boolean
   compact?: boolean
   isNew?: boolean
@@ -33,7 +34,7 @@ function getTimeUrgency(scheduledTime: string | Date): "urgent" | "soon" | "norm
   return "normal"
 }
 
-function OrderCard({ order, onAccept, onView, onTransferRequest, onCancel, showActions = true, compact = false, isNew = false, transferLoading = null }: OrderCardProps) {
+function OrderCard({ order, onAccept, onView, onTransferRequest, onCancel, onDispatchToHall, showActions = true, compact = false, isNew = false, transferLoading = null }: OrderCardProps) {
   const scheduledDate = typeof order.scheduledTime === 'string' ? parseISO(order.scheduledTime) : order.scheduledTime
   const orderType: OrderType = order.type || 'pending'
   const vehicle: VehicleType = order.vehicle || 'any'
@@ -43,6 +44,11 @@ function OrderCard({ order, onAccept, onView, onTransferRequest, onCancel, showA
   const notes = order.notes || order.note || order.rawText
   const orderNo = formatOrderNo(scheduledDate, order.orderSeq)
   const typeBadgeColor = TYPE_COLORS[orderType]
+  // Dispatch-to-hall state
+  const [showDispatchForm, setShowDispatchForm] = useState(false)
+  const [dispatchCashCollected, setDispatchCashCollected] = useState('')
+  const [dispatchCommissionReturn, setDispatchCommissionReturn] = useState('')
+  const [dispatching, setDispatching] = useState(false)
 
   const isPickup = orderType === 'pickup'
   const isBoat = orderType === 'pickup_boat' || orderType === 'dropoff_boat'
@@ -135,6 +141,11 @@ function OrderCard({ order, onAccept, onView, onTransferRequest, onCancel, showA
             {order.kenichiRequired && (
               <span className="inline-flex items-center px-3 py-1.5 text-[15px] font-bold font-mono-nums rounded bg-[#F3E8FF] text-[#6B21A8]">
                 肯驛
+              </span>
+            )}
+            {order.isQROrder && (
+              <span className="inline-flex items-center px-3 py-1.5 text-[15px] font-bold font-mono-nums rounded bg-[#1C1917] text-[#E8A855]">
+                QR 貴賓單
               </span>
             )}
           </div>
