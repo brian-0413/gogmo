@@ -7,6 +7,39 @@
 
 ## 今日開發（2026-04-16）
 
+### [完成] 測試策略建立 + 示範測試撰寫
+
+**Commit**: 待 commit
+**規格文件**: `docs/test-strategy.md`
+
+**實作內容**：
+- **測試策略文件**（`docs/test-strategy.md`）：涵蓋 80% 覆蓋率目標、6 模組優先順序（P0: Auth/Accept, P1: Transfer/SSE/AI, P2: PAYUNi）、三層測試架構（Unit/Integration/E2E）、Fixtures 設計、Mock 策略、CI/CD 整合
+- **Vitest 設定更新**（`vitest.config.ts`）：覆蓋率閾值 lines 80% / functions 80% / branches 70% / statements 80%，納入 `src/lib/**/*.ts`
+- **示範測試**（共 57 個，全部通過）：
+  - `tests/lib/auth.test.ts`（23 個）：JWT 單元測試（hashPassword/verifyPassword, generateToken/verifyToken, 錯誤路徑）
+  - `tests/lib/api.auth.login.test.ts`（18 個）：POST /api/auth/login API 整合測試
+  - `tests/lib/api.orders.accept.test.ts`（16 個）：POST /api/orders/[id]/accept API 整合測試
+- **測試工具檔案**：
+  - `tests/lib/test-helpers.ts`：HTTP request 工廠函式（makePostRequest/makeGetRequest）+ 時間輔助工具
+  - `tests/fixtures/auth.ts`：User 工廠函式（createDriverUser/createDispatcherUser/createAdminUser）+ 命名 fixtures
+  - `tests/fixtures/order.ts`：Order 工廠函式（createPublishedOrder 等）
+- **CI/CD workflow**（`.github/workflows/test.yml`）：Vitest 測試 + V8 覆蓋率上傳 Codecov + Next.js build
+
+**已修復問題**：
+- Vitest hoisting：`vi.mock()` 中的 mock 函式需用 `vi.hoisted()` 建立
+- Next.js App Router params：動態路由需 `{ params: Promise.resolve({ id }) }` 第二引數
+- 衝突時間邏輯：衝突門檻 60 分鐘，需確保新單 1 小時後、衝突單 30 分鐘前
+- Mock 隔離：`beforeEach` 中 `$transaction.mockReset()` 清除前測試殘留實作
+- 衝突冷卻 mock：`driver.findUnique` 在 `$transaction` 外的呼叫需獨立 mock
+- 銀行帳號 mock：`bankAccount: null` 需直接覆寫欄位（`??` 運算子對 `null` 傳回預設值）
+
+**待實作**（依 `docs/test-strategy.md` 規劃）：
+- Transfer API 測試
+- SSE 測試
+- AI 解析測試
+- PAYUNi 測試
+- E2E 測試（Playwright）
+
 ### ABCD 團隊全面代碼審查完成
 
 共發現 **24 個問題**，已分類如下：
@@ -41,7 +74,7 @@
 
 | # | 問題 | 負責 | 狀態 |
 |---|------|------|------|
-| 13 | 現有測試覆蓋率僅 12% | C | 進行中 |
+| 13 | 現有測試覆蓋率僅 12% | C | 完成（57 個測試，見上方） |
 | 14 | console.log 殘留 30+ 處 | A | 已修復 (`5add310`) |
 | 15 | README.md 完全過期 | D | 已完成 (`d520d7f`) |
 | 16 | CURRENT_WORK.md 落後 HEAD | D | 已完成 (`23216fb`) |

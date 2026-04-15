@@ -10,8 +10,22 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'lcov'],
-      include: ['src/app/api/**/*.ts'],
-      exclude: [],
+      include: [
+        'src/app/api/**/*.ts',
+        'src/lib/**/*.ts',
+      ],
+      exclude: [
+        'src/lib/prisma.ts',       // DB connection, no logic to test
+        'src/lib/google-drive.ts', // External API, tested via integration
+        'src/lib/email.ts',        // External API, tested via integration
+        'src/lib/rate-limit.ts',   // Rate limiting, indirect test
+      ],
+      thresholds: {
+        lines: 80,
+        functions: 80,
+        branches: 70,
+        statements: 80,
+      },
     },
   },
   resolve: {
