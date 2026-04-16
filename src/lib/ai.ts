@@ -345,6 +345,7 @@ export interface LLMParseResult {
 
 /**
  * 使用 Claude Haiku 解析 LINE 訂單文字
+ * 529 Overloaded 時自動重試（最多 2 次）
  */
 export async function parseBatchOrdersLLM(
   text: string,
@@ -376,24 +377,43 @@ ${truncatedText}
 
 只回傳 JSON array，不要任何其他文字，不要用 markdown code block。`
 
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 16384,
-      system: systemPrompt,
-      messages: [{ role: 'user', content: userMessage }],
-    }),
-  })
+  // 發送請求，529 時自動重試（最多 2 次）
+  let lastError: Error | null = null
+  let response: Response | null = null
 
-  if (!response.ok) {
-    const error = await response.text()
-    throw new Error(`Anthropic API error: ${response.status} - ${error}`)
+  for (let attempt = 0; attempt < 3; attempt++) {
+    if (attempt > 0) {
+      // 指數退避：500ms, 1000ms
+      await new Promise(resolve => setTimeout(resolve, 500 * attempt))
+    }
+
+    const fetchRes = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 1024,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userMessage }],
+      }),
+    })
+
+    if (fetchRes.status === 529) {
+      lastError = new Error(`Anthropic Overloaded (529) - attempt ${attempt + 1}/3`)
+      continue
+    }
+
+    response = fetchRes
+    break
+  }
+
+  if (!response || !response.ok) {
+    const error = response ? await response.text() : lastError?.message
+    throw new Error(`Anthropic API error: ${response?.status ?? 'network'} - ${error}`)
   }
 
   const data = await response.json()

@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
     const myOrders = searchParams.get('myOrders') === 'true'
     const recommended = searchParams.get('recommended') === 'true'
     const page = parseInt(searchParams.get('page') || '1', 10)
-    const limit = Math.min(parseInt(searchParams.get('limit') || '20', 10), 100) // Max 100 per page
+    const limit = Math.min(parseInt(searchParams.get('limit') || '20', 10), 1000) // Max 100 per page
     const skip = (page - 1) * limit
 
     const where: Record<string, unknown> = {}

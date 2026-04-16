@@ -169,7 +169,7 @@ export default function DispatcherDashboard() {
   const fetchOrders = useCallback(async () => {
     if (!token) return
     try {
-      const res = await fetch('/api/orders', { headers: { Authorization: `Bearer ${token}` } })
+      const res = await fetch('/api/orders?limit=1000', { headers: { Authorization: `Bearer ${token}` } })
       const data = await res.json()
       if (data.success) setOrders(data.data.orders || [])
     } catch (error) {
