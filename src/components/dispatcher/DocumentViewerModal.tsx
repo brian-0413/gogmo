@@ -37,22 +37,6 @@ function getTabs(role: string) {
   return role === 'DISPATCHER' ? DISPATCHER_TABS : ADMIN_TABS
 }
 
-/**
- * 將 Google Drive 分享連結轉為可直接嵌入的縮圖 URL。
- * 格式: https://drive.google.com/file/d/{fileId}/view
- *  → 縮圖: https://drive.google.com/thumbnail?id={fileId}&sz=w1000
- * sz=w1000 表示最大寬度 1000px，適合在 Modal 中顯示
- */
-function toEmbedUrl(googleDriveUrl: string, mimeType: string): string {
-  const match = googleDriveUrl.match(/\/file\/d\/([^/]+)/)
-  if (!match) return googleDriveUrl
-  const fileId = match[1]
-  if (mimeType.startsWith('image/') || mimeType === 'application/pdf') {
-    return `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`
-  }
-  return googleDriveUrl
-}
-
 export function DocumentViewerModal({ driverId, driverName, licensePlate, token, viewerRole, onClose }: DocumentViewerModalProps) {
   const [documents, setDocuments] = useState<Document[]>([])
   const [loading, setLoading] = useState(true)
@@ -137,12 +121,12 @@ export function DocumentViewerModal({ driverId, driverName, licensePlate, token,
             </div>
           ) : isImage ? (
             <img
-              src={toEmbedUrl(currentDoc.fileUrl, currentDoc.mimeType)}
+              src={currentDoc.fileUrl}
               alt={TAB_LABELS[currentTab]}
               className="w-full h-auto max-h-[60vh] object-contain rounded-lg"
             />
           ) : (
-            // PDF 或其他類型：統一在新視窗開啟，避免 Google Drive 嵌入限制
+            // PDF 或其他類型在新視窗開啟
             <div className="flex flex-col items-center justify-center h-48 gap-4">
               <FileText className="w-12 h-12 text-[#DDDDDD]" />
               <p className="text-[#717171] text-[14px]">文件預覽需在新視窗開啟</p>

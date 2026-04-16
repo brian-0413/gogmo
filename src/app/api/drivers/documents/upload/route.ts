@@ -1,17 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUserFromToken } from '@/lib/auth'
 import { ApiResponse } from '@/types'
-import { uploadFileToDrive, getOrCreateUserFolder, setFilePublic } from '@/lib/google-drive'
+import { createClient } from '@supabase/supabase-js'
 import { prisma } from '@/lib/prisma'
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'application/pdf']
 const MAX_SIZE = 5 * 1024 * 1024 // 5MB
 const MAX_UPLOAD_ATTEMPTS = 3 // 同一文件類型最多上傳次數
-const DOC_TYPE_FILE_NAME: Record<string, string> = {
-  VEHICLE_REGISTRATION: '行照',
-  DRIVER_LICENSE: '駕照',
-  INSURANCE: '保險證',
-}
 
 export async function POST(request: NextRequest) {
   const token = request.headers.get('Authorization')?.replace('Bearer ', '')
@@ -66,32 +61,45 @@ export async function POST(request: NextRequest) {
   if (!driver) {
     return NextResponse.json<ApiResponse>({ success: false, error: '找不到司機資料' }, { status: 404 })
   }
-  const licensePlate = driver.licensePlate || user.id
-  const userName = user.name
 
   const ext = file.name.split('.').pop() || 'bin'
-  const docTypeLabel = DOC_TYPE_FILE_NAME[docType] || docType
-  // 新命名格式：{車牌}-{姓名}-{文件類型}.{ext}
-  const driveFileName = `${licensePlate}-${userName}-${docTypeLabel}.${ext}`
   const buffer = Buffer.from(await file.arrayBuffer())
 
+  // 建立 Supabase client（service role，繞過 RLS）
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!supabaseUrl || !serviceRoleKey) {
+    return NextResponse.json<ApiResponse>({ success: false, error: 'Supabase 未正確設定' }, { status: 500 })
+  }
+  const supabase = createClient(supabaseUrl, serviceRoleKey)
+
+  // 路徑格式：{userId}/{docType}/{timestamp}-{filename}
+  const safeFileName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_')
+  const storagePath = `${user.id}/${docType}/${Date.now()}-${safeFileName}`
+
   let fileUrl = ''
-  let driveFileId = ''
-  let driveFolderId = ''
   let uploadFailed = false
 
   try {
-    const rootFolderId = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID || '1QG9tF229aMvpd6kOHd-bl7MKK2YWbxNR'
+    const { data, error } = await supabase.storage
+      .from('driver-credentials')
+      .upload(storagePath, buffer, {
+        contentType: file.type,
+        upsert: false,
+      })
 
-    const folderId = await getOrCreateUserFolder(rootFolderId, user.id, licensePlate, userName)
-    const result = await uploadFileToDrive(folderId, driveFileName, file.type, buffer)
-    await setFilePublic(result.fileId)
+    if (error) {
+      throw new Error(error.message)
+    }
 
-    fileUrl = result.webViewLink
-    driveFileId = result.fileId
-    driveFolderId = folderId
+    // 從上傳結果取得完整公開 URL
+    const { data: urlData } = supabase.storage
+      .from('driver-credentials')
+      .getPublicUrl(storagePath)
+
+    fileUrl = urlData.publicUrl
   } catch (err) {
-    console.error('Google Drive upload failed:', err)
+    console.error('Supabase Storage upload failed:', err)
     uploadFailed = true
     fileUrl = `upload-failed:${file.name}`
   }
@@ -102,8 +110,6 @@ export async function POST(request: NextRequest) {
       userId: user.id,
       type: docType,
       fileUrl,
-      driveFileId,
-      driveFolderId,
       fileName: file.name,
       mimeType: file.type,
       sizeBytes: file.size,
