@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REC-2391 貴賓預訂</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #FAF7F2; min-height: 100vh; padding-bottom: 80px; }
+  .header { background: #1C1917; color: white; padding: 24px 20px; text-align: center; }
+  .header-title { font-size: 40px; font-weight: 900; color: #E8A855; letter-spacing: 4px; font-family: 'Courier New', monospace; }
+  .header-sub { font-size: 14px; color: #888; margin-top: 6px; letter-spacing: 1px; }
+  .chat-container { padding: 24px 16px; max-width: 480px; margin: 0 auto; }
+  .bot-msg { background: white; border-radius: 16px 16px 16px 4px; padding: 16px 18px; margin-bottom: 20px; max-width: 90%; box-shadow: 0 1px 4px rgba(0,0,0,0.08); line-height: 1.7; font-size: 15px; color: #222; }
+  .bot-msg .greeting { font-size: 13px; color: #888; margin-bottom: 10px; letter-spacing: 1px; }
+  .bot-msg .driver-name { color: #E8A855; font-weight: 900; font-size: 28px; letter-spacing: 2px; font-family: 'Courier New', monospace; display: block; }
+  .bot-msg .highlight { background: #FFF3E0; border-radius: 8px; padding: 10px 14px; margin-top: 12px; font-size: 14px; color: #B45309; border-left: 3px solid #E8A855; }
+  .type-cards { display: flex; gap: 10px; margin-top: 10px; }
+  .type-btn { background: white; border: 2px solid #DDDDDD; border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; transition: all 0.15s; font-size: 13px; font-weight: 500; color: #222; flex: 1; text-align: center; }
+  .type-btn:hover, .type-btn.selected { border-color: #E8A855; background: #FFF8EE; }
+  .type-btn .icon { width: 26px; height: 26px; background: #FAF7F2; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #333; }
+  .type-btn .label-sub { font-size: 10px; color: #888; margin-top: 2px; font-weight: 400; }
+  .type-btn .arrow { color: #CCCCCC; font-size: 16px; font-weight: 300; }
+  .status-bar { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid #EEEEEE; padding: 12px 16px; display: flex; align-items: center; gap: 8px; }
+  .status-bar input { flex: 1; background: #FAF7F2; border: none; border-radius: 20px; padding: 10px 16px; font-size: 15px; }
+  .status-bar input::placeholder { color: #AAAAAA; }
+  .send-btn { background: #1C1917; color: white; border: none; border-radius: 20px; padding: 8px 16px; font-size: 14px; font-weight: 600; cursor: pointer; }
+  .user-msg { background: #E8A855; color: #1C1917; border-radius: 16px 16px 4px 16px; padding: 12px 16px; margin-bottom: 20px; max-width: 75%; margin-left: auto; font-size: 15px; font-weight: 500; }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-title">REC-2391</div>
+  <div class="header-sub">專屬貴賓預訂頁面</div>
+</div>
+
+<!-- Chat -->
+<div class="chat-container" id="chat">
+
+  <!-- Bot greeting -->
+  <div class="bot-msg">
+    <div class="greeting">您好</div>
+    <div>親愛的貴賓您好，我是專屬<br><span class="driver-name">REC-2391</span>司機的行程預訂機器人，很高興為您服務</div>
+    <div class="highlight">
+      請告訴我您的行程需求，我會為您安排最好的接送服務
+    </div>
+  </div>
+
+  <!-- Bot asks -->
+  <div class="bot-msg">
+    請問您需要什麼服務？
+  </div>
+
+  <!-- Type options -->
+  <div class="type-cards" id="typeCards">
+    <div class="type-btn" onclick="selectType(this, 'pickup')">
+      <div class="icon">接</div>
+      <div>接機 / 接船</div>
+      <div class="label-sub">從機場或港口接您</div>
+    </div>
+    <div class="type-btn" onclick="selectType(this, 'dropoff')">
+      <div class="icon">送</div>
+      <div>送機 / 送船</div>
+      <div class="label-sub">載您到機場或港口</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Input bar -->
+<div class="status-bar">
+  <input type="text" placeholder="點選上方選項或輸入訊息..." readonly>
+  <button class="send-btn">送出</button>
+</div>
+
+<script>
+  const chat = document.getElementById('chat');
+
+  function selectType(el, type) {
+    document.querySelectorAll('.type-btn').forEach(b => { b.classList.remove('selected'); b.style.borderColor = '#DDDDDD'; });
+    el.classList.add('selected');
+    el.style.borderColor = '#E8A855';
+
+    // Show user selection
+    const userMsg = document.createElement('div');
+    userMsg.className = 'user-msg';
+    userMsg.textContent = type === 'pickup' ? '接機 / 接船' : '送機 / 送船';
+    chat.appendChild(userMsg);
+
+    // Bot responds
+    setTimeout(() => {
+      const next = document.createElement('div');
+      next.className = 'bot-msg';
+      next.innerHTML = type === 'pickup'
+        ? '好的，請問您抵達的航班是什麼？<br><br>上車地點：桃園國際機場第一航廈'
+        : '好的，請問您要從哪裡出發？<br><br>目的地：桃園國際機場第一航廈';
+      chat.appendChild(next);
+      window.scrollTo(0, document.body.scrollHeight);
+    }, 600);
+  }
+</script>
+</body>
+</html>

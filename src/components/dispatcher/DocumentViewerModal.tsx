@@ -38,18 +38,18 @@ function getTabs(role: string) {
 }
 
 /**
- * 將 Google Drive 分享連結轉為可直接嵌入/下載的 URL。
+ * 將 Google Drive 分享連結轉為可直接嵌入的縮圖 URL。
  * 格式: https://drive.google.com/file/d/{fileId}/view
- *  → 圖片: https://drive.google.com/uc?id={fileId}&export=view
+ *  → 縮圖: https://drive.google.com/thumbnail?id={fileId}&sz=w1000
+ * sz=w1000 表示最大寬度 1000px，適合在 Modal 中顯示
  */
 function toEmbedUrl(googleDriveUrl: string, mimeType: string): string {
   const match = googleDriveUrl.match(/\/file\/d\/([^/]+)/)
   if (!match) return googleDriveUrl
   const fileId = match[1]
-  if (mimeType.startsWith('image/')) {
-    return `https://drive.google.com/uc?id=${fileId}&export=view`
+  if (mimeType.startsWith('image/') || mimeType === 'application/pdf') {
+    return `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`
   }
-  // PDF 維持新視窗開啟，直接返回原連結
   return googleDriveUrl
 }
 

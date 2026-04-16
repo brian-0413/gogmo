@@ -174,9 +174,12 @@ export default function DispatcherDashboard() {
       if (data.success) setOrders(data.data.orders || [])
     } catch (error) {
       console.error('Failed to fetch orders:', error)
-    } finally {
-      setLoading(false)
     }
+  }, [token])
+
+  // Ensure loading stops when token becomes available (prevents infinite loading if token is null on first render)
+  useEffect(() => {
+    if (token) setLoading(false)
   }, [token])
 
   // Keep ref updated

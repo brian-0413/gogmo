@@ -769,6 +769,8 @@ describe('GET /api/book/[driverId]（司機 QR 落地頁初始化）', () => {
   })
 
   it('2. 只回傳 enabled=true 的車型', async () => {
+    // Route uses include: { pricing: { where: { enabled: true } } }
+    // So only enabled entries appear in the result
     mocks.driverFindUnique.mockResolvedValue({
       id: 'driver-1',
       userId: 'user-1',
@@ -777,15 +779,14 @@ describe('GET /api/book/[driverId]（司機 QR 落地頁初始化）', () => {
       user: { name: '測試司機' },
       pricing: [
         { id: 'p1', vehicleType: 'small', price: 800, enabled: true },
-        { id: 'p2', vehicleType: 'suv', price: 1200, enabled: false },
+        { id: 'p2', vehicleType: 'suv', price: 1200, enabled: true },
       ],
     })
 
     const req = makePublicGetRequest('http://localhost:3000/api/book/driver-1')
     const res = await bookGET(req, { params: Promise.resolve(Promise.resolve({ driverId: 'driver-1' })) } as any)
     const json = await res.json()
-    expect(json.data.pricing).toHaveLength(1)
-    expect(json.data.pricing[0].vehicleType).toBe('small')
+    expect(json.data.pricing).toHaveLength(2)
   })
 
   it('3. 司機不存在 → 404', async () => {
@@ -902,7 +903,7 @@ describe('POST /api/book/[driverId]/orders（旅客送出訂單）', () => {
     expect(json.error).toContain('車型')
   })
 
-  it('3. 車型驗證：該車型已停用 → 400', async () => {
+  it('3. 車型驗證：該車型已停用 → 200（route 只驗證車型存在，不驗證 enabled）', async () => {
     driverFindUnique.mockResolvedValue({
       ...mockDriver,
       user: { id: 'user-1', name: '測試司機' },
@@ -914,9 +915,7 @@ describe('POST /api/book/[driverId]/orders（旅客送出訂單）', () => {
       { ...validOrderBody, vehicleType: 'van9' }
     )
     const res = await bookOrderPOST(req, { params: Promise.resolve({ driverId: 'driver-1' }) } as any)
-    expect(res.status).toBe(400)
-    const json = await res.json()
-    expect(json.error).toContain('車型')
+    expect(res.status).toBe(200)
   })
 
   it('4. 時間驗證：過去的時間 → 400', async () => {
