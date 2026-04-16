@@ -37,6 +37,22 @@ function getTabs(role: string) {
   return role === 'DISPATCHER' ? DISPATCHER_TABS : ADMIN_TABS
 }
 
+/**
+ * 將 Google Drive 分享連結轉為可直接嵌入/下載的 URL。
+ * 格式: https://drive.google.com/file/d/{fileId}/view
+ *  → 圖片: https://drive.google.com/uc?id={fileId}&export=view
+ */
+function toEmbedUrl(googleDriveUrl: string, mimeType: string): string {
+  const match = googleDriveUrl.match(/\/file\/d\/([^/]+)/)
+  if (!match) return googleDriveUrl
+  const fileId = match[1]
+  if (mimeType.startsWith('image/')) {
+    return `https://drive.google.com/uc?id=${fileId}&export=view`
+  }
+  // PDF 維持新視窗開啟，直接返回原連結
+  return googleDriveUrl
+}
+
 export function DocumentViewerModal({ driverId, driverName, licensePlate, token, viewerRole, onClose }: DocumentViewerModalProps) {
   const [documents, setDocuments] = useState<Document[]>([])
   const [loading, setLoading] = useState(true)
@@ -121,7 +137,7 @@ export function DocumentViewerModal({ driverId, driverName, licensePlate, token,
             </div>
           ) : isImage ? (
             <img
-              src={currentDoc.fileUrl}
+              src={toEmbedUrl(currentDoc.fileUrl, currentDoc.mimeType)}
               alt={TAB_LABELS[currentTab]}
               className="w-full h-auto max-h-[60vh] object-contain rounded-lg"
             />
