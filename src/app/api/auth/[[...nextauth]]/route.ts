@@ -110,50 +110,42 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Upload documents to Google Drive (if any) — failures do NOT block registration
+    // Upload documents to Supabase Storage (if any) — failures do NOT block registration
     if (uploadedFiles.length > 0) {
       if (process.env.NODE_ENV !== 'production') console.log(`[REGISTER] Received ${uploadedFiles.length} files:`, uploadedFiles.map(f => `${f.type} (${f.file.name}, ${f.file.size} bytes)`))
-      const { uploadFileToDrive, getOrCreateUserFolder, setFilePublic } = await import('@/lib/google-drive')
       const { prisma } = await import('@/lib/prisma')
+      const { createClient } = await import('@supabase/supabase-js')
+
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+      const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+      const supabase = supabaseUrl && serviceRoleKey ? createClient(supabaseUrl, serviceRoleKey) : null
 
       for (const { type, file } of uploadedFiles) {
         try {
-          if (process.env.NODE_ENV !== 'production') console.log(`[REGISTER] Uploading ${type} to Google Drive...`)
-          const driver = await prisma.driver.findUnique({ where: { userId: result.user!.id } })
-          const dispatcher = await prisma.dispatcher.findUnique({ where: { userId: result.user!.id } })
-          const plate = driver?.licensePlate || dispatcher?.companyName || result.user!.id
-          const userName = result.user!.name
+          if (process.env.NODE_ENV !== 'production') console.log(`[REGISTER] Uploading ${type} to Supabase Storage...`)
 
           const ext = file.name.split('.').pop() || 'bin'
-          const labelMap: Record<string, string> = {
-            VEHICLE_REGISTRATION: '行照',
-            DRIVER_LICENSE: '駕照',
-            INSURANCE: '保險證',
-            ID_CARD: '身分證',
-            BUSINESS_REGISTRATION: '商業登記',
-          }
-          // 新命名格式：{車牌}-{姓名}-{文件類型}.{ext}
-          const fileName = `${plate}-${userName}-${labelMap[type] || type}.${ext}`
+          const safeFileName = `${result.user!.id}-${type}-${Date.now()}.${ext}`
+          const storagePath = `${result.user!.id}/${safeFileName}`
           const buffer = Buffer.from(await file.arrayBuffer())
 
-          const roleFolderId = driver
-            ? (process.env.GOOGLE_DRIVE_DRIVER_FOLDER_ID || '1QG9tF229aMvpd6kOHd-bl7MKK2YWbxNR')
-            : (process.env.GOOGLE_DRIVE_DISPATCHER_FOLDER_ID || '1ZcVPCvi5f5qbF1W6g86q1BOCy8qMDt9e')
+          if (!supabase) throw new Error('Supabase 未設定')
 
-          // 新資料夾格式：{YYYYMMDD}-{車牌}-{姓名}
-          const folderId = await getOrCreateUserFolder(roleFolderId, result.user!.id, plate, userName)
-          if (process.env.NODE_ENV !== 'production') console.log(`[REGISTER] Created/retrieved folder: ${folderId}`)
-          const uploaded = await uploadFileToDrive(folderId, fileName, file.type, buffer)
-          if (process.env.NODE_ENV !== 'production') console.log(`[REGISTER] Uploaded file: ${uploaded.fileId} -> ${uploaded.webViewLink}`)
-          await setFilePublic(uploaded.fileId)
+          const { error } = await supabase.storage
+            .from('driver-credentials')
+            .upload(storagePath, buffer, { contentType: file.type, upsert: false })
+
+          if (error) throw new Error(error.message)
+
+          const { data: urlData } = supabase.storage
+            .from('driver-credentials')
+            .getPublicUrl(storagePath)
 
           await prisma.userDocument.create({
             data: {
               userId: result.user!.id,
               type,
-              fileUrl: uploaded.webViewLink,
-              driveFileId: uploaded.fileId,
-              driveFolderId: folderId,
+              fileUrl: urlData.publicUrl,
               fileName: file.name,
               mimeType: file.type,
               sizeBytes: file.size,
@@ -163,7 +155,6 @@ export async function POST(request: NextRequest) {
           })
         } catch (err) {
           console.error(`[REGISTER] 文件上傳失敗 (${type}):`, err)
-          const { prisma } = await import('@/lib/prisma')
           // 檢查是否已達上傳失敗上限，超過則不建立記錄
           const failedCount = await prisma.userDocument.count({
             where: { userId: result.user!.id, type, uploadFailed: true },

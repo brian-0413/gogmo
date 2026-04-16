@@ -2,14 +2,16 @@
  * POST /api/drivers/documents/upload — 司機上傳文件
  *
  * 覆蓋情境：
- * 1. 成功上傳（mock Drive API）
- * 2. 未授權 → 401
- * 3. 非司機角色 → 403
- * 4. 未選擇檔案 → 400
- * 5. 不支援的檔案類型 → 400
- * 6. 檔案過大 → 400
- * 7. 無效的文件類型 → 400
- * 8. Drive 上傳失敗 → uploadFailed=true 但仍建立文件記錄
+ * 1. 成功上傳（mock Supabase Storage）
+ * 2. Supabase 上傳失敗 → uploadFailed=true 但仍建立文件記錄
+ * 3. 未授權 → 401
+ * 4. 非司機角色 → 403
+ * 5. 未選擇檔案 → 400
+ * 6. 不支援的檔案類型 → 400
+ * 7. 檔案過大 → 400
+ * 8. 無效的文件類型 → 400
+ * 9. 上傳失敗滿 3 次 → 400
+ * 10. 新建文件狀態為 PENDING
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
@@ -38,25 +40,29 @@ const mockUser = {
   driver: mockDriver,
 }
 
+// Mock Supabase client — must use vi.hoisted() so mocks are available when vi.mock is hoisted
+const { mockUpload, mockGetPublicUrl, mockStorageFrom, mockStorage, mockCreateClient } = vi.hoisted(() => {
+  const mockUpload = vi.fn()
+  const mockGetPublicUrl = vi.fn()
+  const mockStorageFrom = vi.fn(() => ({ upload: mockUpload, getPublicUrl: mockGetPublicUrl }))
+  const mockStorage = vi.fn(() => ({ from: mockStorageFrom }))
+  const mockCreateClient = vi.fn(() => ({ storage: mockStorage() }))
+  return { mockUpload, mockGetPublicUrl, mockStorageFrom, mockStorage, mockCreateClient }
+})
+
+vi.mock('@supabase/supabase-js', () => ({
+  createClient: mockCreateClient,
+}))
+
 vi.mock('@/lib/prisma', () => ({
   prisma: {
     driver: { findUnique: vi.fn() },
-    userDocument: { create: vi.fn(), count: vi.fn() },
+    userDocument: { create: vi.fn(), count: vi.fn(), deleteMany: vi.fn() },
   },
 }))
 
 vi.mock('@/lib/auth', () => ({
   getUserFromToken: vi.fn(),
-}))
-
-vi.mock('@/lib/google-drive', () => ({
-  getOrCreateUserFolder: vi.fn().mockResolvedValue('folder-id-123'),
-  uploadFileToDrive: vi.fn().mockResolvedValue({
-    fileId: 'file-id-456',
-    webViewLink: 'https://drive.google.com/file/d/file-id-456/view',
-    webContentLink: 'https://drive.google.com/uc?export=download&id=file-id-456',
-  }),
-  setFilePublic: vi.fn().mockResolvedValue(undefined),
 }))
 
 import { prisma } from '@/lib/prisma'
@@ -65,7 +71,7 @@ import { POST } from '@/app/api/drivers/documents/upload/route'
 
 const mockedPrisma = prisma as unknown as {
   driver: { findUnique: ReturnType<typeof vi.fn> }
-  userDocument: { create: ReturnType<typeof vi.fn>; count: ReturnType<typeof vi.fn> }
+  userDocument: { create: ReturnType<typeof vi.fn>; count: ReturnType<typeof vi.fn>; deleteMany: ReturnType<typeof vi.fn> }
 }
 const mockedGetUser = getUserFromToken as unknown as ReturnType<typeof vi.fn>
 
@@ -77,32 +83,30 @@ function makeUploadRequest(formData: FormData, token = 'valid-token') {
   })
 }
 
-function createValidFormData() {
-  const form = new FormData()
-  form.set('userId', 'user-1')
-  form.set('type', 'VEHICLE_REGISTRATION')
-  // 建立一個小的 mock File
-  const file = new File(['dummy'], 'car-reg.jpg', { type: 'image/jpeg' })
-  // Replace with actual file
-  form.delete('file')
-  form.set('file', file)
-  return form
-}
-
 beforeEach(() => {
   vi.clearAllMocks()
   mockedGetUser.mockResolvedValue(mockUser)
   mockedPrisma.driver.findUnique.mockResolvedValue(mockDriver)
   mockedPrisma.userDocument.count.mockResolvedValue(0)
+  mockedPrisma.userDocument.deleteMany.mockResolvedValue({ count: 0 })
+  // Reset Supabase mock
+  mockUpload.mockReset()
+  mockGetPublicUrl.mockReset()
+  mockCreateClient.mockReset()
+  mockCreateClient.mockReturnValue({ storage: mockStorage() })
 })
 
 describe('POST /api/drivers/documents/upload', () => {
   it('1. 成功上傳 → 200，status=PENDING', async () => {
+    mockUpload.mockResolvedValue({ data: { path: 'user-1/test.jpg' }, error: null })
+    mockGetPublicUrl.mockReturnValue({
+      data: { publicUrl: 'https://vwvixbmnqbxfoyexuzvs.supabase.co/storage/v1/object/public/driver-credentials/user-1/test.jpg' },
+    })
     mockedPrisma.userDocument.create.mockResolvedValue({
       id: 'doc-new',
       userId: 'user-1',
       type: 'VEHICLE_REGISTRATION',
-      fileUrl: 'https://drive.google.com/file/d/file-id-456/view',
+      fileUrl: 'https://vwvixbmnqbxfoyexuzvs.supabase.co/storage/v1/object/public/driver-credentials/user-1/test.jpg',
       status: 'PENDING',
       uploadFailed: false,
     })
@@ -121,10 +125,8 @@ describe('POST /api/drivers/documents/upload', () => {
     expect(json.data.documentId).toBe('doc-new')
   })
 
-  it('2. Drive 上傳失敗 → uploadFailed=true，仍建立文件記錄', async () => {
-    const { uploadFileToDrive } = await import('@/lib/google-drive')
-    ;(uploadFileToDrive as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('Drive API error'))
-
+  it('2. Supabase 上傳失敗 → uploadFailed=true，仍建立文件記錄', async () => {
+    mockUpload.mockResolvedValue({ data: null, error: { message: 'Storage error' } })
     mockedPrisma.userDocument.create.mockResolvedValue({
       id: 'doc-failed',
       userId: 'user-1',
@@ -189,7 +191,7 @@ describe('POST /api/drivers/documents/upload', () => {
   })
 
   it('7. 檔案超過 5MB → 400', async () => {
-    const largeContent = new Array(6 * 1024 * 1024).fill('x').join('')
+    const largeContent = new Uint8Array(6 * 1024 * 1024)
     const form = new FormData()
     form.set('type', 'VEHICLE_REGISTRATION')
     form.set('file', new File([largeContent], 'big.jpg', { type: 'image/jpeg' }))
@@ -223,7 +225,7 @@ describe('POST /api/drivers/documents/upload', () => {
     expect(json.error).toContain('無法替他人上傳')
   })
 
-  it('11. 上傳失敗滿 3 次 → 400', async () => {
+  it('10. 上傳失敗滿 3 次 → 400', async () => {
     mockedPrisma.userDocument.count.mockResolvedValue(3)
 
     const form = new FormData()
@@ -236,11 +238,15 @@ describe('POST /api/drivers/documents/upload', () => {
     expect(json.error).toContain('3 次')
   })
 
-  it('10. 新建文件狀態為 PENDING（待審核）', async () => {
+  it('11. 新建文件狀態為 PENDING（待審核）', async () => {
+    mockUpload.mockResolvedValue({ data: { path: 'user-1/test.pdf' }, error: null })
+    mockGetPublicUrl.mockReturnValue({
+      data: { publicUrl: 'https://vwvixbmnqbxfoyexuzvs.supabase.co/storage/v1/object/public/driver-credentials/user-1/test.pdf' },
+    })
     mockedPrisma.userDocument.create.mockResolvedValue({
       id: 'doc-new',
       userId: 'user-1',
-      type: 'VEHICLE_REGISTRATION',
+      type: 'DRIVER_LICENSE',
       status: 'PENDING',
       uploadFailed: false,
     })

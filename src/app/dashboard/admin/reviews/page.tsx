@@ -279,7 +279,7 @@ export default function AdminReviewsPage() {
                                   {doc.uploadFailed && (
                                     <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-[#FEF3C7] text-[#B45309] rounded text-[10px] font-medium">
                                       <AlertTriangle className="w-3 h-3" />
-                                      Drive上傳失敗
+                                      上傳失敗
                                     </span>
                                   )}
                                 </div>

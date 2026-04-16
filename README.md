@@ -11,7 +11,7 @@
 - **Database**: PostgreSQL + Prisma ORM v7（Supabase, Transaction Pooler）
 - **認證**: 自定義 JWT（無 NextAuth）
 - **AI 解析**: Claude Haiku API（訂單自動解析）
-- **文件儲存**: Google Drive API（司機證件）
+- **文件儲存**: Supabase Storage（司機證件）
 - **金流**: PAYUNi（信用卡加值）、銀行轉帳
 - **部署**: Zeabur
 
@@ -25,7 +25,7 @@
 - **智慧排班**：地理距離 + 時間鏈推薦、支援送機觸發 / 接機觸發兩種情境
 - **小車頭專區**：Premium 司機專屬，LINE 風格 14 步對話發單
 - **小隊互助**：bonus 機制、3% 轉單費、邀請制搶單
-- **個人中心**：文件上傳管理（Google Drive）、點數加值（PAYUNi / 銀行轉帳）、銀行帳號設定
+- **個人中心**：文件上傳管理（Supabase Storage）、點數加值（PAYUNi / 銀行轉帳）、銀行帳號設定
 
 ### 派單方端
 - **行控中心**：6 格 Stats（接機/送機/待接單/已接單/進行中/已完成）、訂單卡片牆
@@ -37,7 +37,7 @@
 
 ### 管理員端
 - **帳號審核**：司機 / 派單方分頁審查、文件檢視（行照/駕照/保險證）
-- **Drive 測試**：上傳測試區（用於除錯）
+- **上傳測試**：Storage 測試區（用於除錯）
 - **用戶管理**：點數調整、密碼重設
 - **費率設定**：接單費率 / 退單費率 / 轉單費率 / bonus 最低點數
 - **Cron**：每日文件過期檢查（到期前 30 天警示、到期自動凍結）
@@ -53,7 +53,7 @@ src/
 │   │   ├── login/page.tsx
 │   │   └── register/page.tsx
 │   ├── api/
-│   │   ├── admin/          # 審核、用戶管理、Drive測試、費率設定
+│   │   ├── admin/          # 審核、用戶管理、Storage測試、費率設定
 │   │   ├── auth/           # 登入、註冊、驗證 Email、密碼重設
 │   │   ├── cron/           # 每日排程（文件過期、行程鎖定）
 │   │   ├── dispatchers/    # 派單方資料、SSE事件、結算
@@ -67,7 +67,7 @@ src/
 │   │   ├── admin/page.tsx           # 管理員首頁
 │   │   ├── admin/users/page.tsx     # 用戶管理
 │   │   ├── admin/reviews/page.tsx   # 帳號審核
-│   │   ├── admin/drive-test/page.tsx # Drive 測試
+│   │   ├── admin/drive-test/page.tsx # Storage 測試
 │   │   ├── dispatcher/page.tsx      # 派單方行控中心
 │   │   ├── driver/page.tsx          # 司機端主頁
 │   │   └── driver/order/[id]/page.tsx # 司機訂單詳情
@@ -108,7 +108,7 @@ src/
     ├── scheduling.ts        # 智慧排班演算法
     ├── utils.ts             # formatOrderNo 等工具
     ├── bank-codes.ts        # 37 家台灣銀行代碼
-    ├── google-drive.ts      # Drive API 操作
+    ├── google-drive.ts      # [已廢棄 — 已遷移至 Supabase Storage]
     ├── payuni.ts            # PAYUNi AES-256-GCM 加解密
     ├── sse-emitter.ts       # SSE 事件發射器
     ├── email.ts             # Email 發送（驗證信等）
@@ -158,7 +158,7 @@ cp .env.example .env.local
 # DATABASE_URL          — Supabase PostgreSQL（Transaction Pooler）
 # ANTHROPIC_API_KEY    — Claude API key（用於 Haiku 解析）
 # JWT_SECRET            — JWT 簽章密鑰
-# GOOGLE_SERVICE_KEY    — Google Service Account JSON（用於 Drive API）
+# SUPABASE_SERVICE_ROLE_KEY — Supabase Service Role Key（用於 Storage 上傳）
 # RESEND_API_KEY        — Resend API key（用於 Email）
 # PAYUNI_*              — PAYUNi 金流 API 參數
 

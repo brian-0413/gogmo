@@ -249,6 +249,15 @@ c64ed8b fix: 修補測試檔案 mock 型別 — userDocument.count
 **Commits**: `30243a2` → `1ff328a` → ... → `6d5ad44`
 **功能概述**：將註冊流程的三證文件從本地磁碟改存 Google Drive，透過 Google Apps Script Web App 作為上傳 proxy（繞過 Service Account storage quota 限制）。
 
+**[已過時 — 2026-04-17] Google Drive → Supabase Storage 遷移**
+
+> 2026-04-17：Google Apps Script 帳號被鎖，所有 Drive 檔案無法公開存取。改用 Supabase Storage 作為新方案。
+> Commits: `2ab200c` 等
+> - 所有上傳 API（drivers/documents/upload、uploads、auth register、admin drive-test）改為 Supabase Storage
+> - DocumentViewerModal 移除 URL 轉換，直接用 Supabase 公開 URL
+> - `src/lib/google-drive.ts` 已刪除
+> - `google-drive-document-storage-design.md` 和 `gdrive-document-storage-plan.md` 已過時
+
 **Apps Script 最終修復（多層問題排查）**：
 - `doPost()` 函數 scope 問題：移除 wrapper，直接暴露頂層函數
 - JSON body 偵測：`e.postData.contents` 先嘗試 `JSON.parse()`，失敗才用 `e.parameter`

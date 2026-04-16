@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUserFromToken } from '@/lib/auth'
 import { ApiResponse } from '@/types'
-import { uploadFileToDrive, getOrCreateUserFolder, setFilePublic } from '@/lib/google-drive'
+import { createClient } from '@supabase/supabase-js'
 import { prisma } from '@/lib/prisma'
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'application/pdf']
@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json<ApiResponse>({ success: false, error: '檔案需小於 5MB' }, { status: 400 })
   }
 
-  // 檢查失敗次數，超過上限則拒絕（避免無限重試）
+  // 檢查失敗次數
   if (docType) {
     const failedCount = await prisma.userDocument.count({
       where: { userId: user.id, type: docType, uploadFailed: true },
@@ -52,59 +52,51 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  // Get user's role, license plate and name (Driver or Dispatcher)
-  const driver = await prisma.driver.findUnique({ where: { userId: user.id } })
-  const dispatcher = await prisma.dispatcher.findUnique({ where: { userId: user.id } })
-  const role = driver ? 'DRIVER' : 'DISPATCHER'
-  const licensePlate = driver?.licensePlate || dispatcher?.companyName || user.id
-  const userName = user.name
-
-  // Build Google Drive file name: {車牌}-{姓名}-{文件類型}.{ext}
+  const buffer = Buffer.from(await file.arrayBuffer())
   const ext = file.name.split('.').pop() || 'bin'
   const docTypeLabel = docType ? (DOC_TYPE_FILE_NAME[docType] || docType) : '文件'
-  const driveFileName = `${licensePlate}-${userName}-${docTypeLabel}.${ext}`
-
-  const buffer = Buffer.from(await file.arrayBuffer())
+  const safeFileName = `${user.id}-${docTypeLabel}-${Date.now()}.${ext}`
 
   let fileUrl = ''
-  let driveFileId = ''
-  let driveFolderId = ''
   let uploadFailed = false
 
   try {
-    // 依角色選擇父資料夾：司機用 DRIVER_FOLDER_ID，派單方用 DISPATCHER_FOLDER_ID
-    const roleFolderId = role === 'DRIVER'
-      ? (process.env.GOOGLE_DRIVE_DRIVER_FOLDER_ID || '1QG9tF229aMvpd6kOHd-bl7MKK2YWbxNR')
-      : (process.env.GOOGLE_DRIVE_DISPATCHER_FOLDER_ID || '1ZcVPCvi5f5qbF1W6g86q1BOCy8qMDt9e')
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    if (!supabaseUrl || !serviceRoleKey) {
+      throw new Error('Supabase 未正確設定')
+    }
+    const supabase = createClient(supabaseUrl, serviceRoleKey)
+    const storagePath = `${user.id}/${safeFileName}`
 
-    const folderId = await getOrCreateUserFolder(roleFolderId, user.id, licensePlate, userName)
-    const result = await uploadFileToDrive(folderId, driveFileName, file.type, buffer)
-    await setFilePublic(result.fileId)
+    const { error } = await supabase.storage
+      .from('driver-credentials')
+      .upload(storagePath, buffer, { contentType: file.type, upsert: false })
 
-    fileUrl = result.webViewLink
-    driveFileId = result.fileId
-    driveFolderId = folderId
+    if (error) throw new Error(error.message)
+
+    const { data: urlData } = supabase.storage
+      .from('driver-credentials')
+      .getPublicUrl(storagePath)
+    fileUrl = urlData.publicUrl
   } catch (err) {
-    console.error('Google Drive upload failed:', err)
+    console.error('Supabase Storage upload failed:', err)
     uploadFailed = true
     fileUrl = `upload-failed:${file.name}`
   }
 
-  // Delete old documents of the same type (avoid duplicates)
+  // Delete old documents of the same type (avoid duplicates) — 先刪再創
   if (docType) {
     await prisma.userDocument.deleteMany({
       where: { userId: user.id, type: docType },
     })
   }
 
-  // Create UserDocument record
   const doc = await prisma.userDocument.create({
     data: {
       userId: user.id,
       type: docType || 'OTHER',
       fileUrl,
-      driveFileId,
-      driveFolderId,
       fileName: file.name,
       mimeType: file.type,
       sizeBytes: file.size,

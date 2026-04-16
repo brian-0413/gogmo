@@ -15,10 +15,9 @@ export default defineConfig({
         'src/lib/**/*.ts',
       ],
       exclude: [
-        'src/lib/prisma.ts',       // DB connection, no logic to test
-        'src/lib/google-drive.ts', // External API, tested via integration
-        'src/lib/email.ts',        // External API, tested via integration
-        'src/lib/rate-limit.ts',   // Rate limiting, indirect test
+        'src/lib/prisma.ts',     // DB connection, no logic to test
+        'src/lib/email.ts',      // External API, tested via integration
+        'src/lib/rate-limit.ts', // Rate limiting, indirect test
       ],
       thresholds: {
         lines: 80,

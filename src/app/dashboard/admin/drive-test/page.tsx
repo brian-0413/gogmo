@@ -125,7 +125,7 @@ export default function AdminDriveTestPage() {
             <Link href="/dashboard/admin/drive-test"
               className="px-4 py-2 text-sm rounded-full transition-colors flex items-center gap-2 bg-[#FF385C] text-white">
               <Upload className="w-3.5 h-3.5" />
-              Drive 測試
+              Storage 測試
             </Link>
           </div>
         </div>
@@ -134,9 +134,9 @@ export default function AdminDriveTestPage() {
       {/* Content */}
       <main className="max-w-2xl mx-auto px-4 sm:px-6 py-8">
         <div className="mb-6">
-          <h1 className="text-[20px] font-medium text-[#222222]">Drive 上傳測試區</h1>
+          <h1 className="text-[20px] font-medium text-[#222222]">Storage 上傳測試區</h1>
           <p className="text-[13px] text-[#717171] mt-1">
-            選擇一個檔案，點選下方按鈕測試上傳到 Google Drive「🔧Drive上傳測試區」資料夾。
+            選擇一個檔案，點選下方按鈕測試上傳到 Supabase Storage。
           </p>
         </div>
 
@@ -228,7 +228,7 @@ export default function AdminDriveTestPage() {
                         rel="noreferrer"
                         className="inline-flex items-center gap-1 text-[12px] text-[#FF385C] hover:underline mt-1"
                       >
-                        在 Google Drive 開啟
+                        在瀏覽器開啟
                         <ExternalLink className="w-3 h-3" />
                       </a>
                     )}
