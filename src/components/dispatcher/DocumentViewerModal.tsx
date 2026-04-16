@@ -1,6 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
-import { X, FileText, Loader2 } from 'lucide-react'
+import { X, FileText, Loader2, ExternalLink } from 'lucide-react'
 
 interface Document {
   id: string
@@ -16,6 +16,7 @@ interface DocumentViewerModalProps {
   driverName: string
   licensePlate: string
   token: string
+  viewerRole: 'DISPATCHER' | 'ADMIN'
   onClose: () => void
 }
 
@@ -27,12 +28,21 @@ const TAB_LABELS: Record<string, string> = {
   BUSINESS_REGISTRATION: '商業登記',
 }
 
-const DOC_ORDER = ['VEHICLE_REGISTRATION', 'DRIVER_LICENSE', 'INSURANCE', 'ID_CARD', 'BUSINESS_REGISTRATION']
+// 派單方只能看司機三證
+const DISPATCHER_TABS = ['VEHICLE_REGISTRATION', 'DRIVER_LICENSE', 'INSURANCE']
+// 管理員可以看到全部
+const ADMIN_TABS = ['VEHICLE_REGISTRATION', 'DRIVER_LICENSE', 'INSURANCE', 'ID_CARD', 'BUSINESS_REGISTRATION']
 
-export function DocumentViewerModal({ driverId, driverName, licensePlate, token, onClose }: DocumentViewerModalProps) {
+function getTabs(role: string) {
+  return role === 'DISPATCHER' ? DISPATCHER_TABS : ADMIN_TABS
+}
+
+export function DocumentViewerModal({ driverId, driverName, licensePlate, token, viewerRole, onClose }: DocumentViewerModalProps) {
   const [documents, setDocuments] = useState<Document[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+
+  const tabs = getTabs(viewerRole)
 
   useEffect(() => {
     fetch(`/api/drivers/${driverId}/documents`, {
@@ -49,13 +59,14 @@ export function DocumentViewerModal({ driverId, driverName, licensePlate, token,
 
   const getDoc = (type: string) => documents.find(d => d.type === type)
 
-  const activeTab = DOC_ORDER.find(t => getDoc(t) && !getDoc(t)!.uploadFailed) || DOC_ORDER[0]
-  const [currentTab, setCurrentTab] = useState(activeTab)
-
+  const firstAvailableTab = tabs.find(t => {
+    const doc = getDoc(t)
+    return doc && !doc.uploadFailed && doc.fileUrl
+  }) || tabs[0]
+  const [currentTab, setCurrentTab] = useState(firstAvailableTab)
   const currentDoc = getDoc(currentTab)
 
   const isImage = currentDoc?.mimeType?.startsWith('image/')
-  const isPdf = currentDoc?.mimeType === 'application/pdf'
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={onClose}>
@@ -73,7 +84,7 @@ export function DocumentViewerModal({ driverId, driverName, licensePlate, token,
 
         {/* Tabs */}
         <div className="flex border-b border-[#DDDDDD]">
-          {DOC_ORDER.map(type => {
+          {tabs.map(type => {
             const doc = getDoc(type)
             const isActive = type === currentTab
             const isEmpty = !doc || doc.uploadFailed || !doc.fileUrl
@@ -114,18 +125,14 @@ export function DocumentViewerModal({ driverId, driverName, licensePlate, token,
               alt={TAB_LABELS[currentTab]}
               className="w-full h-auto max-h-[60vh] object-contain rounded-lg"
             />
-          ) : isPdf ? (
-            <iframe
-              src={currentDoc.fileUrl.replace('/view', '/preview')}
-              className="w-full h-[60vh] rounded-lg border-0"
-              title={TAB_LABELS[currentTab]}
-            />
           ) : (
-            <div className="flex flex-col items-center justify-center h-48 gap-3">
+            // PDF 或其他類型：統一在新視窗開啟，避免 Google Drive 嵌入限制
+            <div className="flex flex-col items-center justify-center h-48 gap-4">
               <FileText className="w-12 h-12 text-[#DDDDDD]" />
-              <p className="text-[#717171] text-[14px]">無法預覽此類型檔案</p>
+              <p className="text-[#717171] text-[14px]">文件預覽需在新視窗開啟</p>
               <a href={currentDoc.fileUrl} target="_blank" rel="noopener noreferrer"
-                className="px-4 py-2 bg-[#0C447C] text-white text-[13px] rounded-lg hover:bg-[#0A3570] transition-colors">
+                className="flex items-center gap-2 px-4 py-2 bg-[#0C447C] text-white text-[13px] rounded-lg hover:bg-[#0A3570] transition-colors">
+                <ExternalLink className="w-4 h-4" />
                 在新視窗開啟
               </a>
             </div>

@@ -349,6 +349,7 @@ export function DispatcherOrderCard({ order, token, onUpdate }: DispatcherOrderC
           driverName={order.driver.user?.name || ''}
           licensePlate={order.driver.licensePlate}
           token={token || ''}
+          viewerRole="DISPATCHER"
           onClose={() => setViewingDocuments(false)}
         />
       )}
