@@ -2,12 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getUserFromToken } from '@/lib/auth'
 import { ApiResponse } from '@/types'
-import {
-  getScheduleRecommendations,
-  recommendPickupAfterDropoff,
-  recommendDropoffAfterPickup,
-} from '@/lib/scheduling'
+import { getSmartScheduleRecommendations } from '@/lib/scheduling'
 import type { Order, OrderType } from '@/types'
+import { TIGHTNESS_DROPOFF_PICKUP, TIGHTNESS_PICKUP_DROPOFF } from '@/lib/scheduling'
 
 // GET /api/schedule/recommend — 根據司機已接訂單推薦可銜接訂單
 export async function GET(request: NextRequest) {
@@ -90,50 +87,29 @@ export async function GET(request: NextRequest) {
     const orders = currentOrders.map(toOrder)
     const available = availableOrders.map(toOrder)
 
-    // 如果司機沒有進行中的行程
-    if (orders.length === 0) {
-      return NextResponse.json<ApiResponse>({
-        success: true,
-        data: {
-          currentOrders: [],
-          currentOrder: null,
-          availableCount: available.length,
-          recommendations: [],
-          timeline: [],
-          totalIncome: 0,
-          message: '您目前沒有進行中的行程，請到接單大廳接單',
-        },
-      })
-    }
+    // 計算司機今日已接單數（COMPLETED）
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const todayCompletedCount = await prisma.order.count({
+      where: {
+        driverId,
+        status: 'COMPLETED',
+        completedAt: { gte: today },
+      },
+    })
 
-    if (available.length === 0) {
-      return NextResponse.json<ApiResponse>({
-        success: true,
-        data: {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          currentOrders: (orders as any[]).map((o: any) => ({ ...o, scheduledTime: o.scheduledTime.toString() })),
-          currentOrder: null,
-          availableCount: 0,
-          recommendations: [],
-          timeline: [],
-          totalIncome: 0,
-          message: '目前接單大廳沒有可接的訂單',
-        },
-      })
-    }
-
-    // 取得完整排班推薦
-    const scheduleRecs = getScheduleRecommendations(orders, available)
-
-    // 找出最近的一張行程當觸發
-    const sorted = [...orders].sort(
-      (a, b) => new Date(a.scheduledTime).getTime() - new Date(b.scheduledTime).getTime()
-    )
-    const currentOrder = sorted[sorted.length - 1]
-
-    // 收集所有推薦（攤平）
-    const allPickupRecs = scheduleRecs.flatMap((r) => r.pickupRecommendations)
-    const allDropoffRecs = scheduleRecs.flatMap((r) => r.dropoffRecommendations)
+    // 呼叫智慧排班核心邏輯
+    const result = getSmartScheduleRecommendations({
+      driver: {
+        id: driverId,
+        carType: (user.driver.carType || 'pending') as Order['vehicle'],
+        acceptedOrderCount: orders.length + todayCompletedCount,
+        dailyOrderLimit: 6,
+      },
+      acceptedOrders: orders,
+      availableOrders: available,
+      startOrderId: triggerOrderId || undefined,
+    })
 
     // 建構前端扁平化推薦格式
     const formatRecOrder = (order: Order) => ({
@@ -153,72 +129,68 @@ export async function GET(request: NextRequest) {
       kenichiRequired: order.kenichiRequired,
     })
 
-    // 計算銜接說明
-    const buildReason = (
-      rec: typeof allPickupRecs[0] | typeof allDropoffRecs[0],
-      recType: 'pickup' | 'dropoff'
-    ): string => {
-      if (recType === 'pickup') {
-        const r = rec as typeof allPickupRecs[0]
-        return r.explanation
-      } else {
-        const r = rec as typeof allDropoffRecs[0]
-        return r.explanation
+    // 格式化 Recommendation -> 前端格式
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const formatRec = (rec: any, recType: 'pickup' | 'dropoff') => ({
+      ...formatRecOrder(rec.order),
+      waitMinutes: rec.waitMinutes ?? 0,
+      bufferMinutes: rec.bufferMinutes ?? 0,
+      emptyDriveMinutes: rec.emptyDriveMinutes ?? 0,
+      tightnessLabel: rec.tightness?.label ?? '',
+      tightnessLevel: rec.tightness?.level ?? 'reasonable',
+      reason: rec.explanation ?? '',
+      recommendType: recType,
+    })
+
+    // 建構排班時間軸
+    const timeline: Array<{ time: string; label: string; orderId?: string; price?: number; isTrigger?: boolean; waitMinutes?: number; travelMinutes?: number }> = []
+    if (result.currentOrder) {
+      const isPickup = result.currentOrder.type === 'pickup' || result.currentOrder.type === 'pickup_boat'
+      const scheduledTime = new Date(result.currentOrder.scheduledTime)
+      timeline.push({
+        time: scheduledTime.toISOString(),
+        label: `${isPickup ? '接機' : '送機'} ${result.currentOrder.pickupLocation} → ${result.currentOrder.dropoffLocation}`,
+        orderId: result.currentOrder.id,
+        price: result.currentOrder.price,
+        isTrigger: true,
+      })
+      if (result.arriveTime) {
+        timeline.push({
+          time: result.arriveTime.toISOString(),
+          label: '抵達目的地',
+          isTrigger: false,
+        })
+      }
+      // 加入第一筆推薦
+      if (result.mainRecommendations.length > 0) {
+        const first = result.mainRecommendations[0]
+        const isRecPickup = first.order.type === 'pickup' || first.order.type === 'pickup_boat'
+        timeline.push({
+          time: new Date(first.order.scheduledTime).toISOString(),
+          label: `${isRecPickup ? '接機' : '送機'} ${first.order.pickupLocation} → ${first.order.dropoffLocation}`,
+          orderId: first.order.id,
+          price: first.order.price,
+          isTrigger: false,
+        })
       }
     }
 
-    const recommendations = [
-      ...allPickupRecs.map((r) => ({
-        ...formatRecOrder(r.order),
-        tightnessLabel: r.tightness.label,
-        tightnessLevel: r.tightness.level,
-        reason: r.explanation,
-        recommendType: 'pickup' as const,
-      })),
-      ...allDropoffRecs.map((r) => ({
-        ...formatRecOrder(r.order),
-        tightnessLabel: r.tightness.label,
-        tightnessLevel: r.tightness.level,
-        reason: r.explanation,
-        recommendType: 'dropoff' as const,
-      })),
-    ]
-
-    // 建構排班時間軸（從現有行程 + 已選推薦）
-    // timeline 的 currentOrders 部分
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const currentOrderNodes = (orders as any[]).map((o: any) => ({
-      time: new Date(o.scheduledTime).toISOString(),
-      label: `${o.type === 'pickup' || o.type === 'pickup_boat' ? '接機' : '送機'} ${o.pickupLocation} → ${o.dropoffLocation}`,
-      orderId: o.id,
-      price: o.price,
-      isTrigger: o.id === currentOrder.id,
-    }))
-
-    // 加入第一筆推薦到時間軸（示範）
-    if (recommendations.length > 0) {
-      const firstRec = recommendations[0]
-      currentOrderNodes.push({
-        time: firstRec.scheduledTime,
-        label: `${firstRec.recommendType === 'pickup' ? '接機' : '送機'} ${firstRec.pickupLocation} → ${firstRec.dropoffLocation}`,
-        orderId: firstRec.id,
-        price: firstRec.price,
-        isTrigger: false,
-      })
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const totalIncome = (orders as any[]).reduce((sum: any, o: any) => sum + o.price, 0)
+    const totalIncome = orders.reduce((sum: number, o: any) => sum + (o.price || 0), 0)
 
     return NextResponse.json<ApiResponse>({
       success: true,
       data: {
+        driverStatus: result.driverStatus,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         currentOrders: (orders as any[]).map((o: any) => ({ ...o, scheduledTime: o.scheduledTime.toString() })),
-        currentOrder: { ...currentOrder, scheduledTime: currentOrder.scheduledTime.toString() },
+        currentOrder: result.currentOrder ? { ...result.currentOrder, scheduledTime: new Date(result.currentOrder.scheduledTime).toISOString() } : null,
+        arriveTime: result.arriveTime ? result.arriveTime.toISOString() : null,
         availableCount: available.length,
-        recommendations,
-        timeline: currentOrderNodes,
+        recommendations: [],
+        mainRecommendations: result.mainRecommendations.map(r => formatRec(r, r.order.type === 'pickup' || r.order.type === 'pickup_boat' ? 'pickup' : 'dropoff')),
+        standbyRecommendations: result.standbyRecommendations.map(r => formatRec(r, r.order.type === 'pickup' || r.order.type === 'pickup_boat' ? 'pickup' : 'dropoff')),
+        nextRecommendations: result.nextRecommendations.map(r => formatRec(r, r.order.type === 'pickup' || r.order.type === 'pickup_boat' ? 'pickup' : 'dropoff')),
+        timeline,
         totalIncome,
       },
     })

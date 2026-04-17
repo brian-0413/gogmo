@@ -4,7 +4,7 @@ import { OrderStatusBadge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { format, parseISO, differenceInMinutes } from 'date-fns'
 import { zhTW } from 'date-fns/locale'
-import { User, Package, FileText, ChevronDown, ChevronUp, Send } from 'lucide-react'
+import { User, Package, FileText, ChevronDown, ChevronUp, Send, Sparkles } from 'lucide-react'
 import { useState } from 'react'
 import { formatOrderNo } from '@/lib/utils'
 import { TYPE_COLORS, VEHICLE_LABELS, TYPE_LABELS, TRANSFER_FEE_RATE } from '@/lib/constants'
@@ -19,6 +19,7 @@ interface OrderCardProps {
   onTransferRequest?: (orderId: string, reason: string) => void
   onCancel?: (orderId: string) => void
   onDispatchToHall?: (orderId: string, cashCollected: number, commissionReturn: number) => Promise<boolean>
+  onSmartSchedule?: (orderId: string) => void
   showActions?: boolean
   compact?: boolean
   isNew?: boolean
@@ -34,7 +35,7 @@ function getTimeUrgency(scheduledTime: string | Date): "urgent" | "soon" | "norm
   return "normal"
 }
 
-function OrderCard({ order, onAccept, onView, onTransferRequest, onCancel, onDispatchToHall, showActions = true, compact = false, isNew = false, transferLoading = null }: OrderCardProps) {
+function OrderCard({ order, onAccept, onView, onTransferRequest, onCancel, onDispatchToHall, onSmartSchedule, showActions = true, compact = false, isNew = false, transferLoading = null }: OrderCardProps) {
   const scheduledDate = typeof order.scheduledTime === 'string' ? parseISO(order.scheduledTime) : order.scheduledTime
   const orderType: OrderType = order.type || 'pending'
   const vehicle: VehicleType = order.vehicle || 'any'
@@ -57,7 +58,17 @@ function OrderCard({ order, onAccept, onView, onTransferRequest, onCancel, onDis
 
   if (compact) {
     return (
-      <div className="bg-white border border-[#DDDDDD] rounded-xl p-3 hover:shadow-[0_2px_12px_rgba(0,0,0,0.08)] transition-all duration-200">
+      <div className="bg-white border border-[#DDDDDD] rounded-xl p-3 hover:shadow-[0_2px_12px_rgba(0,0,0,0.08)] transition-all duration-200 relative">
+        {order.status === 'ACCEPTED' && onSmartSchedule && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onSmartSchedule(order.id) }}
+            className="absolute top-2 right-2 flex items-center gap-1 px-2 py-1 bg-gradient-to-r from-[#F97316] to-[#EA580C] text-white text-[11px] font-bold rounded-lg hover:from-[#EA580C] hover:to-[#C2410C] transition-colors shadow-sm z-10"
+            title="智慧排單"
+          >
+            <Sparkles className="w-3 h-3" />
+            智慧排單
+          </button>
+        )}
         {/* 顯眼單號標籤 */}
         <div className="flex items-center justify-between mb-2 flex-wrap gap-1">
           <div className="flex items-center gap-1">
@@ -370,6 +381,16 @@ function OrderCard({ order, onAccept, onView, onTransferRequest, onCancel, onDis
                       className="flex-1 py-2.5 sm:py-auto text-[14px] sm:text-[13px] font-bold bg-[#0C447C] text-white hover:bg-[#0a3a6e] transition-colors disabled:bg-gray-200 disabled:text-gray-400"
                     >
                       {transferLoading === order.id ? '等待隊友回應...' : '請求小隊支援'}
+                    </Button>
+                  )}
+                  {onSmartSchedule && (
+                    <Button
+                      size="sm"
+                      onClick={() => onSmartSchedule(order.id)}
+                      className="py-2.5 sm:py-auto px-3 text-[13px] font-bold bg-gradient-to-r from-[#F97316] to-[#EA580C] text-white hover:from-[#EA580C] hover:to-[#C2410C] transition-colors shadow-sm"
+                    >
+                      <Sparkles className="w-3.5 h-3.5 mr-1" />
+                      智慧排單
                     </Button>
                   )}
                   <Button

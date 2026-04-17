@@ -85,8 +85,10 @@ export default function DriverDashboard() {
 
   // 智慧排班結果狀態
   const [scheduleResult, setScheduleResult] = useState<{
+    driverStatus?: { dailyOrderCount: number; dailyOrderLimit: number; canAcceptMore: boolean }
     currentOrders: Array<{ id: string; scheduledTime: string; type: string; status: string; pickupLocation: string; dropoffLocation: string; price: number }>
     currentOrder: { id: string; scheduledTime: string; type: string; pickupLocation: string; dropoffLocation: string; price: number } | null
+    arriveTime?: string | null
     availableCount: number
     recommendations: Array<{
       id: string; orderDate: string; orderSeq: number
@@ -96,8 +98,12 @@ export default function DriverDashboard() {
       kenichiRequired: boolean; reason: string
       tightnessLabel: string; tightnessLevel: string
       recommendType: 'pickup' | 'dropoff'
+      waitMinutes?: number; bufferMinutes?: number; emptyDriveMinutes?: number
     }>
-    timeline: Array<{ time: string; label: string; orderId?: string; price?: number; isTrigger?: boolean }>
+    mainRecommendations?: Array<{ id: string; orderDate: string; orderSeq: number; type: string; vehicle: string; scheduledTime: string; price: number; pickupLocation: string; dropoffLocation: string; passengerName: string; passengerCount: number; luggageCount: number; flightNumber: string; kenichiRequired: boolean; reason: string; tightnessLabel: string; tightnessLevel: string; recommendType: 'pickup' | 'dropoff'; waitMinutes?: number; bufferMinutes?: number; emptyDriveMinutes?: number }>
+    standbyRecommendations?: Array<{ id: string; orderDate: string; orderSeq: number; type: string; vehicle: string; scheduledTime: string; price: number; pickupLocation: string; dropoffLocation: string; passengerName: string; passengerCount: number; luggageCount: number; flightNumber: string; kenichiRequired: boolean; reason: string; tightnessLabel: string; tightnessLevel: string; recommendType: 'pickup' | 'dropoff'; waitMinutes?: number; bufferMinutes?: number; emptyDriveMinutes?: number }>
+    nextRecommendations?: Array<{ id: string; orderDate: string; orderSeq: number; type: string; vehicle: string; scheduledTime: string; price: number; pickupLocation: string; dropoffLocation: string; passengerName: string; passengerCount: number; luggageCount: number; flightNumber: string; kenichiRequired: boolean; reason: string; tightnessLabel: string; tightnessLevel: string; recommendType: 'pickup' | 'dropoff'; waitMinutes?: number; bufferMinutes?: number; emptyDriveMinutes?: number }>
+    timeline: Array<{ time: string; label: string; orderId?: string; price?: number; isTrigger?: boolean; waitMinutes?: number; travelMinutes?: number }>
     totalIncome: number
   } | null>(null)
   const [scheduleLoading, setScheduleLoading] = useState(false)
@@ -107,6 +113,8 @@ export default function DriverDashboard() {
   const [scheduleConfirming, setScheduleConfirming] = useState(false)
   // 小車頭 Tab 狀態
   const [showSelfDispatch, setShowSelfDispatch] = useState(false)
+  // 智慧排單：從行程卡片點擊，記錄起點訂單
+  const [selectedOrderForSchedule, setSelectedOrderForSchedule] = useState<Order | null>(null)
   // QR 小車頭子面板狀態: 'qr' | 'pricing' | 'customers'
   const [qrSubTab, setQrSubTab] = useState<'qr' | 'pricing' | 'customers'>('qr')
   // 目前時間（避免 render 中建立 new Date）
@@ -133,7 +141,9 @@ export default function DriverDashboard() {
   const filteredScheduleRecs = useMemo(() => {
     if (!scheduleResult?.currentOrder) return { recs: [], label: '', sortHint: '' }
     const isPickup = scheduleResult.currentOrder.type === 'pickup' || scheduleResult.currentOrder.type === 'pickup_boat'
-    const recs = scheduleResult.recommendations.filter(r => r.recommendType === (isPickup ? 'dropoff' : 'pickup'))
+    // 優先使用 mainRecommendations，否則 fallback 到 recommendations
+    const allRecs = scheduleResult.mainRecommendations || scheduleResult.recommendations
+    const recs = allRecs.filter(r => r.recommendType === (isPickup ? 'dropoff' : 'pickup'))
     return {
       recs,
       label: isPickup ? '推薦送機' : '推薦接機',
@@ -468,6 +478,9 @@ export default function DriverDashboard() {
   // 針對特定訂單做智慧排單
   const handleScheduleForOrder = async (orderId: string) => {
     if (!token) return
+    // 記錄起點訂單（用於 SmartSchedulePanel）
+    const startOrder = myOrders.find(o => o.id === orderId) || null
+    setSelectedOrderForSchedule(startOrder)
     setScheduleLoading(true)
     setScheduleResult(null)
     setSelectedScheduleOrders([])
@@ -874,12 +887,13 @@ export default function DriverDashboard() {
 
             {/* ===== 智慧排班結果面板 ===== */}
             <SmartSchedulePanel
+              startOrder={selectedOrderForSchedule}
               scheduleResult={scheduleResult}
               filteredScheduleRecs={filteredScheduleRecs}
               selectedScheduleOrders={selectedScheduleOrders}
               onToggleOrder={toggleScheduleOrder}
               onConfirmSchedule={handleConfirmSchedule}
-              onClear={() => { setScheduleResult(null); setMatchResults(null); setSelectedScheduleOrders([]) }}
+              onClear={() => { setScheduleResult(null); setMatchResults(null); setSelectedScheduleOrders([]); setSelectedOrderForSchedule(null) }}
               scheduleConfirming={scheduleConfirming}
             />
 
@@ -1014,7 +1028,7 @@ export default function DriverDashboard() {
                       onClick={() => router.push(`/dashboard/driver/order/${order.id}`)}
                       className="cursor-pointer"
                     >
-                      <OrderCard order={order} showActions={true} compact={true} onTransferRequest={handleTransferRequest} onCancel={handleCancelOrder} onDispatchToHall={handleDispatchToHall} transferLoading={actionLoading} />
+                      <OrderCard order={order} showActions={true} compact={true} onTransferRequest={handleTransferRequest} onCancel={handleCancelOrder} onDispatchToHall={handleDispatchToHall} onSmartSchedule={handleScheduleForOrder} transferLoading={actionLoading} />
                     </div>
                     {order.status === 'ACCEPTED' && (
                       <div className="mt-2 flex flex-col gap-2">
