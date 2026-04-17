@@ -7,8 +7,10 @@ import { ApiResponse } from '@/types'
 export async function GET(_request: NextRequest) {
   try {
     const { searchParams } = new URL(_request.url)
-    const page = parseInt(searchParams.get('page') || '1', 10)
-    const limit = parseInt(searchParams.get('limit') || '50', 10)
+    const pageRaw = parseInt(searchParams.get('page') || '1', 10)
+    const limitRaw = parseInt(searchParams.get('limit') || '50', 10)
+    const page = Number.isFinite(pageRaw) && pageRaw > 0 ? pageRaw : 1
+    const limit = Math.min(Number.isFinite(limitRaw) && limitRaw > 0 ? limitRaw : 50, 100)
     const skip = (page - 1) * limit
 
     const token = _request.headers.get('Authorization')?.replace('Bearer ', '')

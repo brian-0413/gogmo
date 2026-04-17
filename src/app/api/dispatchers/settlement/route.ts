@@ -27,8 +27,10 @@ export async function GET(request: NextRequest) {
     const startDate = searchParams.get('startDate')
     const endDate = searchParams.get('endDate')
     // 分頁：take/skip，限制最大 100
-    const take = Math.min(parseInt(searchParams.get('take') || '50', 10), 100)
-    const skip = parseInt(searchParams.get('skip') || '0', 10)
+    const takeRaw = parseInt(searchParams.get('take') || '50', 10)
+    const skipRaw = parseInt(searchParams.get('skip') || '0', 10)
+    const take = Math.min(Number.isFinite(takeRaw) && takeRaw > 0 ? takeRaw : 50, 100)
+    const skip = Number.isFinite(skipRaw) && skipRaw >= 0 ? skipRaw : 0
 
     // Build date filter for completedAt
     const completedAtFilter: Record<string, unknown> = {}

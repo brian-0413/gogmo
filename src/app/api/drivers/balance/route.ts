@@ -24,7 +24,8 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url)
     const status = searchParams.get('status')
-    const limit = parseInt(searchParams.get('limit') || '50', 10)
+    const limitRaw = parseInt(searchParams.get('limit') || '50', 10)
+    const limit = Math.min(Number.isFinite(limitRaw) && limitRaw > 0 ? limitRaw : 50, 100)
 
     const where: Record<string, unknown> = { driverId: user.driver.id }
     if (status) {

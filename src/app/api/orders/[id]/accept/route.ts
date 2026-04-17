@@ -203,9 +203,24 @@ export async function POST(
         throw new Error(`點數不足，需要 ${platformFee} 點`)
       }
 
-      const updatedOrder = await tx.order.update({
-        where: { id },
+      // 以條件式 updateMany 搶單：僅當訂單仍為 PUBLISHED 或（ASSIGNED 給本司機）時才更新，
+      // 避免兩位司機同時接同一單。
+      const claim = await tx.order.updateMany({
+        where: {
+          id,
+          OR: [
+            { status: 'PUBLISHED' },
+            { status: 'ASSIGNED', driverId },
+          ],
+        },
         data: { driverId, status: 'ACCEPTED' },
+      })
+      if (claim.count === 0) {
+        throw new Error('此訂單已被其他司機接走')
+      }
+
+      const updatedOrder = await tx.order.findUnique({
+        where: { id },
         include: {
           dispatcher: { include: { user: true } },
           driver: { include: { user: true } },
@@ -236,6 +251,7 @@ export async function POST(
         },
       })
 
+      if (!updatedOrder) throw new Error('此訂單已被其他司機接走')
       return updatedOrder
     })
 
@@ -251,7 +267,7 @@ export async function POST(
     })
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
-    if (message.startsWith('點數不足')) {
+    if (message.startsWith('點數不足') || message === '此訂單已被其他司機接走') {
       return NextResponse.json<ApiResponse>(
         { success: false, error: message },
         { status: 400 }

@@ -29,6 +29,7 @@ const mocks = vi.hoisted(() => ({
   orderFindUnique: vi.fn(),
   orderFindMany: vi.fn(),
   orderUpdate: vi.fn(),
+  orderUpdateMany: vi.fn(),
   driverFindUnique: vi.fn(),
   driverUpdate: vi.fn(),
   transactionCreate: vi.fn(),
@@ -44,6 +45,7 @@ vi.mock('@/lib/prisma', () => ({
       findUnique: mocks.orderFindUnique,
       findMany: mocks.orderFindMany,
       update: mocks.orderUpdate,
+      updateMany: mocks.orderUpdateMany,
     },
     driver: {
       findUnique: mocks.driverFindUnique,
@@ -55,7 +57,7 @@ vi.mock('@/lib/prisma', () => ({
     $transaction: mocks.$transaction,
   },
   default: {
-    order: { findUnique: mocks.orderFindUnique, findMany: mocks.orderFindMany, update: mocks.orderUpdate },
+    order: { findUnique: mocks.orderFindUnique, findMany: mocks.orderFindMany, update: mocks.orderUpdate, updateMany: mocks.orderUpdateMany },
     driver: { findUnique: mocks.driverFindUnique, update: mocks.driverUpdate },
     transaction: { create: mocks.transactionCreate },
     $transaction: mocks.$transaction,
@@ -85,6 +87,7 @@ const mockPrisma = prisma as unknown as {
     findUnique: typeof mocks.orderFindUnique
     findMany: typeof mocks.orderFindMany
     update: typeof mocks.orderUpdate
+    updateMany: typeof mocks.orderUpdateMany
   }
   driver: {
     findUnique: typeof mocks.driverFindUnique
@@ -221,7 +224,7 @@ describe('POST /api/orders/[id]/accept — 正常接單', () => {
 
     mockPrisma.$transaction.mockImplementation(async (callback: (tx: typeof mockPrisma) => unknown) => {
       mockPrisma.driver.findUnique.mockResolvedValue({ ...driver.driver, balance: 495 })
-      mockPrisma.order.update.mockResolvedValue({
+      mockPrisma.order.updateMany.mockResolvedValue({ count: 1 } as unknown as never); mockPrisma.order.findUnique.mockResolvedValue({
         ...order,
         status: 'ACCEPTED',
         driverId: 'driver-1',
@@ -257,7 +260,7 @@ describe('POST /api/orders/[id]/accept — 正常接單', () => {
 
     mockPrisma.$transaction.mockImplementation(async (callback: (tx: typeof mockPrisma) => unknown) => {
       mockPrisma.driver.findUnique.mockResolvedValue({ ...driver.driver, balance: 460 })
-      mockPrisma.order.update.mockResolvedValue({ ...order, status: 'ACCEPTED' })
+      mockPrisma.order.updateMany.mockResolvedValue({ count: 1 } as unknown as never); mockPrisma.order.findUnique.mockResolvedValue({ ...order, status: 'ACCEPTED' })
       return callback(mockPrisma)
     })
 
@@ -282,7 +285,7 @@ describe('POST /api/orders/[id]/accept — 正常接單', () => {
 
     mockPrisma.$transaction.mockImplementation(async (callback: (tx: typeof mockPrisma) => unknown) => {
       mockPrisma.driver.findUnique.mockResolvedValue({ ...driver.driver, balance: 450 })
-      mockPrisma.order.update.mockResolvedValue({ ...order, status: 'ACCEPTED' })
+      mockPrisma.order.updateMany.mockResolvedValue({ count: 1 } as unknown as never); mockPrisma.order.findUnique.mockResolvedValue({ ...order, status: 'ACCEPTED' })
       return callback(mockPrisma)
     })
 
@@ -304,7 +307,7 @@ describe('POST /api/orders/[id]/accept — 正常接單', () => {
 
     mockPrisma.$transaction.mockImplementation(async (callback: (tx: typeof mockPrisma) => unknown) => {
       mockPrisma.driver.findUnique.mockResolvedValue({ ...driver.driver, balance: 500 })
-      mockPrisma.order.update.mockResolvedValue({ ...order, status: 'ACCEPTED' })
+      mockPrisma.order.updateMany.mockResolvedValue({ count: 1 } as unknown as never); mockPrisma.order.findUnique.mockResolvedValue({ ...order, status: 'ACCEPTED' })
       return callback(mockPrisma)
     })
 
@@ -388,7 +391,7 @@ describe('POST /api/orders/[id]/accept — 衝突警告', () => {
 
     // 冷卻已過，直接接單
     mockPrisma.$transaction.mockImplementation(async (callback: (tx: typeof mockPrisma) => unknown) => {
-      mockPrisma.order.update.mockResolvedValue({ ...order, status: 'ACCEPTED' })
+      mockPrisma.order.updateMany.mockResolvedValue({ count: 1 } as unknown as never); mockPrisma.order.findUnique.mockResolvedValue({ ...order, status: 'ACCEPTED' })
       return callback(mockPrisma)
     })
 
@@ -412,7 +415,7 @@ describe('POST /api/orders/[id]/accept — 衝突警告', () => {
 
     mockPrisma.$transaction.mockImplementation(async (callback: (tx: typeof mockPrisma) => unknown) => {
       mockPrisma.driver.findUnique.mockResolvedValue({ ...driver.driver, balance: 460 })
-      mockPrisma.order.update.mockResolvedValue({ ...order, status: 'ACCEPTED' })
+      mockPrisma.order.updateMany.mockResolvedValue({ count: 1 } as unknown as never); mockPrisma.order.findUnique.mockResolvedValue({ ...order, status: 'ACCEPTED' })
       return callback(mockPrisma)
     })
 
@@ -478,7 +481,7 @@ describe('POST /api/orders/[id]/accept — 失敗場景', () => {
     // 交易內的 driver.findUnique（不影響銀行帳號檢查，純交易用途）
     mockPrisma.$transaction.mockImplementation(async (callback: (tx: typeof mockPrisma) => unknown) => {
       mockPrisma.driver.findUnique.mockResolvedValue({ ...driver.driver, balance: 500 })
-      mockPrisma.order.update.mockResolvedValue({ ...order, status: 'ACCEPTED' })
+      mockPrisma.order.updateMany.mockResolvedValue({ count: 1 } as unknown as never); mockPrisma.order.findUnique.mockResolvedValue({ ...order, status: 'ACCEPTED' })
       return callback(mockPrisma)
     })
 
