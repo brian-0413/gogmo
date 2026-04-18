@@ -174,6 +174,11 @@ export async function login(email: string, password: string): Promise<AuthResult
       return { success: false, error: '帳號或密碼錯誤' }
     }
 
+    if (user.accountStatus === 'REJECTED') {
+      const reason = user.rejectReason ? `：${user.rejectReason}` : '，請聯繫客服'
+      return { success: false, error: `帳號審核未通過${reason}` }
+    }
+
     let token: string
     try {
       token = generateToken({ userId: user.id, role: user.role })
@@ -214,6 +219,10 @@ export async function loginByPlate(licensePlate: string, password: string): Prom
     if (!user) return { success: false, error: '車牌號碼不存在' }
     const isValid = await verifyPassword(password, user.password)
     if (!isValid) return { success: false, error: '密碼錯誤' }
+    if (user.accountStatus === 'REJECTED') {
+      const reason = user.rejectReason ? `：${user.rejectReason}` : '，請聯繫客服'
+      return { success: false, error: `帳號審核未通過${reason}` }
+    }
     const token = generateToken({ userId: user.id, role: user.role })
     return {
       success: true,
