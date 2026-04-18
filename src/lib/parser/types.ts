@@ -55,6 +55,8 @@ export interface ParsedOrder {
   dispatcher_ref?: string
   bundle_intent?: boolean
   bundle_ref?: string
+  bundle_split_warning?: boolean  // true = 此訂單來自套裝單自動拆分
+  original_bundle_ref?: string    // 原始套裝單的識別編號
   multi_stop?: boolean
 }
 

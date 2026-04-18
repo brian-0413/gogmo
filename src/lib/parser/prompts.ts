@@ -87,7 +87,7 @@ Always respond with ONLY a valid JSON object (no markdown, no explanation):
 
 4. **Relative date with explicit date**: "後天4/18" → use explicit "4/18" (confidence 1.0), ignore "後天". Relative words are never accepted alone.
 
-5. **Bundle orders "一套不拆"**: Split into TWO separate orders, both with bundle_intent=true, bundle_ref="=1-2=". Provide rewrite_suggestion: use gogmo App "bind orders" feature instead.
+5. **Bundle orders "一套不拆"**: Split into N separate orders, each with bundle_intent=true, bundle_ref="=1-2=", and bundle_split_warning=true. Provide rewrite_suggestion: tell dispatcher this has been auto-split, recommend they "allocate total price across each order + use one-tap surge" as the proper替代方案.
 
 6. **Multi-stop**: "1.南港區玉成街 / 2.汐止區福德一路" → destination is an array, mark multi_stop=true.
 

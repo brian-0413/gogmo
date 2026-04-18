@@ -198,6 +198,8 @@ function normalizeOrders(orders: unknown, defaultDate: string): ParseResult['ord
       dispatcher_ref: typeof order.dispatcher_ref === 'string' ? order.dispatcher_ref : undefined,
       bundle_intent: Boolean(order.bundle_intent),
       bundle_ref: typeof order.bundle_ref === 'string' ? order.bundle_ref : undefined,
+      bundle_split_warning: Boolean(order.bundle_split_warning),
+      original_bundle_ref: typeof order.original_bundle_ref === 'string' ? order.original_bundle_ref : undefined,
       multi_stop: Boolean(order.multi_stop),
     }
   })
