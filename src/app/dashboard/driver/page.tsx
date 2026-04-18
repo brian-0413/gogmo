@@ -20,8 +20,10 @@ import { format, parseISO, startOfDay, startOfWeek, isSameDay } from 'date-fns'
 import { formatOrderNo } from '@/lib/utils'
 import { zhTW } from 'date-fns/locale'
 import { DRIVER_EARNINGS_RATE, CANCELLATION_FEE_RATE, TRANSFER_FEE_RATE } from '@/lib/constants'
-import { ClipboardList, FileText, Wallet, LogOut, Plane, Radio, Inbox, ArrowUpDown, ArrowUp, ArrowDown, Car, Sparkles, Calendar, Sparkle, Users, X, Clock } from 'lucide-react'
+import { ClipboardList, FileText, Wallet, LogOut, Plane, Radio, Inbox, ArrowUpDown, ArrowUp, ArrowDown, Car, Sparkles, Calendar, Sparkle, Users, X, Clock, MessageCircle } from 'lucide-react'
 import Link from 'next/link'
+import { MessageBadge } from '@/components/ui/MessageBadge'
+import { MessageThreadView } from '@/components/ui/MessageThreadView'
 
 type Tab = 'available' | 'myorders' | 'balance' | 'selfdispatch' | 'squad' | 'profile'
 type SortKey = 'scheduledTime' | 'price' | 'type'
@@ -120,6 +122,7 @@ export default function DriverDashboard() {
   // 目前時間（避免 render 中建立 new Date）
   const [currentTime, setCurrentTime] = useState(new Date())
   const [, setTick] = useState(0)
+  const [showMessageDrawer, setShowMessageDrawer] = useState(false)
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -221,6 +224,8 @@ export default function DriverDashboard() {
           })
         } else if (data.type === 'ORDER_CANCELLED') {
           setAvailableOrders((prev) => prev.filter((o) => o.id !== data.orderId))
+        } else if (data.type === 'SQUAD_INVITE') {
+          alert(`【小隊邀請】${data.squadName} 小隊邀請你加入！\n請至「小隊」分頁回覆。`)
         }
       } catch {}
     }
@@ -666,6 +671,14 @@ export default function DriverDashboard() {
                   <p className="text-sm font-medium text-[#1C1917] hidden sm:block">{user.name}</p>
                   <p className="text-xs text-[#78716C] hidden sm:block">{driverProfile?.licensePlate || '未設定車牌'}</p>
                 </div>
+                <button
+                  onClick={() => setShowMessageDrawer(true)}
+                  className="relative p-2 rounded-xl hover:bg-[#F7F7F7] transition-colors btn-physics"
+                  aria-label="訊息"
+                >
+                  <MessageCircle className="w-5 h-5 text-[#717171]" />
+                  <MessageBadge />
+                </button>
                 <Button variant="outline" size="sm" onClick={logout} className="border-[#DDDDDD] text-[#717171] hover:border-[#FF385C]/30 hover:text-[#FF385C] hover:bg-[#FFF3E0]">
                   <LogOut className="w-4 h-4" />
                 </Button>
@@ -674,6 +687,20 @@ export default function DriverDashboard() {
           </div>
         </div>
       </header>
+
+      {/* 訊息抽屜 */}
+      {showMessageDrawer && (
+        <div className="fixed inset-0 z-50 flex justify-end" onClick={() => setShowMessageDrawer(false)}>
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
+          <div
+            className="relative w-full max-w-md bg-white shadow-2xl slide-in-right"
+            style={{ height: '100vh' }}
+            onClick={e => e.stopPropagation()}
+          >
+            <MessageThreadView />
+          </div>
+        </div>
+      )}
 
       {/* 行動版：Header 右側餘額（md+ 以上 Header 已有豐富資訊） */}
       <div className="md:hidden relative z-10 bg-[#FAF8F5]/90 border-b border-[#E7E5E4]">

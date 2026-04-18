@@ -22,8 +22,11 @@ import {
   LogOut,
   TrendingUp,
   X,
+  MessageCircle,
 } from 'lucide-react'
 import Link from 'next/link'
+import { MessageBadge } from '@/components/ui/MessageBadge'
+import { MessageThreadView } from '@/components/ui/MessageThreadView'
 
 type Tab = 'orders' | 'create' | 'review' | 'drivers' | 'settlement'
 
@@ -64,6 +67,7 @@ export default function DispatcherDashboard() {
   }>({})
   const [createLoading, setCreateLoading] = useState(false)
   const [publishResult, setPublishResult] = useState<{ success: number; failed: number; errors: Array<{ rawText: string; error: string }> } | null>(null)
+  const [showMessageDrawer, setShowMessageDrawer] = useState(false)
 
   useEffect(() => {
     if (!isLoading && (!user || user.role !== 'DISPATCHER')) {
@@ -373,8 +377,16 @@ export default function DispatcherDashboard() {
               </div>
             </div>
 
-            {/* User + logout */}
+            {/* User + messages + logout */}
             <div className="flex items-center gap-3">
+              <button
+                onClick={() => setShowMessageDrawer(true)}
+                className="relative p-2 rounded-xl hover:bg-[#F7F7F7] transition-colors btn-physics"
+                aria-label="訊息"
+              >
+                <MessageCircle className="w-5 h-5 text-[#717171]" />
+                <MessageBadge />
+              </button>
               <span className="text-sm text-[#717171]">{user.name}</span>
               <Button variant="outline" size="sm" onClick={logout} className="text-[13px]">
                 <LogOut className="w-4 h-4" />
@@ -383,6 +395,20 @@ export default function DispatcherDashboard() {
           </div>
         </div>
       </header>
+
+      {/* 訊息抽屜 */}
+      {showMessageDrawer && (
+        <div className="fixed inset-0 z-50 flex justify-end" onClick={() => setShowMessageDrawer(false)}>
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm animate-reveal-up" />
+          <div
+            className="relative w-full max-w-md bg-white shadow-2xl animate-reveal-up"
+            style={{ height: '100vh', animation: 'slideInRight 0.25s cubic-bezier(0.32, 0.72, 0, 1)' }}
+            onClick={e => e.stopPropagation()}
+          >
+            <MessageThreadView />
+          </div>
+        </div>
+      )}
 
       {/* Navigation — pill buttons */}
       <div className="bg-[#FAF8F5] border-b border-[#DDDDDD]">

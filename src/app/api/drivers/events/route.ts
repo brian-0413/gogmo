@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { prisma } from '@/lib/prisma'
 import { getUserFromToken } from '@/lib/auth'
+import { globalEmitter } from '@/lib/sse-emitter'
 
 // SSE event types
 type SSEEvent =
@@ -9,6 +10,7 @@ type SSEEvent =
   | { type: 'HEARTBEAT'; timestamp: string }
   | { type: 'ORDER_CANCELLED'; orderId: string }
   | { type: 'TRANSFER_STATUS_CHANGE'; orderId: string; transferStatus: string }
+  | { type: 'SQUAD_INVITE'; inviteId: string; squadId: string; squadName: string; driverId: string; founderName?: string }
 
 // Thread-safety note:
 // The previous `driverLastCheckMap` (in-memory Map) is NOT safe across multiple
@@ -218,10 +220,19 @@ export async function GET(request: NextRequest) {
         }
       }, 3000) // 3 seconds
 
+      // Listen for squad invite events targeted at this driver
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      globalEmitter.on('squad-invite', (event: any) => {
+        if (event.driverId === driverId) {
+          sendEvent(event)
+        }
+      })
+
       // Handle client disconnect
       request.signal.addEventListener('abort', () => {
         isClosed = true
         clearInterval(intervalId)
+        globalEmitter.removeAllListeners('squad-invite')
         try {
           controller.close()
         } catch {
