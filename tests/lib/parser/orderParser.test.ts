@@ -417,6 +417,7 @@ describe('parseOrder', () => {
             },
             bundle_intent: true,
             bundle_ref: 'auto:3job:2300',
+            bundle_split_warning: true,
             rewrite_suggestion: '⚠️ 整套價 $2300 無法自動拆分到個別訂單\n✏️ 請在 gogmo App 上：\n  1. 建立這 3 筆訂單，各自填寫個別價格（總和 = 2300）\n  2. 點「綁定派單」連成一套\n📖 為什麼：每筆訂單需要獨立價格，司機才能評估是否接單',
             raw_segment: '後天4/18 大車配小\n17:05接大同\n+\n20:00松山機場接中正\n+\n23:30中正送\n$2300',
           },
@@ -437,6 +438,7 @@ describe('parseOrder', () => {
               special_requirements: { value: null, confidence: 0 },
             },
             bundle_intent: true,
+            bundle_split_warning: true,
             bundle_ref: 'auto:3job:2300',
             rewrite_suggestion: null,
           },
@@ -458,6 +460,7 @@ describe('parseOrder', () => {
             },
             bundle_intent: true,
             bundle_ref: 'auto:3job:2300',
+            bundle_split_warning: true,
             rewrite_suggestion: null,
           },
         ],
@@ -476,6 +479,7 @@ $2300`)
       result.orders.forEach(order => {
         expect(order.bundle_intent).toBe(true)
         expect(order.bundle_ref).toBe('auto:3job:2300')
+        expect(order.bundle_split_warning).toBe(true)
         expect(order.fields.price.value).toBeNull() // Total $2300 not split
       })
       expect(result.orders[0].rewrite_suggestion).toContain('$2300')
