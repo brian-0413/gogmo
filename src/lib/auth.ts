@@ -2,6 +2,7 @@ import bcrypt from 'bcryptjs'
 import jwt, { SignOptions } from 'jsonwebtoken'
 import { prisma } from './prisma'
 import { NEW_USER_BONUS } from './constants'
+import { sendResetPasswordEmail } from './email'
 
 const JWT_SECRET = process.env.JWT_SECRET
 const JWT_EXPIRES_IN = '7d'
@@ -277,14 +278,22 @@ export async function forgotPassword(
       if (!user) return { success: false, error: '車牌與 Email 不匹配' }
       const token = generateToken({ userId: user.id, role: 'RESET' }, '1h')
       const resetUrl = `${appUrl}/reset-password?token=${token}`
-      if (process.env.NODE_ENV !== 'production') console.log(`[EMAIL] Reset link for ${email}: ${resetUrl}`)
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`[EMAIL] Reset link for ${email}: ${resetUrl}`)
+      } else {
+        await sendResetPasswordEmail(email, resetUrl)
+      }
       return { success: true }
     } else {
       const user = await prisma.user.findUnique({ where: { email: account, role: 'DISPATCHER' } })
       if (!user) return { success: false, error: '此 Email 未註冊' }
       const token = generateToken({ userId: user.id, role: 'RESET' }, '1h')
       const resetUrl = `${appUrl}/reset-password?token=${token}`
-      if (process.env.NODE_ENV !== 'production') console.log(`[EMAIL] Reset link for ${email}: ${resetUrl}`)
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`[EMAIL] Reset link for ${account}: ${resetUrl}`)
+      } else {
+        await sendResetPasswordEmail(account, resetUrl)
+      }
       return { success: true }
     }
   } catch (error) {
