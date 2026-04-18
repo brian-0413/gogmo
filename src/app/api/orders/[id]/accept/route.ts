@@ -267,10 +267,16 @@ export async function POST(
     })
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
-    if (message.startsWith('點數不足') || message === '此訂單已被其他司機接走') {
+    if (message.startsWith('點數不足')) {
       return NextResponse.json<ApiResponse>(
         { success: false, error: message },
         { status: 400 }
+      )
+    }
+    if (message === '此訂單已被其他司機接走') {
+      return NextResponse.json<ApiResponse>(
+        { success: false, error: message },
+        { status: 409 }
       )
     }
     console.error('Accept order error:', error)
