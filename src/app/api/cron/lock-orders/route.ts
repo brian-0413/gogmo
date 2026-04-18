@@ -10,7 +10,7 @@ const CRON_SECRET = process.env.CRON_SECRET ?? ''
 export async function GET(request: NextRequest) {
   try {
     const secret = request.headers.get('x-cron-secret')
-    if (secret !== CRON_SECRET) {
+    if (!CRON_SECRET || secret !== CRON_SECRET) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 

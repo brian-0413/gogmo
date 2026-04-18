@@ -132,9 +132,9 @@ export async function POST(
       const bonusPoints = lockedTransfer.bonusPoints
       const fromDriverName = lockedTransfer.fromDriver.user.name
 
-      // a. 更新 toDriverId + status = APPROVED
+      // a. 更新 toDriverId + status = APPROVED（atomic check: status must still be PENDING_SQUAD）
       const updatedTransfer = await tx.orderTransfer.update({
-        where: { id: transferId },
+        where: { id: transferId, status: 'PENDING_SQUAD' },
         data: {
           toDriverId,
           status: 'APPROVED',

@@ -116,10 +116,9 @@ export async function POST(request: NextRequest) {
       })
     }
   } catch (error) {
-    const errMsg = error instanceof Error ? error.message : String(error)
     console.error('Create topup error:', error)
     return NextResponse.json<ApiResponse>(
-      { success: false, error: `伺服器錯誤: ${errMsg}` },
+      { success: false, error: '伺服器錯誤' },
       { status: 500 }
     )
   }

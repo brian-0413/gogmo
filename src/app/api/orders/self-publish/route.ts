@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getUserFromToken } from '@/lib/auth'
+import { getUserFromToken, hashPassword } from '@/lib/auth'
 import { ApiResponse, SelfPublishRequest } from '@/types'
 import { checkRateLimit } from '@/lib/api-utils'
 import { MAX_ORDER_PRICE } from '@/lib/constants'
 import { format } from 'date-fns'
+import { randomUUID } from 'crypto'
 
 export async function POST(request: NextRequest) {
   const rateLimitResult = checkRateLimit(request, { type: 'orders' })
@@ -138,7 +139,7 @@ export async function POST(request: NextRequest) {
         const dummyUser = await prisma.user.create({
           data: {
             email: 'self-dispatch@goGMO.local',
-            password: 'DO_NOT_USE_THIS_ACCOUNT',
+            password: await hashPassword(randomUUID()),
             name: 'goGMO 系統',
             phone: '0000000000',
             role: 'DISPATCHER',
