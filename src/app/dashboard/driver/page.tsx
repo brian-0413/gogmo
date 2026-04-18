@@ -20,7 +20,7 @@ import { format, parseISO, startOfDay, startOfWeek, isSameDay } from 'date-fns'
 import { formatOrderNo } from '@/lib/utils'
 import { zhTW } from 'date-fns/locale'
 import { DRIVER_EARNINGS_RATE, CANCELLATION_FEE_RATE, TRANSFER_FEE_RATE } from '@/lib/constants'
-import { ClipboardList, FileText, Wallet, LogOut, Plane, Radio, Inbox, ArrowUpDown, ArrowUp, ArrowDown, Car, Sparkles, Calendar, Sparkle, Users } from 'lucide-react'
+import { ClipboardList, FileText, Wallet, LogOut, Plane, Radio, Inbox, ArrowUpDown, ArrowUp, ArrowDown, Car, Sparkles, Calendar, Sparkle, Users, X, Clock } from 'lucide-react'
 import Link from 'next/link'
 
 type Tab = 'available' | 'myorders' | 'balance' | 'selfdispatch' | 'squad' | 'profile'
@@ -574,24 +574,20 @@ export default function DriverDashboard() {
 
   // Account status gate — REJECTED blocks full access, PENDING_* only shows banner
   if (user.accountStatus === 'REJECTED') {
-    const msg = { title: '審核未通過', message: `您的資料審核未通過：${user.rejectReason || '原因不明'}。如有疑問請聯繫客服。`, color: '#E24B4A', icon: '✕' }
     return (
       <div className="min-h-screen bg-[#FAF8F5] flex items-center justify-center">
-        <div className="bg-white border border-[#DDDDDD] rounded-2xl p-8 text-center max-w-md">
-          <div className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center" style={{ backgroundColor: `${msg.color}15` }}>
-            <span className="text-3xl">{msg.icon}</span>
+        <div className="bg-white border border-[#DDDDDD] rounded-2xl p-8 text-center max-w-md animate-reveal-up">
+          <div className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center bg-[#FCEBEB]">
+            <X className="w-8 h-8 text-[#E24B4A]" />
           </div>
-          <h2 className="text-lg font-bold text-[#222222] mb-2">{msg.title}</h2>
-          <p className="text-sm text-[#717171]">{msg.message}</p>
+          <h2 className="text-lg font-bold text-[#222222] mb-2">審核未通過</h2>
+          <p className="text-sm text-[#717171]">您的資料審核未通過：{user.rejectReason || '原因不明'}。如有疑問請聯繫客服。</p>
         </div>
       </div>
     )
   }
 
   const showStatusBanner = user.accountStatus && user.accountStatus !== 'ACTIVE'
-  const statusMsg = showStatusBanner
-    ? { title: '資料審核中', message: '您的資料已送出，審核通過後即可開始接單。', color: '#3B82F6', icon: '⏳' }
-    : null
 
   return (
     <div className="min-h-screen bg-[#FAF8F5] text-[#1C1917]">
@@ -602,9 +598,10 @@ export default function DriverDashboard() {
       </div>
 
       {/* Status banner */}
-      {showStatusBanner && statusMsg && (
-        <div className="bg-[#3B82F6] text-white px-4 py-3 text-center text-sm font-medium z-30 relative">
-          {statusMsg.icon} {statusMsg.message}
+      {showStatusBanner && (
+        <div className="bg-[#3B82F6] text-white px-4 py-3 text-center text-sm font-medium z-30 relative flex items-center justify-center gap-2">
+          <Clock className="w-4 h-4" />
+          您的資料已送出，審核通過後即可開始接單。
         </div>
       )}
 

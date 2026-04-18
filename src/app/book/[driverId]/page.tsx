@@ -1,7 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { QROrderChat } from '@/components/book/QROrderChat'
+import { Plane, HelpCircle, AlertCircle } from 'lucide-react'
 
 interface PricingOption {
   vehicleType: string
@@ -66,7 +68,6 @@ export default function DriverBookPage({ params }: { params: Promise<{ driverId:
   }) => {
     if (!driverId) return { success: false, error: '找不到司機' }
 
-    // Transform QROrderChat form data to API request format
     const payload = {
       orderType: formData.orderType,
       airport: formData.airport || '',
@@ -105,15 +106,18 @@ export default function DriverBookPage({ params }: { params: Promise<{ driverId:
   if (notFound || !driverInfo) {
     return (
       <div className="min-h-screen bg-[#FAF7F2] flex items-center justify-center">
-        <div className="text-center bg-white border border-[#DDDDDD] rounded-2xl p-8 max-w-sm mx-4">
+        <main className="w-full max-w-sm mx-4 bg-white border border-[#DDDDDD] rounded-2xl p-8 text-center animate-reveal-up">
           <div className="w-16 h-16 rounded-2xl bg-[#F4EFE9] border border-[#DDDDDD] flex items-center justify-center mx-auto mb-4">
-            <span className="text-3xl font-bold text-[#D6D3D1]">?</span>
+            <HelpCircle className="w-8 h-8 text-[#B0B0B0]" />
           </div>
           <h2 className="text-lg font-bold text-[#222222] mb-2">找不到司機</h2>
           <p className="text-[14px] text-[#717171]">
             這個連結已失效或司機不存在
           </p>
-        </div>
+          <Link href="/" className="mt-6 inline-block text-[#FF385C] text-sm font-medium hover:text-[#D70466] transition-colors">
+            返回首頁
+          </Link>
+        </main>
       </div>
     )
   }
@@ -122,30 +126,41 @@ export default function DriverBookPage({ params }: { params: Promise<{ driverId:
 
   return (
     <div className="min-h-screen bg-[#FAF7F2]">
+      {/* Skip to content */}
+      <a
+        href="#booking-form"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:bg-[#FF385C] focus:text-white focus:px-4 focus:py-2 focus:rounded-lg focus:text-sm"
+      >
+        跳到預訂表單
+      </a>
+
       {/* Header */}
-      <div className="bg-[#1C1917] px-5 py-6 text-center">
+      <header className="bg-[#1C1917] px-5 py-6 text-center animate-reveal-up">
         <div className="text-[40px] font-black font-mono-nums text-[#E8A855] tracking-[4px] leading-none">
           {driverInfo.licensePlate}
         </div>
         <div className="text-[13px] text-[#888] mt-2 tracking-wider">
           專屬貴賓預訂頁面
         </div>
-      </div>
+      </header>
 
       {/* Content */}
-      <div className="max-w-[480px] mx-auto px-4 py-6 pb-12">
+      <main id="booking-form" className="w-full mx-auto px-4 py-6 pb-12 md:max-w-[480px]">
         {!hasPricing ? (
-          <div className="bg-white border border-[#DDDDDD] rounded-2xl p-8 text-center">
+          <div className="bg-white border border-[#DDDDDD] rounded-2xl p-8 text-center animate-reveal-up">
             <div className="w-16 h-16 rounded-2xl bg-[#F4EFE9] border border-[#DDDDDD] flex items-center justify-center mx-auto mb-4">
-              <span className="text-3xl font-bold text-[#D6D3D1]">!</span>
+              <AlertCircle className="w-8 h-8 text-[#B0B0B0]" />
             </div>
             <h2 className="text-lg font-bold text-[#222222] mb-2">尚未開放預訂</h2>
             <p className="text-[14px] text-[#717171]">
               司機尚未設定服務項目，請稍後再試
             </p>
+            <Link href="/" className="mt-6 inline-block text-[#FF385C] text-sm font-medium hover:text-[#D70466] transition-colors">
+              返回首頁
+            </Link>
           </div>
         ) : (
-          <div className="bg-white border border-[#DDDDDD] rounded-2xl overflow-hidden shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
+          <div className="bg-white border border-[#DDDDDD] rounded-2xl overflow-hidden shadow-[0_4px_24px_rgba(0,0,0,0.06)] animate-reveal-up delay-100">
             <QROrderChat
               driverId={driverInfo.id}
               licensePlate={driverInfo.licensePlate}
@@ -154,7 +169,15 @@ export default function DriverBookPage({ params }: { params: Promise<{ driverId:
             />
           </div>
         )}
-      </div>
+
+        {/* Back link */}
+        <div className="mt-4 text-center">
+          <Link href="/" className="text-[11px] text-[#717171] hover:text-[#222222] transition-colors flex items-center justify-center gap-1">
+            <Plane className="w-3 h-3" />
+            返回 goGMO 首頁
+          </Link>
+        </div>
+      </main>
     </div>
   )
 }
