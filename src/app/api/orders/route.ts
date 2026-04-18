@@ -56,11 +56,40 @@ export async function GET(request: NextRequest) {
       where.dispatcherId = user.dispatcher.id
     }
 
+    // Validate status enum
     if (status) {
+      const validStatuses = ['PENDING', 'PUBLISHED', 'ASSIGNED', 'ACCEPTED', 'ARRIVED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED', 'REJECTED']
+      if (!validStatuses.includes(status)) {
+        return NextResponse.json<ApiResponse>(
+          { success: false, error: '無效的 status 參數' },
+          { status: 400 }
+        )
+      }
       where.status = status
     }
 
+    // Authorization check for driverId parameter - prevents PII leak
     if (driverId) {
+      if (user.role === 'DRIVER' && user.driver?.id !== driverId) {
+        return NextResponse.json<ApiResponse>(
+          { success: false, error: '無權限查詢此司機的訂單' },
+          { status: 403 }
+        )
+      }
+      if (user.role === 'DISPATCHER') {
+        // Dispatchers can only query driverIds that have accepted their orders
+        const dispatcherOrderWithDriver = await prisma.order.findFirst({
+          where: { dispatcherId: user.dispatcher?.id, driverId },
+          select: { id: true },
+        })
+        if (!dispatcherOrderWithDriver) {
+          return NextResponse.json<ApiResponse>(
+            { success: false, error: '無權限查詢此司機的訂單' },
+            { status: 403 }
+          )
+        }
+      }
+      // ADMIN has no restriction
       where.driverId = driverId
     }
 
