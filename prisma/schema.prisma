@@ -173,6 +173,7 @@ model Driver {
   topups          Topup[]
   pricing         DriverPricing[]
   customers       DriverCustomer[]
+  messageThreads  MessageThread[]
 
   @@map("drivers")
 }
@@ -190,6 +191,7 @@ model Dispatcher {
 
   // Relations
   orders          Order[]
+  messageThreads  MessageThread[]
 
   @@map("dispatchers")
 }
@@ -401,4 +403,55 @@ model DriverCustomer {
   @@unique([driverId, phone])
   @@index([driverId])
   @@map("driver_customers")
+}
+
+// ============== Messaging ==============
+
+model MessageThread {
+  id            String    @id @default(cuid())
+  dispatcherId  String
+  dispatcher    Dispatcher @relation(fields: [dispatcherId], references: [id])
+  driverId      String
+  driver        Driver    @relation(fields: [driverId], references: [id])
+  lastMessageAt DateTime  @default(now())
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  messages     Message[]
+  participants MessageParticipant[]
+
+  @@unique([dispatcherId, driverId])
+  @@index([driverId])
+  @@index([dispatcherId])
+  @@map("message_threads")
+}
+
+model MessageParticipant {
+  id        String       @id @default(cuid())
+  threadId  String
+  thread    MessageThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  userId    String       // either driver.userId or dispatcher.userId
+  role      UserRole     // DRIVER or DISPATCHER
+  lastReadAt DateTime?   // last time user opened this thread
+  createdAt DateTime      @default(now())
+
+  @@unique([threadId, userId])
+  @@index([userId])
+  @@map("message_participants")
+}
+
+model Message {
+  id        String    @id @default(cuid())
+  threadId  String
+  thread    MessageThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  senderId  String    // userId of the sender
+  senderRole UserRole  // DRIVER or DISPATCHER
+  content   String
+  isRead   Boolean   @default(false)
+  isSystem Boolean   @default(false) // system-generated messages (e.g., order status changes)
+  createdAt DateTime  @default(now())
+
+  @@index([threadId])
+  @@index([senderId])
+  @@map("messages")
 }
