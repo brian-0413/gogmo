@@ -26,7 +26,7 @@ export function RegisterWizard() {
     carBrand: '',
     carModel: '',
     carColor: '',
-    vehicleSize: '',
+    vehicleType: '' as any,
   })
   const [step4BankData, setStep4BankData] = useState<Step4BankData>({
     bankCode: '',
@@ -82,7 +82,7 @@ export function RegisterWizard() {
       fd.append('role', role)
       if (role === 'DRIVER') {
         fd.append('licensePlate', step3Data.licensePlate)
-        fd.append('carType', step3Data.vehicleSize || '轎車')
+        fd.append('carType', step3Data.vehicleType || 'SEDAN_5')
         fd.append('carColor', step3Data.carColor)
         fd.append('carBrand', step3Data.carBrand)
         fd.append('carModel', step3Data.carModel)

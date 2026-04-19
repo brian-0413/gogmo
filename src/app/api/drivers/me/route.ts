@@ -60,7 +60,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json()
-    const allowedFields = ['licensePlate', 'carType', 'carColor', 'status']
+    const allowedFields = ['licensePlate', 'vehicleType', 'carColor', 'status']
 
     const updateData: Record<string, unknown> = {}
     for (const field of allowedFields) {

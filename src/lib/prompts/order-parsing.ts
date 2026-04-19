@@ -11,7 +11,7 @@ const SYSTEM_PROMPT = `你是台灣機場接送平台的訂單解析專家。負
   "date": "日期（YYYY-MM-DD 格式，使用預設日期）",
   "time": "時間 HH:MM，落地則填 \"落地\"",
   "type": "pickup | dropoff | pickup_boat | dropoff_boat | transfer | charter | pending",
-  "vehicle": "small | suv | van9 | any | pending（只能填這五個值之一，中文車型名稱不可填入此欄）",
+  "vehicle": "SEDAN_5 | SUV_5 | MPV_7 | VAN_9 | CUSTOM（只能填這五個值之一，中文車型名稱不可填入此欄）",
   "price": 數字或null,
   "pickupLocation": "起點（如為桃園則填 \"桃園國際機場\"）",
   "dropoffLocation": "終點",

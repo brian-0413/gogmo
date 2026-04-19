@@ -13,7 +13,8 @@
 // ─── Types ──────────────────────────────────────────────────────────────
 
 import type { Order } from '@/types'
-import type { VehicleType } from '@/types'
+import { VehicleType, RequirementLevel } from '@/lib/vehicle'
+import { isVehicleCompatible as checkCompat } from '@/lib/vehicle'
 
 /** 司機車型 → 可承接的訂單車型 */
 export type VehicleCompatibility = {
@@ -418,25 +419,6 @@ export function isAdjacentRegion(
 
 // ─── 車型相容 ────────────────────────────────────────────────────
 
-/**
- * 判斷司機車型是否可承接該訂單
- * 大車可接小車的單，小車不能接大車的單
- */
-export function isVehicleCompatible(
-  driverType: VehicleType,
-  orderType: VehicleType
-): boolean {
-  // pending 和 any 都可以
-  if (orderType === 'pending' || orderType === 'any' || orderType === 'any_r') return true
-  if (driverType === 'pending' || driverType === 'any' || driverType === 'any_r') return true
-
-  if (driverType === 'small') return orderType === 'small'
-  if (driverType === 'suv') return orderType === 'small' || orderType === 'suv'
-  if (driverType === 'van9') return true  // 9人座可接所有
-
-  return false
-}
-
 // ─── 銜接緊密度 ────────────────────────────────────────────────
 
 export const TIGHTNESS_DROPOFF_PICKUP: Record<TightnessDropoffToPickup, TightnessInfo> = {
@@ -555,7 +537,7 @@ export function recommendPickupAfterDropoff(
     if (landingTime < minLanding || landingTime > maxLanding) continue
 
     // 車型相容
-    if (!isVehicleCompatible(dropoffOrder.vehicle, order.vehicle)) continue
+    if (!checkCompat(dropoffOrder.vehicle as VehicleType, order.vehicle as VehicleType, RequirementLevel.EXACT)) continue
 
     // 銜接緊密度
     const tightness = calculateDropoffToPickupTightness(arriveAtAirport, landingTime)
@@ -622,7 +604,7 @@ export function recommendDropoffAfterPickup(
     if (!destAirport) continue
 
     // 車型相容
-    if (!isVehicleCompatible(pickupOrder.vehicle, order.vehicle)) continue
+    if (!checkCompat(pickupOrder.vehicle as VehicleType, order.vehicle as VehicleType, RequirementLevel.EXACT)) continue
 
     const sendTime = new Date(order.scheduledTime)
 
@@ -689,7 +671,7 @@ export function recommendEmptyDriveOrders(
     if (order.type !== 'dropoff' && order.type !== 'dropoff_boat') continue
 
     // 車型相容
-    if (!isVehicleCompatible(driver.carType, order.vehicle)) continue
+    if (!checkCompat(driver.carType as VehicleType, order.vehicle as VehicleType, RequirementLevel.EXACT)) continue
 
     // 空車回程時間
     const emptyDriveMin = getTravelMinutes(currentDest, order.pickupLocation, new Date())

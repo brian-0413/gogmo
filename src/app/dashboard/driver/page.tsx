@@ -20,6 +20,7 @@ import { format, parseISO, startOfDay, startOfWeek, isSameDay } from 'date-fns'
 import { formatOrderNo } from '@/lib/utils'
 import { zhTW } from 'date-fns/locale'
 import { DRIVER_EARNINGS_RATE, CANCELLATION_FEE_RATE, TRANSFER_FEE_RATE } from '@/lib/constants'
+import { VehicleType, RequirementLevel, getCompatibleVehicleTypes, VEHICLE_LABELS } from '@/lib/vehicle'
 import { ClipboardList, FileText, Wallet, LogOut, Plane, Radio, Inbox, ArrowUpDown, ArrowUp, ArrowDown, Car, Sparkles, Calendar, Sparkle, Users, X, Clock, MessageCircle } from 'lucide-react'
 import Link from 'next/link'
 import { MessageBadge } from '@/components/ui/MessageBadge'
@@ -28,24 +29,6 @@ import { MessageThreadView } from '@/components/ui/MessageThreadView'
 type Tab = 'available' | 'myorders' | 'balance' | 'selfdispatch' | 'squad' | 'profile'
 type SortKey = 'scheduledTime' | 'price' | 'type'
 type SortDir = 'asc' | 'desc'
-
-// 司機能看到哪些車型訂單（車型越大能看的越多）
-const VEHICLE_SCOPE: Record<string, string[]> = {
-  small:  ['small', 'any'],
-  suv:    ['suv', 'small', 'any'],
-  van9:   ['van9', 'suv', 'small', 'any', 'any_r'],
-  any_r:  ['any_r', 'any'],
-  any:    ['any'],
-  pending: ['any'],
-  // 中文車型 → 英文 enum 對照（供顯示名稱查詢）
-  '小車': ['small', 'any'],
-  '轎車': ['small', 'any'],
-  '休旅': ['suv', 'small', 'any'],
-  'SUV':  ['suv', 'small', 'any'],
-  '7人座': ['van9', 'suv', 'small', 'any', 'any_r'],
-  '9人座': ['van9', 'suv', 'small', 'any', 'any_r'],
-  '福祉車': ['suv', 'small', 'any'],
-}
 
 const SORT_OPTIONS: { key: SortKey; label: string }[] = [
   { key: 'scheduledTime', label: '日期/時間' },
@@ -72,7 +55,7 @@ export default function DriverDashboard() {
     todayOrders: number; weekOrders: number; allOrders: number
   }>({ today: 0, thisWeek: 0, allTime: 0, todayOrders: 0, weekOrders: 0, allOrders: 0 })
   const [driverProfile, setDriverProfile] = useState<{
-    licensePlate: string; carType: string; carColor: string
+    licensePlate: string; vehicleType: string; carColor: string
   } | null>(null)
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [sortKey, setSortKey] = useState<SortKey>('scheduledTime')
@@ -180,13 +163,13 @@ export default function DriverDashboard() {
     setBalanceStats({ today, thisWeek, allTime, todayOrders, weekOrders, allOrders })
   }, [])
 
-  // 車型過濾範圍（根據司機註冊車型）
-  const driverCarType = driverProfile?.carType || 'pending'
-  const vehicleScope = VEHICLE_SCOPE[driverCarType] || ['any']
+  // 車型過濾範圍（根據司機註冊車型），使用統一的 getCompatibleVehicleTypes
+  const driverVehicle = (driverProfile?.vehicleType || 'SEDAN_5') as VehicleType
+  const compatibleOrderVehicleTypes = getCompatibleVehicleTypes(driverVehicle, RequirementLevel.MIN)
 
   const filteredAvailableOrders = useMemo(() => {
     // 車型過濾
-    let orders = availableOrders.filter(o => vehicleScope.includes(o.vehicle || 'pending'))
+    let orders = availableOrders.filter(o => compatibleOrderVehicleTypes.includes((o as any).vehicleType || 'SEDAN_5' as VehicleType))
     // 排序
     orders = [...orders].sort((a, b) => {
       if (sortKey === 'price') {
@@ -203,7 +186,7 @@ export default function DriverDashboard() {
       return sortDir === 'asc' ? aTime - bTime : bTime - aTime
     })
     return orders
-  }, [availableOrders, vehicleScope, sortKey, sortDir])
+  }, [availableOrders, compatibleOrderVehicleTypes, sortKey, sortDir])
 
   useEffect(() => {
     if (!isLoading && (!user || user.role !== 'DRIVER')) router.push('/login')
@@ -772,7 +755,7 @@ export default function DriverDashboard() {
                     <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-[#F5F4F0] border border-[#DDDDDD] rounded-lg">
                       <Car className="w-3.5 h-3.5 text-[#717171]" />
                       <span className="text-[12px] text-[#717171]">
-                        您的車型：<span className="font-bold text-[#222222]">{driverProfile?.carType || '未設定'}</span>
+                        您的車型：<span className="font-bold text-[#222222]">{VEHICLE_LABELS[driverProfile?.vehicleType as VehicleType] || driverProfile?.vehicleType || '未設定'}</span>
                       </span>
                       <span className="text-[11px] text-[#A8A29E]">
                         （顯示 {filteredAvailableOrders.length} / {availableOrders.length} 單）

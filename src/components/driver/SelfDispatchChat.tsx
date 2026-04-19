@@ -15,7 +15,7 @@ interface FormData {
   scheduledDate: string
   scheduledTime: string
   flightNumber: string
-  vehicleType: 'small' | 'suv' | 'van9' | null
+  vehicleType: VehicleType | null
   passengerCount: number | null
   luggageItems: LuggageItem[]
   luggageStep: 'size' | 'quantity' | 'confirm' | 'done'
@@ -66,11 +66,13 @@ const DEFAULT_FORM: FormData = {
 }
 
 // ============ Vehicle Types ============
-export const VEHICLE_TYPE_OPTIONS: { label: string; value: FormData['vehicleType'] }[] = [
-  { label: '5人座小車', value: 'small' },
-  { label: '5人座休旅車', value: 'suv' },
-  { label: '7人座', value: 'van9' },
-  { label: '9人座', value: 'van9' },
+import { VehicleType, VEHICLE_LABELS, VEHICLE_DROPDOWN_OPTIONS } from '@/lib/vehicle'
+
+export const VEHICLE_TYPE_OPTIONS: { label: string; value: VehicleType }[] = [
+  { label: VEHICLE_LABELS[VehicleType.SEDAN_5], value: VehicleType.SEDAN_5 },
+  { label: VEHICLE_LABELS[VehicleType.SUV_5], value: VehicleType.SUV_5 },
+  { label: VEHICLE_LABELS[VehicleType.MPV_7], value: VehicleType.MPV_7 },
+  { label: VEHICLE_LABELS[VehicleType.VAN_9], value: VehicleType.VAN_9 },
 ]
 
 // ============ Labels ============
@@ -84,12 +86,6 @@ const ORDER_TYPE_LABELS: Record<string, string> = {
   dropoff: '送機',
   pickup_boat: '接船',
   dropoff_boat: '送船',
-}
-
-const VEHICLE_LABELS: Record<string, string> = {
-  small: '小車(5人)',
-  suv: '休旅(7人)',
-  van9: '9人座',
 }
 
 const FEE_MODE_LABELS: Record<string, string> = {

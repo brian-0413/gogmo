@@ -8,6 +8,8 @@
  */
 
 import type { Order } from '@/types'
+import { VehicleType, RequirementLevel } from '@/lib/vehicle'
+import { isVehicleCompatible, getCompatibleVehicleTypes } from '@/lib/vehicle'
 
 // ─── 尖峰時段判斷 ────────────────────────────────────────
 
@@ -106,23 +108,13 @@ export function findMatchingOrders(
 ): MatchedOrder[] {
   const driverFreeTime = getDriverFreeTime(currentOrders)
 
-  // 車型過濾（與現有車型過濾邏輯一致）
-  const VEHICLE_SCOPE: Record<string, string[]> = {
-    small:  ['small', 'any'],
-    suv:    ['suv', 'small', 'any'],
-    van9:   ['van9', 'suv', 'small', 'any', 'any_r'],
-    any_r:  ['any_r', 'any'],
-    any:    ['any'],
-    pending: ['any'],
-  }
-  const vehicleScope = VEHICLE_SCOPE[driverVehicle] || ['any']
-
+  // 車型過濾（使用統一的 isVehicleCompatible，新系統預設 MIN 等級）
   const now = new Date()
   const recommendations: MatchedOrder[] = []
 
   for (const order of availableOrders) {
-    // 1. 車型過濾
-    if (!vehicleScope.includes(order.vehicle || 'pending')) continue
+    // 1. 車型過濾（新系統 MIN 等級：司機車型 >= 訂單車型即可）
+    if (!isVehicleCompatible(driverVehicle as VehicleType, (order as any).vehicleType as VehicleType, RequirementLevel.MIN)) continue
 
     // 2. 狀態過濾（只考慮 PUBLISHED）
     if (order.status !== 'PUBLISHED') continue

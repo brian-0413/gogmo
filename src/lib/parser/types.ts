@@ -1,5 +1,7 @@
 // Types matching SKILL.md output schema
 
+import type { VehicleType } from '@/lib/vehicle'
+
 export type ParseStatus = 'accepted' | 'needs_review' | 'rejected'
 export type ParseMode = 'strict' | 'lenient'
 
@@ -16,7 +18,7 @@ export interface OrderFields {
   origin: Field<string | null>
   destination: Field<string | null>
   price: Field<number | null>
-  vehicle_type: Field<string | null> // "small" | "suv" | "large" | "van9" | "any" | "imported" | "mercedes_v" | "g_independent"
+  vehicle_type: Field<VehicleType | string | null> // 新系統接受 SEDAN_5/SUV_5/MPV_7/VAN_9/CUSTOM，也接受舊代號（dict 會轉換）
   flight_number: Field<string | null>
   passenger_count: Field<number | null>
   luggage_count: Field<number | null>

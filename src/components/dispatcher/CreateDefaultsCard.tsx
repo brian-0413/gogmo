@@ -2,18 +2,12 @@
 
 import { Calendar, FileText } from 'lucide-react'
 import { getDateOptions } from '@/lib/utils'
-
-// VEHICLE_OPTIONS — 從 page.tsx 行 73-76 複製
-const VEHICLE_OPTIONS = [
-  '任意車', '小車', '休旅', '7人座', '9人座', 'VITO', 'GRANVIA', '自填',
-] as const
-
-const DATE_OPTIONS = getDateOptions()
+import { VehicleType, VEHICLE_LABELS, VEHICLE_DROPDOWN_OPTIONS, normalizeVehicleInput } from '@/lib/vehicle'
 
 interface CreateDefaultsCardProps {
   defaults: {
     date?: string
-    vehicle?: string
+    vehicleType?: VehicleType
     vehicleCustom?: string
     kenichiRequired?: boolean
   }
@@ -21,6 +15,9 @@ interface CreateDefaultsCardProps {
 }
 
 export function CreateDefaultsCard({ defaults, onChange }: CreateDefaultsCardProps) {
+  const selectedVehicle = defaults.vehicleType
+  const isCustom = selectedVehicle === VehicleType.CUSTOM
+
   return (
     <div className="bg-white border border-[#DDDDDD] rounded-xl overflow-hidden">
       {/* 卡片標題 */}
@@ -36,51 +33,38 @@ export function CreateDefaultsCard({ defaults, onChange }: CreateDefaultsCardPro
         {/* 日期選擇 */}
         <div className="space-y-2">
           <label className="text-[11px] text-[#717171] font-normal">日期（必選）</label>
-          <div className="relative">
-            <select
-              value={defaults.date || ''}
-              onChange={(e) => onChange({ ...defaults, date: e.target.value })}
-              className="w-full bg-white border border-[#DDDDDD] rounded-lg pl-10 pr-3 py-2.5 text-[#222222] text-sm focus:outline-none focus:border-[#222222] cursor-pointer font-mono-nums"
-            >
-              {DATE_OPTIONS.map(opt => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
-            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#717171] pointer-events-none" />
-          </div>
+          <select
+            value={defaults.date || ''}
+            onChange={(e) => onChange({ ...defaults, date: e.target.value })}
+            className="w-full bg-white border border-[#DDDDDD] rounded-lg pl-10 pr-3 py-2.5 text-[#222222] text-sm focus:outline-none focus:border-[#222222] cursor-pointer font-mono-nums"
+          >
+            {getDateOptions().map(opt => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+          <Calendar className="w-4 h-4 text-[#717171] inline -mt-8 ml-3 pointer-events-none" />
         </div>
 
         {/* 車型選擇 */}
         <div className="space-y-2">
           <label className="text-[11px] text-[#717171] font-normal">車型（整批套用）</label>
           <div className="flex flex-wrap gap-2">
-            {VEHICLE_OPTIONS.filter(v => v !== '自填').map(v => (
+            {VEHICLE_DROPDOWN_OPTIONS.map(opt => (
               <button
-                key={v}
+                key={opt.value}
                 type="button"
-                onClick={() => onChange({ ...defaults, vehicle: v, vehicleCustom: '' })}
+                onClick={() => onChange({ ...defaults, vehicleType: opt.value as VehicleType, vehicleCustom: '' })}
                 className={`px-3 py-1.5 rounded-lg text-[13px] font-normal transition-colors ${
-                  defaults.vehicle === v
+                  selectedVehicle === opt.value
                     ? 'bg-[#FF385C] text-white'
                     : 'bg-white text-[#717171] border border-[#DDDDDD] hover:bg-[#F7F7F7]'
                 }`}
               >
-                {v}
+                {opt.label}
               </button>
             ))}
-            <button
-              type="button"
-              onClick={() => onChange({ ...defaults, vehicle: '自填' })}
-              className={`px-3 py-1.5 rounded-lg text-[13px] font-normal transition-colors ${
-                defaults.vehicle === '自填'
-                  ? 'bg-[#FF385C] text-white'
-                  : 'bg-white text-[#717171] border border-[#DDDDDD] hover:bg-[#F7F7F7]'
-              }`}
-            >
-              自填
-            </button>
           </div>
-          {defaults.vehicle === '自填' && (
+          {isCustom && (
             <input
               type="text"
               value={defaults.vehicleCustom || ''}

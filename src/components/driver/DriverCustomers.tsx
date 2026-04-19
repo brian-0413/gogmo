@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { Search, Plus, Pencil, X, Check, Trash2, Phone, MapPin, Calendar } from 'lucide-react'
+import { VehicleType, VEHICLE_LABELS } from '@/lib/vehicle'
 
 interface Customer {
   id: string
@@ -28,18 +29,14 @@ interface DriverCustomersProps {
   token: string
 }
 
+// 客戶偏好車型下拉（使用新系統 VehicleType）
 const VEHICLE_OPTIONS = [
   { value: '', label: '未指定' },
-  { value: 'small', label: '小車(5人)' },
-  { value: 'suv', label: '休旅(7人)' },
-  { value: 'van9', label: '9人座' },
+  { value: VehicleType.SEDAN_5, label: VEHICLE_LABELS[VehicleType.SEDAN_5] },
+  { value: VehicleType.SUV_5, label: VEHICLE_LABELS[VehicleType.SUV_5] },
+  { value: VehicleType.MPV_7, label: VEHICLE_LABELS[VehicleType.MPV_7] },
+  { value: VehicleType.VAN_9, label: VEHICLE_LABELS[VehicleType.VAN_9] },
 ]
-
-const VEHICLE_LABELS: Record<string, string> = {
-  small: '小車(5人)',
-  suv: '休旅(7人)',
-  van9: '9人座',
-}
 
 function formatDate(dateStr: string | null | undefined): string {
   if (!dateStr) return '-'

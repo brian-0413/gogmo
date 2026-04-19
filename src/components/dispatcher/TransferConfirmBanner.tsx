@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { format } from 'date-fns'
+import { VehicleType, VEHICLE_LABELS } from '@/lib/vehicle'
 import { Button } from '@/components/ui/Button'
 import { AlertTriangle, X } from 'lucide-react'
 
@@ -26,12 +27,12 @@ export interface TransferPendingData {
   }
   fromDriver?: {
     licensePlate: string
-    carType: string
+    vehicleType: string
     user?: { name: string }
   }
   toDriver?: {
     licensePlate: string
-    carType: string
+    vehicleType: string
     user?: { name: string }
   }
 }
@@ -48,12 +49,8 @@ function formatOrderId(orderId: string): string {
   return `#${orderId.slice(2, 10)}`
 }
 
-function getVehicleLabel(vehicle: string): string {
-  const map: Record<string, string> = {
-    small: '小車', suv: '休旅車', van9: '9人座',
-    any: '任意車', any_r: '任意R牌', pending: '待確認',
-  }
-  return map[vehicle] || vehicle || '—'
+function getVehicleLabel(vehicleType: string): string {
+  return VEHICLE_LABELS[vehicleType as VehicleType] || vehicleType || '—'
 }
 
 function getTypeLabel(type: string): string {
@@ -241,7 +238,7 @@ export function TransferConfirmBanner({ transfer, token, onApprove, onReject, on
               {fromDriver?.user?.name || '—'}
             </p>
             <p className="text-[12px] text-[#717171] font-mono-nums">
-              {fromDriver?.licensePlate || '—'} {getVehicleLabel(fromDriver?.carType || '')}
+              {fromDriver?.licensePlate || '—'} {getVehicleLabel(fromDriver?.vehicleType || '')}
             </p>
           </div>
           <div className="bg-white border border-[#DDDDDD] rounded-lg px-3 py-2">
@@ -250,7 +247,7 @@ export function TransferConfirmBanner({ transfer, token, onApprove, onReject, on
               {toDriver?.user?.name || '等待中'}
             </p>
             <p className="text-[12px] text-[#717171] font-mono-nums">
-              {toDriver ? `${toDriver.licensePlate || '—'} ${getVehicleLabel(toDriver.carType || '')}` : '—'}
+              {toDriver ? `${toDriver.licensePlate || '—'} ${getVehicleLabel(toDriver.vehicleType || '')}` : '—'}
             </p>
           </div>
         </div>

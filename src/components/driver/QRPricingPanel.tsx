@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { QrCode, Plus, Pencil, Check, X } from 'lucide-react'
+import { VehicleType, VEHICLE_LABELS } from '@/lib/vehicle'
 
 interface PricingItem {
   id: string
@@ -17,17 +18,13 @@ interface QRPricingPanelProps {
   qrCodeUrl?: string
 }
 
-const VEHICLE_OPTIONS = [
-  { value: 'small', label: '小車(5人座)' },
-  { value: 'suv', label: '休旅(7人座)' },
-  { value: 'van9', label: '9人座' },
+// QR 落地頁車型顯示（只顯示前 4 種，CUSTOM 不在 QR 定價中）
+const ALL_VEHICLE_TYPES: VehicleType[] = [
+  VehicleType.SEDAN_5,
+  VehicleType.SUV_5,
+  VehicleType.MPV_7,
+  VehicleType.VAN_9,
 ]
-
-const VEHICLE_LABELS: Record<string, string> = {
-  small: '小車(5人座)',
-  suv: '休旅(7人座)',
-  van9: '9人座',
-}
 
 export function QRPricingPanel({ token, driverId, licensePlate, qrCodeUrl }: QRPricingPanelProps) {
   const [pricing, setPricing] = useState<PricingItem[]>([])
@@ -187,7 +184,6 @@ export function QRPricingPanel({ token, driverId, licensePlate, qrCodeUrl }: QRP
   const bookUrl = `goGMO.com/book/${driverId}`
 
   // Fill in missing vehicle types with empty entries
-  const allTypes = ['small', 'suv', 'van9']
   const pricingMap: Record<string, PricingItem | undefined> = {}
   for (const p of pricing) {
     pricingMap[p.vehicleType] = p
@@ -253,7 +249,7 @@ export function QRPricingPanel({ token, driverId, licensePlate, qrCodeUrl }: QRP
           <div className="text-center py-8 text-[#78716C]">載入中...</div>
         ) : (
           <div className="space-y-3">
-            {allTypes.map(vtype => {
+            {ALL_VEHICLE_TYPES.map(vtype => {
               const item = pricingMap[vtype]
               const isEditing = editingId === item?.id
 
@@ -324,7 +320,7 @@ export function QRPricingPanel({ token, driverId, licensePlate, qrCodeUrl }: QRP
                 return (
                   <div key={item.id} className="bg-[#FFF3E0] border border-[#F59E0B]/30 rounded-xl p-4 space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-[14px] font-bold text-[#222222]">{VEHICLE_LABELS[item.vehicleType]}</span>
+                      <span className="text-[14px] font-bold text-[#222222]">{VEHICLE_LABELS[item.vehicleType as VehicleType]}</span>
                       <div className="flex items-center gap-1">
                         <button
                           onClick={() => saveEdit(item.id)}
@@ -378,7 +374,7 @@ export function QRPricingPanel({ token, driverId, licensePlate, qrCodeUrl }: QRP
                     <div
                       className={`w-2 h-2 rounded-full ${item.enabled ? 'bg-[#22C55E]' : 'bg-[#DDDDDD]'}`}
                     />
-                    <span className="text-[14px] font-medium text-[#222222]">{VEHICLE_LABELS[item.vehicleType]}</span>
+                    <span className="text-[14px] font-medium text-[#222222]">{VEHICLE_LABELS[item.vehicleType as VehicleType]}</span>
                     <span className={`text-[14px] font-bold font-mono-nums ${item.enabled ? 'text-[#FF385C]' : 'text-[#A8A29E]'}`}>
                       NT$ {item.price.toLocaleString()}
                     </span>

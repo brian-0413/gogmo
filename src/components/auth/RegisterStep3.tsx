@@ -1,18 +1,13 @@
 'use client'
 
-const VEHICLE_SIZE_OPTIONS = [
-  { value: 'small_sedan', label: '5人座（小車/轎車）' },
-  { value: 'small_suv', label: '5人座（休旅/SUV）' },
-  { value: 'van7', label: '7人座' },
-  { value: 'van9', label: '9人座' },
-]
+import { VehicleType, VEHICLE_LABELS, VEHICLE_DROPDOWN_OPTIONS } from '@/lib/vehicle'
 
 export interface Step3Data {
   licensePlate: string
   carBrand: string
   carModel: string
   carColor: string
-  vehicleSize: string
+  vehicleType: VehicleType
 }
 
 interface RegisterStep3Props {
@@ -23,7 +18,7 @@ interface RegisterStep3Props {
 }
 
 export function RegisterStep3({ data, onChange, onNext, onBack }: RegisterStep3Props) {
-  const canProceed = data.licensePlate.trim() && data.vehicleSize
+  const canProceed = data.licensePlate.trim() && data.vehicleType
 
   const handlePlateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onChange({ ...data, licensePlate: e.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, '') })
@@ -92,12 +87,12 @@ export function RegisterStep3({ data, onChange, onNext, onBack }: RegisterStep3P
         <div className="space-y-1">
           <label className="text-[11px] text-[#717171] font-normal">車型（載客數）</label>
           <select
-            value={data.vehicleSize}
-            onChange={e => onChange({ ...data, vehicleSize: e.target.value })}
+            value={data.vehicleType}
+            onChange={e => onChange({ ...data, vehicleType: e.target.value as VehicleType })}
             className="w-full bg-white border border-[#DDDDDD] rounded-lg px-3 py-2.5 text-[#222222] text-sm focus:outline-none focus:border-[#222222]"
           >
             <option value="">請選擇車型</option>
-            {VEHICLE_SIZE_OPTIONS.map(opt => (
+            {VEHICLE_DROPDOWN_OPTIONS.filter(opt => opt.value !== VehicleType.CUSTOM).map(opt => (
               <option key={opt.value} value={opt.value}>{opt.label}</option>
             ))}
           </select>

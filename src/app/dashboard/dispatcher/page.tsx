@@ -14,6 +14,7 @@ import { TransferConfirmBanner, type TransferPendingData } from '@/components/di
 import { format } from 'date-fns'
 import { getDateOptions } from '@/lib/utils'
 import { DEFAULT_ORDER_PRICE } from '@/lib/constants'
+import { VehicleType, VEHICLE_LABELS } from '@/lib/vehicle'
 import type { Order } from '@/types'
 import {
   ClipboardList,
@@ -34,7 +35,7 @@ interface Driver {
   id: string
   status: string
   licensePlate: string
-  carType: string
+  vehicleType: string
   carColor: string
   user: { name: string; phone: string }
 }
@@ -142,12 +143,12 @@ export default function DispatcherDashboard() {
                 } : undefined,
                 fromDriver: t.fromDriver ? {
                   licensePlate: t.fromDriver.licensePlate,
-                  carType: t.fromDriver.carType,
+                  vehicleType: t.fromDriver.vehicleType,
                   user: t.fromDriver.user,
                 } : undefined,
                 toDriver: t.toDriver ? {
                   licensePlate: t.toDriver.licensePlate,
-                  carType: t.toDriver.carType,
+                  vehicleType: t.toDriver.vehicleType,
                   user: t.toDriver.user,
                 } : undefined,
               })

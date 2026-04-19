@@ -3,12 +3,13 @@
 import { useState } from 'react'
 import { format } from 'date-fns'
 import { Search, Wifi, WifiOff, Coffee, Phone, MapPin, Users } from 'lucide-react'
+import { VehicleType, VEHICLE_LABELS_SHORT } from '@/lib/vehicle'
 
 interface Driver {
   id: string
   status: string
   licensePlate: string
-  carType: string
+  vehicleType: string
   carColor: string
   user: { name: string; phone: string }
 }
@@ -47,12 +48,12 @@ const STATUS_CONFIG = {
   },
 } as const
 
-function getVehicleTag(carType: string): string {
-  const t = carType?.toUpperCase() || ''
+function getVehicleTag(vehicleType: string): string {
+  const t = vehicleType?.toUpperCase() || ''
   if (t.includes('VAN') || t.includes('9') || t.includes('七') || t.includes('VITO')) return '9S'
   if (t.includes('休') || t.includes('SUV') || t.includes('GRANVIA')) return 'SUV'
   if (t.includes('小') || t.includes('轎')) return '5S'
-  return carType?.slice(0, 4) || '—'
+  return VEHICLE_LABELS_SHORT[vehicleType as VehicleType] || vehicleType?.slice(0, 4) || '—'
 }
 
 function FleetStats({ drivers }: { drivers: Driver[] }) {
@@ -86,7 +87,7 @@ function FleetStats({ drivers }: { drivers: Driver[] }) {
 function DriverCard({ driver }: { driver: Driver }) {
   const config = STATUS_CONFIG[driver.status as keyof typeof STATUS_CONFIG] || STATUS_CONFIG.OFFLINE
   const StatusIcon = config.icon
-  const vehicleTag = getVehicleTag(driver.carType)
+  const vehicleTag = getVehicleTag(driver.vehicleType)
 
   return (
     <div className={`bg-white border rounded-xl p-3 sm:p-4 hover:shadow-[0_2px_12px_rgba(0,0,0,0.08)] transition-shadow duration-200 ${config.border}`}>
@@ -118,7 +119,7 @@ function DriverCard({ driver }: { driver: Driver }) {
             <div className="px-2 py-0.5 bg-white border border-[#DDDDDD] rounded text-[11px] font-medium text-[#222222] font-mono-nums">
               {driver.licensePlate || '----'}
             </div>
-            <span className="text-[13px] text-[#717171]">{driver.carColor} {driver.carType}</span>
+            <span className="text-[13px] text-[#717171]">{driver.carColor} {VEHICLE_LABELS_SHORT[driver.vehicleType as VehicleType] || driver.vehicleType}</span>
           </div>
         </div>
       </div>
@@ -200,7 +201,7 @@ export function FleetControl({ drivers }: FleetControlProps) {
       d.user.name,
       d.user.phone,
       d.licensePlate,
-      d.carType,
+      d.vehicleType,
       d.carColor,
     ].some(field => field?.toLowerCase().includes(search.toLowerCase()))
     return matchFilter && matchSearch

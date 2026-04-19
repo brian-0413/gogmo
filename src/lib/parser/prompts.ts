@@ -60,16 +60,16 @@ Always respond with ONLY a valid JSON object (no markdown, no explanation):
 - 接駁/送船 → "transfer"
 
 ### Vehicle types
-- 小車/轎車 → "small"
-- 休旅/SUV → "suv"
-- 大車/九座 → "large"
-- 進口車 → "imported"
-- 賓士V/V車 → "mercedes_v"
-- G獨立 → "g_independent"
+- 小車/轎車 → "SEDAN_5"
+- 休旅/SUV → "SUV_5"
+- 七人座/MPV → "MPV_7"
+- 九人座/九座 → "VAN_9"
+- 自訂車款/特殊車款 → "CUSTOM"
 
 ### Plate types
-- R牌/R → "R"
-- 任意R → "any_R"
+- R牌/R → "RENTAL"
+- T牌/T → "TAXI"
+- 任意R → "RENTAL"
 
 ## Special Requirements Keywords
 - 無菸/無菸司機 → "no_smoking"

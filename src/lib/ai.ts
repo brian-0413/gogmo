@@ -7,6 +7,7 @@
 
 import { SYSTEM_PROMPT } from './prompts/order-parsing'
 import type { OrderType, VehicleType, PlateType } from '@/types'
+import { normalizeParserOutput } from '@/lib/vehicle'
 
 export type ParseStatus = 'ok' | 'incomplete' | 'rejected'
 
@@ -455,22 +456,26 @@ ${truncatedText}
   }
 
   // Validate and normalize each order
-  const validatedOrders: ParsedOrder[] = (orders || []).map((o: any) => ({
-    date: o.date || defaultDate,
-    time: o.time || null,
-    type: (o.type || 'pending') as any,
-    vehicle: (o.vehicle || 'any') as any,
-    plateType: (o.plateType || 'any') as any,
-    price: o.price != null ? Number(o.price) : null,
-    notes: o.notes || o.rawText || '',
-    rawText: o.rawText || '',
-    pickupLocation: o.pickupLocation,
-    dropoffLocation: o.dropoffLocation,
-    status: (o.status || 'ok') as any,
-    reason: o.reason,
-    isPaired: o.isPaired || false,
-    kenichiRequired: o.kenichiRequired || false,
-  }))
+  const validatedOrders: ParsedOrder[] = (orders || []).map((o: any) => {
+    // 車型正規化：新系統統一透過 normalizeParserOutput 轉換（支援新舊代號）
+    const normalized = normalizeParserOutput({ vehicle_type: o.vehicle })
+    return {
+      date: o.date || defaultDate,
+      time: o.time || null,
+      type: (o.type || 'pending') as any,
+      vehicle: (normalized.vehicleType ?? 'SEDAN_5') as any,
+      plateType: (o.plateType || 'any') as any,
+      price: o.price != null ? Number(o.price) : null,
+      notes: o.notes || o.rawText || '',
+      rawText: o.rawText || '',
+      pickupLocation: o.pickupLocation,
+      dropoffLocation: o.dropoffLocation,
+      status: (o.status || 'ok') as any,
+      reason: o.reason,
+      isPaired: o.isPaired || false,
+      kenichiRequired: o.kenichiRequired || false,
+    }
+  })
 
   return { orders: validatedOrders, rawResponse }
 }
