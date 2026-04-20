@@ -3,8 +3,13 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
+import { format, parseISO, startOfDay, startOfWeek, isSameDay } from 'date-fns'
+import { zhTW } from 'date-fns/locale'
+import Link from 'next/link'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
+import { MessageBadge } from '@/components/ui/MessageBadge'
+import { MessageThreadView } from '@/components/ui/MessageThreadView'
 import { OrderCard, Order } from '@/components/driver/OrderCard'
 import { OrderCalendar } from '@/components/driver/OrderCalendar'
 import { SmartSchedulePanel } from '@/components/driver/SmartSchedulePanel'
@@ -16,15 +21,10 @@ import { TransferRequestForm } from '@/components/driver/TransferRequestForm'
 import { QRPricingPanel } from '@/components/driver/QRPricingPanel'
 import { DriverCustomers } from '@/components/driver/DriverCustomers'
 import type { BalanceData } from '@/components/driver/SettlementTab'
-import { format, parseISO, startOfDay, startOfWeek, isSameDay } from 'date-fns'
 import { formatOrderNo } from '@/lib/utils'
-import { zhTW } from 'date-fns/locale'
-import { DRIVER_EARNINGS_RATE, CANCELLATION_FEE_RATE, TRANSFER_FEE_RATE } from '@/lib/constants'
+import { DRIVER_EARNINGS_RATE, CANCELLATION_FEE_RATE, PLATFORM_FEE_RATE, TRANSFER_FEE_RATE } from '@/lib/constants'
 import { VehicleType, RequirementLevel, isVehicleCompatible, VEHICLE_LABELS } from '@/lib/vehicle'
 import { ClipboardList, FileText, Wallet, LogOut, Plane, Radio, Inbox, ArrowUpDown, ArrowUp, ArrowDown, Car, Sparkles, Calendar, Sparkle, Users, X, Clock, MessageCircle } from 'lucide-react'
-import Link from 'next/link'
-import { MessageBadge } from '@/components/ui/MessageBadge'
-import { MessageThreadView } from '@/components/ui/MessageThreadView'
 
 type Tab = 'available' | 'myorders' | 'balance' | 'selfdispatch' | 'squad' | 'profile'
 type SortKey = 'scheduledTime' | 'price' | 'type'
@@ -60,14 +60,6 @@ export default function DriverDashboard() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [sortKey, setSortKey] = useState<SortKey>('scheduledTime')
   const [sortDir, setSortDir] = useState<SortDir>('asc')
-  const [matchResults, setMatchResults] = useState<{
-    currentOrders: Array<{ id: string; scheduledTime: string; type: string; status: string; pickupLocation: string; dropoffLocation: string; price: number; freeTime: string }>
-    driverFreeTime: string
-    recommendations: Array<{ id: string; orderDate: string; orderSeq: number; type: string; vehicle: string; scheduledTime: string; price: number; pickupLocation: string; dropoffLocation: string; passengerName: string; passengerCount: number; luggageCount: number; flightNumber: string; kenichiRequired: boolean; minutesFromFree: number; reason: string }>
-    summary: { currentOrdersCount: number; recommendationsCount: number }
-  } | null>(null)
-  const [matchLoading, setMatchLoading] = useState(false)
-
   // 智慧排班結果狀態
   const [scheduleResult, setScheduleResult] = useState<{
     driverStatus?: { dailyOrderCount: number; dailyOrderLimit: number; canAcceptMore: boolean }
@@ -408,38 +400,14 @@ export default function DriverDashboard() {
     }
   }
 
-  const handleCheckMatch = async () => {
-    if (!token) return
-    setMatchLoading(true)
-    setMatchResults(null)
-    try {
-      const res = await fetch('/api/orders/match', {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      const data = await res.json()
-      if (data.success) {
-        setMatchResults(data.data)
-      } else {
-        alert(data.error || '查詢失敗')
-      }
-    } catch {
-      alert('網路錯誤，請稍後再試')
-    } finally {
-      setMatchLoading(false)
-    }
-  }
-
   const handleAcceptFromMatch = async (orderId: string) => {
     if (!token) return
     const order = availableOrders.find(o => o.id === orderId)
     if (!order) {
-      // 如果大廳沒有，先加進去
       alert('請稍候，訂單可能已被其他人接走')
       return
     }
     await handleAcceptOrder(orderId)
-    // 接單成功後重新檢查配單
-    setMatchResults(null)
   }
 
   // 智慧排班：呼叫新 API
@@ -868,30 +836,15 @@ export default function DriverDashboard() {
                   <Sparkles className={`w-4 h-4 ${scheduleLoading ? 'animate-spin' : ''}`} />
                   {scheduleLoading ? '分析中...' : '智慧排班'}
                 </button>
+                {scheduleResult && (
                 <button
-                  onClick={handleCheckMatch}
-                  disabled={matchLoading}
-                  className="flex items-center gap-2 px-3 py-2 border border-[#DDDDDD] text-[#717171] text-[13px] font-medium rounded-lg hover:bg-[#F5F4F0] transition-all disabled:opacity-60 disabled:cursor-not-allowed"
-                >
-                  <Calendar className="w-3.5 h-3.5" />
-                  {matchLoading ? '檢查中...' : '時間配單'}
-                </button>
-                {(scheduleResult || matchResults) && (
-                  <span className="text-[13px] text-[#78716C]">
-                    <span className="font-bold font-mono-nums text-[#222222]">
-                      {scheduleResult?.recommendations?.length ?? matchResults?.recommendations.length ?? 0}
-                    </span> 筆推薦
-                  </span>
-                )}
-              </div>
-              {(scheduleResult || matchResults) && (
-                <button
-                  onClick={() => { setScheduleResult(null); setMatchResults(null); setSelectedScheduleOrders([]) }}
+                  onClick={() => { setScheduleResult(null); setSelectedScheduleOrders([]) }}
                   className="text-[12px] text-[#78716C] hover:text-[#222222] underline"
                 >
                   清除
                 </button>
               )}
+              </div>
             </div>
 
             {/* ===== 智慧排班結果面板 ===== */}
@@ -902,116 +855,9 @@ export default function DriverDashboard() {
               selectedScheduleOrders={selectedScheduleOrders}
               onToggleOrder={toggleScheduleOrder}
               onConfirmSchedule={handleConfirmSchedule}
-              onClear={() => { setScheduleResult(null); setMatchResults(null); setSelectedScheduleOrders([]); setSelectedOrderForSchedule(null) }}
+              onClear={() => { setScheduleResult(null); setSelectedScheduleOrders([]); setSelectedOrderForSchedule(null) }}
               scheduleConfirming={scheduleConfirming}
             />
-
-            {/* 舊的時間配單結果（保留相容性） */}
-            {matchResults && !scheduleResult && (
-              <div className="space-y-3">
-                {/* 當前行程概覽 */}
-                {matchResults.currentOrders.length > 0 && (
-                  <div className="bg-white border border-[#DDDDDD] rounded-xl p-4 shadow-sm">
-                    <p className="text-[11px] text-[#78716C] uppercase tracking-wider mb-2 font-medium">當前行程</p>
-                    <div className="space-y-1.5">
-                      {matchResults.currentOrders.map(order => (
-                        <div key={order.id} className="flex items-center justify-between text-[13px]">
-                          <div className="flex items-center gap-2">
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold font-mono-nums" style={{
-                              backgroundColor: order.type === 'pickup' || order.type === 'pickup_boat' ? '#E6F1FB' : '#FFF3E0',
-                              color: order.type === 'pickup' || order.type === 'pickup_boat' ? '#0C447C' : '#92400E'
-                            }}>
-                              {order.type === 'pickup' || order.type === 'pickup_boat' ? '接機' : order.type === 'dropoff' || order.type === 'dropoff_boat' ? '送機' : '其他'}
-                            </span>
-                            <span className="text-[#717171]">
-                              {order.pickupLocation} → {order.dropoffLocation}
-                            </span>
-                          </div>
-                          <span className="text-[12px] text-[#717171] font-mono-nums">
-                            自由：{order.freeTime}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* 推薦清單 */}
-                {matchResults.recommendations.length === 0 ? (
-                  <div className="text-center py-8 bg-white border border-[#DDDDDD] rounded-xl">
-                    <div className="w-12 h-12 rounded-xl bg-[#F5F4F0] border border-[#DDDDDD] flex items-center justify-center mx-auto mb-3">
-                      <Sparkles className="w-6 h-6 text-[#D6D3D1]" />
-                    </div>
-                    <p className="text-[14px] text-[#78716C] font-medium">目前沒有合適的配單</p>
-                    <p className="text-[12px] text-[#A8A29E] mt-1">符合您行程的大廳訂單會在此顯示</p>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <p className="text-[11px] text-[#78716C] uppercase tracking-wider font-medium">推薦配單</p>
-                    {matchResults.recommendations.map(rec => {
-                      return (
-                        <div key={rec.id} className="bg-white border border-[#DDDDDD] rounded-xl p-4 hover:shadow-[0_2px_8px_rgba(0,0,0,0.06)] transition-all duration-200">
-                          <div className="flex items-start justify-between mb-2">
-                            <div className="flex items-center gap-2">
-                              <span className="inline-flex items-center px-2.5 py-1 bg-[#FF385C] text-white text-[13px] font-bold font-mono-nums rounded">
-                                #{rec.orderSeq.toString().padStart(4, '0')}
-                              </span>
-                              <span className="inline-flex items-center px-2.5 py-1 text-[12px] font-bold font-mono-nums rounded" style={{
-                                backgroundColor: rec.type === 'pickup' || rec.type === 'pickup_boat' ? '#E6F1FB' : '#FFF3E0',
-                                color: rec.type === 'pickup' || rec.type === 'pickup_boat' ? '#0C447C' : '#92400E'
-                              }}>
-                                {rec.type === 'pickup' || rec.type === 'pickup_boat' ? '接機' : rec.type === 'dropoff' || rec.type === 'dropoff_boat' ? '送機' : rec.type === 'transfer' ? '接駁' : '包車'}
-                              </span>
-                              <span className="inline-flex items-center px-2.5 py-1 text-[12px] font-bold font-mono-nums rounded bg-[#F4EFE9] text-[#717171]">
-                                {rec.vehicle === 'small' ? '小車' : rec.vehicle === 'suv' ? '休旅' : rec.vehicle === 'van9' ? '9人座' : rec.vehicle === 'any' ? '任意' : rec.vehicle === 'any_r' ? '任意R' : '待確認'}
-                              </span>
-                              {rec.kenichiRequired && (
-                                <span className="inline-flex items-center px-2.5 py-1 text-[12px] font-bold font-mono-nums rounded bg-[#F3E8FF] text-[#6B21A8]">
-                                  肯驛
-                                </span>
-                              )}
-                            </div>
-                            <div className="text-right">
-                              <p className="text-[20px] font-bold font-mono-nums text-[#FF385C] leading-none">
-                                NT${rec.price.toLocaleString()}
-                              </p>
-                              <p className="text-[11px] text-[#78716C] mt-0.5 font-mono-nums">
-                                自由後 {rec.minutesFromFree >= 0 ? `+${rec.minutesFromFree}分` : `${rec.minutesFromFree}分`}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2 mb-2 text-[13px]">
-                            <span className="font-bold font-mono-nums text-[#222222]">
-                              {format(parseISO(rec.scheduledTime), 'M/dd HH:mm', { locale: zhTW })}
-                            </span>
-                            {rec.flightNumber && (
-                              <span className="px-1.5 py-0.5 rounded bg-[#F4EFE9] text-[11px] font-mono-nums text-[#717171]">
-                                {rec.flightNumber}
-                              </span>
-                            )}
-                          </div>
-                          <div className="flex items-start gap-2 mb-2 text-[13px] text-[#717171]">
-                            <span className="font-medium text-[#222222] truncate">{rec.pickupLocation}</span>
-                            <span className="text-[#DDDDDD] flex-shrink-0">→</span>
-                            <span className="font-medium text-[#222222] truncate">{rec.dropoffLocation}</span>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <p className="text-[12px] text-[#B45309] italic">{rec.reason}</p>
-                            <button
-                              onClick={() => handleAcceptFromMatch(rec.id)}
-                              disabled={actionLoading === rec.id}
-                              className="px-4 py-2 bg-gradient-to-r from-[#F59E0B] to-[#D97706] text-white text-[13px] font-bold rounded-lg hover:shadow-[0_2px_8px_rgba(245,158,11,0.4)] transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
-                            >
-                              {actionLoading === rec.id ? '處理中...' : '配此單'}
-                            </button>
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                )}
-              </div>
-            )}
 
             {/* Orders grid */}
             {filteredOrders.length === 0 ? (
