@@ -35,5 +35,6 @@ export const VEHICLE_DROPDOWN_OPTIONS = [
   { value: VehicleType.SUV_5, label: VEHICLE_LABELS[VehicleType.SUV_5] },
   { value: VehicleType.MPV_7, label: VEHICLE_LABELS[VehicleType.MPV_7] },
   { value: VehicleType.VAN_9, label: VEHICLE_LABELS[VehicleType.VAN_9] },
+  { value: 'ANY', label: '任意車型' },
   { value: VehicleType.CUSTOM, label: VEHICLE_LABELS[VehicleType.CUSTOM] },
 ] as const

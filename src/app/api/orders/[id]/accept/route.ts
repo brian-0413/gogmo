@@ -4,6 +4,7 @@ import { getUserFromToken } from '@/lib/auth'
 import { ApiResponse } from '@/types'
 import { PLATFORM_FEE_RATE } from '@/lib/constants'
 import { getOrCreateThread, createSystemMessage } from '@/lib/messages'
+import { isVehicleCompatible, VehicleType } from '@/lib/vehicle'
 
 // ─── 衝突檢查 ─────────────────────────────────────────
 
@@ -128,6 +129,14 @@ export async function POST(
     if (!user.driver.bankCode || !user.driver.bankAccount) {
       return NextResponse.json<ApiResponse>(
         { success: false, error: '請先至個人中心填寫銀行帳號，以開始接單' },
+        { status: 400 }
+      )
+    }
+
+    // 車型相容性檢查
+    if (order.vehicleType && !isVehicleCompatible(user.driver.vehicleType as VehicleType, order.vehicleType, order.vehicleRequirement || 'MIN')) {
+      return NextResponse.json<ApiResponse>(
+        { success: false, error: '您的車型不符合此訂單的要求' },
         { status: 400 }
       )
     }
