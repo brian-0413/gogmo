@@ -9,7 +9,7 @@ import { DispatcherOrderCard } from '@/components/dispatcher/OrderCard'
 import { FleetControl } from '@/components/dispatcher/FleetControl'
 import { SettlementTab } from '@/components/dispatcher/SettlementTab'
 import { CreateDefaultsCard } from '@/components/dispatcher/CreateDefaultsCard'
-import { ReviewItemCard, ReviewItem } from '@/components/dispatcher/ReviewItemCard'
+import { ReviewItemCard, ReviewItemV2 } from '@/components/dispatcher/ReviewItemCard'
 import { TransferConfirmBanner, type TransferPendingData } from '@/components/dispatcher/TransferConfirmBanner'
 import { format } from 'date-fns'
 import { getDateOptions } from '@/lib/utils'
@@ -59,12 +59,12 @@ export default function DispatcherDashboard() {
     date: '', vehicle: '任意車', vehicleCustom: '', kenichiRequired: false,
   })
   const [rawText, setRawText] = useState('')
-  const [reviewItems, setReviewItems] = useState<ReviewItem[]>([])
+  const [reviewItems, setReviewItems] = useState<ReviewItemV2[]>([])
   const [editingId, setEditingId] = useState<string | null>(null)
   const [pendingTransfer, setPendingTransfer] = useState<TransferPendingData | null>(null)
   const [editForm, setEditForm] = useState<{
     price?: number; scheduledTime?: string; pickupLocation?: string;
-    dropoffLocation?: string; note?: string; editedVehicle?: string; editedVehicleCustom?: string;
+    dropoffLocation?: string; note?: string; editedVehicle?: string; editedVehicleCustom?: string; kenichi?: boolean;
   }>({})
   const [createLoading, setCreateLoading] = useState(false)
   const [publishResult, setPublishResult] = useState<{ success: number; failed: number; errors: Array<{ rawText: string; error: string }> } | null>(null)
@@ -227,22 +227,49 @@ export default function DispatcherDashboard() {
       })
       const data = await res.json()
       if (!data.success) { alert(data.error || '解析失敗'); return }
-      const parsed = data.data?.orders || []
+
+      const { summary, accepted, needsReview, rejected } = data.data as {
+        summary: { total: number; accepted: number; needsReview: number; rejected: number }
+        accepted: Array<{ order: any; confidence: number }>
+        needsReview: Array<{ order: any; confidence: number; uncertainFields: string[]; reason: string }>
+        rejected: Array<{ rawText: string; reason: string; missingFields: string[]; suggestion?: string }>
+      }
+
       /* eslint-disable no-restricted-syntax */
       const batchVehicle = defaults.vehicle === '自填' ? defaults.vehicleCustom : defaults.vehicle
       /* eslint-enable no-restricted-syntax */
-      const items: ReviewItem[] = parsed.map((p: any) => ({
-        ...p, reviewId: generateId(),
+
+      const toItem = (order: any, bucket: 'accepted' | 'needsReview' | 'rejected', extra: Record<string, unknown> = {}): ReviewItemV2 => ({
+        reviewId: generateId(),
+        bucket,
+        rawText: order.rawText || order.notes || '',
+        date: order.date || defaults.date,
+        time: order.time || null,
+        type: order.type || 'pending',
+        vehicle: order.vehicle || batchVehicle,
+        price: order.price ?? null,
+        pickupLocation: order.pickupLocation,
+        dropoffLocation: order.dropoffLocation,
+        notes: order.notes || '',
+        plateType: order.plateType,
         editedVehicle: batchVehicle,
         editedVehicleCustom: '',
         editedKenichi: defaults.kenichiRequired || false,
-      }))
+        ...extra,
+      })
+
+      const items: ReviewItemV2[] = [
+        ...accepted.map(a => toItem(a.order, 'accepted', { confidence: a.confidence })),
+        ...needsReview.map(r => toItem(r.order, 'needsReview', { confidence: r.confidence, uncertainFields: r.uncertainFields, reason: r.reason })),
+        ...rejected.map(r => toItem({ notes: r.rawText, type: 'pending' }, 'rejected', { rawText: r.rawText, reason: r.reason, missingFields: r.missingFields, suggestion: r.suggestion })),
+      ]
+
       setReviewItems(items)
       setActiveTab('review')
     } catch (e: any) { alert('解析失敗：' + e.message) } finally { setCreateLoading(false) }
   }
 
-  const handleEditItem = (item: ReviewItem) => {
+  const handleEditItem = (item: ReviewItemV2) => {
     setEditingId(item.reviewId)
     setEditForm({
       price: item.price ?? DEFAULT_ORDER_PRICE,
@@ -250,8 +277,9 @@ export default function DispatcherDashboard() {
       pickupLocation: item.pickupLocation || undefined,
       dropoffLocation: item.dropoffLocation || undefined,
       note: item.notes || undefined,
-      editedVehicle: item.editedVehicle || '',
+      editedVehicle: item.editedVehicle || item.vehicle || '',
       editedVehicleCustom: item.editedVehicleCustom || '',
+      kenichi: item.editedKenichi ?? false,
     })
   }
 
@@ -260,7 +288,16 @@ export default function DispatcherDashboard() {
       prev.map(item =>
         item.reviewId === reviewId
           /* eslint-disable no-restricted-syntax */
-          ? { ...item, editedPrice: editForm.price, editedTime: editForm.scheduledTime, editedPickup: editForm.pickupLocation, editedDropoff: editForm.dropoffLocation, editedNotes: editForm.note, editedVehicle: editForm.editedVehicle === '自填' ? editForm.editedVehicleCustom : editForm.editedVehicle }
+          ? {
+              ...item,
+              editedPrice: editForm.price,
+              editedTime: editForm.scheduledTime,
+              editedPickup: editForm.pickupLocation,
+              editedDropoff: editForm.dropoffLocation,
+              editedNotes: editForm.note,
+              editedVehicle: editForm.editedVehicle === '自填' ? editForm.editedVehicleCustom : editForm.editedVehicle,
+              editedKenichi: editForm.kenichi,
+            }
           /* eslint-enable no-restricted-syntax */
           : item
       )
@@ -583,17 +620,17 @@ export default function DispatcherDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-[20px] font-bold text-[#222222]">審核清單</h2>
-                <p className="text-[14px] text-[#717171]">{reviewItems.length} 筆待確認</p>
+                {reviewItems.length > 0 && (
+                  <p className="text-[14px] text-[#717171]">
+                    共 {reviewItems.length} 筆｜✅ 已接受 {reviewItems.filter(i => i.bucket === 'accepted').length} ｜⚠️ 需確認 {reviewItems.filter(i => i.bucket === 'needsReview').length} ｜❌ 需補齊 {reviewItems.filter(i => i.bucket === 'rejected').length}
+                  </p>
+                )}
+                {reviewItems.length === 0 && (
+                  <p className="text-[14px] text-[#717171]">0 筆待確認</p>
+                )}
               </div>
               {reviewItems.length > 0 && (
                 <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => setReviewItems(prev => prev.map(item => ({ ...item })))}
-                    className="text-[14px]"
-                  >
-                    全選
-                  </Button>
                   <Button
                     variant="outline"
                     onClick={() => setReviewItems([])}

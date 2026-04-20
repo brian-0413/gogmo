@@ -340,38 +340,42 @@ export function parseBatchOrders(
   return results
 }
 
-// ============ LLM 訂單解析（使用 Claude Haiku） ============
+/**
+ * 三區解析結果（accepted / needs_review / rejected）
+ */
+export interface ParsedResultBucket {
+  accepted: ParsedOrder[]
+  needsReview: Array<ParsedOrder & { uncertainFields: string[]; reason: string }>
+  rejected: Array<{ rawText: string; reason: string; missingFields: string[]; suggestion?: string }>
+}
 
-export interface LLMParseResult {
-  orders: ParsedOrder[]
-  rawResponse: string
+export interface ParseResponseV2 {
+  summary: { total: number; accepted: number; needsReview: number; rejected: number }
+  accepted: Array<{ order: ParsedOrder; confidence: number }>
+  needsReview: Array<{ order: ParsedOrder; confidence: number; uncertainFields: string[]; reason: string }>
+  rejected: Array<{ rawText: string; reason: string; missingFields: string[]; suggestion?: string }>
 }
 
 /**
  * 使用 Claude Haiku 解析 LINE 訂單文字
  * 529 Overloaded 時自動重試（最多 2 次）
+ * 回傳三區結構（accepted / needs_review / rejected）
  */
-export async function parseBatchOrdersLLM(
+export async function parseOrdersV2(
   text: string,
   defaults: BatchOrderDefaults
-): Promise<LLMParseResult> {
+): Promise<ParseResponseV2> {
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) {
     throw new Error('ANTHROPIC_API_KEY 未設定')
   }
-
-  // 輸入長度限制：超過 2000 字元截斷，避免 LLM API 錯誤或超費
-  const MAX_INPUT_LENGTH = 2000
-  const truncatedText = text.length > MAX_INPUT_LENGTH
-    ? text.substring(0, MAX_INPUT_LENGTH) + '\n[內容過長已截斷]'
-    : text
 
   const defaultDate = defaults.date || new Date().toISOString().split('T')[0]
   const systemPrompt = SYSTEM_PROMPT.replace('{DEFAULT_DATE}', defaultDate)
 
   const userMessage = `請解析以下訂單訊息：
 
-${truncatedText}
+${text}
 
 日期：${defaultDate}
 種類：${defaults.type ? defaults.type : '（未指定）'}
@@ -381,13 +385,11 @@ ${truncatedText}
 
 只回傳 JSON array，不要任何其他文字，不要用 markdown code block。`
 
-  // 發送請求，529 時自動重試（最多 2 次）
   let lastError: Error | null = null
   let response: Response | null = null
 
   for (let attempt = 0; attempt < 3; attempt++) {
     if (attempt > 0) {
-      // 指數退避：500ms, 1000ms
       await new Promise(resolve => setTimeout(resolve, 500 * attempt))
     }
 
@@ -400,7 +402,8 @@ ${truncatedText}
       },
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 1024,
+        max_tokens: 8192,
+        temperature: 0,
         system: systemPrompt,
         messages: [{ role: 'user', content: userMessage }],
       }),
@@ -423,20 +426,16 @@ ${truncatedText}
   const data = await response.json()
   const rawResponse = data.content?.[0]?.text || '[]'
 
-  // Parse JSON from response
   let orders: any[] = []
   try {
-    // Strip markdown code block markers if present
     let cleaned = rawResponse
       .replace(/^```json\s*/i, '')
       .replace(/^```\s*/i, '')
       .replace(/\s*```$/i, '')
       .trim()
 
-    // Try to extract JSON array - find the array boundaries robustly
     const jsonStart = cleaned.indexOf('[')
     if (jsonStart !== -1) {
-      // Count brackets to find the matching closing bracket
       let depth = 0
       let end = jsonStart
       for (let i = jsonStart; i < cleaned.length; i++) {
@@ -455,12 +454,20 @@ ${truncatedText}
       orders = JSON.parse(cleaned)
     }
   } catch (e) {
-    throw new Error(`JSON parse error: ${e}, response: ${rawResponse}`)
+    // JSON 截斷或損壞：嘗試修補
+    const fixed = fixTruncatedJson(rawResponse)
+    if (fixed) {
+      try {
+        orders = JSON.parse(fixed)
+      } catch {
+        throw new Error(`JSON parse error: ${e}, raw: ${rawResponse.substring(0, 300)}`)
+      }
+    } else {
+      throw new Error(`JSON parse error: ${e}, raw: ${rawResponse.substring(0, 300)}`)
+    }
   }
 
-  // Validate and normalize each order
   const validatedOrders: ParsedOrder[] = (orders || []).map((o: any) => {
-    // 車型正規化：新系統統一透過 normalizeParserOutput 轉換（支援新舊代號）
     const normalized = normalizeParserOutput({ vehicle_type: o.vehicle })
     return {
       date: o.date || defaultDate,
@@ -480,7 +487,111 @@ ${truncatedText}
     }
   })
 
-  return { orders: validatedOrders, rawResponse }
+  return bucketByConfidence(validatedOrders)
+}
+
+/**
+ * 嘗試修補截斷的 JSON（缺少結尾的 ] 或 }）
+ */
+function fixTruncatedJson(raw: string): string | null {
+  let cleaned = raw.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '').trim()
+  const start = cleaned.indexOf('[')
+  if (start === -1) return null
+
+  // 找配對的 closing bracket
+  let depth = 0
+  let end = cleaned.length
+  for (let i = start; i < cleaned.length; i++) {
+    const ch = cleaned[i]
+    if (ch === '{') depth++
+    else if (ch === '}') depth--
+    else if (ch === '[') depth++
+    else if (ch === ']') depth--
+    if (depth === 0 && (ch === ']' || ch === '}')) { end = i + 1; break }
+  }
+
+  const truncated = cleaned.substring(start, end)
+  // 補上缺失的 closing brackets
+  const openBraces = (truncated.match(/\{/g) || []).length
+  const closeBraces = (truncated.match(/\}/g) || []).length
+  const openBrackets = (truncated.match(/\[/g) || []).length
+  const closeBrackets = (truncated.match(/\]/g) || []).length
+
+  let result = truncated
+  for (let i = 0; i < openBraces - closeBraces; i++) result += '}'
+  for (let i = 0; i < openBrackets - closeBrackets; i++) result += ']'
+  return result
+}
+
+/**
+ * 根據 confidence 將訂單分到三個區域
+ */
+function bucketByConfidence(orders: ParsedOrder[]): ParseResponseV2 {
+  const accepted: ParseResponseV2['accepted'] = []
+  const needsReview: ParseResponseV2['needsReview'] = []
+  const rejected: ParseResponseV2['rejected'] = []
+
+  for (const order of orders) {
+    const confidence = calcConfidence(order)
+
+    if (order.status === 'rejected' || confidence < 0.7) {
+      rejected.push({
+        rawText: order.rawText || order.notes || '',
+        reason: order.reason || '解析失敗',
+        missingFields: getMissingFields(order),
+        suggestion: (order as any).rewrite_suggestion || undefined,
+      })
+    } else if (order.status === 'incomplete' || confidence < 0.85) {
+      needsReview.push({
+        order,
+        confidence,
+        uncertainFields: getUncertainFields(order),
+        reason: order.reason || `部分欄位不確定（confidence ${confidence}）`,
+      })
+    } else {
+      accepted.push({ order, confidence })
+    }
+  }
+
+  return {
+    summary: {
+      total: orders.length,
+      accepted: accepted.length,
+      needsReview: needsReview.length,
+      rejected: rejected.length,
+    },
+    accepted,
+    needsReview,
+    rejected,
+  }
+}
+
+function calcConfidence(order: ParsedOrder): number {
+  let score = 1.0
+  if (!order.time) score -= 0.2
+  if (!order.pickupLocation) score -= 0.15
+  if (!order.dropoffLocation) score -= 0.15
+  if (order.price === null) score -= 0.1
+  if (!order.type || order.type === 'pending') score -= 0.15
+  if (order.status === 'incomplete') score -= 0.15
+  return Math.max(0, Math.min(1, score))
+}
+
+function getMissingFields(order: ParsedOrder): string[] {
+  const missing: string[] = []
+  if (!order.time) missing.push('time')
+  if (!order.pickupLocation) missing.push('pickupLocation')
+  if (!order.dropoffLocation) missing.push('dropoffLocation')
+  if (order.price === null) missing.push('price')
+  return missing
+}
+
+function getUncertainFields(order: ParsedOrder): string[] {
+  const uncertain: string[] = []
+  if (!order.time) uncertain.push('time')
+  if (!order.pickupLocation) uncertain.push('pickupLocation')
+  if (!order.dropoffLocation) uncertain.push('dropoffLocation')
+  return uncertain
 }
 
 // ============ 舊版 API 相容性（已廢棄） ============

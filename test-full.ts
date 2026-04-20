@@ -1,4 +1,4 @@
-import { parseBatchOrdersLLM } from './src/lib/ai'
+import { parseOrdersV2 } from './src/lib/ai'
 
 // 今天第一批真實訂單
 const text = `📌大車
@@ -140,64 +140,34 @@ PM15：20桃園機場二航（BR-868）--竹北 舉牌 3位 含舉牌費1,300
 0500 新竹送 1000$`
 
 async function main() {
-  const defaults = { date: '2026-03-31' }
-  console.log('Parsing orders with Claude Haiku...\n')
+  const defaults = { date: '2026-04-20' }
+  console.log('Parsing orders with Claude Haiku (v2)...\n')
 
   const start = Date.now()
-  const result = await parseBatchOrdersLLM(text, defaults)
+  const result = await parseOrdersV2(text, defaults)
   const elapsed = Date.now() - start
 
-  const ok = result.orders.filter(o => o.status === 'ok')
-  const incomplete = result.orders.filter(o => o.status === 'incomplete')
-  const rejected = result.orders.filter(o => o.status === 'rejected')
-
   console.log('='.repeat(50))
-  console.log(`解析完成！共 ${result.orders.length} 筆`)
-  console.log(`✅ 正常: ${ok.length} 筆`)
-  console.log(`⚠️ 待補正: ${incomplete.length} 筆`)
-  console.log(`❌ 拒絕: ${rejected.length} 筆`)
+  console.log(`解析完成！共 ${result.summary.total} 筆`)
+  console.log(`✅ 成功（accepted）: ${result.summary.accepted} 筆`)
+  console.log(`⚠️ 需確認（needsReview）: ${result.summary.needsReview} 筆`)
+  console.log(`❌ 需補齊（rejected）: ${result.summary.rejected} 筆`)
   console.log(`耗時: ${elapsed}ms`)
   console.log('='.repeat(50))
 
-  // 計算費用
-  const totalPrice = ok.reduce((sum, o) => sum + (o.price || 0), 0)
-  console.log(`\n💰 總金額: ${totalPrice.toLocaleString()} 元\n`)
-
-  // 顯示被拒絕的
-  if (rejected.length > 0) {
-    console.log('❌ 拒絕的訂單：')
-    rejected.forEach((r: any) => {
-      console.log(`  - ${r.rawText}`)
-      console.log(`    原因: ${r.reason}`)
+  if (result.accepted.length > 0) {
+    console.log('\n✅ 成功區：')
+    result.accepted.forEach((r: any) => {
+      console.log(`  ${r.order.time} | ${r.order.type} | ${r.order.pickupLocation} → ${r.order.dropoffLocation} | $${r.order.price} (conf: ${r.confidence})`)
     })
-    console.log()
   }
 
-  // 顯示待補正的
-  if (incomplete.length > 0) {
-    console.log('⚠️ 待補正的訂單：')
-    incomplete.forEach((r: any) => {
-      console.log(`  - ${r.rawText}`)
-      console.log(`    原因: ${r.reason}`)
+  if (result.rejected.length > 0) {
+    console.log('\n❌ 需補齊區：')
+    result.rejected.forEach((r: any) => {
+      console.log(`  ${r.rawText} | ${r.reason}`)
     })
-    console.log()
   }
-
-  // Claude Haiku 4.5 費用估算
-  const inputTokens = Math.ceil(text.length / 4) // 粗估
-  const outputTokens = Math.ceil(result.rawResponse.length / 4)
-  const inputCost = inputTokens * 0.8 / 1_000_000  // $0.8/million tokens
-  const outputCost = outputTokens * 4 / 1_000_000   // $4/million tokens
-  const totalCostUSD = inputCost + outputCost
-  const totalCostTWD = totalCostUSD * 33
-
-  console.log('📊 Claude Haiku 4.5 費用估算')
-  console.log(`  輸入 tokens: ~${inputTokens}`)
-  console.log(`  輸出 tokens: ~${outputTokens}`)
-  console.log(`  本次費用: ~$${totalCostUSD.toFixed(4)} USD (約 NT$${totalCostTWD.toFixed(2)})`)
-  console.log()
-  console.log(`  假設每天處理 50 筆訂單 → NT$${(totalCostTWD * 50 / ok.length).toFixed(2)}/天`)
-  console.log(`  假設每天處理 50 筆訂單 → NT$${(totalCostTWD * 50 / ok.length * 30).toFixed(0)}/月`)
 }
 
 main().catch(e => console.error('Error:', e.message))

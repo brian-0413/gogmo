@@ -1,5 +1,5 @@
 import 'dotenv/config'
-import { parseBatchOrdersLLM } from './src/lib/ai'
+import { parseOrdersV2 } from './src/lib/ai'
 
 const text = `4/1
 📌小車
@@ -23,16 +23,27 @@ const text = `4/1
 1340 桃機-中正 (L) $1000/綁`
 
 async function main() {
-  const result = await parseBatchOrdersLLM(text, { date: '2026-04-01' })
-  console.log('rawResponse:\n', result.rawResponse.substring(0, 3000))
-  console.log('\n解析結果（共' + result.orders.length + '筆）：\n')
-  result.orders.forEach((o: any, i: number) => {
-    const icon = o.status === 'ok' ? 'V' : o.status === 'incomplete' ? '?' : 'X'
-    console.log(`${icon}. [${o.status}] ${o.time} | ${o.type} | vehicle:${o.vehicle} | ${o.pickupLocation} -> ${o.dropoffLocation} | $${o.price}`)
-    console.log(`   notes: ${o.notes}`)
-    if (o.kenichiRequired) console.log(`   肯驛: YES`)
-    if (o.reason) console.log(`   原因: ${o.reason}`)
-    console.log()
+  const result = await parseOrdersV2(text, { date: '2026-04-01' })
+  console.log(`=== 解析結果摘要 ===`)
+  console.log(`總計: ${result.summary.total} 筆`)
+  console.log(`✅ 成功: ${result.summary.accepted} 筆`)
+  console.log(`⚠️ 需確認: ${result.summary.needsReview} 筆`)
+  console.log(`❌ 需補齊: ${result.summary.rejected} 筆\n`)
+  result.accepted.forEach((r, i) => {
+    const icon = r.confidence >= 0.85 ? 'V' : '?'
+    console.log(`${icon}. [conf:${r.confidence}] ${r.order.time} | ${r.order.type} | vehicle:${r.order.vehicle} | ${r.order.pickupLocation} -> ${r.order.dropoffLocation} | $${r.order.price}`)
+    console.log(`   notes: ${r.order.notes}`)
+    if (r.order.kenichiRequired) console.log(`   肯驛: YES`)
+  })
+  result.needsReview.forEach((r, i) => {
+    console.log(`?. [conf:${r.confidence}] ${r.order.time} | ${r.order.type} | ${r.order.pickupLocation} -> ${r.order.dropoffLocation} | $${r.order.price}`)
+    console.log(`   原因: ${r.reason}`)
+    console.log(`   不確定欄位: ${r.uncertainFields.join(', ')}`)
+  })
+  result.rejected.forEach((r, i) => {
+    console.log(`X. ${r.rawText}`)
+    console.log(`   原因: ${r.reason}`)
+    console.log(`   缺少: ${r.missingFields.join(', ')}`)
   })
 }
 

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUserFromToken } from '@/lib/auth'
-import { parseBatchOrdersLLM } from '@/lib/ai'
+import { parseOrdersV2 } from '@/lib/ai'
 import { ApiResponse } from '@/types'
 
 // POST /api/orders/parse - Parse order text using LLM (Claude Haiku)
@@ -40,15 +40,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const result = await parseBatchOrdersLLM(text, defaults || {})
+    const result = await parseOrdersV2(text, defaults || {})
 
     return NextResponse.json<ApiResponse>({
       success: true,
-      data: {
-        orders: result.orders || [],
-        count: (result.orders || []).length,
-        rawResponse: result.rawResponse,
-      },
+      data: result,
     })
   } catch (error: any) {
     console.error('Parse order error:', error)
