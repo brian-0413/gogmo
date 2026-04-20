@@ -289,7 +289,12 @@ export function SmartSchedulePanel({
                                 <tc.icon className="w-3 h-3" />
                                 {rec.tightnessLabel}
                               </span>
-                              {rec.reason && <p className="text-[12px] text-[#B45309] italic">{rec.reason}</p>}
+                              {rec.reason && (
+                                <div className="flex items-center gap-1.5 mt-1.5 text-[12px] text-[#B45309] bg-[#FFF7ED] border border-[#FED7AA] rounded-lg px-3 py-1.5">
+                                  <span>💡</span>
+                                  <span className="font-medium">{rec.reason}</span>
+                                </div>
+                              )}
                             </div>
                             {isSelected && <span className="text-[12px] font-bold text-[#B45309]">已選擇</span>}
                           </div>
