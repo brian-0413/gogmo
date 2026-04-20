@@ -298,7 +298,7 @@ export async function POST(request: NextRequest) {
         dropoffLng: body.dropoffLng,
         passengerCount: body.passengerCount || 1,
         luggageCount: body.luggageCount || 0,
-        scheduledTime: new Date(body.scheduledTime),
+        scheduledTime: scheduledDate,
         price: body.price,
         type: body.type || 'pending',
         vehicleType: normalized.vehicleType,

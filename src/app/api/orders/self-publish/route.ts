@@ -195,7 +195,7 @@ export async function POST(request: NextRequest) {
         dropoffAddress: body.dropoffLocation,
         passengerCount: body.passengerCount,
         luggageCount,
-        scheduledTime: new Date(body.scheduledTime),
+        scheduledTime: scheduledDate,
         price: body.driverAmount,
         type: body.orderType,
         vehicleType: normalized.vehicleType,
