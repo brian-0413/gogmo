@@ -170,7 +170,7 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    // Broadcast SSE to the target driver
+    // 发推送通知到目标司机（通过 SSE）
     broadcastSquadInviteEvent({
       type: 'SQUAD_INVITE',
       inviteId: invite.id,
