@@ -516,7 +516,7 @@ export default function DispatcherDashboard() {
             <div className="grid grid-cols-3 lg:grid-cols-6 gap-2 mb-6">
               {/* 接(x)/送(x) */}
               <div className="bg-white border border-[#DDDDDD] rounded-xl p-3 sm:p-4 flex flex-col items-center justify-center gap-0.5">
-                <p className="text-[11px] sm:text-[13px] text-[#717171] font-bold leading-tight">接機</p>
+                <p className="text-[11px] sm:text-[13px] text-[#717171] font-bold leading-tight">接機 / 送機</p>
                 <div className="flex items-baseline gap-0.5 leading-none">
                   <p className="text-[22px] sm:text-[28px] font-bold text-[#0C447C] font-mono-nums">{statusCounts.PICKUP}</p>
                   <p className="text-[13px] sm:text-[16px] text-[#717171] font-mono-nums">/</p>
