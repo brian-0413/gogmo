@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { getUserFromToken } from '@/lib/auth'
 import { ApiResponse } from '@/types'
 import { PLATFORM_FEE_RATE } from '@/lib/constants'
+import { getOrCreateThread, createSystemMessage } from '@/lib/messages'
 
 // ─── 衝突檢查 ─────────────────────────────────────────
 
@@ -254,6 +255,17 @@ export async function POST(
       if (!updatedOrder) throw new Error('此訂單已被其他司機接走')
       return updatedOrder
     })
+
+    // 建立訊息對話線並發送系統訊息
+    if (updated.dispatchers && updated.dispatchers.length > 0 && updated.driverId) {
+      const dispatcherId = updated.dispatchers[0].dispatcherId
+      const { id: threadId } = await getOrCreateThread(dispatcherId, updated.driverId)
+      const timeStr = new Date(order.scheduledTime).toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' })
+      await createSystemMessage(
+        threadId,
+        `司機已接單：「${order.pickupLocation} → ${order.dropoffLocation}」於 ${timeStr}，金額 NT$${order.price.toLocaleString()}`
+      )
+    }
 
     const platformFee = Math.floor(order.price * PLATFORM_FEE_RATE)
 
