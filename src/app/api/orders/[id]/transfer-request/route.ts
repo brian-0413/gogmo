@@ -172,7 +172,7 @@ export async function POST(
               pickupLocation: true,
               dropoffLocation: true,
               type: true,
-              vehicle: true,
+              vehicleType: true,
             },
           },
           fromDriver: {
@@ -247,7 +247,7 @@ export async function GET(
             pickupLocation: true,
             dropoffLocation: true,
             type: true,
-            vehicle: true,
+            vehicleType: true,
           },
         },
         fromDriver: {

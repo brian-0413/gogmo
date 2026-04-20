@@ -42,7 +42,7 @@ export async function GET(
             pickupLocation: true,
             dropoffLocation: true,
             type: true,
-            vehicle: true,
+            vehicleType: true,
             driverId: true,
             driver: {
               include: {
@@ -71,7 +71,7 @@ export async function GET(
       )
     }
 
-    if (transfer.order.dispatcherId !== user.dispatcher.id) {
+    if ((transfer as any).order.dispatcherId !== user.dispatcher.id) {
       return NextResponse.json<ApiResponse>(
         { success: false, error: '您不是此訂單的派單方' },
         { status: 403 }

@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { getUserFromToken, hashPassword } from '@/lib/auth'
 import { ApiResponse } from '@/types'
 import type { AccountStatus } from '@/types'
+import { normalizeVehicleInput } from '@/lib/vehicle'
 
 // GET /api/admin/users/[id] — 取得單一使用者詳情
 export async function GET(
@@ -96,7 +97,10 @@ export async function PUT(
       }
       driverUpdate.licensePlate = newPlate
     }
-    if (body.driver.carType !== undefined) driverUpdate.carType = body.driver.carType
+    if (body.driver.carType !== undefined) {
+      const normalized = normalizeVehicleInput(body.driver.carType)
+      driverUpdate.vehicleType = normalized.vehicleType
+    }
     if (body.driver.carColor !== undefined) driverUpdate.carColor = body.driver.carColor
     if (body.driver.carBrand !== undefined) driverUpdate.carBrand = body.driver.carBrand || null
     if (body.driver.carModel !== undefined) driverUpdate.carModel = body.driver.carModel || null

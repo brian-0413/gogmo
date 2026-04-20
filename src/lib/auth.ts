@@ -3,6 +3,7 @@ import jwt, { SignOptions } from 'jsonwebtoken'
 import { prisma } from './prisma'
 import { NEW_USER_BONUS } from './constants'
 import { sendResetPasswordEmail } from './email'
+import { normalizeVehicleInput } from './vehicle'
 
 const JWT_SECRET = process.env.JWT_SECRET
 const JWT_EXPIRES_IN = '7d'
@@ -107,7 +108,7 @@ export async function register(
           driver: {
             create: {
               licensePlate: extraData.licensePlate || '',
-              carType: extraData.carType || '轎車',
+              vehicleType: normalizeVehicleInput(extraData.carType || '').vehicleType ?? 'SEDAN_5',
               carColor: extraData.carColor || '',
               balance: NEW_USER_BONUS, // 新用戶贈送點數
               carBrand: extraData.carBrand || null,

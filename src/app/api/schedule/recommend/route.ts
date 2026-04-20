@@ -71,8 +71,8 @@ export async function GET(request: NextRequest) {
       scheduledTime: new Date(o.scheduledTime).toISOString(),
       price: o.price,
       type: o.type as OrderType,
-      vehicle: o.vehicle as Order['vehicle'],
-      plateType: o.plateType as Order['plateType'],
+      vehicleType: o.vehicleType as Order['vehicle'],
+      allowTaxiPlate: o.allowTaxiPlate,
       notes: o.notes ?? undefined,
       note: o.note ?? undefined,
       rawText: o.rawText ?? undefined,
@@ -99,13 +99,14 @@ export async function GET(request: NextRequest) {
     })
 
     // 呼叫智慧排班核心邏輯
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const result = getSmartScheduleRecommendations({
       driver: {
         id: driverId,
-        carType: (user.driver.carType || 'pending') as Order['vehicle'],
+        vehicleType: user.driver.vehicleType,
         acceptedOrderCount: orders.length + todayCompletedCount,
         dailyOrderLimit: 6,
-      },
+      } as any,
       acceptedOrders: orders,
       availableOrders: available,
       startOrderId: triggerOrderId || undefined,
@@ -117,7 +118,7 @@ export async function GET(request: NextRequest) {
       orderDate: order.orderDate,
       orderSeq: order.orderSeq,
       type: order.type,
-      vehicle: order.vehicle,
+      vehicleType: (order as any).vehicleType,
       scheduledTime: new Date(order.scheduledTime).toISOString(),
       price: order.price,
       pickupLocation: order.pickupLocation,

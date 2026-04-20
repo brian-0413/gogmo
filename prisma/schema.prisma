@@ -63,6 +63,41 @@ enum AccountStatus {
   REJECTED
 }
 
+enum DispatcherTier {
+  BASIC
+  PREMIUM
+  ENTERPRISE
+}
+
+enum VerificationStatus {
+  PENDING
+  PHONE_VERIFIED
+  FULLY_VERIFIED
+  REJECTED
+  SUSPENDED
+}
+
+// === 車型系統（與 src/lib/vehicle 同步） ===
+
+enum VehicleType {
+  SEDAN_5  // 5 人座（轎車）
+  SUV_5    // 5 人座休旅（含 7 人座 SUV）
+  MPV_7    // 7 人座 MPV
+  VAN_9    // 9 人座
+  CUSTOM   // 自訂車款
+}
+
+enum RequirementLevel {
+  EXACT  // 必須是這個車型
+  MIN    // 最低需求，可派更高等級
+  ANY    // 任意車型
+}
+
+enum PlateType {
+  RENTAL  // R 牌（租賃車）
+  TAXI    // T 牌（計程車）
+}
+
 // ============== Models ==============
 
 model Squad {
@@ -114,7 +149,7 @@ model User {
   email     String   @unique
   password  String
   name      String
-  phone     String
+  phone     String   @unique
   role             UserRole
   emailVerified    Boolean        @default(false)
   emailVerifyToken String?
@@ -122,6 +157,22 @@ model User {
   rejectReason     String?
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
+
+  // Tier & Quota System (派單方用，司機/管理員預設 BASIC)
+  tier             DispatcherTier    @default(BASIC)
+  tierExpiresAt    DateTime?
+  dailyOrderCount  Int               @default(0)
+  dailyCountResetAt DateTime         @default(now())
+
+  // Verification System
+  realName             String?
+  nationalIdHash       String?
+  taxId                String?
+  phoneVerifiedAt      DateTime?
+  emailVerifiedAt      DateTime?
+  lineId               String?
+  verificationStatus   VerificationStatus @default(PENDING)
+  verifiedAt           DateTime?
 
   // Relations
   driver     Driver?
@@ -145,7 +196,8 @@ model Driver {
   userId          String       @unique
   user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   licensePlate    String       // 車牌
-  carType         String       // 車型（如：轎車、SUV、福祉車）
+  vehicleType     VehicleType  @default(SEDAN_5)
+  plateType       PlateType    @default(RENTAL)
   carColor        String       // 車色
   carBrand        String?      // 車廠/品牌（如：TOYOTA）
   carModel        String?      // 車型/型號（如：CAMRY）
@@ -189,9 +241,13 @@ model Dispatcher {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
+  // Duplicate order handling preference
+  duplicateHandling String @default("auto_merge") // auto_merge / warn_and_keep / ask_user
+
   // Relations
   orders          Order[]
   messageThreads  MessageThread[]
+  preference      DispatcherPreference?
 
   @@map("dispatchers")
 }
@@ -237,9 +293,11 @@ model Order {
   price           Int          // 價格（整數）
 
   // 接送種類與車型要求
-  type            String      @default("pending") // pickup / dropoff / transfer / charter / pending
-  vehicle         String      @default("pending") // small / suv / van9 / any / any_r / pending
-  plateType       String      @default("any")     // R / T / any
+  type             String      @default("pending") // pickup / dropoff / transfer / charter / pending
+  vehicleType      VehicleType?
+  vehicleRequirement RequirementLevel @default(EXACT)
+  customVehicleNote String?
+  allowTaxiPlate   Boolean     @default(false)   // 是否允許 T 牌司機接單
 
   // 解析後備註（原文保留）
   notes           String?
@@ -257,6 +315,13 @@ model Order {
   // 轉帳狀態
   transferStatus   String     @default("pending") // pending / completed
 
+  // 加價系統
+  originalPrice    Int?       // 建立時的原始價格（永不變）
+  currentPrice     Int?       // 現價 = originalPrice + 累積加價
+  isSurge          Boolean    @default(false)
+  surgeEnabled     Boolean    @default(true)      // false = 低價陷阱，永久禁用加價
+  surgeCount       Int        @default(0)         // 已加價次數，上限 3
+
   // Timestamps
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
@@ -273,6 +338,7 @@ model Order {
   qrPrice         Int?            // QR單的報價（建立時鎖定）
 
   transfers       OrderTransfer[]
+  surgeHistory    OrderSurgeHistory[]
 
   @@index([status])
   @@index([isLocked])
@@ -376,7 +442,7 @@ model Topup {
 model DriverPricing {
   id          String   @id @default(cuid())
   driverId    String
-  vehicleType String   // "small" | "suv" | "van9"
+  vehicleType VehicleType
   price       Int      // NT$
   enabled     Boolean  @default(true)
   createdAt   DateTime @default(now())
@@ -454,4 +520,52 @@ model Message {
   @@index([threadId])
   @@index([senderId])
   @@map("messages")
+}
+
+// ============== Surge Pricing ==============
+
+model OrderSurgeHistory {
+  id            String   @id @default(cuid())
+  orderId       String
+  order         Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  previousPrice Int
+  surgeAmount   Int
+  newPrice      Int
+  surgedAt      DateTime @default(now())
+  surgedBy      String   // dispatcher userId
+
+  @@index([orderId])
+  @@map("order_surge_history")
+}
+
+model RegionPriceStats {
+  id          String   @id @default(cuid())
+  region      String
+  timeSlot    String
+  airport     String?
+  vehicleType VehicleType?
+  avgPrice    Int
+  sampleSize  Int
+  updatedAt   DateTime @updatedAt
+
+  @@unique([region, timeSlot, airport, vehicleType])
+  @@map("region_price_stats")
+}
+
+// ============== Dispatcher Preferences ==============
+
+model DispatcherPreference {
+  id                 String   @id @default(cuid())
+  dispatcherId       String   @unique
+  dispatcher         Dispatcher @relation(fields: [dispatcherId], references: [id], onDelete: Cascade)
+  defaultVehicleType String?
+  defaultLicenseType String?
+  defaultPrice       Int?
+  defaultAirport     String?
+  driverRequirements Json?
+  paymentMethod      String?
+  batchPriceMode     String   @default("off") // inherit / override / off
+  updatedAt          DateTime @updatedAt
+
+  @@map("dispatcher_preferences")
 }

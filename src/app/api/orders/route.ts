@@ -5,6 +5,7 @@ import { ApiResponse, CreateOrderRequest } from '@/types'
 import { checkRateLimit } from '@/lib/api-utils'
 import { MAX_FIELD_LENGTHS, MAX_ORDER_PRICE } from '@/lib/validation'
 import { format } from 'date-fns'
+import { normalizeVehicleInput } from '@/lib/vehicle'
 
 // Helper to get user from request
 async function getUser(request: NextRequest) {
@@ -249,7 +250,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate scheduled time is in the future
-    const scheduledDate = new Date(body.scheduledTime)
+    // datetime-local input 無時區資訊，視為台北時間（UTC+8）
+    const scheduledTimeStr = body.scheduledTime
+    const hasTimezone = scheduledTimeStr.includes('+') || scheduledTimeStr.includes('Z') || scheduledTimeStr.endsWith('+08:00')
+    const scheduledDate = new Date(hasTimezone ? scheduledTimeStr : `${scheduledTimeStr}+08:00`)
     const now = new Date()
     if (scheduledDate < now) {
       return NextResponse.json<ApiResponse>(
@@ -258,14 +262,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Validate vehicle enum values (database has ENUM restriction)
-    const validVehicles = ['small', 'suv', 'van9', 'any', 'any_r', 'pending']
-    if (body.vehicle && !validVehicles.includes(body.vehicle)) {
-      return NextResponse.json<ApiResponse>(
-        { success: false, error: `車型 無效：${body.vehicle}。有效值：${validVehicles.join(', ')}` },
-        { status: 400 }
-      )
-    }
+    // 車型正規化（使用統一的 vehicle module）
+    const normalized = normalizeVehicleInput(body.vehicle)
 
     // Calculate daily sequence number (YYYYMMDD-0001 format)
     const todayStr = format(scheduledDate, 'yyyyMMdd')
@@ -303,8 +301,10 @@ export async function POST(request: NextRequest) {
         scheduledTime: new Date(body.scheduledTime),
         price: body.price,
         type: body.type || 'pending',
-        vehicle: body.vehicle || 'any',
-        plateType: body.plateType || 'any',
+        vehicleType: normalized.vehicleType,
+        vehicleRequirement: normalized.requirement,
+        customVehicleNote: normalized.customVehicleNote,
+        allowTaxiPlate: (body as any).allowTaxiPlate ?? false,
         notes: body.notes,
         note: body.note,
         rawText: body.rawText,

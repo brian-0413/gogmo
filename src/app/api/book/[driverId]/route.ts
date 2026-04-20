@@ -44,7 +44,8 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
       data: {
         id: driver.id,
         licensePlate: driver.licensePlate,
-        carType: driver.carType,
+        vehicleType: driver.vehicleType,
+        plateType: driver.plateType,
         isPremium: driver.isPremium,
         pricing: vehicleOptions,
       },

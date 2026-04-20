@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
     driver: u.driver ? {
       id: u.driver.id,
       licensePlate: u.driver.licensePlate,
-      carType: u.driver.carType,
+      vehicleType: u.driver.vehicleType,
       carBrand: u.driver.carBrand,
       carModel: u.driver.carModel,
       carColor: u.driver.carColor,

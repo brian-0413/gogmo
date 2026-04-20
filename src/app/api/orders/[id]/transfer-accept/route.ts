@@ -3,28 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { getUserFromToken } from '@/lib/auth'
 import { ApiResponse } from '@/types'
 import { broadcastSquadEvent, broadcastDispatcherEvent } from '@/lib/sse-emitter'
-
-// 車型相容性檢查：小車不能接大車單
-function canAcceptOrder(driverVehicle: string, orderVehicle: string): boolean {
-  // any / any_r 任何人可接
-  if (orderVehicle === 'any') return true
-  if (orderVehicle === 'any_r') return true
-  if (orderVehicle === 'pending') return true
-
-  if (orderVehicle === 'small') {
-    // 小車只能接 small/any
-    return ['small', 'any', 'pending'].includes(driverVehicle)
-  }
-  if (orderVehicle === 'suv') {
-    // 休旅可接 small/suv/any
-    return ['small', 'suv', 'any', 'pending'].includes(driverVehicle)
-  }
-  if (orderVehicle === 'van9') {
-    // 9人座只能接 van9/any/any_r
-    return ['van9', 'any', 'any_r', 'pending'].includes(driverVehicle)
-  }
-  return true
-}
+import { isVehicleCompatible } from '@/lib/vehicle'
 
 // POST /api/orders/[id]/transfer-accept — 隊友接受轉單
 export async function POST(
@@ -118,7 +97,7 @@ export async function POST(
       )
     }
 
-    if (!canAcceptOrder(driver.carType, transfer.order.vehicle)) {
+    if (!isVehicleCompatible(driver.vehicleType, transfer.order.vehicleType!, transfer.order.vehicleRequirement)) {
       return NextResponse.json<ApiResponse>(
         { success: false, error: '您的車型不符，無法接受此轉單' },
         { status: 400 }
@@ -142,7 +121,7 @@ export async function POST(
             pickupLocation: true,
             dropoffLocation: true,
             type: true,
-            vehicle: true,
+            vehicleType: true,
           },
         },
         fromDriver: {

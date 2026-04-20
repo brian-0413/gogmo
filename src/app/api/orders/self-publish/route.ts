@@ -6,6 +6,7 @@ import { checkRateLimit } from '@/lib/api-utils'
 import { MAX_ORDER_PRICE } from '@/lib/constants'
 import { format } from 'date-fns'
 import { randomUUID } from 'crypto'
+import { normalizeVehicleInput } from '@/lib/vehicle'
 
 export async function POST(request: NextRequest) {
   const rateLimitResult = checkRateLimit(request, { type: 'orders' })
@@ -84,7 +85,10 @@ export async function POST(request: NextRequest) {
     }
 
     // 時間驗證
-    const scheduledDate = new Date(body.scheduledTime)
+    // datetime-local input 無時區資訊，視為台北時間（UTC+8）
+    const scheduledTimeStr = body.scheduledTime
+    const hasTimezone = scheduledTimeStr.includes('+') || scheduledTimeStr.includes('Z') || scheduledTimeStr.endsWith('+08:00')
+    const scheduledDate = new Date(hasTimezone ? scheduledTimeStr : `${scheduledTimeStr}+08:00`)
     const now = new Date()
     if (scheduledDate < now) {
       return NextResponse.json<ApiResponse>(
@@ -93,14 +97,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 車型驗證
-    const validVehicles = ['small', 'suv', 'van9']
-    if (!validVehicles.includes(body.vehicleType)) {
-      return NextResponse.json<ApiResponse>(
-        { success: false, error: `車型 無效：${body.vehicleType}` },
-        { status: 400 }
-      )
-    }
+    // 車型正規化
+    const normalized = normalizeVehicleInput(body.vehicleType)
 
     // 接送種類驗證
     const validTypes = ['pickup', 'dropoff', 'pickup_boat', 'dropoff_boat']
@@ -164,7 +162,8 @@ export async function POST(request: NextRequest) {
     }
 
     // 計算 orderSeq（司機自派單的流水號，隔日歸零重新計算）
-    const todayStr = format(scheduledDate, 'yyyyMMdd')
+    // 直接從原始字串取出日期（scheduledTime 已是台北時間），避免 server timezone 干擾
+    const todayStr = scheduledTimeStr.slice(0, 10).replace(/-/g, '')
     const lastSelfPublishOrder = await prisma.order.findFirst({
       where: {
         isSelfPublish: true,
@@ -199,8 +198,10 @@ export async function POST(request: NextRequest) {
         scheduledTime: new Date(body.scheduledTime),
         price: body.driverAmount,
         type: body.orderType,
-        vehicle: body.vehicleType,
-        plateType: 'any',
+        vehicleType: normalized.vehicleType,
+        vehicleRequirement: normalized.requirement,
+        customVehicleNote: normalized.customVehicleNote,
+        allowTaxiPlate: false,
         notes: notesParts.join('\n') || undefined,
         status: 'PUBLISHED',
         isSelfPublish: true,

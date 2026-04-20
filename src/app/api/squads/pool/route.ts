@@ -59,7 +59,7 @@ export async function GET(request: NextRequest) {
             pickupLocation: true,
             dropoffLocation: true,
             type: true,
-            vehicle: true,
+            vehicleType: true,
             passengerCount: true,
             passengerName: true,
             passengerPhone: true,

@@ -42,7 +42,7 @@ export async function POST(
             pickupLocation: true,
             dropoffLocation: true,
             type: true,
-            vehicle: true,
+            vehicleType: true,
             status: true,
           },
         },
@@ -78,7 +78,7 @@ export async function POST(
     // 行程前 1 小時內不能搶單
     const now = new Date()
     const oneHourMs = 60 * 60 * 1000
-    if (transfer.order.scheduledTime.getTime() - now.getTime() < oneHourMs) {
+    if ((transfer as any).order.scheduledTime.getTime() - now.getTime() < oneHourMs) {
       return NextResponse.json<ApiResponse>(
         { success: false, error: '行程前 1 小時內無法搶單' },
         { status: 400 }
@@ -226,7 +226,7 @@ export async function POST(
     broadcastSquadEvent({
       type: 'TRANSFER_APPROVED',
       transferId: transfer.id,
-      orderId: transfer.order.id,
+      orderId: (transfer as any).order.id,
       fromDriverId: transfer.fromDriverId,
       toDriverId: user.driver.id,
       squadId: transfer.squadId,
@@ -237,7 +237,7 @@ export async function POST(
     broadcastDispatcherEvent({
       type: 'TRANSFER_APPROVED',
       transferId: transfer.id,
-      orderId: transfer.order.id,
+      orderId: (transfer as any).order.id,
       fromDriverId: transfer.fromDriverId,
       toDriverId: user.driver.id,
       status: 'APPROVED',

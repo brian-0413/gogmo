@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const driverId = user.driver.id
-    const driverVehicle = user.driver.carType
+    const driverVehicle = user.driver.vehicleType
 
     // 1. 取得司機所有已接的行程（含狀態）
     const currentOrders = await prisma.order.findMany({
@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
         pickupLocation: true,
         dropoffLocation: true,
         price: true,
-        vehicle: true,
+        vehicleType: true,
         orderDate: true,
         orderSeq: true,
         passengerName: true,
@@ -117,8 +117,7 @@ export async function GET(request: NextRequest) {
         scheduledTime: o.scheduledTime,
         price: o.price,
         type: o.type as OrderType,
-        vehicle: o.vehicle as import('@/types').VehicleType,
-        plateType: o.plateType as import('@/types').PlateType,
+        vehicleType: o.vehicleType as import('@/types').VehicleType,
         kenichiRequired: o.kenichiRequired ?? false,
         createdAt: o.createdAt.toISOString(),
         updatedAt: o.updatedAt?.toISOString(),
@@ -129,7 +128,7 @@ export async function GET(request: NextRequest) {
         notes: o.notes ?? undefined,
         note: o.note ?? undefined,
         rawText: o.rawText ?? undefined,
-      })),
+      })) as any,
       driverVehicle
     )
 
@@ -153,7 +152,7 @@ export async function GET(request: NextRequest) {
           orderDate: r.orderDate,
           orderSeq: r.orderSeq,
           type: r.type,
-          vehicle: r.vehicle,
+          vehicleType: (r as any).vehicleType,
           scheduledTime: r.scheduledTime instanceof Date
             ? r.scheduledTime.toISOString()
             : r.scheduledTime,
