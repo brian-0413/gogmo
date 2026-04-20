@@ -20,7 +20,7 @@ import { format, parseISO, startOfDay, startOfWeek, isSameDay } from 'date-fns'
 import { formatOrderNo } from '@/lib/utils'
 import { zhTW } from 'date-fns/locale'
 import { DRIVER_EARNINGS_RATE, CANCELLATION_FEE_RATE, TRANSFER_FEE_RATE } from '@/lib/constants'
-import { VehicleType, RequirementLevel, getCompatibleVehicleTypes, VEHICLE_LABELS } from '@/lib/vehicle'
+import { VehicleType, RequirementLevel, isVehicleCompatible, VEHICLE_LABELS } from '@/lib/vehicle'
 import { ClipboardList, FileText, Wallet, LogOut, Plane, Radio, Inbox, ArrowUpDown, ArrowUp, ArrowDown, Car, Sparkles, Calendar, Sparkle, Users, X, Clock, MessageCircle } from 'lucide-react'
 import Link from 'next/link'
 import { MessageBadge } from '@/components/ui/MessageBadge'
@@ -163,14 +163,17 @@ export default function DriverDashboard() {
     setBalanceStats({ today, thisWeek, allTime, todayOrders, weekOrders, allOrders })
   }, [])
 
-  // 車型過濾範圍（根據司機註冊車型），使用統一的 getCompatibleVehicleTypes
+  // 車型過濾：使用 isVehicleCompatible 檢查每筆訂單（正確處理 vehicleRequirement=ANY）
   const driverVehicle = (driverProfile?.vehicleType || 'SEDAN_5') as VehicleType
-  const compatibleOrderVehicleTypes = getCompatibleVehicleTypes(driverVehicle, RequirementLevel.MIN)
 
   const filteredAvailableOrders = useMemo(() => {
-    // 車型過濾
-    let orders = availableOrders.filter(o => compatibleOrderVehicleTypes.includes((o as any).vehicleType || 'SEDAN_5' as VehicleType))
-    // 排序
+    let orders = availableOrders.filter(o =>
+      isVehicleCompatible(
+        driverVehicle,
+        (o as any).vehicleType as VehicleType || VehicleType.SEDAN_5,
+        (o as any).vehicleRequirement as RequirementLevel || RequirementLevel.ANY
+      )
+    )
     orders = [...orders].sort((a, b) => {
       if (sortKey === 'price') {
         return sortDir === 'asc' ? a.price - b.price : b.price - a.price
@@ -180,13 +183,12 @@ export default function DriverDashboard() {
         const bVal = TYPE_SORT_ORDER[b.type || 'pending'] ?? 99
         return sortDir === 'asc' ? aVal - bVal : bVal - aVal
       }
-      // scheduledTime (default)
       const aTime = new Date(a.scheduledTime).getTime()
       const bTime = new Date(b.scheduledTime).getTime()
       return sortDir === 'asc' ? aTime - bTime : bTime - aTime
     })
     return orders
-  }, [availableOrders, compatibleOrderVehicleTypes, sortKey, sortDir])
+  }, [availableOrders, driverVehicle, sortKey, sortDir])
 
   useEffect(() => {
     if (!isLoading && (!user || user.role !== 'DRIVER')) router.push('/login')
