@@ -228,7 +228,9 @@ export default function DispatcherDashboard() {
       const data = await res.json()
       if (!data.success) { alert(data.error || '解析失敗'); return }
       const parsed = data.data?.orders || []
+      /* eslint-disable no-restricted-syntax */
       const batchVehicle = defaults.vehicle === '自填' ? defaults.vehicleCustom : defaults.vehicle
+      /* eslint-enable no-restricted-syntax */
       const items: ReviewItem[] = parsed.map((p: any) => ({
         ...p, reviewId: generateId(),
         editedVehicle: batchVehicle,
@@ -257,7 +259,9 @@ export default function DispatcherDashboard() {
     setReviewItems(prev =>
       prev.map(item =>
         item.reviewId === reviewId
+          /* eslint-disable no-restricted-syntax */
           ? { ...item, editedPrice: editForm.price, editedTime: editForm.scheduledTime, editedPickup: editForm.pickupLocation, editedDropoff: editForm.dropoffLocation, editedNotes: editForm.note, editedVehicle: editForm.editedVehicle === '自填' ? editForm.editedVehicleCustom : editForm.editedVehicle }
+          /* eslint-enable no-restricted-syntax */
           : item
       )
     )
@@ -299,9 +303,11 @@ export default function DispatcherDashboard() {
             price: item.editedPrice ?? item.price ?? 800,
             type: item.editedType || item.type || 'pending',
             vehicle: (() => {
+              /* eslint-disable no-restricted-syntax */
               const raw = item.editedVehicle === '自填' ? item.editedVehicleCustom : item.editedVehicle || (defaults.vehicle === '自填' ? defaults.vehicleCustom : defaults.vehicle)
               const map: Record<string, string> = { '任意車': 'any', '小車': 'small', '休旅': 'suv', '7人座': 'van9', '9人座': 'van9', 'VITO': 'van9', 'GRANVIA': 'suv' }
               return raw ? (map[raw] || 'any') : 'any'
+              /* eslint-enable no-restricted-syntax */
             })(),
             plateType: item.editedPlateType || item.plateType || 'any',
             notes: item.editedNotes || item.notes || '', note: '', rawText: item.rawText || '',

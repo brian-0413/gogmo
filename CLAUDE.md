@@ -168,3 +168,57 @@ git commit + push + 更新 CURRENT_WORK.md
 
 ## 智慧排單功能
 智慧排班單能規格見 docs/smart-scheduling.md
+
+## 車型系統規範（2026-04 重構）
+
+### 標準車型代號
+
+| 代號 | 中文 | 說明 |
+|------|------|------|
+| `SEDAN_5` | 5 人座轎車 | 小車/轎車 |
+| `SUV_5` | 5 人座休旅 | 休旅/SUV（含 7 人座 SUV 行李空間不足視為 5 人座） |
+| `MPV_7` | 7 人座 MPV | Sienna、Odyssey、Custin |
+| `VAN_9` | 9 人座 | Hiace、Tourneo、Starex、VITO、GRANVIA |
+| `CUSTOM` | 自訂車款 | Alphard、V-Class 等指定品牌車款 |
+
+### 派單嚴格度
+
+| 代號 | 說明 |
+|------|------|
+| `EXACT` | 必須是這個車型 |
+| `MIN` | 最低需求，可派更高等級（大車可接小車單） |
+| `ANY` | 任意車型 |
+
+### 車牌類型
+
+| 代號 | 說明 |
+|------|------|
+| `RENTAL` | R 牌（租賃車）— 預設，所有派單接受 |
+| `TAXI` | T 牌（計程車）— 僅當 `Order.allowTaxiPlate = true` 才收到派單 |
+
+### 程式碼規則
+
+1. **必須** 從 `@/lib/vehicle` import 所有車型相關物件
+2. **禁止** 在程式碼中硬編碼任何車型字串（包括 'small'、'5人座'、'small_suv' 等）
+3. **禁止** 重複定義 `VEHICLE_LABELS` 或類似 mapping
+4. 處理外部輸入（API body、AI 解析、LINE 訊息）一律走 `normalizeVehicleInput()`
+5. 顯示車型中文一律使用 `VEHICLE_LABELS[vehicleType]`
+6. 判斷司機可否接單一律使用 `isVehicleCompatible()`
+
+### 新增車型步驟
+
+1. 在 `src/lib/vehicle/types.ts` 加入 enum 值
+2. 在 `src/lib/vehicle/labels.ts` 加入中文標籤
+3. 在 `src/lib/vehicle/capacity.ts` 加入 spec
+4. 在 `src/lib/vehicle/parser-dictionary.ts` 加入常見寫法字典
+5. 修改 Prisma schema 的 `VehicleType` enum 並跑 migration
+6. 如有需要，在 ESLint 規則中將新代號加入「合法清單」
+
+### CUSTOM 訂單特別說明
+
+選擇 CUSTOM 時需同時填寫 `customVehicleNote`（自由文字描述）。CUSTOM 訂單由派單方手動指派，不會自動派給標準車型司機。
+
+### 向後相容
+
+- `src/lib/vehicle-compat.ts` — 向後相容 re-export，Phase 3 後逐漸移除
+- `src/types/index.ts` — VehicleType re-export 即將移除，新程式碼請從 `@/lib/vehicle` import

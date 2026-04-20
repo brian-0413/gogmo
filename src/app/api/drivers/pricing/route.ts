@@ -5,6 +5,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUserFromToken } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { VehicleType } from '@/lib/vehicle'
 
 // GET /api/drivers/pricing
 export async function GET(req: NextRequest) {
@@ -53,7 +54,7 @@ export async function POST(req: NextRequest) {
     if (typeof price !== 'number' || price < 0) {
       return NextResponse.json({ success: false, error: '價格需為正數' }, { status: 400 })
     }
-    if (!['small', 'suv', 'van9'].includes(vehicleType)) {
+    if (![VehicleType.SEDAN_5, VehicleType.SUV_5, VehicleType.VAN_9].includes(vehicleType)) {
       return NextResponse.json({ success: false, error: '無效的車型' }, { status: 400 })
     }
 

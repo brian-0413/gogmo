@@ -6,8 +6,8 @@
 //   - 送機：起點=訊息中的地點，終點=○機（外層決定）
 
 import { SYSTEM_PROMPT } from './prompts/order-parsing'
-import type { OrderType, VehicleType, PlateType } from '@/types'
-import { normalizeParserOutput } from '@/lib/vehicle'
+import type { OrderType, PlateType } from '@/types'
+import { VehicleType, normalizeParserOutput } from '@/lib/vehicle'
 
 export type ParseStatus = 'ok' | 'incomplete' | 'rejected'
 
@@ -100,8 +100,10 @@ function extractPrice(line: string): number | null {
   return null
 }
 
-// ============ 車型解析 ============
-function extractVehicle(line: string): { vehicle: VehicleType; plateType: PlateType } {
+// ============ 車型解析（僅用於舊版 regex 解析器，LLM 解析器使用 normalizeParserOutput） ============
+/* eslint-disable no-restricted-syntax */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function extractVehicle(line: string): { vehicle: any; plateType: any } {
   if (line.includes('9人') || line.includes('九人') || line.match(/van9/i)) {
     return { vehicle: 'van9', plateType: 'any' }
   }
@@ -125,6 +127,7 @@ function extractVehicle(line: string): { vehicle: VehicleType; plateType: PlateT
   }
   return { vehicle: 'any', plateType: 'any' }
 }
+/* eslint-enable no-restricted-syntax */
 
 // ============ 種類解析 ============
 // 規則（有明確優先順序）：

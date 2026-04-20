@@ -6,8 +6,9 @@ import { Pencil, Trash2, User, Check, X } from 'lucide-react'
 import { formatOrderNo } from '@/lib/utils'
 import { ProgressBar } from '@/components/driver/ProgressBar'
 import { DocumentViewerModal } from './DocumentViewerModal'
-import { TYPE_TAG_STYLE, STATUS_TAG_STYLE, TYPE_LABELS, STATUS_LABELS, VEHICLE_LABELS } from '@/lib/constants'
-import type { Order, OrderStatus, OrderType, VehicleType } from '@/types'
+import { VehicleType, VEHICLE_LABELS } from '@/lib/vehicle'
+import { TYPE_TAG_STYLE, STATUS_TAG_STYLE, TYPE_LABELS, STATUS_LABELS } from '@/lib/vehicle-compat'
+import type { Order, OrderStatus, OrderType } from '@/types'
 
 interface DispatcherOrderCardProps {
   order: Order

@@ -48,7 +48,8 @@ export interface Driver {
   isPremium?: boolean
 }
 
-export type VehicleSizeType = 'small_sedan' | 'small_suv' | 'van7' | 'van9'
+// VehicleSizeType 已廢除，請使用 @/lib/vehicle 的 VehicleType
+// export type VehicleSizeType = 'small_sedan' | 'small_suv' | 'van7' | 'van9'
 
 export interface Dispatcher {
   id: string

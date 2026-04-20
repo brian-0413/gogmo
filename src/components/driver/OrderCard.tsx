@@ -7,8 +7,9 @@ import { zhTW } from 'date-fns/locale'
 import { User, Package, FileText, ChevronDown, ChevronUp, Send, Sparkles } from 'lucide-react'
 import { useState } from 'react'
 import { formatOrderNo } from '@/lib/utils'
-import { TYPE_COLORS, VEHICLE_LABELS, TYPE_LABELS, TRANSFER_FEE_RATE } from '@/lib/constants'
-import type { OrderType, VehicleType, Order } from '@/types'
+import { VEHICLE_LABELS, TYPE_COLORS, TYPE_LABELS, TRANSFER_FEE_RATE } from '@/lib/vehicle-compat'
+import type { OrderType, Order } from '@/types'
+import type { VehicleType } from '@/lib/vehicle'
 
 export type { Order } from '@/types'
 
@@ -38,7 +39,7 @@ function getTimeUrgency(scheduledTime: string | Date): "urgent" | "soon" | "norm
 function OrderCard({ order, onAccept, onView, onTransferRequest, onCancel, onDispatchToHall, onSmartSchedule, showActions = true, compact = false, isNew = false, transferLoading = null }: OrderCardProps) {
   const scheduledDate = typeof order.scheduledTime === 'string' ? parseISO(order.scheduledTime) : order.scheduledTime
   const orderType: OrderType = order.type || 'pending'
-  const vehicle: VehicleType = order.vehicle || 'any'
+  const vehicle: VehicleType = order.vehicle as VehicleType || 'SEDAN_5'
   const urgency = getTimeUrgency(order.scheduledTime)
   const [notesExpanded, setNotesExpanded] = useState(false)
   const [compactNotesExpanded, setCompactNotesExpanded] = useState(false)
@@ -153,7 +154,7 @@ function OrderCard({ order, onAccept, onView, onTransferRequest, onCancel, onDis
               {TYPE_LABELS[orderType]}
             </span>
             <span className="inline-flex items-center px-3 py-1.5 text-[15px] font-bold font-mono-nums rounded bg-[#F4EFE9] text-[#717171]">
-              {VEHICLE_LABELS[vehicle]}
+              {VEHICLE_LABELS[vehicle as keyof typeof VEHICLE_LABELS]}
               {order.plateType && order.plateType !== 'any' ? ` (${order.plateType}牌)` : ''}
             </span>
             {order.kenichiRequired && (

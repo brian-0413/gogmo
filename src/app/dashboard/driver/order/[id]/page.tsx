@@ -10,9 +10,10 @@ import { format } from 'date-fns'
 import { zhTW } from 'date-fns/locale'
 import { ArrowLeft, Phone, Clock, MapPin, User, Package } from 'lucide-react'
 import { formatOrderNo } from '@/lib/utils'
-import { TYPE_LABELS, TYPE_COLORS, VEHICLE_LABELS } from '@/lib/constants'
+import { VEHICLE_LABELS as NEW_VEHICLE_LABELS, VehicleType } from '@/lib/vehicle'
+import { TYPE_LABELS, TYPE_COLORS } from '@/lib/vehicle-compat'
 import { CANCELLATION_FEE_RATE } from '@/lib/constants'
-import type { Order, OrderType, VehicleType } from '@/types'
+import type { Order, OrderType } from '@/types'
 
 export default function OrderDetailPage() {
   const { user, token, isLoading } = useAuth()
@@ -180,7 +181,7 @@ export default function OrderDetailPage() {
               {orderTypeLabel}
             </span>
             <span className="inline-flex items-center px-3 py-1.5 text-[15px] font-bold font-mono-nums rounded bg-[#F4EFE9] text-[#717171]">
-              {VEHICLE_LABELS[order.vehicle as VehicleType] ?? '待確認'}
+              {NEW_VEHICLE_LABELS[order.vehicle as VehicleType] ?? '待確認'}
             </span>
             {order.kenichiRequired && (
               <span className="inline-flex items-center px-3 py-1.5 text-[15px] font-bold font-mono-nums rounded bg-[#F3E8FF] text-[#6B21A8]">
