@@ -3,7 +3,8 @@
 import { format, parseISO } from 'date-fns'
 import { zhTW } from 'date-fns/locale'
 import { Sparkles, CheckCircle, AlertTriangle, XCircle, ArrowRight, X, CalendarDays, Clock } from 'lucide-react'
-import { PLATFORM_FEE_RATE } from '@/lib/constants'
+import { PLATFORM_FEE_RATE, TYPE_LABELS } from '@/lib/constants'
+import { VEHICLE_LABELS, normalizeVehicleInput } from '@/lib/vehicle'
 import type { Order } from '@/types'
 
 interface SmartScheduleRecommendation {
@@ -90,17 +91,14 @@ export function SmartSchedulePanel({
     return { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200', icon: AlertTriangle }
   }
 
-  // 車型翻譯
+  // 車型顯示
   const vehicleLabel = (v: string) => {
-    const labels: Record<string, string> = { small: '小車', suv: '休旅', van9: '9人座', any: '任意', any_r: '任意R' }
-    return labels[v] || '待確認'
+    const normalized = normalizeVehicleInput(v)
+    return normalized.vehicleType ? VEHICLE_LABELS[normalized.vehicleType] : '待確認'
   }
 
-  // 種類翻譯
-  const typeLabel = (t: string) => {
-    const labels: Record<string, string> = { pickup: '接機', dropoff: '送機', pickup_boat: '接機(港)', dropoff_boat: '送機(港)', transfer: '接駁', charter: '包車' }
-    return labels[t] || t
-  }
+  // 種類顯示
+  const typeLabel = (t: string) => TYPE_LABELS[t as keyof typeof TYPE_LABELS] ?? t
 
   // 顯示起始訂單的 helper
   const renderOrderBadge = (type: string) => {
