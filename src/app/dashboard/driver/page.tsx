@@ -45,6 +45,7 @@ export default function DriverDashboard() {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<Tab>('available')
   const [availableOrders, setAvailableOrders] = useState<Order[]>([])
+  const [orderMeta, setOrderMeta] = useState<Record<string, { matchReason?: string; connectsTo?: string; travelMinutes?: number }>>({})
   const [myOrders, setMyOrders] = useState<Order[]>([])
   const [balance, setBalance] = useState<BalanceData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -214,14 +215,32 @@ export default function DriverDashboard() {
   const fetchOrders = useCallback(async () => {
     if (!token) return
     try {
-      const [availableRes, myRes] = await Promise.all([
+      const [availableRes, myRes, smartRes] = await Promise.all([
         fetch('/api/orders?status=PUBLISHED', { headers: { Authorization: `Bearer ${token}` } }),
         fetch('/api/orders?myOrders=true', { headers: { Authorization: `Bearer ${token}` } }),
+        fetch('/api/driver/orders/smart-sort', { headers: { Authorization: `Bearer ${token}` } }),
       ])
       const availableData = await availableRes.json()
       const myData = await myRes.json()
+      const smartData = await smartRes.json()
+
       if (availableData.success) setAvailableOrders(availableData.data.orders || [])
       if (myData.success) setMyOrders(myData.data.orders || [])
+
+      // 儲存 smart-sort 附加資訊（matchReason / connectsTo）
+      if (smartData.success && smartData.data?.orders) {
+        const meta: Record<string, { matchReason?: string; connectsTo?: string; travelMinutes?: number }> = {}
+        for (const item of smartData.data.orders) {
+          if (item.matchReason) {
+            meta[item.order.id] = {
+              matchReason: item.matchReason,
+              connectsTo: item.connectsTo ?? undefined,
+              travelMinutes: item.travelMinutes ?? undefined,
+            }
+          }
+        }
+        setOrderMeta(meta)
+      }
     } catch (error) { console.error('Failed to fetch orders:', error) }
     finally { setLoading(false) }
   }, [token])
@@ -785,7 +804,7 @@ export default function DriverDashboard() {
                   <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
                     {filteredAvailableOrders.map((order, index) => (
                       <div key={order.id} className="animate-cardEntry" style={{ animationDelay: `${Math.min(index * 40, 400)}ms` }}>
-                        <OrderCard order={order} onAccept={handleAcceptOrder} onDispatchToHall={handleDispatchToHall} showActions={true} isNew={true} />
+                        <OrderCard order={order} onAccept={handleAcceptOrder} onDispatchToHall={handleDispatchToHall} showActions={true} isNew={true} matchReason={orderMeta[order.id]?.matchReason} connectsTo={orderMeta[order.id]?.connectsTo} />
                       </div>
                     ))}
                   </div>

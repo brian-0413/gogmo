@@ -25,6 +25,9 @@ interface OrderCardProps {
   compact?: boolean
   isNew?: boolean
   transferLoading?: string | null
+  /** 銜接提示：來自 smart-sort API */
+  matchReason?: string
+  connectsTo?: string
 }
 
 function getTimeUrgency(scheduledTime: string | Date): "urgent" | "soon" | "normal" {
@@ -36,7 +39,7 @@ function getTimeUrgency(scheduledTime: string | Date): "urgent" | "soon" | "norm
   return "normal"
 }
 
-function OrderCard({ order, onAccept, onView, onTransferRequest, onCancel, onDispatchToHall, onSmartSchedule, showActions = true, compact = false, isNew = false, transferLoading = null }: OrderCardProps) {
+function OrderCard({ order, onAccept, onView, onTransferRequest, onCancel, onDispatchToHall, onSmartSchedule, showActions = true, compact = false, isNew = false, transferLoading = null, matchReason, connectsTo }: OrderCardProps) {
   const scheduledDate = typeof order.scheduledTime === 'string' ? parseISO(order.scheduledTime) : order.scheduledTime
   const orderType: OrderType = order.type || 'pending'
   const vehicle: VehicleType = order.vehicle as VehicleType || 'SEDAN_5'
@@ -128,6 +131,12 @@ function OrderCard({ order, onAccept, onView, onTransferRequest, onCancel, onDis
               {notes}
             </button>
           )
+        )}
+        {matchReason && (
+          <div className="flex items-center gap-1.5 mt-2 text-[12px] text-[#B45309] bg-[#FFF7ED] border border-[#FED7AA] rounded-lg px-3 py-2">
+            <span>💡</span>
+            <span className="font-medium">{matchReason}</span>
+          </div>
         )}
       </div>
     )
