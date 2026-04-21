@@ -5,53 +5,78 @@
 
 ---
 
-## 今日開發（2026-04-18）
+## 今日開發（2026-04-21）
 
-### [完成] 安全與正確性修復（6 項）
+### [完成] 派單方審核司機接單功能
 
-**Branch**: `fix/security-and-correctness-2026-04`
+**Branch**: `main`
 
-**實作內容**：
+**實作內容（7 Tasks）**：
 
-1. **修補 /api/orders driverId 參數 PII 漏洞**
-   - `src/app/api/orders/route.ts` GET handler
-   - DRIVER 只能查詢自己的 driverId，否則 403
-   - DISPATCHER 只能查詢有承接過自己訂單的司機，否則 403
-   - ADMIN 無限制
-   - 新增 status enum 白名單驗證
-
-2. **accept endpoint race condition → 409 Conflict**
+1. **修改 accept route — 司機接單改為 ASSIGNED**
    - `src/app/api/orders/[id]/accept/route.ts`
-   - updateMany 原子搶單已正確實作
-   - 衝突時錯誤碼從 400 改為 409
+   - 司機接單後狀態改為 `ASSIGNED`（等待派單方審核），不再立即扣點
+   - 保留點數門檻檢查、車型相容性檢查、衝突檢查
 
-3. **forgotPassword 生產環境寄送重設密碼郵件**
-   - `src/lib/email.ts`：新增 sendResetPasswordEmail()
-   - `src/lib/auth.ts`：forgotPassword() 在 NODE_ENV=production 時呼叫郵件函式
-   - 開發環境維持 log 行為
+2. **新建 dispatcher-approve API**
+   - `src/app/api/orders/[id]/dispatcher-approve/route.ts`
+   - 派單方同意 → 正式 ACCEPTED + 扣點 + 寫 Transaction 記錄
+   - 使用 prisma.$transaction 確保原子性
 
-4. **login / loginByPlate 補充 accountStatus=REJECTED 檢查**
-   - `src/lib/auth.ts`
-   - 密碼驗證成功後，若帳號為 REJECTED 一律回絕登入
+3. **新建 dispatcher-reject API**
+   - `src/app/api/orders/[id]/dispatcher-reject/route.ts`
+   - 派單方拒絕 → 狀態回到 PUBLISHED + driverId 清空 + 發訊息通知司機
 
-5. **Prisma Schema drift migration**
-   - 刪除錯誤的 migration 鏈（缺少初始建表 migration）
-   - 建立乾淨的 20260418122052_baseline_2026_04 migration
-   - drift 檢查：全部為 CREATE，無 DROP/ALTER/TRUNCATE
-   - 新增 20260418122355_add_messaging_models
+4. **新建 pending-approvals GET API**
+   - `src/app/api/dispatcher/pending-approvals/route.ts`
+   - 取派單方所有 ASSIGNED 訂單，含司機資料及三證
 
-6. **完整即時訊息系統**
-   - Prisma: MessageThread, MessageParticipant, Message 模型
-   - API: threads CRUD, 發送/讀取訊息, 未讀計數
-   - `src/lib/messages.ts`: getOrCreateThread, createSystemMessage, getUnreadCountByUser
-   - 元件: MessageBadge, MessageThreadView
+5. **新建 PendingApprovalCard 元件**
+   - `src/components/dispatcher/PendingApprovalCard.tsx`
+   - 顯示司機姓名（只顯示名）、車號、車型是否符合（✅/❌）、三證（✅/❌）
+   - 同意/拒絕按鈕
+
+6. **派單方行控中心新增待同意 Tab**
+   - `src/app/dashboard/dispatcher/page.tsx`
+   - 新增 `pending-approval` Tab，含紅色 badge 顯示筆數
+   - 每 10 秒自動刷新
+
+7. **lock-orders cron 加入逾時自動取消**
+   - `src/app/api/cron/lock-orders/route.ts`
+   - PUBLISHED 且 scheduledTime + 90分鐘 < now → 自動 CANCELLED
+   - 寬限期可透過 ORDER_EXPIRE_GRACE_MINUTES 環境變數調整
+
+**另修復**：
+- 訂單時間時區問題（datetime-local 無時區被當 UTC 存）
+  - `src/app/api/orders/route.ts` — 使用已 parse 的 scheduledDate
+  - `src/app/api/orders/self-publish/route.ts` — 同樣修正
+- SmartSchedulePanel 車型顯示改用正規化 API（移除硬編碼）
+- SmartSchedulePanel 建議卡片加上 💡 接駁提示框
 
 **Commits**（依序）：
-- `fix(security): 修補 /api/orders driverId 參數權限檢查 + status enum 驗證`
-- `fix(security): accept endpoint 搶單衝突回傳 409 Conflict`
-- `fix(security): forgotPassword 生產環境寄送重設密碼郵件`
-- `fix(security): login 和 loginByPlate 補充 accountStatus=REJECTED 檢查`
-- `fix(infrastructure): 建立乾淨的 Prisma baseline migration`
-- `feat: 新增完整即時訊息系統`
+- `fix: 司機接單改為 ASSIGNED 等待派單方審核`
+- `fix: 移除 accept route 多餘 import 與無用變數`
+- `feat: 新增派單方同意司機接單 API`
+- `feat: 新增派單方拒絕司機接單 API`
+- `feat: 新增派單方待審核訂單查詢 API`
+- `feat: 新增派單方待審核卡片元件`
+- `feat: 派單方行控中心新增待同意 Tab`
+- `fix: 修復派單方待同意 Tab 的 fetch race condition`
+- `fix: handleReject 事後呼叫 fetchOrders 同步訂單列表`
+- `feat: lock-orders cron 加入逾時自動取消邏輯`
+- `fix: 訂單時間時區問題，修復 datetime-local 無時區被當 UTC 存的 bug`
+- `fix: SmartSchedulePanel 車型種類顯示改用正規化 API，移除硬編碼`
+- `feat: SmartSchedulePanel 建議卡片加上 💡 接駁提示框`
 
-**待辦**：push 到 GitHub + 更新此檔案
+---
+
+## 進行中
+
+- 前端手機版 UI 優化（司機端儀表板）
+
+---
+
+## 待辦
+
+- 司機遲到/缺席處理機制
+- LINE 通知整合
