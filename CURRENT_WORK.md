@@ -77,6 +77,8 @@
   - 底部 Nav 同步更新為 5 Tab
   - 移除 selfdispatch / squad tab（移除的小車頭、我的小隊功能）
   - 訊息改為獨立 Tab，移除訊息抽屜 drawer
+  - [完成] Filter pills（全部/接機/送機/包車）
+  - [完成] 訊息按鈕改為導向獨立 messages tab，移除訊息 drawer
 
 ## 待辦
 
