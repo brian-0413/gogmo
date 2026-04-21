@@ -231,14 +231,12 @@ export default function DispatcherDashboard() {
     return () => clearInterval(interval)
   }, [token, fetchOrders, fetchDrivers])
 
-  useEffect(() => {
-    if (token) { fetchPendingApprovals() }
-  }, [token, fetchPendingApprovals])
-
   // 每 10 秒刷新待同意列表
   useEffect(() => {
     if (!token) return
-    const interval = setInterval(fetchPendingApprovals, 10000)
+    const interval = setInterval(() => {
+      fetchPendingApprovals()
+    }, 10000)
     return () => clearInterval(interval)
   }, [token, fetchPendingApprovals])
 
