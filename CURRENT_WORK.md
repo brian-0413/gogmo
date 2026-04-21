@@ -52,6 +52,9 @@
   - `src/app/api/orders/self-publish/route.ts` — 同樣修正
 - SmartSchedulePanel 車型顯示改用正規化 API（移除硬編碼）
 - SmartSchedulePanel 建議卡片加上 💡 接駁提示框
+- AI 解析失敗時錯誤訊息加入筆數提示（`src/lib/ai.ts`）
+- 資料庫 orders 全清空確認（0 筆，DATABASE_URL 問題已排除）
+- `isPremium` 欄位已手動加入資料庫（migrate drift 問題繞過）
 
 **Commits**（依序）：
 - `fix: 司機接單改為 ASSIGNED 等待派單方審核`
