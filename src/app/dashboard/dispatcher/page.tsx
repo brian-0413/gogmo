@@ -422,6 +422,7 @@ export default function DispatcherDashboard() {
       const data = await res.json()
       if (data.success) {
         setPendingApprovals(prev => prev.filter(o => o.id !== orderId))
+        fetchOrders()
       } else {
         alert(data.error || '審核失敗')
       }
