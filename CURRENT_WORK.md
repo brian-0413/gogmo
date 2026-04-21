@@ -72,9 +72,11 @@
 
 ## 進行中
 
-- 前端手機版 UI 優化（司機端儀表板）
-
----
+- 司機端 prototype 實作：重構儀表板為 5 Tab（新接單大廳 / 行程 / 訊息中心 / 帳務 / 個人）
+  - Tab 重新命名：hall / schedule / messages / balance / profile
+  - 底部 Nav 同步更新為 5 Tab
+  - 移除 selfdispatch / squad tab（移除的小車頭、我的小隊功能）
+  - 訊息改為獨立 Tab，移除訊息抽屜 drawer
 
 ## 待辦
 

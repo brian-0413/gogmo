@@ -26,7 +26,7 @@ import { DRIVER_EARNINGS_RATE, CANCELLATION_FEE_RATE, PLATFORM_FEE_RATE, TRANSFE
 import { VehicleType, RequirementLevel, isVehicleCompatible, VEHICLE_LABELS } from '@/lib/vehicle'
 import { ClipboardList, FileText, Wallet, LogOut, Plane, Radio, Inbox, ArrowUpDown, ArrowUp, ArrowDown, Car, Sparkles, Calendar, Sparkle, Users, X, Clock, MessageCircle } from 'lucide-react'
 
-type Tab = 'available' | 'myorders' | 'balance' | 'selfdispatch' | 'squad' | 'profile'
+type Tab = 'hall' | 'schedule' | 'messages' | 'balance' | 'profile'
 type SortKey = 'scheduledTime' | 'price' | 'type'
 type SortDir = 'asc' | 'desc'
 
@@ -43,7 +43,7 @@ const TYPE_SORT_ORDER: Record<string, number> = {
 export default function DriverDashboard() {
   const { user, token, isLoading, logout } = useAuth()
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState<Tab>('available')
+  const [activeTab, setActiveTab] = useState<Tab>('hall')
   const [availableOrders, setAvailableOrders] = useState<Order[]>([])
   const [orderMeta, setOrderMeta] = useState<Record<string, { matchReason?: string; connectsTo?: string; travelMinutes?: number }>>({})
   const [myOrders, setMyOrders] = useState<Order[]>([])
@@ -311,7 +311,7 @@ export default function DriverDashboard() {
           }
         }
         // 接單成功
-        setActiveTab('myorders')
+        setActiveTab('schedule')
         await fetchBalance()
       } else {
         // API 失敗，回滾樂觀更新
@@ -693,11 +693,10 @@ export default function DriverDashboard() {
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex gap-0">
             {[
-              { key: 'available' as Tab, icon: ClipboardList, label: '接單大廳', accent: '#F59E0B', badge: filteredAvailableOrders.length },
-              { key: 'myorders' as Tab, icon: FileText, label: '我的行程', accent: '#F59E0B', badge: myOrders.length },
+              { key: 'hall' as Tab, icon: ClipboardList, label: '接單大廳', accent: '#F59E0B', badge: filteredAvailableOrders.length },
+              { key: 'schedule' as Tab, icon: Calendar, label: '我的行程', accent: '#F59E0B', badge: myOrders.length },
+              { key: 'messages' as Tab, icon: MessageCircle, label: '訊息中心', accent: '#F59E0B', badge: null },
               { key: 'balance' as Tab, icon: Wallet, label: '帳務中心', accent: '#F59E0B', badge: null },
-              { key: 'selfdispatch' as Tab, icon: Sparkle, label: '小車頭', accent: '#FF385C', badge: null },
-              { key: 'squad' as Tab, icon: Users, label: '我的小隊', accent: '#F59E0B', badge: null },
               { key: 'profile' as Tab, icon: Users, label: '個人中心', accent: '#F59E0B', badge: null },
             ].map(({ key, icon: Icon, label, accent, badge }) => (
               <button
@@ -728,8 +727,8 @@ export default function DriverDashboard() {
       {/* Content — 底部留 padding 避免被 Tab Bar 遮住 */}
       <main className="relative z-10 max-w-7xl mx-auto px-3 sm:px-6 py-4 sm:py-6 pb-24 md:pb-6">
 
-        {/* ===== AVAILABLE ORDERS ===== */}
-        {activeTab === 'available' && (
+        {/* ===== HALL ===== */}
+        {activeTab === 'hall' && (
           <>
             {loading ? (
               <div className="text-center py-12">
@@ -814,8 +813,8 @@ export default function DriverDashboard() {
           </>
         )}
 
-        {/* ===== MY ORDERS ===== */}
-        {activeTab === 'myorders' && (
+        {/* ===== SCHEDULE ===== */}
+        {activeTab === 'schedule' && (
           <>
             {/* Calendar */}
             <OrderCalendar
@@ -949,107 +948,14 @@ export default function DriverDashboard() {
         {/* ===== BALANCE ===== */}
         {activeTab === 'balance' && <SettlementTab token={token} balance={balance} balanceStats={balanceStats} />}
 
-        {/* ===== 小車頭 ===== */}
-        {activeTab === 'selfdispatch' && token && (
-          <div>
-            {!user?.driver?.isPremium ? (
-              <div className="text-center py-20 bg-white border border-[#DDDDDD] rounded-2xl">
-                <div className="w-16 h-16 rounded-2xl bg-[#F4EFE9] border border-[#DDDDDD] flex items-center justify-center mx-auto mb-4">
-                  <Sparkle className="w-8 h-8 text-[#D6D3D1]" />
-                </div>
-                <p className="text-[#717171] text-lg font-medium mb-2">小車頭功能僅限 Premium 司機</p>
-                <p className="text-[#A8A29E] text-sm">升級 Premium 解鎖自助發單功能</p>
-              </div>
-            ) : showSelfDispatch ? (
-              <SelfDispatchChat
-                token={token}
-                onSuccess={() => {
-                  setShowSelfDispatch(false)
-                  setActiveTab('myorders')
-                }}
-                onClose={() => setShowSelfDispatch(false)}
-              />
-            ) : (
-              <div>
-                {/* 小車頭功能選擇 */}
-                <div className="grid grid-cols-2 gap-3 mb-4">
-                  <button
-                    onClick={() => setShowSelfDispatch(true)}
-                    className="bg-white border border-[#DDDDDD] rounded-xl p-5 text-center hover:border-[#FF385C] hover:shadow-[0_2px_12px_rgba(255,53,92,0.1)] transition-all"
-                  >
-                    <div className="w-12 h-12 rounded-xl bg-[#FFF3E0] border border-[#F59E0B]/20 flex items-center justify-center mx-auto mb-3">
-                      <Sparkle className="w-6 h-6 text-[#F59E0B]" />
-                    </div>
-                    <p className="text-[14px] font-bold text-[#222222]">自行發單</p>
-                    <p className="text-[12px] text-[#717171] mt-1">將空車時間發布到接單大廳</p>
-                  </button>
-                  <button
-                    onClick={() => setQrSubTab('qr')}
-                    className="bg-white border border-[#DDDDDD] rounded-xl p-5 text-center hover:border-[#FF385C] hover:shadow-[0_2px_12px_rgba(255,53,92,0.1)] transition-all"
-                  >
-                    <div className="w-12 h-12 rounded-xl bg-[#FFF3E0] border border-[#F59E0B]/20 flex items-center justify-center mx-auto mb-3">
-                      <Sparkle className="w-6 h-6 text-[#FF385C]" />
-                    </div>
-                    <p className="text-[14px] font-bold text-[#222222]">QR 貴賓單</p>
-                    <p className="text-[12px] text-[#717171] mt-1">分享連結讓貴賓直接預訂</p>
-                  </button>
-                </div>
-
-                {/* QR 貴賓單面板（3 子面板） */}
-                <div>
-                  {/* 子面板 Tab */}
-                  <div className="flex gap-1 p-1 bg-[#F4EFE9] border border-[#DDDDDD] rounded-xl mb-4">
-                    {[
-                      { key: 'qr' as const, label: '我的 QR 單' },
-                      { key: 'pricing' as const, label: '報價設定' },
-                      { key: 'customers' as const, label: '客戶資料庫' },
-                    ].map(tab => (
-                      <button
-                        key={tab.key}
-                        onClick={() => setQrSubTab(tab.key)}
-                        className={`flex-1 py-2.5 text-[13px] font-bold rounded-lg transition-all ${
-                          qrSubTab === tab.key
-                            ? 'bg-white text-[#FF385C] shadow-sm border border-[#DDDDDD]'
-                            : 'text-[#717171] hover:text-[#222222]'
-                        }`}
-                      >
-                        {tab.label}
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* 子面板內容 */}
-                  {qrSubTab === 'qr' && (
-                    <QRPricingPanel
-                      token={token}
-                      driverId={user.driver?.id || ''}
-                      licensePlate={driverProfile?.licensePlate || ''}
-                    />
-                  )}
-                  {qrSubTab === 'pricing' && (
-                    <QRPricingPanel
-                      token={token}
-                      driverId={user.driver?.id || ''}
-                      licensePlate={driverProfile?.licensePlate || ''}
-                    />
-                  )}
-                  {qrSubTab === 'customers' && (
-                    <DriverCustomers token={token} />
-                  )}
-                </div>
-              </div>
-            )}
+        {/* ===== MESSAGES ===== */}
+        {activeTab === 'messages' && (
+          <div className="space-y-4">
+            <div className="bg-white border border-[#DDDDDD] rounded-2xl p-6">
+              <h2 className="text-lg font-bold text-[#222222] mb-4">訊息中心</h2>
+              <MessageThreadView />
+            </div>
           </div>
-        )}
-
-        {/* ===== 我的小隊 ===== */}
-        {activeTab === 'squad' && token && (
-          <SquadTab token={token} driverId={user.driver?.id || ''} />
-        )}
-
-        {/* ===== 個人中心 ===== */}
-        {activeTab === 'profile' && token && (
-          <ProfileTab token={token} />
         )}
 
         {/* ===== 請求小隊支援對話框 ===== */}
@@ -1078,37 +984,48 @@ export default function DriverDashboard() {
         <div className="flex h-16">
           {/* 接單大廳 */}
           <button
-            onClick={() => setActiveTab('available')}
+            onClick={() => setActiveTab('hall')}
             className="flex-1 flex flex-col items-center justify-center gap-1 relative"
           >
             <div className="relative">
-              <ClipboardList className={`w-6 h-6 ${activeTab === 'available' ? 'text-[#F59E0B]' : 'text-[#71717A]'}`} />
+              <ClipboardList className={`w-6 h-6 ${activeTab === 'hall' ? 'text-[#F59E0B]' : 'text-[#71717A]'}`} />
               {filteredAvailableOrders.length > 0 && (
                 <span className="absolute -top-1 -right-1.5 min-w-[17px] h-[17px] px-0.5 rounded-full bg-[#F59E0B] text-white text-[10px] font-bold font-mono-nums flex items-center justify-center leading-none">
                   {filteredAvailableOrders.length > 99 ? '99+' : filteredAvailableOrders.length}
                 </span>
               )}
             </div>
-            <span className={`text-[11px] font-medium leading-none ${activeTab === 'available' ? 'text-[#F59E0B]' : 'text-[#71717A]'}`}>
+            <span className={`text-[11px] font-medium leading-none ${activeTab === 'hall' ? 'text-[#F59E0B]' : 'text-[#71717A]'}`}>
               接單
             </span>
           </button>
 
           {/* 我的行程 */}
           <button
-            onClick={() => setActiveTab('myorders')}
+            onClick={() => setActiveTab('schedule')}
             className="flex-1 flex flex-col items-center justify-center gap-1 relative"
           >
             <div className="relative">
-              <FileText className={`w-6 h-6 ${activeTab === 'myorders' ? 'text-[#F59E0B]' : 'text-[#71717A]'}`} />
+              <Calendar className={`w-6 h-6 ${activeTab === 'schedule' ? 'text-[#F59E0B]' : 'text-[#71717A]'}`} />
               {myOrders.length > 0 && (
                 <span className="absolute -top-1 -right-1.5 min-w-[17px] h-[17px] px-0.5 rounded-full bg-[#F59E0B]/20 text-[#F59E0B] text-[10px] font-bold font-mono-nums flex items-center justify-center leading-none">
                   {myOrders.length > 99 ? '99+' : myOrders.length}
                 </span>
               )}
             </div>
-            <span className={`text-[11px] font-medium leading-none ${activeTab === 'myorders' ? 'text-[#F59E0B]' : 'text-[#71717A]'}`}>
+            <span className={`text-[11px] font-medium leading-none ${activeTab === 'schedule' ? 'text-[#F59E0B]' : 'text-[#71717A]'}`}>
               行程
+            </span>
+          </button>
+
+          {/* 訊息中心 */}
+          <button
+            onClick={() => setActiveTab('messages')}
+            className="flex-1 flex flex-col items-center justify-center gap-1 relative"
+          >
+            <MessageCircle className={`w-6 h-6 ${activeTab === 'messages' ? 'text-[#F59E0B]' : 'text-[#71717A]'}`} />
+            <span className={`text-[11px] font-medium leading-none ${activeTab === 'messages' ? 'text-[#F59E0B]' : 'text-[#71717A]'}`}>
+              訊息
             </span>
           </button>
 
@@ -1123,24 +1040,13 @@ export default function DriverDashboard() {
             </span>
           </button>
 
-          {/* 小車頭（Premium only） */}
+          {/* 個人中心 */}
           <button
-            onClick={() => user?.driver?.isPremium ? setActiveTab('selfdispatch') : null}
-            className={`flex-1 flex flex-col items-center justify-center gap-1 relative ${!user?.driver?.isPremium ? 'opacity-40' : ''}`}
-          >
-            <Sparkle className={`w-6 h-6 ${activeTab === 'selfdispatch' ? 'text-[#FF385C]' : 'text-[#71717A]'}`} />
-            <span className={`text-[11px] font-medium leading-none ${activeTab === 'selfdispatch' ? 'text-[#FF385C]' : 'text-[#71717A]'}`}>
-              小車頭
-            </span>
-          </button>
-
-          {/* 我的小隊 */}
-          <button
-            onClick={() => setActiveTab('squad')}
+            onClick={() => setActiveTab('profile')}
             className="flex-1 flex flex-col items-center justify-center gap-1 relative"
           >
-            <Users className={`w-6 h-6 ${activeTab === 'squad' ? 'text-[#F59E0B]' : 'text-[#71717A]'}`} />
-            <span className={`text-[11px] font-medium leading-none ${activeTab === 'squad' ? 'text-[#F59E0B]' : 'text-[#71717A]'}`}>
+            <Users className={`w-6 h-6 ${activeTab === 'profile' ? 'text-[#F59E0B]' : 'text-[#71717A]'}`} />
+            <span className={`text-[11px] font-medium leading-none ${activeTab === 'profile' ? 'text-[#F59E0B]' : 'text-[#71717A]'}`}>
               我的
             </span>
           </button>
