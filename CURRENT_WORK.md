@@ -81,6 +81,9 @@
   - [完成] 訊息按鈕改為導向獨立 messages tab，移除訊息 drawer
   - [完成] SettlementTab 改為點數/行程雙 Tab（廢除摺疊）
   - [完成] ProfileTab 加入深色模式切換設定區塊
+  - [完成] OrderCard Premium 金邊 + Urgent 倒數計時
+  - [完成] 訊息中心整合未讀 badge（底部 Nav + Tab Header）
+  - [完成] Balance Tab 頂部「可用點數/待結算」橫幅
 
 ## 待辦
 
