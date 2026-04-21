@@ -222,7 +222,7 @@ export async function POST(
             { status: 'ASSIGNED', driverId },
           ],
         },
-        data: { driverId, status: 'ASSIGNED' },
+        data: { driverId, status: 'ACCEPTED' },
       })
       if (claim.count === 0) {
         throw new Error('此訂單已被其他司機接走')
