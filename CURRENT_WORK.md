@@ -79,6 +79,8 @@
   - 訊息改為獨立 Tab，移除訊息抽屜 drawer
   - [完成] Filter pills（全部/接機/送機/包車）
   - [完成] 訊息按鈕改為導向獨立 messages tab，移除訊息 drawer
+  - [完成] SettlementTab 改為點數/行程雙 Tab（廢除摺疊）
+  - [完成] ProfileTab 加入深色模式切換設定區塊
 
 ## 待辦
 
