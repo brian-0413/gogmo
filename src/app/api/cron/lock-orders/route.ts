@@ -96,11 +96,33 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // 逾時自動取消：PUBLISHED 且 scheduledTime + 寬限期 < now 的訂單
+    const EXPIRE_GRACE_MINUTES = parseInt(process.env.ORDER_EXPIRE_GRACE_MINUTES ?? '90')
+    const expireThreshold = new Date(now.getTime() - EXPIRE_GRACE_MINUTES * 60 * 1000)
+
+    const expiredOrders = await prisma.order.findMany({
+      where: {
+        status: 'PUBLISHED',
+        scheduledTime: { lt: expireThreshold },
+      },
+      select: { id: true, dispatcherId: true },
+    })
+
+    for (const order of expiredOrders) {
+      await prisma.$transaction(async (tx) => {
+        await tx.order.update({
+          where: { id: order.id },
+          data: { status: 'CANCELLED' },
+        })
+      })
+    }
+    const expiredCount = expiredOrders.length
+
     return NextResponse.json({
       success: true,
       message: 'Lock orders cron completed',
       lockedCount: orderIds.length,
-      expiredCount: pendingTransfers.length,
+      expiredCount,
     })
   } catch (error) {
     console.error('Lock orders cron error:', error)
