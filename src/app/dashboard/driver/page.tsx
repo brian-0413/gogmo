@@ -110,6 +110,19 @@ export default function DriverDashboard() {
     return () => clearInterval(timer)
   }, [])
 
+  // 深色模式：初始化並監聽變化
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const stored = localStorage.getItem('darkMode')
+    if (stored !== null) setDarkMode(stored === 'true')
+    else setDarkMode(false)
+  }, [])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    document.documentElement.classList.toggle('dark', darkMode)
+  }, [darkMode])
+
   // 請求小隊支援對話框
   const [transferDialog, setTransferDialog] = useState<{ open: boolean; orderId: string | null; order: Order | null }>({
     open: false,
