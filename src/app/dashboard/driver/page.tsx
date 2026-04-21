@@ -969,7 +969,10 @@ export default function DriverDashboard() {
         {activeTab === 'messages' && (
           <div className="space-y-4">
             <div className="bg-white border border-[#DDDDDD] rounded-2xl p-6">
-              <h2 className="text-lg font-bold text-[#222222] mb-4">訊息中心</h2>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-bold text-[#222222]">訊息中心</h2>
+                <MessageBadge />
+              </div>
               <MessageThreadView />
             </div>
           </div>
@@ -1045,7 +1048,10 @@ export default function DriverDashboard() {
             onClick={() => setActiveTab('messages')}
             className="flex-1 flex flex-col items-center justify-center gap-1 relative"
           >
-            <MessageCircle className={`w-6 h-6 ${activeTab === 'messages' ? 'text-[#F59E0B]' : 'text-[#71717A]'}`} />
+            <div className="relative">
+              <MessageCircle className={`w-6 h-6 ${activeTab === 'messages' ? 'text-[#F59E0B]' : 'text-[#71717A]'}`} />
+              <MessageBadge />
+            </div>
             <span className={`text-[11px] font-medium leading-none ${activeTab === 'messages' ? 'text-[#F59E0B]' : 'text-[#71717A]'}`}>
               訊息
             </span>
