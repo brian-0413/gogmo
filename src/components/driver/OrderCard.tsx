@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/Button'
 import { format, parseISO, differenceInMinutes } from 'date-fns'
 import { zhTW } from 'date-fns/locale'
 import { User, Package, FileText, ChevronDown, ChevronUp, Send, Sparkles } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { formatOrderNo } from '@/lib/utils'
 import { VEHICLE_LABELS, TYPE_COLORS, TYPE_LABELS, TRANSFER_FEE_RATE } from '@/lib/vehicle-compat'
 import type { OrderType, Order } from '@/types'
@@ -46,6 +46,21 @@ function OrderCard({ order, onAccept, onView, onTransferRequest, onCancel, onDis
   const urgency = getTimeUrgency(order.scheduledTime)
   const [notesExpanded, setNotesExpanded] = useState(false)
   const [compactNotesExpanded, setCompactNotesExpanded] = useState(false)
+  // Urgent countdown
+  const [countdown, setCountdown] = useState('')
+  useEffect(() => {
+    if (urgency !== 'urgent') return
+    const update = () => {
+      const diff = differenceInMinutes(scheduledDate, new Date())
+      if (diff <= 0) { setCountdown('已超时'); return }
+      const h = Math.floor(diff / 60)
+      const m = diff % 60
+      setCountdown(h > 0 ? `距 ${h}小時${m}分` : `距 ${m}分`)
+    }
+    update()
+    const t = setInterval(update, 60000)
+    return () => clearInterval(t)
+  }, [scheduledDate, urgency])
   const notes = order.notes || order.note || order.rawText
   const orderNo = formatOrderNo(scheduledDate, order.orderSeq)
   const typeBadgeColor = TYPE_COLORS[orderType]
@@ -143,9 +158,13 @@ function OrderCard({ order, onAccept, onView, onTransferRequest, onCancel, onDis
   }
 
   return (
-    <div className={`bg-white border border-[#DDDDDD] rounded-xl overflow-hidden transition-all duration-200 hover:shadow-[0_2px_12px_rgba(0,0,0,0.08)] ${isNew ? 'animate-cardEntry' : ''}`}>
-      {/* Top accent stripe for new orders */}
-      {isNew && (
+    <div className={`bg-white border rounded-xl overflow-hidden transition-all duration-200 hover:shadow-[0_2px_12px_rgba(0,0,0,0.08)] ${isNew ? 'animate-cardEntry' : ''} ${order.isPremium ? 'border-[#FFD700] shadow-[0_0_12px_rgba(255,215,0,0.3)]' : 'border-[#DDDDDD]'}`}>
+      {/* Premium gold top stripe */}
+      {order.isPremium && (
+        <div className="h-0.5 bg-gradient-to-r from-[#FFD700] via-[#FFF8DC] to-[#FFD700]" />
+      )}
+      {/* Urgent red top stripe */}
+      {!order.isPremium && isNew && (
         <div className="h-0.5 bg-gradient-to-r from-[#FF385C] via-[#FF385C]/50 to-[#FF385C]" />
       )}
 
@@ -179,6 +198,11 @@ function OrderCard({ order, onAccept, onView, onTransferRequest, onCancel, onDis
           </div>
           <div className="flex items-center gap-1.5 flex-shrink-0">
             <OrderStatusBadge status={order.status} />
+            {urgency === 'urgent' && (
+              <span className="inline-flex items-center px-2 py-1 text-[11px] font-bold rounded bg-[#EF4444] text-white animate-pulse">
+                {countdown}
+              </span>
+            )}
             {order.status === 'ACCEPTED' && order.transferStatus && order.transferStatus !== 'pending' && (
               <span className="inline-flex items-center px-2 py-1 text-[11px] font-bold rounded bg-[#FFF3E0] text-[#B45309]">
                 等待小隊支援
