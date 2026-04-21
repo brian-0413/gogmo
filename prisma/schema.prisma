@@ -311,6 +311,7 @@ model Order {
   // 肯驛系統
   kenichiRequired Boolean     @default(false) // 是否需要肯驛系統
   isSelfPublish    Boolean     @default(false) // 司機自助發單
+  isPremium         Boolean     @default(false) // Premium 加價單
 
   // 轉帳狀態
   transferStatus   String     @default("pending") // pending / completed
