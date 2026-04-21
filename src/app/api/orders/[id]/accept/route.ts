@@ -223,7 +223,7 @@ export async function POST(
             { status: 'ASSIGNED', driverId },
           ],
         },
-        data: { driverId, status: 'ACCEPTED' },
+        data: { driverId, status: 'ASSIGNED' },
       })
       if (claim.count === 0) {
         throw new Error('此訂單已被其他司機接走')
@@ -245,36 +245,9 @@ export async function POST(
         })
       }
 
-      await tx.driver.update({
-        where: { id: driverId },
-        data: { balance: driver.balance - platformFee },
-      })
-
-      await tx.transaction.create({
-        data: {
-          orderId: id,
-          driverId,
-          amount: -platformFee,
-          type: 'PLATFORM_FEE',
-          status: 'SETTLED',
-          description: `接單平台費 (5%) - 訂單 #${id.slice(0, 8)}`,
-        },
-      })
-
       if (!updatedOrder) throw new Error('此訂單已被其他司機接走')
       return updatedOrder
     })
-
-    // 建立訊息對話線並發送系統訊息
-    if (updated.dispatchers && updated.dispatchers.length > 0 && updated.driverId) {
-      const dispatcherId = updated.dispatchers[0].dispatcherId
-      const { id: threadId } = await getOrCreateThread(dispatcherId, updated.driverId)
-      const timeStr = new Date(order.scheduledTime).toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' })
-      await createSystemMessage(
-        threadId,
-        `司機已接單：「${order.pickupLocation} → ${order.dropoffLocation}」於 ${timeStr}，金額 NT$${order.price.toLocaleString()}`
-      )
-    }
 
     const platformFee = Math.floor(order.price * PLATFORM_FEE_RATE)
 
