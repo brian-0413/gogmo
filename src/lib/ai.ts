@@ -420,7 +420,8 @@ ${text}
 
   if (!response || !response.ok) {
     const error = response ? await response.text() : lastError?.message
-    throw new Error(`Anthropic API error: ${response?.status ?? 'network'} - ${error}`)
+    const lineCount = (text.match(/\n/g) || []).length + 1
+    throw new Error(`Anthropic API error: ${response?.status ?? 'network'} - ${error}（解析 ${lineCount} 筆訂單，超過模型輸出上限，請減少筆數分批解析）`)
   }
 
   const data = await response.json()
