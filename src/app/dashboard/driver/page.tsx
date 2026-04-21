@@ -61,6 +61,7 @@ export default function DriverDashboard() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [sortKey, setSortKey] = useState<SortKey>('scheduledTime')
   const [sortDir, setSortDir] = useState<SortDir>('asc')
+  const [hallFilter, setHallFilter] = useState<'all' | 'pickup' | 'dropoff' | 'charter'>('all')
   // 智慧排班結果狀態
   const [scheduleResult, setScheduleResult] = useState<{
     driverStatus?: { dailyOrderCount: number; dailyOrderLimit: number; canAcceptMore: boolean }
@@ -167,6 +168,15 @@ export default function DriverDashboard() {
         (o as any).vehicleRequirement as RequirementLevel || RequirementLevel.ANY
       )
     )
+    // 種類過濾
+    if (hallFilter !== 'all') {
+      orders = orders.filter(o => {
+        if (hallFilter === 'pickup') return o.type === 'pickup' || o.type === 'pickup_boat'
+        if (hallFilter === 'dropoff') return o.type === 'dropoff' || o.type === 'dropoff_boat'
+        if (hallFilter === 'charter') return o.type === 'charter' || o.type === 'transfer'
+        return true
+      })
+    }
     orders = [...orders].sort((a, b) => {
       if (sortKey === 'price') {
         return sortDir === 'asc' ? a.price - b.price : b.price - a.price
@@ -181,7 +191,7 @@ export default function DriverDashboard() {
       return sortDir === 'asc' ? aTime - bTime : bTime - aTime
     })
     return orders
-  }, [availableOrders, driverVehicle, sortKey, sortDir])
+  }, [availableOrders, driverVehicle, sortKey, sortDir, hallFilter])
 
   useEffect(() => {
     if (!isLoading && (!user || user.role !== 'DRIVER')) router.push('/login')
@@ -736,38 +746,35 @@ export default function DriverDashboard() {
               </div>
             ) : (
               <>
-                {/* 排序工具列 */}
-                <div className="flex items-center justify-between mb-4 gap-3">
-                  {/* 車型範圍提示 */}
-                  <div className="flex items-center gap-2">
-                    <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-[#F5F4F0] border border-[#DDDDDD] rounded-lg">
-                      <Car className="w-3.5 h-3.5 text-[#717171]" />
-                      <span className="text-[12px] text-[#717171]">
-                        您的車型：<span className="font-bold text-[#222222]">{VEHICLE_LABELS[driverProfile?.vehicleType as VehicleType] || driverProfile?.vehicleType || '未設定'}</span>
-                      </span>
-                      <span className="text-[11px] text-[#A8A29E]">
-                        （顯示 {filteredAvailableOrders.length} / {availableOrders.length} 單）
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1.5 sm:hidden">
-                      <span className="text-[13px] font-bold text-[#222222] font-mono-nums">{filteredAvailableOrders.length}</span>
-                      <span className="text-[12px] text-[#717171]">筆可接</span>
-                    </div>
-                  </div>
-                  {/* 排序按鈕 */}
-                  <div className="flex items-center gap-1">
-                    <ArrowUpDown className="w-3.5 h-3.5 text-[#717171] flex-shrink-0" />
-                    <span className="text-[11px] text-[#717171] mr-1 hidden sm:inline">排序：</span>
+                {/* Filter Pills */}
+                <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-1">
+                  {[
+                    { key: 'all' as const, label: '全部' },
+                    { key: 'pickup' as const, label: '接機' },
+                    { key: 'dropoff' as const, label: '送機' },
+                    { key: 'charter' as const, label: '包車' },
+                  ].map(f => (
+                    <button
+                      key={f.key}
+                      onClick={() => setHallFilter(f.key)}
+                      className={`flex-shrink-0 px-4 py-2 rounded-full text-[13px] font-bold transition-all ${
+                        hallFilter === f.key
+                          ? 'bg-[#F59E0B] text-white shadow-[0_2px_8px_rgba(245,158,11,0.3)]'
+                          : 'bg-white border border-[#DDDDDD] text-[#717171] hover:border-[#F59E0B] hover:text-[#B45309]'
+                      }`}
+                    >
+                      {f.label}
+                    </button>
+                  ))}
+                  <div className="ml-auto flex-shrink-0 flex items-center gap-2">
+                    <ArrowUpDown className="w-3.5 h-3.5 text-[#717171]" />
+                    <span className="text-[11px] text-[#717171] hidden sm:inline">排序：</span>
                     {SORT_OPTIONS.map(opt => (
                       <button
                         key={opt.key}
                         onClick={() => {
-                          if (sortKey === opt.key) {
-                            setSortDir(d => d === 'asc' ? 'desc' : 'asc')
-                          } else {
-                            setSortKey(opt.key)
-                            setSortDir('asc')
-                          }
+                          if (sortKey === opt.key) setSortDir(d => d === 'asc' ? 'desc' : 'asc')
+                          else { setSortKey(opt.key); setSortDir('asc') }
                         }}
                         className={`flex items-center gap-0.5 px-2 py-1 rounded text-[12px] font-medium transition-colors ${
                           sortKey === opt.key
@@ -776,11 +783,20 @@ export default function DriverDashboard() {
                         }`}
                       >
                         {opt.label}
-                        {sortKey === opt.key && (
-                          sortDir === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
-                        )}
+                        {sortKey === opt.key && (sortDir === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}
                       </button>
                     ))}
+                  </div>
+                </div>
+
+                {/* 車型範圍提示（桌面版） */}
+                <div className="hidden sm:flex items-center gap-2 mb-4">
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 bg-[#F5F4F0] border border-[#DDDDDD] rounded-lg">
+                    <Car className="w-3.5 h-3.5 text-[#717171]" />
+                    <span className="text-[12px] text-[#717171]">
+                      您的車型：<span className="font-bold text-[#222222]">{VEHICLE_LABELS[driverProfile?.vehicleType as VehicleType] || driverProfile?.vehicleType || '未設定'}</span>
+                    </span>
+                    <span className="text-[11px] text-[#A8A29E]">（顯示 {filteredAvailableOrders.length} / {availableOrders.length} 單）</span>
                   </div>
                 </div>
 
