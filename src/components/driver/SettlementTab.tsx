@@ -94,6 +94,24 @@ export function SettlementTab({ token, balance, balanceStats }: SettlementTabPro
 
   return (
     <div className="space-y-5">
+      {/* Top balance bar */}
+      <div className="bg-gradient-to-r from-[#1C1917] to-[#2D2A26] rounded-2xl p-5 text-white shadow-lg">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-xs text-[#A8A29E] mb-1">可用點數</p>
+            <p className="text-3xl font-bold font-mono-nums">{balance.balance.toLocaleString()}</p>
+          </div>
+          <div className="w-px h-12 bg-[#A8A29E]/30" />
+          <div>
+            <p className="text-xs text-[#A8A29E] mb-1">待結算</p>
+            <p className="text-3xl font-bold font-mono-nums">
+              {balance.transactions.filter(t => t.status === 'PENDING').length}
+            </p>
+            <p className="text-xs text-[#A8A29E]">筆</p>
+          </div>
+        </div>
+      </div>
+
       {/* Earnings cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         {/* Today */}
