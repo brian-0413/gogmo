@@ -28,8 +28,9 @@ import {
 import Link from 'next/link'
 import { MessageBadge } from '@/components/ui/MessageBadge'
 import { MessageThreadView } from '@/components/ui/MessageThreadView'
+import { PendingApprovalCard } from '@/components/dispatcher/PendingApprovalCard'
 
-type Tab = 'orders' | 'create' | 'review' | 'drivers' | 'settlement'
+type Tab = 'orders' | 'create' | 'review' | 'drivers' | 'settlement' | 'pending-approval'
 
 interface Driver {
   id: string
@@ -69,6 +70,8 @@ export default function DispatcherDashboard() {
   const [createLoading, setCreateLoading] = useState(false)
   const [publishResult, setPublishResult] = useState<{ success: number; failed: number; errors: Array<{ rawText: string; error: string }> } | null>(null)
   const [showMessageDrawer, setShowMessageDrawer] = useState(false)
+  const [pendingApprovals, setPendingApprovals] = useState<any[]>([])
+  const [approvalLoading, setApprovalLoading] = useState(false)
 
   useEffect(() => {
     if (!isLoading && (!user || user.role !== 'DISPATCHER')) {
@@ -201,6 +204,19 @@ export default function DispatcherDashboard() {
     }
   }, [token])
 
+  const fetchPendingApprovals = useCallback(async () => {
+    if (!token) return
+    try {
+      const res = await fetch('/api/dispatcher/pending-approvals', {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      const data = await res.json()
+      if (data.success) setPendingApprovals(data.data.orders)
+    } catch (error) {
+      console.error('Failed to fetch pending approvals:', error)
+    }
+  }, [token])
+
   useEffect(() => {
     if (token) { fetchOrders(); fetchDrivers() }
   }, [token, fetchOrders, fetchDrivers])
@@ -214,6 +230,17 @@ export default function DispatcherDashboard() {
     }, 10000)
     return () => clearInterval(interval)
   }, [token, fetchOrders, fetchDrivers])
+
+  useEffect(() => {
+    if (token) { fetchPendingApprovals() }
+  }, [token, fetchPendingApprovals])
+
+  // 每 10 秒刷新待同意列表
+  useEffect(() => {
+    if (!token) return
+    const interval = setInterval(fetchPendingApprovals, 10000)
+    return () => clearInterval(interval)
+  }, [token, fetchPendingApprovals])
 
   const handleParseBatch = async () => {
     if (!rawText.trim()) return
@@ -367,6 +394,44 @@ export default function DispatcherDashboard() {
     }
   }
 
+  const handleApprove = async (orderId: string) => {
+    setApprovalLoading(true)
+    try {
+      const res = await fetch(`/api/orders/${orderId}/dispatcher-approve`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      })
+      const data = await res.json()
+      if (data.success) {
+        setPendingApprovals(prev => prev.filter(o => o.id !== orderId))
+        fetchOrders()
+      } else {
+        alert(data.error || '審核失敗')
+      }
+    } finally {
+      setApprovalLoading(false)
+    }
+  }
+
+  const handleReject = async (orderId: string) => {
+    setApprovalLoading(true)
+    try {
+      const res = await fetch(`/api/orders/${orderId}/dispatcher-reject`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      })
+      const data = await res.json()
+      if (data.success) {
+        setPendingApprovals(prev => prev.filter(o => o.id !== orderId))
+      } else {
+        alert(data.error || '審核失敗')
+      }
+    } finally {
+      setApprovalLoading(false)
+    }
+  }
+
   if (isLoading || !user) {
     return (
       <div className="min-h-screen bg-[#FAF8F5] flex items-center justify-center">
@@ -463,19 +528,27 @@ export default function DispatcherDashboard() {
               { key: 'create' as Tab, label: '派單中心' },
               { key: 'drivers' as Tab, label: '司機車隊' },
               { key: 'settlement' as Tab, label: '帳務中心' },
+              { key: 'pending-approval' as Tab, label: '待同意' },
             ]).map(tab => (
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
                 className={`px-4 py-2 text-sm rounded-full transition-colors ${
                   activeTab === tab.key
-                    ? 'bg-[#222222] text-white'
+                    ? activeTab === 'pending-approval'
+                      ? 'bg-[#FFF7ED] text-[#B45309]'
+                      : 'bg-[#222222] text-white'
                     : 'bg-transparent text-[#717171] border border-[#DDDDDD] hover:bg-[#F7F7F7]'
                 }`}
               >
                 {tab.label}
                 {tab.key === 'orders' && orders.length > 0 && (
                   <span className="ml-1.5 text-[11px] opacity-70">({orders.length})</span>
+                )}
+                {tab.key === 'pending-approval' && pendingApprovals.length > 0 && (
+                  <span className="ml-1.5 bg-[#FF385C] text-white text-[11px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                    {pendingApprovals.length}
+                  </span>
                 )}
               </button>
             ))}
@@ -687,6 +760,27 @@ export default function DispatcherDashboard() {
 
         {/* ===== SETTLEMENT TAB ===== */}
         {activeTab === 'settlement' && <SettlementTab token={token} />}
+
+        {/* ===== PENDING APPROVAL TAB ===== */}
+        {activeTab === 'pending-approval' && (
+          <div className="space-y-3">
+            {pendingApprovals.length === 0 ? (
+              <div className="text-center py-12 text-[#78716C]">
+                <p className="text-[14px]">目前沒有待審核的接單申請</p>
+              </div>
+            ) : (
+              pendingApprovals.map(order => (
+                <PendingApprovalCard
+                  key={order.id}
+                  order={order}
+                  onApprove={handleApprove}
+                  onReject={handleReject}
+                  loading={approvalLoading}
+                />
+              ))
+            )}
+          </div>
+        )}
       </main>
 
       {/* Publish Result Modal */}
