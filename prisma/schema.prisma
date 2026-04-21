@@ -341,6 +341,10 @@ model Order {
   transfers       OrderTransfer[]
   surgeHistory    OrderSurgeHistory[]
 
+  // 智慧排單用 Zone 標記
+  originZone      String?         // 起點所在 Zone（AnyZone，null 表示無法分類）
+  destinationZone String?         // 終點所在 Zone
+
   @@index([status])
   @@index([isLocked])
   @@index([driverId])
