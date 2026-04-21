@@ -59,6 +59,8 @@ export default function DriverDashboard() {
     licensePlate: string; vehicleType: string; carColor: string
   } | null>(null)
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
+  const [scheduleView, setScheduleView] = useState<'calendar' | 'timeline'>('calendar')
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null)
   const [sortKey, setSortKey] = useState<SortKey>('scheduledTime')
   const [sortDir, setSortDir] = useState<SortDir>('asc')
   const [hallFilter, setHallFilter] = useState<'all' | 'pickup' | 'dropoff' | 'charter'>('all')
@@ -852,6 +854,95 @@ export default function DriverDashboard() {
               selectedDate={selectedDate}
               onSelectDate={setSelectedDate}
             />
+
+            {/* View toggle + Filter header */}
+            <div className="flex items-center justify-between px-1">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setScheduleView('calendar')}
+                  className={`px-3 py-1.5 text-[12px] font-bold rounded-lg transition-all ${
+                    scheduleView === 'calendar' ? 'bg-[#F59E0B] text-white' : 'bg-white border border-[#DDDDDD] text-[#717171]'
+                  }`}
+                >
+                  月曆
+                </button>
+                <button
+                  onClick={() => setScheduleView('timeline')}
+                  className={`px-3 py-1.5 text-[12px] font-bold rounded-lg transition-all ${
+                    scheduleView === 'timeline' ? 'bg-[#F59E0B] text-white' : 'bg-white border border-[#DDDDDD] text-[#717171]'
+                  }`}
+                >
+                  時間軸
+                </button>
+              </div>
+              {selectedDate && (
+                <button
+                  onClick={() => setSelectedDate(null)}
+                  className="text-[12px] text-[#78716C] hover:text-[#222222] underline"
+                >
+                  清除篩選
+                </button>
+              )}
+            </div>
+
+            {/* Timeline view */}
+            {scheduleView === 'timeline' && (
+              <div className="bg-white border border-[#DDDDDD] rounded-xl overflow-hidden">
+                <div className="px-4 py-3 border-b border-[#DDDDDD]">
+                  <h3 className="text-sm font-semibold text-[#1C1917]">時間軸</h3>
+                </div>
+                <div className="p-4 space-y-0">
+                  {myOrders.length === 0 ? (
+                    <p className="text-center text-[#717171] text-sm py-8">目前沒有行程</p>
+                  ) : (
+                    myOrders
+                      .slice()
+                      .sort((a, b) => new Date(a.scheduledTime).getTime() - new Date(b.scheduledTime).getTime())
+                      .map((order, idx) => {
+                        const d = new Date(order.scheduledTime)
+                        const statusColor: Record<string, string> = {
+                          ACCEPTED: '#F59E0B', ARRIVED: '#3B82F6',
+                          IN_PROGRESS: '#0C447C', COMPLETED: '#008A05',
+                        }
+                        const dotColor = statusColor[order.status] || '#DDDDDD'
+                        return (
+                          <button
+                            key={order.id}
+                            onClick={() => router.push(`/dashboard/driver/order/${order.id}`)}
+                            className={`w-full flex items-start gap-3 py-3 border-b border-[#EEEEEE] last:border-0 text-left hover:bg-[#F9F8F6] transition-colors ${
+                              idx === 0 ? '' : ''
+                            }`}
+                          >
+                            {/* Timeline dot + line */}
+                            <div className="flex flex-col items-center flex-shrink-0 pt-1">
+                              <div className="w-3 h-3 rounded-full border-2 border-white shadow-sm" style={{ backgroundColor: dotColor }} />
+                              {idx < myOrders.length - 1 && <div className="w-0.5 flex-1 min-h-[24px] bg-[#DDDDDD]" />}
+                            </div>
+                            {/* Content */}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className="text-[13px] font-bold font-mono-nums text-[#222222]">
+                                  {format(d, 'M/dd (E) HH:mm', { locale: zhTW })}
+                                </span>
+                                <span className="text-[13px] font-bold text-[#FF385C] font-mono-nums">
+                                  NT${order.price}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-1.5 mt-1">
+                                <span className="text-[12px] text-[#717171] truncate">{order.pickupLocation}</span>
+                                <span className="text-[10px] text-[#A8A29E]">→</span>
+                                <span className="text-[12px] text-[#717171] truncate">{order.dropoffLocation}</span>
+                              </div>
+                            </div>
+                            {/* Arrow */}
+                            <span className="text-[#A8A29E] text-[12px] flex-shrink-0 mt-1">›</span>
+                          </button>
+                        )
+                      })
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Filter header */}
             {selectedDate && (
