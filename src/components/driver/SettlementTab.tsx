@@ -44,6 +44,7 @@ export function SettlementTab({ token, balance, balanceStats }: SettlementTabPro
   const [completedOrders, setCompletedOrders] = useState<CompletedOrder[]>([])
   const [completedLoading, setCompletedLoading] = useState(false)
   const [showCompleted, setShowCompleted] = useState(false)
+  const [balanceTab, setBalanceTab] = useState<'points' | 'trips'>('points')
 
   const fetchCompletedOrders = useCallback(async () => {
     if (!token) return
@@ -222,57 +223,64 @@ export function SettlementTab({ token, balance, balanceStats }: SettlementTabPro
         </div>
       </div>
 
-      {/* Transactions */}
+      {/* 帳務記錄 Tab */}
       <div className="bg-white border border-[#DDDDDD] rounded-xl overflow-hidden shadow-sm">
-        <div className="px-5 py-4 border-b border-[#DDDDDD]">
-          <h3 className="text-sm font-semibold text-[#1C1917]">最近交易</h3>
+        <div className="flex gap-1 p-1 bg-[#F4EFE9] border-b border-[#DDDDDD]">
+          <button
+            onClick={() => setBalanceTab('points')}
+            className={`flex-1 py-2.5 text-[13px] font-bold rounded-lg transition-all ${
+              balanceTab === 'points'
+                ? 'bg-white text-[#FF385C] shadow-sm border border-[#DDDDDD]'
+                : 'text-[#717171] hover:text-[#222222]'
+            }`}
+          >
+            點數記錄
+          </button>
+          <button
+            onClick={() => setBalanceTab('trips')}
+            className={`flex-1 py-2.5 text-[13px] font-bold rounded-lg transition-all ${
+              balanceTab === 'trips'
+                ? 'bg-white text-[#FF385C] shadow-sm border border-[#DDDDDD]'
+                : 'text-[#717171] hover:text-[#222222]'
+            }`}
+          >
+            行程記錄
+          </button>
         </div>
-        <div className="p-5">
-          {!balance.transactions || balance.transactions.length === 0 ? (
-            <p className="text-[#78716C] text-center py-8 text-sm">暫無交易記錄</p>
-          ) : (
-            <div className="space-y-3">
-              {balance.transactions.slice(0, 10).map((tx) => {
-                const displayAmount = tx.type === 'RIDE_FARE' ? Math.floor(tx.amount * DRIVER_EARNINGS_RATE) : tx.amount
-                return (
-                  <div key={tx.id} className="flex items-center justify-between py-3 border-b border-[#DDDDDD]/50 last:border-0">
-                    <div>
-                      <p className="text-sm font-medium text-[#1C1917]">{tx.description || tx.type}</p>
-                      <p className="text-xs text-[#78716C] font-mono-nums">
-                        {format(typeof tx.createdAt === 'string' ? parseISO(tx.createdAt) : tx.createdAt, 'yyyy/MM/dd HH:mm')}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className={`text-sm font-bold font-mono-nums ${displayAmount >= 0 ? 'text-[#22C55E]' : 'text-[#EF4444]'}`}>
-                        {displayAmount >= 0 ? '+' : ''}{displayAmount.toLocaleString()}
-                      </p>
-                      <Badge variant={tx.status === 'PENDING' ? 'warning' : 'success'} className="text-[10px] mt-0.5">
-                        {tx.status === 'PENDING' ? '待結算' : '已結算'}
-                      </Badge>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-        </div>
-      </div>
 
-      {/* 已完成行程 */}
-      <div className="bg-white border border-[#DDDDDD] rounded-xl overflow-hidden">
-        <button
-          onClick={() => { setShowCompleted(!showCompleted); if (!showCompleted && completedOrders.length === 0) fetchCompletedOrders() }}
-          className="w-full flex items-center justify-between px-5 py-4 hover:bg-[#F7F7F7] transition-colors"
-        >
-          <div className="flex items-center gap-2">
-            <ClipboardList className="w-4 h-4 text-[#717171]" />
-            <span className="text-sm font-medium text-[#222222]">已完成行程</span>
-            <span className="text-[11px] text-[#717171]">共 {completedOrders.length} 筆</span>
+        {balanceTab === 'points' && (
+          <div className="p-5">
+            {!balance.transactions || balance.transactions.length === 0 ? (
+              <p className="text-[#78716C] text-center py-8 text-sm">暫無交易記錄</p>
+            ) : (
+              <div className="space-y-3">
+                {balance.transactions.slice(0, 20).map((tx) => {
+                  const displayAmount = tx.type === 'RIDE_FARE' ? Math.floor(tx.amount * DRIVER_EARNINGS_RATE) : tx.amount
+                  return (
+                    <div key={tx.id} className="flex items-center justify-between py-3 border-b border-[#DDDDDD]/50 last:border-0">
+                      <div>
+                        <p className="text-sm font-medium text-[#1C1917]">{tx.description || tx.type}</p>
+                        <p className="text-xs text-[#78716C] font-mono-nums">
+                          {format(typeof tx.createdAt === 'string' ? parseISO(tx.createdAt) : tx.createdAt, 'yyyy/MM/dd HH:mm')}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className={`text-sm font-bold font-mono-nums ${displayAmount >= 0 ? 'text-[#22C55E]' : 'text-[#EF4444]'}`}>
+                          {displayAmount >= 0 ? '+' : ''}{displayAmount.toLocaleString()}
+                        </p>
+                        <Badge variant={tx.status === 'PENDING' ? 'warning' : 'success'} className="text-[10px] mt-0.5">
+                          {tx.status === 'PENDING' ? '待結算' : '已結算'}
+                        </Badge>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
           </div>
-          {showCompleted ? <ChevronDown className="w-4 h-4 text-[#717171]" /> : <ChevronRight className="w-4 h-4 text-[#717171]" />}
-        </button>
+        )}
 
-        {showCompleted && (
+        {balanceTab === 'trips' && (
           completedOrders.length === 0 ? (
             <div className="text-center py-8">
               {completedLoading ? (
@@ -297,21 +305,29 @@ export function SettlementTab({ token, balance, balanceStats }: SettlementTabPro
                   const completedAtStr = order.completedAt
                     ? format(typeof order.completedAt === 'string' ? parseISO(order.completedAt) : new Date(order.completedAt), 'MM/dd HH:mm')
                     : '-'
-                  const isTransferred = order.transferStatus === 'completed'
                   return (
                     <tr key={order.id} className="border-t border-[#DDDDDD]">
-                      <td className="py-3 px-4 text-[13px] text-[#717171] font-mono-nums">{completedAtStr}</td>
-                      <td className="py-3 px-4 text-[13px] text-[#717171]">{order.pickupLocation} &rarr; {order.dropoffLocation}</td>
-                      <td className="py-3 px-4 text-right text-[13px] text-[#FF385C] font-bold font-mono-nums">NT${order.price.toLocaleString()}</td>
-                      <td className="py-3 px-4 text-[13px] text-[#717171]">{order.dispatcher?.companyName || '-'}</td>
+                      <td className="py-3 px-4 text-[12px] text-[#717171] font-mono-nums">{completedAtStr}</td>
+                      <td className="py-3 px-4 text-[12px] text-[#1C1917]">
+                        <div className="max-w-[160px]">
+                          <p className="truncate">{order.pickupLocation}</p>
+                          <p className="text-[10px] text-[#A8A29E]">→ {order.dropoffLocation}</p>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 text-right text-[12px] font-bold text-[#222222] font-mono-nums">
+                        NT${order.price.toLocaleString()}
+                      </td>
+                      <td className="py-3 px-4 text-[12px] text-[#717171]">
+                        {order.dispatcher?.companyName || '-'}
+                      </td>
                       <td className="py-3 px-4 text-center">
-                        <span className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-[12px] font-medium ${
-                          isTransferred
-                            ? 'bg-[#E8F5E8] text-[#008A05]'
-                            : 'bg-[#F4EFE9] text-[#717171]'
-                        }`}>
-                          {isTransferred ? '派單人已轉帳' : '派單人尚未轉帳'}
-                        </span>
+                        {order.transferStatus === 'COMPLETED' ? (
+                          <span className="text-[11px] text-[#22C55E] font-medium">已轉帳</span>
+                        ) : order.transferStatus === 'PENDING_SQUAD' ? (
+                          <span className="text-[11px] text-[#F59E0B] font-medium">處理中</span>
+                        ) : (
+                          <span className="text-[11px] text-[#A8A29E]">-</span>
+                        )}
                       </td>
                     </tr>
                   )
