@@ -455,19 +455,56 @@ export default function DriverDashboard() {
     await handleAcceptOrder(orderId)
   }
 
-  // 智慧排班：呼叫新 API
+  // 智慧排班：呼叫新 smart-sort API
   const handleSmartSchedule = async () => {
     if (!token) return
     setScheduleLoading(true)
     setScheduleResult(null)
     setSelectedScheduleOrders([])
     try {
-      const res = await fetch('/api/schedule/recommend', {
+      const res = await fetch('/api/driver/orders/smart-sort', {
         headers: { Authorization: `Bearer ${token}` },
       })
       const data = await res.json()
       if (data.success) {
-        setScheduleResult(data.data)
+        // 将新格式转为 SmartSchedulePanel 兼容格式
+        const result = data.data
+        const recs = (result.recommendations || []).map((r: any) => ({
+          id: r.order.id,
+          orderDate: '',
+          orderSeq: 0,
+          type: r.order.type,
+          vehicle: r.order.vehicleType || r.order.vehicle || 'SEDAN_5',
+          scheduledTime: r.order.scheduledTime,
+          price: r.order.price,
+          pickupLocation: r.order.pickupLocation,
+          dropoffLocation: r.order.dropoffLocation,
+          passengerName: '',
+          passengerCount: 0,
+          luggageCount: 0,
+          flightNumber: '',
+          kenichiRequired: false,
+          reason: r.matchReason || '',
+          tightnessLabel: r.warningFlag === 'DEGRADE_C' ? '距離較遠' : r.warningFlag === 'DEGRADE_B' ? '同區域' : '可接',
+          tightnessLevel: r.warningFlag === 'DEGRADE_C' ? 'tight' : r.warningFlag === 'DEGRADE_B' ? 'ok' : 'comfortable',
+          recommendType: r.order.type?.startsWith('pickup') ? 'dropoff' : 'pickup',
+          waitMinutes: r.travelMinutesFromAnchor ?? undefined,
+          bufferMinutes: undefined,
+          emptyDriveMinutes: undefined,
+        }))
+        setScheduleResult({
+          driverStatus: undefined,
+          currentOrders: result.anchor ? [result.anchor] : [],
+          currentOrder: result.anchor,
+          arriveTime: null,
+          availableCount: result.recommendations?.length || 0,
+          recommendations: recs,
+          mainRecommendations: recs,
+          standbyRecommendations: [],
+          nextRecommendations: [],
+          timeline: buildTimeline(result.anchor, result.recommendations || []),
+          totalIncome: result.recommendations?.reduce((s: number, r: any) => s + (r.order.price || 0), 0) || 0,
+        })
       } else {
         alert(data.error || '查詢失敗')
       }
@@ -478,22 +515,81 @@ export default function DriverDashboard() {
     }
   }
 
+  // 根據錨點訂單與推薦建立時間軸
+  function buildTimeline(anchor: any, recommendations: any[]) {
+    if (!anchor) return []
+    const nodes: any[] = []
+    const anchorTime = new Date(anchor.scheduledTime)
+    nodes.push({
+      time: anchor.scheduledTime,
+      label: `${anchor.type === 'pickup' || anchor.type === 'pickup_boat' ? '接機' : '送機'} ${anchor.pickupLocation} → ${anchor.dropoffLocation}`,
+      orderId: anchor.id,
+      price: anchor.price,
+      isTrigger: true,
+    })
+    for (const rec of recommendations.slice(0, 3)) {
+      nodes.push({
+        time: rec.order.scheduledTime,
+        label: `${rec.order.type === 'pickup' || rec.order.type === 'pickup_boat' ? '接機' : '送機'} ${rec.order.pickupLocation} → ${rec.order.dropoffLocation}`,
+        orderId: rec.order.id,
+        price: rec.order.price,
+        travelMinutes: rec.travelMinutesFromAnchor,
+      })
+    }
+    return nodes
+  }
+
   // 針對特定訂單做智慧排單
   const handleScheduleForOrder = async (orderId: string) => {
     if (!token) return
-    // 記錄起點訂單（用於 SmartSchedulePanel）
     const startOrder = myOrders.find(o => o.id === orderId) || null
     setSelectedOrderForSchedule(startOrder)
     setScheduleLoading(true)
     setScheduleResult(null)
     setSelectedScheduleOrders([])
     try {
-      const res = await fetch(`/api/schedule/recommend?orderId=${orderId}`, {
+      const res = await fetch(`/api/driver/orders/smart-sort?anchorOrderId=${orderId}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       const data = await res.json()
       if (data.success) {
-        setScheduleResult(data.data)
+        const result = data.data
+        const recs = (result.recommendations || []).map((r: any) => ({
+          id: r.order.id,
+          orderDate: '',
+          orderSeq: 0,
+          type: r.order.type,
+          vehicle: r.order.vehicleType || r.order.vehicle || 'SEDAN_5',
+          scheduledTime: r.order.scheduledTime,
+          price: r.order.price,
+          pickupLocation: r.order.pickupLocation,
+          dropoffLocation: r.order.dropoffLocation,
+          passengerName: '',
+          passengerCount: 0,
+          luggageCount: 0,
+          flightNumber: '',
+          kenichiRequired: false,
+          reason: r.matchReason || '',
+          tightnessLabel: r.warningFlag === 'DEGRADE_C' ? '距離較遠' : r.warningFlag === 'DEGRADE_B' ? '同區域' : '可接',
+          tightnessLevel: r.warningFlag === 'DEGRADE_C' ? 'tight' : r.warningFlag === 'DEGRADE_B' ? 'ok' : 'comfortable',
+          recommendType: r.order.type?.startsWith('pickup') ? 'dropoff' : 'pickup',
+          waitMinutes: r.travelMinutesFromAnchor ?? undefined,
+          bufferMinutes: undefined,
+          emptyDriveMinutes: undefined,
+        }))
+        setScheduleResult({
+          driverStatus: undefined,
+          currentOrders: result.anchor ? [result.anchor] : [],
+          currentOrder: result.anchor,
+          arriveTime: null,
+          availableCount: result.recommendations?.length || 0,
+          recommendations: recs,
+          mainRecommendations: recs,
+          standbyRecommendations: [],
+          nextRecommendations: [],
+          timeline: buildTimeline(result.anchor, result.recommendations || []),
+          totalIncome: result.recommendations?.reduce((s: number, r: any) => s + (r.order.price || 0), 0) || 0,
+        })
       } else {
         alert(data.error || '查詢失敗')
       }
