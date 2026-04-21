@@ -84,6 +84,7 @@
   - [完成] OrderCard Premium 金邊 + Urgent 倒數計時
   - [完成] 訊息中心整合未讀 badge（底部 Nav + Tab Header）
   - [完成] Balance Tab 頂部「可用點數/待結算」橫幅
+  - [完成] 深色模式完整實作（localStorage 持久化 + 即時 toggle）
 
 ## 待辦
 
