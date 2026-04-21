@@ -3,7 +3,6 @@ import { prisma } from '@/lib/prisma'
 import { getUserFromToken } from '@/lib/auth'
 import { ApiResponse } from '@/types'
 import { PLATFORM_FEE_RATE } from '@/lib/constants'
-import { getOrCreateThread, createSystemMessage } from '@/lib/messages'
 import { isVehicleCompatible, VehicleType } from '@/lib/vehicle'
 
 // ─── 衝突檢查 ─────────────────────────────────────────
@@ -249,15 +248,9 @@ export async function POST(
       return updatedOrder
     })
 
-    const platformFee = Math.floor(order.price * PLATFORM_FEE_RATE)
-
     return NextResponse.json<ApiResponse>({
       success: true,
-      data: {
-        order: updated,
-        platformFee,
-        newBalance: updated.driver?.balance,
-      },
+      data: { order: updated },
     })
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
