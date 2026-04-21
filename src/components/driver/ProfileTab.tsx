@@ -3,10 +3,11 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
-import { Edit2, Check, X, Eye, Upload, FileText, CreditCard, Wallet } from 'lucide-react'
+import { Edit2, Check, X, Eye, Upload, FileText, CreditCard, Wallet, Settings, Moon, Sun } from 'lucide-react'
 
 interface ProfileTabProps {
   token: string
+  darkMode?: boolean
 }
 
 interface ProfileData {
@@ -87,7 +88,7 @@ function getDocStatus(expiryDate: string | null | undefined, uploadFailed?: bool
   return 'normal'
 }
 
-export function ProfileTab({ token }: ProfileTabProps) {
+export function ProfileTab({ token, darkMode: darkModeProp }: ProfileTabProps) {
   const [profile, setProfile] = useState<ProfileData | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -99,6 +100,7 @@ export function ProfileTab({ token }: ProfileTabProps) {
   const [saving, setSaving] = useState(false)
   const [saveSuccess, setSaveSuccess] = useState(false)
   const [saveError, setSaveError] = useState('')
+  const [darkMode, setDarkMode] = useState(darkModeProp ?? false)
 
   // Section 3: document upload
   const [uploadingDoc, setUploadingDoc] = useState<string | null>(null)
@@ -728,6 +730,47 @@ export function ProfileTab({ token }: ProfileTabProps) {
             </div>
           </div>
         )}
+
+        {/* 設定區塊 */}
+        <div className="bg-white border border-[#DDDDDD] rounded-xl p-5 shadow-sm">
+          <div className="flex items-center gap-2 mb-4">
+            <Settings className="w-4 h-4 text-[#717171]" />
+            <h3 className="text-sm font-semibold text-[#1C1917]">設定</h3>
+          </div>
+          <div className="space-y-3">
+            {/*  Dark mode toggle */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                {darkMode ? (
+                  <Moon className="w-5 h-5 text-[#717171]" />
+                ) : (
+                  <Sun className="w-5 h-5 text-[#717171]" />
+                )}
+                <div>
+                  <p className="text-sm font-medium text-[#1C1917]">{darkMode ? '深色模式' : '淺色模式'}</p>
+                  <p className="text-xs text-[#717171]">目前呈現的主題</p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  const next = !darkMode
+                  setDarkMode(next)
+                  if (typeof window !== 'undefined') {
+                    document.documentElement.classList.toggle('dark', next)
+                    localStorage.setItem('darkMode', String(next))
+                  }
+                }}
+                className={`relative w-12 h-6 rounded-full transition-colors ${
+                  darkMode ? 'bg-[#F59E0B]' : 'bg-[#DDDDDD]'
+                }`}
+              >
+                <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                  darkMode ? 'translate-x-6' : 'translate-x-0.5'
+                }`} />
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   )

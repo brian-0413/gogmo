@@ -975,6 +975,11 @@ export default function DriverDashboard() {
           </div>
         )}
 
+        {/* ===== PROFILE ===== */}
+        {activeTab === 'profile' && token && (
+          <ProfileTab token={token} darkMode={darkMode} />
+        )}
+
         {/* ===== 請求小隊支援對話框 ===== */}
         {transferDialog.open && transferDialog.order && (
           <TransferRequestForm
