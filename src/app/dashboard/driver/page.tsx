@@ -100,6 +100,7 @@ export default function DriverDashboard() {
   const [currentTime, setCurrentTime] = useState(new Date())
   const [, setTick] = useState(0)
   const [showMessageDrawer, setShowMessageDrawer] = useState(false)
+  const [darkMode, setDarkMode] = useState(false)
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -654,7 +655,7 @@ export default function DriverDashboard() {
                   <p className="text-xs text-[#78716C] hidden sm:block">{driverProfile?.licensePlate || '未設定車牌'}</p>
                 </div>
                 <button
-                  onClick={() => setShowMessageDrawer(true)}
+                  onClick={() => setActiveTab('messages')}
                   className="relative p-2 rounded-xl hover:bg-[#F7F7F7] transition-colors btn-physics"
                   aria-label="訊息"
                 >
