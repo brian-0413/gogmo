@@ -308,6 +308,15 @@ model Order {
 
   note            String?      // 派單方自填備註
 
+  // 智慧解析新增欄位
+  contactName      String?    // 聯絡人姓名
+  specialRequests  String?    // 特殊需求（安全座椅、舉牌、行李上樓等）
+  pickupAddresses  String[]   // 起點陣列（含加點）
+  dropoffAddresses String[]   // 終點陣列（含加點）
+  originalMessage  String?    @db.Text  // 派單方貼上的原始訊息
+  parsedByAI       Boolean    @default(false)  // 是否由 AI 解析生成
+  parseConfidence  Json?      // 各欄位解析信心（debug 用）
+
   // 肯驛系統
   kenichiRequired Boolean     @default(false) // 是否需要肯驛系統
   isSelfPublish    Boolean     @default(false) // 司機自助發單
