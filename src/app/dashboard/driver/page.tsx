@@ -539,65 +539,9 @@ export default function DriverDashboard() {
     return nodes
   }
 
-  // 針對特定訂單做智慧排單
-  const handleScheduleForOrder = async (orderId: string) => {
-    if (!token) return
-    const startOrder = myOrders.find(o => o.id === orderId) || null
-    setSelectedOrderForSchedule(startOrder)
-    setScheduleLoading(true)
-    setScheduleResult(null)
-    setSelectedScheduleOrders([])
-    try {
-      const res = await fetch(`/api/driver/orders/smart-sort?anchorOrderId=${orderId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      const data = await res.json()
-      if (data.success) {
-        const result = data.data
-        const recs = (result.recommendations || []).map((r: any) => ({
-          id: r.order.id,
-          orderDate: '',
-          orderSeq: 0,
-          type: r.order.type,
-          vehicle: r.order.vehicleType || r.order.vehicle || 'SEDAN_5',
-          scheduledTime: r.order.scheduledTime,
-          price: r.order.price,
-          pickupLocation: r.order.pickupLocation,
-          dropoffLocation: r.order.dropoffLocation,
-          passengerName: '',
-          passengerCount: 0,
-          luggageCount: 0,
-          flightNumber: '',
-          kenichiRequired: false,
-          reason: r.matchReason || '',
-          tightnessLabel: r.warningFlag === 'DEGRADE_C' ? '距離較遠' : r.warningFlag === 'DEGRADE_B' ? '同區域' : '可接',
-          tightnessLevel: r.warningFlag === 'DEGRADE_C' ? 'tight' : r.warningFlag === 'DEGRADE_B' ? 'ok' : 'comfortable',
-          recommendType: r.order.type?.startsWith('pickup') ? 'dropoff' : 'pickup',
-          waitMinutes: r.travelMinutesFromAnchor ?? undefined,
-          bufferMinutes: undefined,
-          emptyDriveMinutes: undefined,
-        }))
-        setScheduleResult({
-          driverStatus: undefined,
-          currentOrders: result.anchor ? [result.anchor] : [],
-          currentOrder: result.anchor,
-          arriveTime: null,
-          availableCount: result.recommendations?.length || 0,
-          recommendations: recs,
-          mainRecommendations: recs,
-          standbyRecommendations: [],
-          nextRecommendations: [],
-          timeline: buildTimeline(result.anchor, result.recommendations || []),
-          totalIncome: result.recommendations?.reduce((s: number, r: any) => s + (r.order.price || 0), 0) || 0,
-        })
-      } else {
-        alert(data.error || '查詢失敗')
-      }
-    } catch {
-      alert('網路錯誤，請稍後再試')
-    } finally {
-      setScheduleLoading(false)
-    }
+  // 針對特定訂單做智慧排單 → 跳轉到智慧排單推薦頁
+  const handleScheduleForOrder = (orderId: string) => {
+    router.push(`/dashboard/driver/smart-match?anchorId=${orderId}`)
   }
 
   // 排班中勾選/取消訂單
