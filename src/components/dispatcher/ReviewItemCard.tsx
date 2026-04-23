@@ -58,8 +58,9 @@ export interface ReviewItemCardEditForm {
   price?: number
   pickupLocation?: string
   dropoffLocation?: string
-  vehicle?: string
-  vehicleCustom?: string
+  note?: string
+  editedVehicle?: string
+  editedVehicleCustom?: string
   kenichi?: boolean
 }
 
@@ -158,13 +159,44 @@ export function ReviewItemCard({
             />
           </div>
           <div className="space-y-2">
-            <label className="text-[13px] text-[#717171] font-medium">下地點</label>
+            <label className="text-[13px] text-[#717171] font-medium">下車地點</label>
             <input
               type="text"
               value={editForm.dropoffLocation || ''}
               onChange={(e) => onEditFormChange({ ...editForm, dropoffLocation: e.target.value })}
               className="w-full bg-white border border-[#DDDDDD] rounded-lg px-4 py-3 text-[#222222] text-[15px] focus:outline-none focus:border-[#222222]"
             />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-[13px] text-[#717171] font-medium">車型</label>
+              <select
+                value={editForm.editedVehicle || ''}
+                onChange={(e) => onEditFormChange({ ...editForm, editedVehicle: e.target.value })}
+                className="w-full bg-white border border-[#DDDDDD] rounded-lg px-3 py-3 text-[#222222] text-[14px] focus:outline-none focus:border-[#222222]"
+              >
+                <option value="任意車">任意車型</option>
+                <option value="小車">5 人座</option>
+                <option value="休旅">5 人座休旅</option>
+                <option value="7人座">7 人座 MPV</option>
+                <option value="9人座">9 人座</option>
+                <option value="任意R">任意 R 牌</option>
+              </select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-[13px] text-[#717171] font-medium">肯驛系統</label>
+              <button
+                type="button"
+                onClick={() => onEditFormChange({ ...editForm, kenichi: !editForm.kenichi })}
+                className={`w-full py-3 rounded-lg text-[14px] font-bold transition-colors border ${
+                  editForm.kenichi
+                    ? 'bg-[#6B21A8] text-white border-[#6B21A8]'
+                    : 'bg-white text-[#717171] border-[#DDDDDD]'
+                }`}
+              >
+                {editForm.kenichi ? '肯驛 ✓' : '一般'}
+              </button>
+            </div>
           </div>
           {item.bucket === 'rejected' && (
             <div className="space-y-2">
