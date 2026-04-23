@@ -76,30 +76,34 @@ export default function OrderEditPage() {
       return
     }
     const result: ParseResult = JSON.parse(stored)
-    setParseResult(result)
 
     const order = result.orders[index]
-    if (order) {
-      setForm({
-        date: order.date || result.date || '',
-        time: order.time || '',
-        vehicleType: (order.vehicleType as VehicleType) || (result.vehicleType as VehicleType) || 'SEDAN_5',
-        vehicleCustom: '',
-        type: order.type || 'pickup',
-        pickupAddresses: order.pickupAddresses?.length ? order.pickupAddresses : [order.pickup || ''],
-        dropoffAddresses: order.dropoffAddresses?.length ? order.dropoffAddresses : [order.dropoff || ''],
-        flightNumber: order.flightNumber || '',
-        price: order.price?.toString() || '',
-        contactName: order.contactName || '',
-        contactPhone: order.contactPhone || '',
-        passengerCount: String(order.passengerCount || 1),
-        luggageCount: String(order.luggageCount || 0),
-        specialRequests: order.specialRequests || [],
-        otherSpecialRequest: order.otherSpecialRequest || '',
-        dispatcherNote: order.dispatcherNote || '',
-      })
+    if (!order) {
+      alert('找不到這張訂單，請回到列表頁')
+      router.replace('/dispatcher/parse/review')
+      return
     }
-  }, [index, router])
+
+    setParseResult(result)
+    setForm({
+      date: order.date || result.date || '',
+      time: order.time || '',
+      vehicleType: (order.vehicleType as VehicleType) || (result.vehicleType as VehicleType) || 'SEDAN_5',
+      vehicleCustom: '',
+      type: order.type || 'pickup',
+      pickupAddresses: order.pickupAddresses?.length ? order.pickupAddresses : [order.pickup || ''],
+      dropoffAddresses: order.dropoffAddresses?.length ? order.dropoffAddresses : [order.dropoff || ''],
+      flightNumber: order.flightNumber || '',
+      price: order.price?.toString() || '',
+      contactName: order.contactName || '',
+      contactPhone: order.contactPhone || '',
+      passengerCount: String(order.passengerCount || 1),
+      luggageCount: String(order.luggageCount || 0),
+      specialRequests: order.specialRequests || [],
+      otherSpecialRequest: order.otherSpecialRequest || '',
+      dispatcherNote: order.dispatcherNote || '',
+    })
+  }, [index])
 
   const updatePickupAddress = (i: number, value: string) => {
     setForm(prev => {
