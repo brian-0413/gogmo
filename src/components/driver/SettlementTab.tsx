@@ -38,9 +38,15 @@ interface SettlementTabProps {
     today: number; thisWeek: number; allTime: number
     todayOrders: number; weekOrders: number; allOrders: number
   }
+  driverProfile?: {
+    name?: string
+    licensePlate: string
+    vehicleType: string
+    carColor: string
+  } | null
 }
 
-export function SettlementTab({ token, balance, balanceStats }: SettlementTabProps) {
+export function SettlementTab({ token, balance, balanceStats, driverProfile }: SettlementTabProps) {
   const [completedOrders, setCompletedOrders] = useState<CompletedOrder[]>([])
   const [completedLoading, setCompletedLoading] = useState(false)
   const [showCompleted, setShowCompleted] = useState(false)
@@ -94,21 +100,42 @@ export function SettlementTab({ token, balance, balanceStats }: SettlementTabPro
 
   return (
     <div className="space-y-5">
-      {/* Top balance bar */}
-      <div className="bg-gradient-to-r from-[#1C1917] to-[#2D2A26] rounded-2xl p-5 text-white shadow-lg">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-xs text-[#A8A29E] mb-1">可用點數</p>
-            <p className="text-3xl font-bold font-mono-nums">{balance.balance.toLocaleString()}</p>
+      {/* Driver info card */}
+      {driverProfile && (
+        <div className="flex items-center gap-3 bg-white border border-[#E5E5E5] rounded-xl p-3 mb-3 dark:bg-[#1C1916] dark:border-[#2E2923]">
+          <div className="w-11 h-11 rounded-xl bg-[#FF385C] text-white flex items-center justify-center text-lg font-black flex-shrink-0">
+            {driverProfile.name?.charAt(0) || '司'}
           </div>
-          <div className="w-px h-12 bg-[#A8A29E]/30" />
-          <div>
-            <p className="text-xs text-[#A8A29E] mb-1">待結算</p>
-            <p className="text-3xl font-bold font-mono-nums">
-              {balance.transactions.filter(t => t.status === 'PENDING').length}
-            </p>
-            <p className="text-xs text-[#A8A29E]">筆</p>
+          <div className="flex-1">
+            <div className="text-[15px] font-black">{driverProfile.name || '司機'}</div>
+            <div className="text-[12px] text-[#717171] mt-0.5">
+              {driverProfile.vehicleType} · {driverProfile.licensePlate}
+            </div>
           </div>
+          <div className="flex items-center gap-1.5 bg-[#F0FDF4] rounded-full px-3 py-1.5">
+            <div className="w-1.5 h-1.5 rounded-full bg-[#008A05]" />
+            <span className="text-[12px] font-bold text-[#008A05]">上線</span>
+          </div>
+        </div>
+      )}
+
+      {/* Two-column stat cards */}
+      <div className="grid grid-cols-2 gap-3">
+        {/* 今日收入 card */}
+        <div className="bg-white border border-[#E5E5E5] rounded-xl p-3.5 dark:bg-[#1C1916] dark:border-[#2E2923]">
+          <div className="text-[11px] text-[#717171] mb-1.5">今日收入</div>
+          <div className="font-mono-nums text-[26px] font-black text-[#FF385C] leading-none mb-1.5">
+            ${balanceStats.today?.toLocaleString() ?? '0'}
+          </div>
+          <div className="text-[11px] text-[#717171]">{balanceStats.todayOrders} 趟完成</div>
+        </div>
+        {/* 帳戶餘額 card */}
+        <div className="bg-white border border-[#E5E5E5] rounded-xl p-3.5 dark:bg-[#1C1916] dark:border-[#2E2923]">
+          <div className="text-[11px] text-[#717171] mb-1.5">帳戶餘額</div>
+          <div className="font-mono-nums text-[26px] font-black leading-none mb-1.5">
+            {balance.balance?.toLocaleString() ?? '0'}
+          </div>
+          <div className="text-[11px] text-[#0C447C] cursor-pointer">點數・儲值 →</div>
         </div>
       </div>
 
