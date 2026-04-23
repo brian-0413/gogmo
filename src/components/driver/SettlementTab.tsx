@@ -6,6 +6,7 @@ import { format, parseISO, startOfDay, startOfWeek } from 'date-fns'
 import { zhTW } from 'date-fns/locale'
 import { Badge } from '@/components/ui/Badge'
 import { DRIVER_EARNINGS_RATE, WEEKLY_SETTLEMENT_TARGET } from '@/lib/constants'
+import { VEHICLE_LABELS } from '@/lib/vehicle'
 
 interface CompletedOrder {
   id: string
@@ -102,14 +103,14 @@ export function SettlementTab({ token, balance, balanceStats, driverProfile }: S
     <div className="space-y-5">
       {/* Driver info card */}
       {driverProfile && (
-        <div className="flex items-center gap-3 bg-white border border-[#E5E5E5] rounded-xl p-3 mb-3">
+        <div className="flex items-center gap-3 bg-white border border-[#E5E5E5] dark:bg-[#1C1916] dark:border-[#2E2923] rounded-xl p-3 mb-3">
           <div className="w-11 h-11 rounded-xl bg-[#FF385C] text-white flex items-center justify-center text-lg font-black flex-shrink-0">
             {driverProfile.name?.charAt(0) || '司'}
           </div>
           <div className="flex-1">
             <div className="text-[15px] font-black">{driverProfile.name || '司機'}</div>
             <div className="text-[12px] text-[#717171] mt-0.5">
-              {driverProfile.vehicleType} · {driverProfile.licensePlate}
+              {VEHICLE_LABELS[driverProfile.vehicleType as keyof typeof VEHICLE_LABELS] || driverProfile.vehicleType} · {driverProfile.licensePlate}
             </div>
           </div>
           <div className="flex items-center gap-1.5 bg-[#F0FDF4] rounded-full px-3 py-1.5">
@@ -122,15 +123,15 @@ export function SettlementTab({ token, balance, balanceStats, driverProfile }: S
       {/* Two-column stat cards */}
       <div className="grid grid-cols-2 gap-3">
         {/* 今日收入 card */}
-        <div className="bg-white border border-[#E5E5E5] rounded-xl p-3.5">
+        <div className="bg-white border border-[#E5E5E5] dark:bg-[#1C1916] dark:border-[#2E2923] rounded-xl p-3.5">
           <div className="text-[11px] text-[#717171] mb-1.5">今日收入</div>
           <div className="font-mono-nums text-[26px] font-black text-[#FF385C] leading-none mb-1.5">
-            ${balanceStats.today?.toLocaleString() ?? '0'}
+            {balanceStats.today?.toLocaleString() ?? '0'}
           </div>
           <div className="text-[11px] text-[#717171]">{balanceStats.todayOrders} 趟完成</div>
         </div>
         {/* 帳戶餘額 card */}
-        <div className="bg-white border border-[#E5E5E5] rounded-xl p-3.5">
+        <div className="bg-white border border-[#E5E5E5] dark:bg-[#1C1916] dark:border-[#2E2923] rounded-xl p-3.5">
           <div className="text-[11px] text-[#717171] mb-1.5">帳戶餘額</div>
           <div className="font-mono-nums text-[26px] font-black leading-none mb-1.5">
             {balance.balance?.toLocaleString() ?? '0'}
