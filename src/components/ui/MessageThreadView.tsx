@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useAuth } from '@/lib/auth-context'
-import { Send, X, MessageCircle } from 'lucide-react'
+import { Send, X, MessageCircle, CheckCheck } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 
 interface Message {
@@ -199,7 +199,50 @@ interface MessageThreadViewProps {
 }
 
 export function MessageThreadView({ className = '' }: MessageThreadViewProps) {
+  const { token } = useAuth()
   const [selectedThreadId, setSelectedThreadId] = useState<string | null>(null)
+  const [unreadCount, setUnreadCount] = useState(0)
+  const [markingRead, setMarkingRead] = useState(false)
+  const [threadListKey, setThreadListKey] = useState(0)
+
+  const fetchUnreadCount = useCallback(async () => {
+    if (!token) return
+    try {
+      const res = await fetch('/api/messages/unread-count', {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      const data = await res.json()
+      if (data.success) setUnreadCount(data.data.count)
+    } catch {
+      // ignore
+    }
+  }, [token])
+
+  useEffect(() => {
+    fetchUnreadCount()
+    const interval = setInterval(fetchUnreadCount, 30000)
+    return () => clearInterval(interval)
+  }, [fetchUnreadCount])
+
+  const handleMarkAllRead = async () => {
+    if (!token || markingRead) return
+    setMarkingRead(true)
+    try {
+      const res = await fetch('/api/messages/read-all', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      const data = await res.json()
+      if (data.success) {
+        setUnreadCount(0)
+        // Refresh thread list to show read state
+        setSelectedThreadId(null)
+        setThreadListKey(k => k + 1)
+      }
+    } finally {
+      setMarkingRead(false)
+    }
+  }
 
   return (
     <div className={`bg-white border border-[#EAEAEA] rounded-2xl overflow-hidden ${className}`}
@@ -208,9 +251,22 @@ export function MessageThreadView({ className = '' }: MessageThreadViewProps) {
         {/* Thread list */}
         <div className="w-1/3 border-r border-[#EAEAEA] overflow-y-auto">
           <div className="px-4 py-3 border-b border-[#EAEAEA]">
-            <span className="text-sm font-bold text-[#222222]">訊息</span>
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-bold text-[#222222]">訊息</span>
+              {unreadCount > 0 && (
+                <button
+                  onClick={handleMarkAllRead}
+                  disabled={markingRead}
+                  className="flex items-center gap-1 text-[11px] font-bold text-[#FF385C] hover:text-[#D70466] transition-colors disabled:opacity-50"
+                >
+                  <CheckCheck className="w-3.5 h-3.5" />
+                  全部已讀
+                </button>
+              )}
+            </div>
           </div>
           <ThreadList
+            key={threadListKey}
             onSelect={id => setSelectedThreadId(id)}
             selectedId={selectedThreadId ?? undefined}
           />
