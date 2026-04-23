@@ -100,10 +100,11 @@ export async function GET(request: NextRequest) {
           const lastCheck = dispatcherLastCheckMap.get(dispatcherId) || new Date(Date.now() - 60000)
 
           // 查詢此派單方所有司機已接的訂單中，有狀態變化的
+          // 包含 ASSIGNED 狀態：司機申請接單後需要即時通知派單方
           const changedOrders = await prisma.order.findMany({
             where: {
               dispatcherId,
-              status: { in: ['IN_PROGRESS', 'ARRIVED', 'PICKED_UP', 'COMPLETED'] },
+              status: { in: ['ASSIGNED', 'IN_PROGRESS', 'ARRIVED', 'PICKED_UP', 'COMPLETED'] },
               updatedAt: { gt: lastCheck },
             },
             include: {

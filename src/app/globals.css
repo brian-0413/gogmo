@@ -82,6 +82,29 @@
   --sidebar-accent-foreground: #717171;
   --sidebar-border: #DDDDDD;
   --sidebar-ring: #FF385C;
+
+  /* gogmo driver prototype design tokens */
+  --gogmo-red: #FF385C;
+  --gogmo-navy: #0C447C;
+  --gogmo-gold: #E8A855;
+  --gogmo-green: #008A05;
+  --gogmo-amber: #B45309;
+  --gogmo-pickup-bg: rgba(42, 111, 175, 0.1);
+  --gogmo-pickup-text: #2A6FAF;
+  --gogmo-pickup-btn: #2A6FAF;
+  --gogmo-dropoff-bg: rgba(196, 122, 43, 0.1);
+  --gogmo-dropoff-text: #C47A2B;
+  --gogmo-dropoff-btn: #C47A2B;
+  --gogmo-charter-bg: rgba(109, 61, 184, 0.1);
+  --gogmo-charter-text: #6D3DB8;
+  --gogmo-charter-btn: #6D3DB8;
+  --gogmo-bg: #FAF7F2;
+  --gogmo-beige: #F4EFE9;
+  --gogmo-card: #ffffff;
+  --gogmo-border: #E5E5E5;
+  --gogmo-text: #1C1917;
+  --gogmo-sub: #717171;
+  --gogmo-gray: #717171;
 }
 
 @theme inline {
@@ -358,4 +381,14 @@ body {
   html {
     @apply font-sans;
   }
+}
+
+/* gogmo dark mode tokens */
+.dark {
+  --gogmo-bg: #0F0D0B;
+  --gogmo-card: #1C1916;
+  --gogmo-border: #2E2923;
+  --gogmo-text: #F0EBE4;
+  --gogmo-sub: #C0B8B0;
+  --gogmo-gray: #8A8078;
 }
