@@ -56,6 +56,7 @@ export default function DriverDashboard() {
     todayOrders: number; weekOrders: number; allOrders: number
   }>({ today: 0, thisWeek: 0, allTime: 0, todayOrders: 0, weekOrders: 0, allOrders: 0 })
   const [driverProfile, setDriverProfile] = useState<{
+    name?: string
     licensePlate: string; vehicleType: string; carColor: string
   } | null>(null)
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
@@ -1092,7 +1093,7 @@ export default function DriverDashboard() {
         )}
 
         {/* ===== BALANCE ===== */}
-        {activeTab === 'balance' && <SettlementTab token={token} balance={balance} balanceStats={balanceStats} />}
+        {activeTab === 'balance' && <SettlementTab token={token} balance={balance} balanceStats={balanceStats} driverProfile={driverProfile} />}
 
         {/* ===== MESSAGES ===== */}
         {activeTab === 'messages' && (
