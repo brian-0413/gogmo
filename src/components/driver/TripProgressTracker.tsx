@@ -22,7 +22,7 @@ const BUTTON_LABELS = [
 ]
 
 export default function TripProgressTracker({ currentStep, onAdvance }: TripProgressTrackerProps) {
-  const isCompleted = currentStep >= 4
+  const isCompleted = currentStep >= 3
   const isNotStarted = currentStep < 0
   const activeStep = isCompleted ? 3 : Math.max(0, currentStep)
 
