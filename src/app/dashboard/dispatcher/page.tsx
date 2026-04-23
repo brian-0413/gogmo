@@ -414,10 +414,10 @@ export default function DispatcherDashboard() {
   const handleReject = async (orderId: string) => {
     setApprovalLoading(true)
     try {
-      const res = await fetch(`/api/orders/${orderId}/dispatcher-reject`, {
+      const res = await fetch(`/api/orders/${orderId}/dispatcher-approve`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({}),
+        body: JSON.stringify({ action: 'reject' }),
       })
       const data = await res.json()
       if (data.success) {
