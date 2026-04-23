@@ -12,7 +12,7 @@ async function getUser(request: NextRequest) {
 
 // POST /api/messages/read-all - Mark all messages as read for the user
 export async function POST(request: NextRequest) {
-  const rateLimitResult = checkRateLimit(request, { type: 'orders' })
+  const rateLimitResult = checkRateLimit(request, { type: 'messages' })
   if (rateLimitResult) return rateLimitResult
 
   try {
