@@ -28,6 +28,8 @@ interface OrderCardProps {
   /** 銜接提示：來自 smart-sort API */
   matchReason?: string
   connectsTo?: string
+  /** 此訂單是否正在等待審核（申請中） */
+  isApplying?: boolean
 }
 
 function getTimeUrgency(scheduledTime: string | Date): "urgent" | "soon" | "normal" {
@@ -39,7 +41,7 @@ function getTimeUrgency(scheduledTime: string | Date): "urgent" | "soon" | "norm
   return "normal"
 }
 
-function OrderCard({ order, onAccept, onView, onTransferRequest, onCancel, onDispatchToHall, onSmartSchedule, showActions = true, compact = false, isNew = false, transferLoading = null, matchReason, connectsTo }: OrderCardProps) {
+function OrderCard({ order, onAccept, onView, onTransferRequest, onCancel, onDispatchToHall, onSmartSchedule, showActions = true, compact = false, isNew = false, transferLoading = null, matchReason, connectsTo, isApplying }: OrderCardProps) {
   const scheduledDate = typeof order.scheduledTime === 'string' ? parseISO(order.scheduledTime) : order.scheduledTime
   const orderType: OrderType = order.type || 'pending'
   const vehicle: VehicleType = order.vehicle as VehicleType || 'SEDAN_5'
@@ -297,10 +299,16 @@ function OrderCard({ order, onAccept, onView, onTransferRequest, onCancel, onDis
                   查看詳情
                 </Button>
               )}
-              {onAccept && order.status === 'PUBLISHED' && (
+              {onAccept && order.status === 'PUBLISHED' && !isApplying && (
                 <Button variant="primary" size="sm" onClick={() => onAccept(order.id)}
                   className="flex-1 py-3 font-bold tracking-wide text-[15px]">
-                  立即接單
+                  申請接單
+                </Button>
+              )}
+              {isApplying && (
+                <Button variant="primary" size="sm" disabled
+                  className="flex-1 py-3 font-bold tracking-wide text-[15px] bg-gray-200 text-gray-500 cursor-wait">
+                  等待審核中
                 </Button>
               )}
             </div>

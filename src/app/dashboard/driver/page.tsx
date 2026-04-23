@@ -296,61 +296,46 @@ export default function DriverDashboard() {
     if (token) { fetchOrders(); fetchBalance(); fetchDriverProfile() }
   }, [token, fetchOrders, fetchBalance, fetchDriverProfile])
 
-  const handleAcceptOrder = async (orderId: string, skipWarning = false) => {
+  const handleApplyOrder = async (orderId: string) => {
     if (!token) return
     if (!user || user.accountStatus !== 'ACTIVE') { alert('帳號尚未通過審核，暫時無法接單'); return }
     if (!user.driver?.bankCode || !user.driver?.bankAccount) { alert('請先至個人中心填寫銀行帳號，以開始接單'); return }
     const order = availableOrders.find(o => o.id === orderId)
     if (!order) return
-    setActionLoading(orderId)
 
-    // 樂觀更新：立刻從大廳移除，加入我的行程
-    setAvailableOrders(prev => prev.filter(o => o.id !== orderId))
-    const acceptedOrder = { ...order, status: 'ACCEPTED' as const }
-    setMyOrders(prev => [acceptedOrder, ...prev])
+    // 標記為申請中，按鈕變成「等待審核中」
+    setAvailableOrders(prev => prev.map(o => o.id === orderId ? { ...o, isApplying: true } : o))
 
     try {
-      const res = await fetch(`/api/orders/${orderId}/accept`, {
+      const res = await fetch(`/api/orders/${orderId}/apply`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ skipWarning }),
       })
       const data = await res.json()
 
+      if (res.status === 409) {
+        // 已被其他司機申請，回滾
+        setAvailableOrders(prev => prev.map(o => o.id === orderId ? { ...o, isApplying: false } : o))
+        alert('此訂單已被其他司機申請')
+        return
+      }
+
       if (data.success) {
-        // 有警告訊息時，先顯示提醒再確認
-        if (data.data?.warning && !skipWarning) {
-          const confirmed = window.confirm(data.data.warning)
-          if (confirmed) {
-            setActionLoading(null)
-            await handleAcceptOrder(orderId, true)
-            return
-          } else {
-            // 使用者取消，回滾
-            setAvailableOrders(prev => [order, ...prev])
-            setMyOrders(prev => prev.filter(o => o.id !== orderId))
-            setActionLoading(null)
-            return
-          }
-        }
-        // 接單成功
-        setActiveTab('schedule')
-        await fetchBalance()
+        // 申請成功，等待後台審核。SSE 會在狀態變為 ASSIGNED 後自動將訂單移出清單
+        // 不需要手動移除，保留 isApplying=true 讓按鈕維持「等待審核中」直到 SSE 刷新
       } else {
-        // API 失敗，回滾樂觀更新
-        setAvailableOrders(prev => [order, ...prev])
-        setMyOrders(prev => prev.filter(o => o.id !== orderId))
-        alert(data.error || '接單失敗')
+        // API 失敗，回滾
+        setAvailableOrders(prev => prev.map(o => o.id === orderId ? { ...o, isApplying: false } : o))
+        alert(data.error || '申請失敗')
       }
     } catch {
-      // 網路錯誤，回滾樂觀更新
-      setAvailableOrders(prev => [order, ...prev])
-      setMyOrders(prev => prev.filter(o => o.id !== orderId))
+      // 網路錯誤，回滾
+      setAvailableOrders(prev => prev.map(o => o.id === orderId ? { ...o, isApplying: false } : o))
       alert('網路錯誤，請稍後再試')
-    } finally { setActionLoading(null) }
+    }
   }
 
   const handleCancelOrder = async (orderId: string) => {
@@ -452,7 +437,7 @@ export default function DriverDashboard() {
       alert('請稍候，訂單可能已被其他人接走')
       return
     }
-    await handleAcceptOrder(orderId)
+    await handleApplyOrder(orderId)
   }
 
   // 智慧排班：呼叫新 smart-sort API
@@ -875,7 +860,7 @@ export default function DriverDashboard() {
                   <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
                     {filteredAvailableOrders.map((order, index) => (
                       <div key={order.id} className="animate-cardEntry" style={{ animationDelay: `${Math.min(index * 40, 400)}ms` }}>
-                        <OrderCard order={order} onAccept={handleAcceptOrder} onDispatchToHall={handleDispatchToHall} showActions={true} isNew={true} matchReason={orderMeta[order.id]?.matchReason} connectsTo={orderMeta[order.id]?.connectsTo} />
+                        <OrderCard order={order} onAccept={handleApplyOrder} onDispatchToHall={handleDispatchToHall} showActions={true} isNew={true} matchReason={orderMeta[order.id]?.matchReason} connectsTo={orderMeta[order.id]?.connectsTo} isApplying={(order as any).isApplying} />
                       </div>
                     ))}
                   </div>
