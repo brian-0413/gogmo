@@ -12,6 +12,9 @@ export const rateLimitConfigs = {
 
   // Relaxed: read operations
   read: { windowMs: 60 * 1000, maxRequests: 120 }, // 120 requests per minute
+
+  // Messages: message operations
+  messages: { windowMs: 60 * 1000, maxRequests: 60 }, // 60 requests per minute
 }
 
 export interface RateLimitOptions {
