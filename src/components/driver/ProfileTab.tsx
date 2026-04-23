@@ -511,7 +511,7 @@ export function ProfileTab({ token, darkMode: darkModeProp }: ProfileTabProps) {
             }
 
             return (
-              <div key={docType} className={`border rounded-xl p-4 ${docStatus.status === 'expiring' ? 'border-[#B45309]' : 'border-[#DDDDDD]'}`}>
+              <div key={docType} className={`border rounded-xl p-4 ${docStatus.status === 'expiring' ? 'border-[#FFE0B2]' : 'border-[#DDDDDD]'}`}>
                 {/* 卡片標題 */}
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-sm font-semibold text-[#222222]">{label}</p>
