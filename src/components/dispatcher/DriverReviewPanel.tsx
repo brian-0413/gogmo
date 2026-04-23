@@ -94,6 +94,15 @@ export function DriverReviewPanel({ order, driver, onApprove, onReject, loading 
     return Object.keys(newErrors).length === 0
   }
 
+  const isFormValid = (): boolean => {
+    if (!contactName.trim()) return false
+    if (!contactPhone.trim()) return false
+    if (isPickup && !flightNumber.trim()) return false
+    if (isDropoff && !pickupAddress.trim()) return false
+    if (isPickup && !dropoffAddress.trim()) return false
+    return true
+  }
+
   const handleApprove = async () => {
     setShowErrors(true)
     if (!validate()) return
@@ -315,7 +324,7 @@ export function DriverReviewPanel({ order, driver, onApprove, onReject, loading 
       <div className="flex gap-3 px-5 py-4 border-t border-[#EBEBEB] bg-[#FAFAFA]">
         <Button
           onClick={handleApprove}
-          disabled={loading}
+          disabled={loading || !isFormValid()}
           className="flex-1 bg-[#22C55E] hover:bg-[#16A34A] text-white text-[15px] font-bold py-2.5 rounded-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Check className="w-4 h-4" />
