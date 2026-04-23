@@ -118,7 +118,7 @@
 
 ---
 
-## 案例 4：套裝訂單（拆成兩筆 + 教育）
+## 案例 4：套裝訂單（強制拆成兩筆 + 教育）
 
 ### 輸入
 ```
@@ -128,7 +128,7 @@
 ```
 
 ### 預期輸出
-**拆成 2 筆獨立訂單**，都標 `bundle_intent: true`：
+**強制拆成 2 筆獨立訂單**（平台不接受套裝），都標 `bundle_split_warning: true`：
 
 ```json
 {
@@ -144,15 +144,15 @@
         "price": { "value": 1800, "confidence": 1.0 },
         "vehicle_type": { "value": "imported", "confidence": 1.0, "raw": "進口車" }
       },
-      "bundle_intent": true,
-      "bundle_ref": "=1-2=",
-      "rewrite_suggestion": "⚠️「一套不拆」是 LINE 時代的權宜寫法\n✏️ 在 gogmo App 上分別建立這 2 筆訂單，再點「綁定派單」按鈕\n📖 為什麼：平台的綁定機制會強制司機接下整套，比文字說明可靠"
+      "bundle_split_warning": true,
+      "original_bundle_ref": "=1-2=",
+      "rewrite_suggestion": "⚠️ 偵測到套裝單寫法（「一套不拆」）\n✏️ 已將這 2 筆訂單自動拆分為獨立訂單\n📖 為什麼：平台不接受套裝派單（成本高、智慧排程更優）\n   如希望司機接整套，建議：\n   1. 把總價平均分配到每筆訂單\n   2. 對其中任一筆使用「一鍵加價」吸引司機"
     },
     {
       "parse_status": "needs_review",
       "fields": { "...": "..." },
-      "bundle_intent": true,
-      "bundle_ref": "=1-2="
+      "bundle_split_warning": true,
+      "original_bundle_ref": "=1-2="
     }
   ]
 }

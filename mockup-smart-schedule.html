@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>智慧排班 Panel — Mockup</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', 'PingFang TC', sans-serif; background: #FAF7F2; color: #222; padding: 20px; }
+  h1 { font-size: 18px; margin-bottom: 20px; color: #111; }
+  h2 { font-size: 14px; color: #666; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .section { background: white; border: 1px solid #DDD; border-radius: 12px; padding: 16px; margin-bottom: 24px; max-width: 560px; }
+  .badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+  .badge-green { background: #ECFDF5; color: #065F46; border: 1px solid #A7F3D0; }
+  .badge-yellow { background: #FFFBEB; color: #92400E; border: 1px solid #FDE68A; }
+  .badge-red { background: #FEF2F2; color: #991B1B; border: 1px solid #FECACA; }
+  .order-card { border: 1px solid #DDD; border-radius: 10px; padding: 12px; margin-bottom: 10px; position: relative; }
+  .order-card.connecting { border-color: #F59E0B; background: #FFF7ED; }
+  .order-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .order-time { font-size: 13px; font-weight: 700; font-family: monospace; }
+  .order-route { font-size: 12px; color: #717171; margin-bottom: 4px; }
+  .order-price { font-size: 16px; font-weight: 700; color: #FF385C; font-family: monospace; }
+  .order-type { font-size: 11px; font-weight: 700; padding: 2px 6px; border-radius: 4px; }
+  .type-pickup { background: #E6F1FB; color: #0C447C; }
+  .type-dropoff { background: #FFF3E0; color: #92400E; }
+  .match-hint { display: flex; align-items: center; gap: 6px; margin-top: 8px; padding: 6px 10px; background: #FFF7ED; border: 1px solid #FED7AA; border-radius: 6px; font-size: 12px; color: #B45309; font-weight: 500; }
+  .match-hint .icon { font-size: 14px; }
+  .timeline { background: #FAFAFA; border: 1px solid #EBEBEB; border-radius: 8px; padding: 12px; margin-bottom: 12px; }
+  .timeline-node { display: flex; align-items: center; gap: 10px; padding: 6px 0; }
+  .timeline-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .dot-primary { background: #F59E0B; }
+  .dot-secondary { background: #0C447C; }
+  .timeline-line { width: 1px; height: 20px; background: #DDD; margin-left: 4px; }
+  .timeline-label { font-size: 12px; color: #222; font-weight: 500; }
+  .timeline-time { font-size: 11px; color: #999; font-family: monospace; margin-left: auto; }
+  .tag-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  .tag { font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; background: #F4EFE9; color: #717171; }
+  .tag-kenchi { background: #F3E8FF; color: #6B21A8; }
+  .section-title { font-size: 13px; font-weight: 700; color: #78716C; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
+  .recommend-list { display: flex; flex-direction: column; gap: 8px; }
+  .rec-card { border: 1px solid #DDD; border-radius: 10px; padding: 10px; cursor: pointer; transition: all 0.15s; }
+  .rec-card:hover { border-color: #F59E0B; background: #FFF9F0; }
+  .rec-card.selected { border-color: #F59E0B; background: #FFF7ED; box-shadow: 0 2px 8px rgba(245,158,11,0.15); }
+  .rec-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+  .rec-order-no { font-size: 12px; font-weight: 700; background: #1C1917; color: #E8A855; padding: 2px 6px; border-radius: 4px; }
+  .rec-price { font-size: 15px; font-weight: 700; color: #FF385C; font-family: monospace; }
+  .rec-time { font-size: 12px; font-weight: 700; font-family: monospace; color: #222; }
+  .rec-route { font-size: 11px; color: #717171; margin: 2px 0; }
+  .rec-tags { display: flex; gap: 4px; margin-top: 4px; flex-wrap: wrap; }
+  .rec-tightness { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; }
+  .tight-green { background: #ECFDF5; color: #065F46; }
+  .tight-yellow { background: #FFFBEB; color: #92400E; }
+  .tight-red { background: #FEF2F2; color: #991B1B; }
+  .rec-reason { font-size: 11px; color: #B45309; font-style: italic; margin-top: 4px; }
+  .rec-check { width: 16px; height: 16px; border: 2px solid #DDD; border-radius: 4px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .rec-check.checked { background: #F59E0B; border-color: #F59E0B; }
+  .rec-check.checked::after { content: '✓'; color: white; font-size: 10px; }
+  .rec-body { display: flex; align-items: flex-start; gap: 8px; }
+  .comment { background: #F0F9FF; border: 1px solid #BAE6FD; border-radius: 6px; padding: 8px 12px; font-size: 12px; color: #0369A1; margin-top: 8px; }
+  .comment strong { font-weight: 700; }
+  .divider { border: none; border-top: 1px dashed #DDD; margin: 16px 0; }
+</style>
+</head>
+<body>
+
+<h1>🎯 智慧排班 Panel — 銜接提示 Mockup</h1>
+
+<div class="section">
+  <h2>A. 銜接提示（接單大廳卡片）</h2>
+  <p style="font-size:12px;color:#999;margin-bottom:12px;">司機視角所見，適用於「接單大廳」訂單卡片</p>
+
+  <!-- 普通訂單（無銜接） -->
+  <div class="order-card">
+    <div class="order-header">
+      <span class="order-type type-pickup">接機</span>
+      <span class="order-time">14:30</span>
+      <span class="order-route">桃園機場第一航廈 → 新北市板橋區</span>
+      <span class="order-price">NT$850</span>
+    </div>
+    <div class="tag-row">
+      <span class="tag">5人座</span>
+      <span class="tag">單號 #0234</span>
+    </div>
+    <!-- 無 matchReason 不顯示 hint -->
+  </div>
+
+  <!-- 銜接訂單（有 matchReason） -->
+  <div class="order-card connecting">
+    <div class="order-header">
+      <span class="order-type type-dropoff">送機</span>
+      <span class="order-time">16:45</span>
+      <span class="order-route">台北市大安區 → 桃園機場第二航廈</span>
+      <span class="order-price">NT$1,200</span>
+    </div>
+    <div class="tag-row">
+      <span class="tag">7人座</span>
+      <span class="tag">單號 #0237</span>
+      <span class="tag-kenchi">肯驛</span>
+    </div>
+    <!-- 💡 銜接提示 -->
+    <div class="match-hint">
+      <span class="icon">💡</span>
+      <span>與你 14:30 的行程相鄰（行車約 25 分）</span>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h2>B. 智慧排班 Panel — 完整視圖</h2>
+  <p style="font-size:12px;color:#999;margin-bottom:12px;">司機點「智慧排班」後的彈出面板</p>
+
+  <!-- Panel Header -->
+  <div style="background:linear-gradient(to right, #FFF7ED, #FFF3E0);border-bottom:1px solid #FFE0B2;padding:12px 16px;border-radius:12px 12px 0 0;">
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span style="font-size:16px;">✨</span>
+      <div>
+        <div style="font-size:14px;font-weight:600;color:#222;">智慧排單推薦</div>
+        <div style="font-size:11px;color:#78716C;">今日已接 2 單，還可接 4 單</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 你目前的行程 -->
+  <div style="padding:12px 16px;border-bottom:1px solid #F0F0F0;">
+    <div class="section-title">你目前的行程</div>
+    <div class="order-card" style="background:#F4EFE9;border:none;margin-bottom:0;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+        <span class="order-type type-pickup">接機</span>
+        <span style="font-size:13px;font-weight:500;">桃園機場第一航廈 → 台北市大安區</span>
+        <span style="margin-left:auto;font-size:14px;font-weight:700;color:#FF385C;font-family:monospace;">NT$850</span>
+      </div>
+      <div style="font-size:11px;color:#717171;">14:30 · 2人 / 2行李 · BR 272</div>
+    </div>
+  </div>
+
+  <!-- 排班時間軸 -->
+  <div style="padding:12px 16px;border-bottom:1px solid #F0F0F0;">
+    <div class="section-title">排班預覽</div>
+    <div class="timeline">
+      <div class="timeline-node">
+        <div class="timeline-dot dot-primary"></div>
+        <div>
+          <div class="timeline-label">接機 桃園機場第一航廈 → 台北市大安區</div>
+          <div class="timeline-time">14:30</div>
+        </div>
+        <span style="margin-left:auto;font-size:11px;color:#FF385C;font-weight:700;font-family:monospace;">NT$850</span>
+      </div>
+      <div style="padding-left:5px;">
+        <div style="width:1px;height:14px;background:#DDD;"></div>
+      </div>
+      <div class="timeline-node">
+        <div class="timeline-dot dot-secondary"></div>
+        <div>
+          <div class="timeline-label" style="color:#717171;">抵達目的地 → 休息 → 前往下個行程</div>
+          <div class="timeline-time" style="color:#A8A29E;">15:40</div>
+        </div>
+        <span style="font-size:10px;color:#78716C;background:#F4EFE9;padding:2px 6px;border-radius:4px;margin-left:auto;">等候 65 分</span>
+      </div>
+      <div style="padding-left:5px;">
+        <div style="width:1px;height:14px;background:#DDD;"></div>
+      </div>
+      <div class="timeline-node">
+        <div class="timeline-dot dot-secondary"></div>
+        <div>
+          <div class="timeline-label">送機 台北市大安區 → 桃園機場第二航廈</div>
+          <div class="timeline-time">16:45</div>
+        </div>
+        <span style="margin-left:auto;font-size:11px;color:#FF385C;font-weight:700;font-family:monospace;">NT$1,200</span>
+      </div>
+    </div>
+
+    <!-- 銜接標章 -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px;">
+      <div style="display:flex;align-items:center;gap:4px;padding:6px 8px;background:#ECFDF5;border:1px solid #A7F3D0;border-radius:6px;font-size:11px;color:#065F46;">
+        <span>✓</span><span><strong>完美銜接</strong><br><span style="font-weight:400;">緩衝充足</span></span>
+      </div>
+      <div style="display:flex;align-items:center;gap:4px;padding:6px 8px;background:#FFFBEB;border:1px solid #FDE68A;border-radius:6px;font-size:11px;color:#92400E;">
+        <span>⚠</span><span><strong>需等候</strong><br><span style="font-weight:400;">30-90分鐘</span></span>
+      </div>
+      <div style="display:flex;align-items:center;gap:4px;padding:6px 8px;background:#FEF2F2;border:1px solid #FECACA;border-radius:6px;font-size:11px;color:#991B1B;">
+        <span>✗</span><span><strong>時間較趕</strong><br><span style="font-weight:400;">請注意</span></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 推薦銜接 -->
+  <div style="padding:12px 16px;">
+    <div class="section-title">推薦銜接</div>
+    <div class="recommend-list">
+
+      <!-- 建議卡片 1（已選） -->
+      <div class="rec-card selected">
+        <div class="rec-header">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <div class="rec-check checked"></div>
+            <span class="rec-order-no">#0237</span>
+            <span class="order-type type-dropoff">送機</span>
+            <span class="tag">7人座</span>
+            <span class="tag-kenchi">肯驛</span>
+          </div>
+          <div style="text-align:right;">
+            <div class="rec-price">NT$1,200</div>
+            <div style="font-size:10px;color:#78716C;font-family:monospace;">平台費 -60 點</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+          <span class="rec-time">16:45</span>
+          <span class="rec-route">台北市大安區 → 桃園機場第二航廈</span>
+        </div>
+        <div class="rec-tags">
+          <span class="rec-tightness tight-green">✓ 完美銜接</span>
+          <span style="font-size:10px;color:#B45309;font-style:italic;">行車約 25 分，緩衝充足</span>
+        </div>
+        <div class="comment">
+          <strong>💡 銜接提示：</strong>與你 <strong>14:30</strong> 的行程相鄰（行車約 25 分）
+        </div>
+      </div>
+
+      <!-- 建議卡片 2（未選） -->
+      <div class="rec-card">
+        <div class="rec-header">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <div class="rec-check"></div>
+            <span class="rec-order-no">#0241</span>
+            <span class="order-type type-pickup">接機</span>
+            <span class="tag">5人座</span>
+          </div>
+          <div style="text-align:right;">
+            <div class="rec-price">NT$680</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+          <span class="rec-time">18:00</span>
+          <span class="rec-route">新北市三重區 → 桃園機場第一航廈</span>
+        </div>
+        <div class="rec-tags">
+          <span class="rec-tightness tight-yellow">⚠ 需要等候</span>
+          <span style="font-size:10px;color:#B45309;font-style:italic;">行車約 40 分</span>
+        </div>
+        <div class="comment" style="background:#F4EFE9;border-color:#E5E5E5;color:#717171;">
+          <strong>💡 銜接提示：</strong>與你 <strong>14:30</strong> 的行程銜接（行車約 40 分）
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 底部操作列 -->
+  <div style="padding:12px 16px;background:#FAFAFA;border-top:1px solid #EBEBEB;border-radius:0 0 12px 12px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <div>
+        <div style="font-size:11px;color:#717171;">已選訂單</div>
+        <div style="font-size:18px;font-weight:700;font-family:monospace;">1 單</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:11px;color:#717171;">總收入預估</div>
+        <div style="font-size:18px;font-weight:700;font-family:monospace;color:#008A05;">NT$2,050</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button style="flex:1;padding:10px;border:1px solid #DDD;border-radius:8px;background:white;font-size:13px;font-weight:600;color:#717171;cursor:not-allowed;">返回</button>
+      <button style="flex:2;padding:10px;border:none;border-radius:8px;background:linear-gradient(to right,#F59E0B,#D97706);color:white;font-size:13px;font-weight:700;cursor:pointer;">確認排單（1單）</button>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h2>修改對照表</h2>
+  <table style="width:100%;border-collapse:collapse;font-size:12px;">
+    <thead>
+      <tr style="background:#F5F4F0;">
+        <th style="text-align:left;padding:8px;border:1px solid #DDD;">位置</th>
+        <th style="text-align:left;padding:8px;border:1px solid #DDD;">修改內容</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="padding:8px;border:1px solid #DDD;font-weight:600;">接單大廳卡片</td>
+        <td style="padding:8px;border:1px solid #DDD;">當 <code>matchReason</code> 存在時，卡片底部顯示 <code>💡 {matchReason}</code>（橙色提示框）</td>
+      </tr>
+      <tr>
+        <td style="padding:8px;border:1px solid #DDD;font-weight:600;">智慧排班 Panel</td>
+        <td style="padding:8px;border:1px solid #DDD;">每張推薦卡片加一行 comment區塊，顯示<code>💡 銜接提示：與你 HH:MM 的行程...</code></td>
+      </tr>
+      <tr>
+        <td style="padding:8px;border:1px solid #DDD;font-weight:600;">smart-sort API</td>
+        <td style="padding:8px;border:1px solid #DDD;">已是膠囊，解法：把 <code>matchReason</code> 附加到 <code>mainRecommendations</code> 內每筆</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+</body>
+</html>

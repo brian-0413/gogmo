@@ -14,6 +14,8 @@ interface DispatcherOrderCardProps {
   order: Order
   token: string | null
   onUpdate: () => void
+  onReview?: () => void
+  isReviewing?: boolean
 }
 
 const AIRPORT_OPTIONS = [
@@ -33,7 +35,7 @@ interface EditForm {
   note: string
 }
 
-export function DispatcherOrderCard({ order, token, onUpdate }: DispatcherOrderCardProps) {
+export function DispatcherOrderCard({ order, token, onUpdate, onReview, isReviewing }: DispatcherOrderCardProps) {
   const scheduledDate = typeof order.scheduledTime === 'string'
     ? parseISO(order.scheduledTime)
     : order.scheduledTime
@@ -293,7 +295,18 @@ export function DispatcherOrderCard({ order, token, onUpdate }: DispatcherOrderC
 
       {/* Action buttons — always visible */}
       <div className="flex gap-2 mt-3">
-        {isImmutable ? (
+        {order.status === 'ASSIGNED' ? (
+          <button
+            onClick={onReview}
+            className={`flex-1 py-2 rounded-lg text-[14px] font-bold flex items-center justify-center gap-1 transition-colors ${
+              isReviewing
+                ? 'bg-[#F4EFE9] text-[#717171] border border-[#DDDDDD]'
+                : 'bg-[#E24B4A] text-white hover:bg-[#C23838]'
+            }`}
+          >
+            {isReviewing ? '收起審查' : '審查'}
+          </button>
+        ) : isImmutable ? (
           <>
             <button
               disabled

@@ -29,6 +29,8 @@ import Link from 'next/link'
 import { MessageBadge } from '@/components/ui/MessageBadge'
 import { MessageThreadView } from '@/components/ui/MessageThreadView'
 import { PendingApprovalCard } from '@/components/dispatcher/PendingApprovalCard'
+import { DriverReviewPanel } from '@/components/dispatcher/DriverReviewPanel'
+import type { DetailedOrderInfo } from '@/components/dispatcher/DriverReviewPanel'
 
 type Tab = 'orders' | 'create' | 'review' | 'drivers' | 'settlement' | 'pending-approval'
 
@@ -72,6 +74,8 @@ export default function DispatcherDashboard() {
   const [showMessageDrawer, setShowMessageDrawer] = useState(false)
   const [pendingApprovals, setPendingApprovals] = useState<any[]>([])
   const [approvalLoading, setApprovalLoading] = useState(false)
+  const [reviewingOrderId, setReviewingOrderId] = useState<string | null>(null)
+  const [reviewLoading, setReviewLoading] = useState(false)
 
   useEffect(() => {
     if (!isLoading && (!user || user.role !== 'DISPATCHER')) {
@@ -544,6 +548,11 @@ export default function DispatcherDashboard() {
                 {tab.key === 'orders' && orders.length > 0 && (
                   <span className="ml-1.5 text-[11px] opacity-70">({orders.length})</span>
                 )}
+                {tab.key === 'orders' && orders.filter(o => o.status === 'ASSIGNED').length > 0 && (
+                  <span className="ml-1.5 bg-[#E24B4A] text-white text-[11px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                    {orders.filter(o => o.status === 'ASSIGNED').length}
+                  </span>
+                )}
                 {tab.key === 'pending-approval' && pendingApprovals.length > 0 && (
                   <span className="ml-1.5 bg-[#FF385C] text-white text-[11px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
                     {pendingApprovals.length}
@@ -636,9 +645,78 @@ export default function DispatcherDashboard() {
               </div>
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-                {orders.map((order) => (
-                  <DispatcherOrderCard key={order.id} order={order} token={token} onUpdate={fetchOrders} />
-                ))}
+                {orders.map((order) => {
+                  if (order.status === 'ASSIGNED') {
+                    const isReviewing = reviewingOrderId === order.id
+                    return (
+                      <div key={order.id} className="contents">
+                        <DispatcherOrderCard
+                          order={order}
+                          token={token}
+                          onUpdate={fetchOrders}
+                          onReview={() => setReviewingOrderId(isReviewing ? null : order.id)}
+                          isReviewing={isReviewing}
+                        />
+                        {isReviewing && order.driver && (
+                          <div className="lg:col-span-2">
+                            <DriverReviewPanel
+                              order={order}
+                              driver={{
+                                name: order.driver.user?.name || '',
+                                phone: order.driver.user?.phone || '',
+                                licensePlate: order.driver.licensePlate,
+                                vehicleType: order.driver.carType,
+                                carColor: order.driver.carColor || '',
+                              }}
+                              onApprove={async (info: DetailedOrderInfo) => {
+                                setReviewLoading(true)
+                                try {
+                                  const res = await fetch(`/api/orders/${order.id}/dispatcher-approve`, {
+                                    method: 'POST',
+                                    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ action: 'approve', ...info }),
+                                  })
+                                  const data = await res.json()
+                                  if (data.success) {
+                                    setReviewingOrderId(null)
+                                    fetchOrders()
+                                  } else {
+                                    alert(data.error || '審核失敗')
+                                  }
+                                } finally {
+                                  setReviewLoading(false)
+                                }
+                              }}
+                              onReject={async () => {
+                                setReviewLoading(true)
+                                try {
+                                  const res = await fetch(`/api/orders/${order.id}/dispatcher-reject`, {
+                                    method: 'POST',
+                                    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({}),
+                                  })
+                                  const data = await res.json()
+                                  if (data.success) {
+                                    setReviewingOrderId(null)
+                                    fetchOrders()
+                                  } else {
+                                    alert(data.error || '審核失敗')
+                                  }
+                                } finally {
+                                  setReviewLoading(false)
+                                }
+                              }}
+                              loading={reviewLoading}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    )
+                  }
+                  return (
+                    <DispatcherOrderCard key={order.id} order={order} token={token} onUpdate={fetchOrders} />
+                  )
+                })}
               </div>
             )}
           </>
