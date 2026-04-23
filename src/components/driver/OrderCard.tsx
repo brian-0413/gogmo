@@ -12,6 +12,18 @@ import { VEHICLE_LABELS, TYPE_COLORS, TYPE_LABELS, TRANSFER_FEE_RATE } from '@/l
 import type { OrderType, Order } from '@/types'
 import type { VehicleType } from '@/lib/vehicle'
 
+// Status color mapping for compact mode badges
+const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
+  COMPLETED:   { bg: '#E8F5E8', text: '#008A05' },
+  IN_PROGRESS: { bg: '#FFF3E0', text: '#B45309' },
+  ACCEPTED:    { bg: '#E8F0FA', text: '#0C447C' },
+  ARRIVED:     { bg: '#E8F0FA', text: '#0C447C' },
+  PICKED_UP:   { bg: '#FFF3E0', text: '#B45309' },
+  PENDING:     { bg: '#F4EFE9', text: '#717171' },
+  PUBLISHED:   { bg: '#F4EFE9', text: '#717171' },
+  ASSIGNED:    { bg: '#FFF3E0', text: '#B45309' },
+}
+
 export type { Order } from '@/types'
 
 interface OrderCardProps {
@@ -106,7 +118,14 @@ function OrderCard({ order, onAccept, onView, onTransferRequest, onCancel, onDis
               </span>
             )}
           </div>
-          <OrderStatusBadge status={order.status} />
+          {order.status && STATUS_COLORS[order.status] && (
+            <span
+              className="text-[11px] font-bold px-2 py-0.5 rounded-full"
+              style={{ backgroundColor: STATUS_COLORS[order.status].bg, color: STATUS_COLORS[order.status].text }}
+            >
+              {order.status === 'ACCEPTED' ? '已接單' : order.status === 'IN_PROGRESS' ? '進行中' : order.status === 'COMPLETED' ? '已完成' : order.status === 'ARRIVED' ? '已抵達' : order.status === 'ASSIGNED' ? '已指派' : order.status}
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-2 mb-2">
           <span className="text-sm font-medium text-[#222222]">
