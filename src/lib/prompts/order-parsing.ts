@@ -81,7 +81,7 @@ LINE 群組訊息中，車型由兩層資訊決定：
 - 含有「配」或「搭」關鍵字 → "系統只接受確定的套裝行程，未確定接送或由要求司機自行搭配之套裝行程，無法刊登。"
 - 含「/綁」關鍵字 → "此為未確定之套裝行程，無法刊登。"
 - 完全無法識別（如整行都是 emoji 無法提取任何資訊）→ "您的訊息無法解析，請修正後再貼"
-- 缺 3 個以上核心欄位（time、pickupLocation、dropoffLocation、price、vehicle）→ "您的訊息無法解析，請修正後再貼"
+- time、pickupLocation、dropoffLocation 三個核心欄位都缺 → "您的訊息無法解析，請修正後再貼"
 
 ## 待補正規則（incomplete）
 滿足以下條件，status 設為 "incomplete"：
