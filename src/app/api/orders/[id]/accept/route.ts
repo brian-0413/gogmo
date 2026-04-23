@@ -95,7 +95,14 @@ export async function POST(
       )
     }
 
-    if (order.status !== 'PUBLISHED' && order.status !== 'ASSIGNED') {
+    if (order.status === 'PUBLISHED') {
+      return NextResponse.json<ApiResponse>(
+        { success: false, error: '請先申請接單' },
+        { status: 400 }
+      )
+    }
+
+    if (order.status !== 'ASSIGNED') {
       return NextResponse.json<ApiResponse>(
         { success: false, error: '此訂單目前無法接單' },
         { status: 400 }
@@ -212,15 +219,13 @@ export async function POST(
         throw new Error(`點數不足，需要 ${platformFee} 點`)
       }
 
-      // 以條件式 updateMany 搶單：僅當訂單仍為 PUBLISHED 或（ASSIGNED 給本司機）時才更新，
+      // 以條件式 updateMany 搶單：僅當訂單仍為 ASSIGNED 給本司機時才更新，
       // 避免兩位司機同時接同一單。
       const claim = await tx.order.updateMany({
         where: {
           id,
-          OR: [
-            { status: 'PUBLISHED' },
-            { status: 'ASSIGNED', driverId },
-          ],
+          status: 'ASSIGNED',
+          driverId,
         },
         data: { driverId, status: 'ACCEPTED' },
       })
