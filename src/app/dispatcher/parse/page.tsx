@@ -183,8 +183,8 @@ export default function DispatcherParsePage() {
         <div className="bg-[#FFF7ED] border border-[#FED7AA] rounded-xl p-4">
           <p className="text-[13px] text-[#B45309]">
             <Sparkles className="w-4 h-4 inline mr-1" />
-            <strong>AI 解析提示：</strong>每行為一張訂單，請用 24 小時制時間、地點、金額。
-            例如：<span className="font-mono">1600 板橋送桃機 1200元</span>
+            <strong>AI 解析提示：</strong>時間（24小時制）/ 種類 + 起迄點 / 金額。
+            例如：<span className="font-mono">1600/桃機接板橋/1200元，或 1400/板橋送松機/1000元</span>
           </p>
         </div>
 
