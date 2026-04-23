@@ -18,7 +18,7 @@ const BUTTON_LABELS = [
   '開始　前往上車地點',
   '抵達　回報已抵達',
   '客上　確認乘客上車',
-  '客下　確認乘客下车',
+  '客下　確認乘客下車',
 ]
 
 export default function TripProgressTracker({ currentStep, onAdvance }: TripProgressTrackerProps) {
