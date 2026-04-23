@@ -7,7 +7,6 @@ import { zhTW } from 'date-fns/locale'
 import { Sparkles, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { useAuth } from '@/lib/auth-context'
-import { normalizeVehicleInput, VEHICLE_LABELS } from '@/lib/vehicle'
 import type { VehicleType } from '@/lib/vehicle'
 
 interface ParseResult {
@@ -18,6 +17,7 @@ interface ParseResult {
 }
 
 interface ParsedOrderItem {
+  orderId: string
   time: string | null
   type: string | null
   pickup: string | null
@@ -28,9 +28,15 @@ interface ParsedOrderItem {
   isConfirmed: boolean
 }
 
+function generateOrderId(date: string, index: number): string {
+  const datePart = date.replace(/-/g, '')
+  const seq = String(index + 1).padStart(3, '0')
+  return `GO-${datePart}-${seq}`
+}
+
 export default function DispatcherParsePage() {
   const router = useRouter()
-  const { token, user } = useAuth()
+  const { token } = useAuth()
   const [rawText, setRawText] = useState('')
   const [defaults, setDefaults] = useState({
     date: format(new Date(), 'yyyy-MM-dd'),
@@ -73,29 +79,15 @@ export default function DispatcherParsePage() {
         return
       }
 
-      // 轉換為 ParseResult 格式，存入 sessionStorage
       const parsed = data.data
 
-      // 轉換 accepted + needsReview → ParsedOrderItem[]
       const items: ParsedOrderItem[] = []
 
+      let idx = 0
       for (const item of parsed.accepted || []) {
         const order = item.order
         items.push({
-          time: order.time,
-          type: order.type,
-          pickup: order.pickupLocation,
-          dropoff: order.dropoffLocation,
-          price: order.price,
-          rawText: order.rawText || order.notes || '',
-          notes: order.notes || '',
-          isConfirmed: true,
-        })
-      }
-
-      for (const item of parsed.needsReview || []) {
-        const order = item.order
-        items.push({
+          orderId: generateOrderId(defaults.date, idx),
           time: order.time,
           type: order.type,
           pickup: order.pickupLocation,
@@ -105,11 +97,28 @@ export default function DispatcherParsePage() {
           notes: order.notes || '',
           isConfirmed: false,
         })
+        idx++
       }
 
-      // rejected 的放最後
+      for (const item of parsed.needsReview || []) {
+        const order = item.order
+        items.push({
+          orderId: generateOrderId(defaults.date, idx),
+          time: order.time,
+          type: order.type,
+          pickup: order.pickupLocation,
+          dropoff: order.dropoffLocation,
+          price: order.price,
+          rawText: order.rawText || order.notes || '',
+          notes: order.notes || '',
+          isConfirmed: false,
+        })
+        idx++
+      }
+
       for (const item of parsed.rejected || []) {
         items.push({
+          orderId: generateOrderId(defaults.date, idx),
           time: null,
           type: null,
           pickup: null,
@@ -119,6 +128,7 @@ export default function DispatcherParsePage() {
           notes: item.reason || '解析失敗',
           isConfirmed: false,
         })
+        idx++
       }
 
       const result: ParseResult = {
@@ -130,14 +140,13 @@ export default function DispatcherParsePage() {
 
       sessionStorage.setItem('parseResult', JSON.stringify(result))
       router.push('/dispatcher/parse/review')
-    } catch (err) {
+    } catch {
       setError('網路錯誤，請稍後再試')
     } finally {
       setLoading(false)
     }
   }, [token, rawText, defaults, isOverLimit, router])
 
-  // 日期選項（今天起 15 天）
   const dateOptions = Array.from({ length: 15 }, (_, i) => {
     const d = addDays(new Date(), i)
     const label = i === 0 ? '（今天）' : i === 1 ? '（明天）' : format(d, '（EEE）', { locale: zhTW })
@@ -162,7 +171,7 @@ export default function DispatcherParsePage() {
         <div className="max-w-2xl mx-auto px-4 py-4">
           <div className="flex items-center gap-3">
             <button onClick={() => router.back()} className="text-[#717171] hover:text-[#222222]">
-              ← 返回
+              返回
             </button>
             <h1 className="text-[20px] font-bold text-[#222222]">智慧解析</h1>
           </div>
