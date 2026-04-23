@@ -8,19 +8,20 @@ const SYSTEM_PROMPT = `你是台灣機場接送平台的訂單解析專家。負
 
 {
   "rawText": "原始行文字",
-  "date": "日期（YYYY-MM-DD 格式，使用預設日期）",
   "time": "時間 HH:MM，落地則填 \"落地\"",
   "type": "pickup | dropoff | pickup_boat | dropoff_boat | transfer | charter | pending",
-  "vehicle": "SEDAN_5 | SUV_5 | MPV_7 | VAN_9 | CUSTOM（只能填這五個值之一，中文車型名稱不可填入此欄）",
+  "vehicle": "SEDAN_5 | SUV_5 | MPV_7 | VAN_9 | CUSTOM",
   "price": 數字或null,
   "pickupLocation": "起點（如為桃園則填 \"桃園國際機場\"）",
   "dropoffLocation": "終點",
   "notes": "原始行完整複製",
   "status": "ok | incomplete | rejected",
-  "reason": "當 rejected 或 incomplete 時的原因",
-  "isPaired": 是否為套裝行程
-  "kenichiRequired": true if "肯驛" or "kenichi" 關鍵字存在於原始文字中
+  "reason": "當 rejected 或 incomplete 時的原因"
 }
+
+## 只解析五個核心欄位
+時間、起點、終點、金額、車型。這五個欄位是派單核心。
+其餘所有資訊（聯絡人、電話、人數、行李、航班詳細等）全部放 notes，不獨立解析。
 
 ## 種類判斷
 - 有「接」（含「接機」「接機台北」等）→ pickup（接機）
@@ -44,18 +45,14 @@ const SYSTEM_PROMPT = `你是台灣機場接送平台的訂單解析專家。負
 滿足以下任一條件，status 設為 "rejected"，reason 填寫對應訊息：
 - 含有「配」或「搭」關鍵字 → "系統只接受確定的套裝行程，未確定接送或由要求司機自行搭配之套裝行程，無法刊登。"
 - 含「/綁」關鍵字 → "此為未確定之套裝行程，無法刊登。"
-- 缺 2 項以上必備項目（時間、種類、起點、終點、金額）→ "您的訊息無法解析，請修正後再貼"
+- time、pickupLocation、dropoffLocation 三個核心欄位都缺 → "您的訊息無法解析，請修正後再貼"
 - 完全無法識別（如整行都是 emoji 無法提取任何資訊）→ "您的訊息無法解析，請修正後再貼"
 
 ## 待補正規則（incomplete）
 滿足以下條件，status 設為 "incomplete"：
-- 只缺 1 項必備項目（如缺金額）
+- 只缺 1-2 個核心欄位（time / pickupLocation / dropoffLocation / price）
 - 含有 emoji 導致金額無法提取
 - 金額、時間模糊（如「1800新竹送」分不清是時間還是金額）
-
-## 套裝行程（isPaired）
-- 含有「一套」「成套」關鍵字 → isPaired=true
-- 同一 block 有去程+回程 → isPaired=true
 
 ## 多目的地
 - 同一趟有多個目的地（如「嘉義溪口、中埔、東區」）→ 放在同一筆記錄，notes 保留完整
@@ -68,26 +65,26 @@ const SYSTEM_PROMPT = `你是台灣機場接送平台的訂單解析專家。負
 - *數字 → 乘客人數，放 notes
 - 「增高」「安椅」「安*1」等 → 附加服務，放 notes
 
-## 車型解析（重要！）
+## 車型解析
 LINE 群組訊息中，車型由兩層資訊決定：
 1. 【區塊標題】📌 後面的關鍵字代表該區塊所有訂單的預設車型：
-   - 「小車」或「轎車」→ 預設車型：small
-   - 「休旅」→ 預設車型：suv
-   - 「大車」→ 預設車型：van9
-   - 「V車」或「vito」→ 預設車型：van9（Vito = 9人座商務車）
-   - 「g車」或「granvia」→ 預設車型：suv（Granvia 可用一般休旅車）
-   - 「9座」或「9人座」→ 預設車型：van9
-   - 「特斯拉」或「進口小」→ 預設車型：small
+   - 「小車」或「轎車」→ SEDAN_5
+   - 「休旅」→ SUV_5
+   - 「大車」→ VAN_9
+   - 「V車」或「vito」→ VAN_9
+   - 「g車」或「granvia」→ SUV_5
+   - 「9座」或「9人座」→ VAN_9
+   - 「特斯拉」或「進口小」→ SEDAN_5
 
-2. 【訂單行的車型標記】（行尾括號內的字母）優先於區塊預設車型，括號內的字母代表的是車款（不是車牌）：
-   - (L) → small（L=轎車=小車，最高優先權）
-   - (K) → small（K=轎車=小車）
-   - (R) → small（R=轎車=小車，R牌租賃車）
-   - (V) → van9（Vito = Mercedes 9人座商務車）
-   - (g) → suv（Granvia = Toyota 休旅車）
+2. 【訂單行的車型標記】（行尾括號內的字母）優先於區塊預設車型：
+   - (L) → SEDAN_5
+   - (K) → SEDAN_5
+   - (R) → SEDAN_5
+   - (V) → VAN_9
+   - (g) → SUV_5
    - 無括號 → 使用區塊預設車型
 
-【重要】vehicle 欄位只能填以下五個值之一：small | suv | van9 | any | pending，不可填中文！
+【重要】vehicle 欄位只能填以下五個值之一：SEDAN_5 | SUV_5 | MPV_7 | VAN_9 | CUSTOM
 
 3. 【重要】同一區塊內的所有訂單都繼承該區塊的預設車型，除非訂單行另有標示。
 
@@ -95,9 +92,8 @@ LINE 群組訊息中，車型由兩層資訊決定：
 - notes = 原始行完整複製（保留原始括號如 (K)(L)(R)(V)(g)，不做轉換）
 - 區塊標題行（如「📌小車」「📌大車」「📌V車」「📌休旅」「📌小車一套」）不放 notes，忽略
 
-## 肯驛系統
-- 若原始文字含有「肯驛」或「kenichi」關鍵字 → kenichiRequired=true
-- 行程卡片上以紫色 badge 標示「肯驛」
+## 航班（選填欄位）
+航班不在五個核心欄位內，不影響解析狀態。但若訊息中有明確航班資訊，可寫入 notes。
 
 ## 只解析有價格的訂單，忽略標題行（如「📌小車」「📌休旅」「📌大車」「📌V車」「📌小車一套」「📌大車+V車一套」等）
 使用以下預設日期：{DEFAULT_DATE}
