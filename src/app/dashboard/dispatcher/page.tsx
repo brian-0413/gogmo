@@ -664,12 +664,13 @@ export default function DispatcherDashboard() {
                 <textarea
                   value={rawText}
                   onChange={(e) => setRawText(e.target.value)}
-                  placeholder={`範例：
-0400 內湖送桃機
-0400 松山送桃機/休旅
-0430 新竹東區送桃機/9座 $1000
-2310 tr875 接北屯+北區 任意車2000
-1545 桃機接萬華 任意R 800`}
+                  placeholder={`為使 AI 能正確解析，請依以下建議格式張貼：
+
+時間（24小時制）/ 種類 + 起迄點 / 金額
+範例：1600/桃機接板橋/1200元，或 1400/板橋送松機/1000元
+
+※ 每行為一張訂單，最多 20 單
+※ 航班、聯絡人等詳細資料請於解析完成後點選編輯`}
                   className="w-full h-32 sm:h-40 bg-[#F7F7F7] border border-[#DDDDDD] rounded-lg px-4 py-3 text-[#222222] text-sm font-mono-nums focus:outline-none focus:border-[#222222] resize-none placeholder-[#B0B0B0]"
                 />
                 <Button
