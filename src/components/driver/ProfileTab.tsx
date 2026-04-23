@@ -73,9 +73,16 @@ const BANK_OPTIONS = [
 
 type DocStatus = 'normal' | 'expiring' | 'expired' | 'failed' | 'none'
 
-function getDocStatus(expiryDate: string | null | undefined, uploadFailed?: boolean): DocStatus {
-  if (uploadFailed) return 'failed'
-  if (!expiryDate) return 'none'
+interface DocStatusInfo {
+  status: DocStatus
+  label: string
+  bg: string
+  text: string
+}
+
+function getDocStatus(expiryDate: string | null | undefined, uploadFailed?: boolean): DocStatusInfo {
+  if (uploadFailed) return { status: 'failed', label: '上傳失敗', bg: '#FCEBEB', text: '#A32D2D' }
+  if (!expiryDate) return { status: 'none', label: '尚未上傳', bg: '#F7F7F7', text: '#717171' }
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   const expiry = new Date(expiryDate)
@@ -83,9 +90,9 @@ function getDocStatus(expiryDate: string | null | undefined, uploadFailed?: bool
   const plus30 = new Date(today)
   plus30.setDate(plus30.getDate() + 30)
 
-  if (expiry < today) return 'expired'
-  if (expiry <= plus30) return 'expiring'
-  return 'normal'
+  if (expiry < today) return { status: 'expired', label: '已過期', bg: '#FCEBEB', text: '#A32D2D' }
+  if (expiry <= plus30) return { status: 'expiring', label: '即將到期', bg: '#FFF3E0', text: '#B45309' }
+  return { status: 'normal', label: '正常', bg: '#E8F5E8', text: '#008A05' }
 }
 
 export function ProfileTab({ token, darkMode: darkModeProp }: ProfileTabProps) {
@@ -306,9 +313,9 @@ export function ProfileTab({ token, darkMode: darkModeProp }: ProfileTabProps) {
     for (const dt of DOC_TYPES) {
       const doc = getDocForType(dt)
       const st = getDocStatus(doc?.expiryDate, doc?.uploadFailed)
-      if (st === 'expired') hasExpired = true
-      if (st === 'expiring') hasExpiring = true
-      if (st === 'failed') hasFailed = true
+      if (st.status === 'expired') hasExpired = true
+      if (st.status === 'expiring') hasExpiring = true
+      if (st.status === 'failed') hasFailed = true
     }
     if (hasExpired) return 'expired'
     if (hasExpiring) return 'expiring'
@@ -480,29 +487,35 @@ export function ProfileTab({ token, darkMode: darkModeProp }: ProfileTabProps) {
           {DOC_TYPES.map(docType => {
             const doc = getDocForType(docType)
             const label = DOC_TYPE_LABELS[docType]
-            const status = getDocStatus(doc?.expiryDate, doc?.uploadFailed)
+            const docStatus = getDocStatus(doc?.expiryDate, doc?.uploadFailed)
             const preview = uploadPreview[docType]
             const isUploading = uploadingDoc === docType
             const wasUploaded = uploadSuccess[docType]
 
-            const statusBadge: Record<DocStatus, React.ReactNode> = {
-              normal: <Badge variant="success">正常</Badge>,
-              expiring: <Badge variant="warning">即將到期</Badge>,
-              expired: <Badge variant="danger">已過期</Badge>,
-              failed: <Badge variant="danger">上傳失敗</Badge>,
-              none: doc?.status === 'PENDING' ? <Badge variant="warning">待審核</Badge>
-                : doc?.status === 'PENDING_REVIEW' ? <Badge variant="warning">待審核</Badge>
-                : <Badge variant="default">尚未上傳</Badge>,
+            const showUploadButton = docStatus.status !== 'normal' && !wasUploaded
+
+            // Handle pending review states
+            let badgeContent: React.ReactNode
+            if (docStatus.status === 'none' && (doc?.status === 'PENDING' || doc?.status === 'PENDING_REVIEW')) {
+              badgeContent = (
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ backgroundColor: '#FFF3E0', color: '#B45309' }}>
+                  待審核
+                </span>
+              )
+            } else {
+              badgeContent = (
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ backgroundColor: docStatus.bg, color: docStatus.text }}>
+                  {docStatus.label}
+                </span>
+              )
             }
 
-            const showUploadButton = status !== 'normal' && !wasUploaded
-
             return (
-              <div key={docType} className="border border-[#DDDDDD] rounded-xl p-4">
+              <div key={docType} className={`border rounded-xl p-4 ${docStatus.status === 'expiring' ? 'border-[#FFE0B2]' : 'border-[#DDDDDD]'}`}>
                 {/* 卡片標題 */}
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-sm font-semibold text-[#222222]">{label}</p>
-                  {statusBadge[status]}
+                  {badgeContent}
                 </div>
                 <div className="h-px bg-[#EEEEEE] mb-3" />
 
@@ -513,13 +526,13 @@ export function ProfileTab({ token, darkMode: darkModeProp }: ProfileTabProps) {
                     {doc.expiryDate && (
                       <p>到期日：{doc.expiryDate.split('T')[0]}</p>
                     )}
-                    {status === 'expired' && (
+                    {docStatus.status === 'expired' && (
                       <p className="text-[#A32D2D] font-medium">已過期，請重新上傳</p>
                     )}
-                    {status === 'expiring' && (
+                    {docStatus.status === 'expiring' && (
                       <p className="text-[#B45309] font-medium">即將到期，請盡快更新</p>
                     )}
-                    {status === 'failed' && (
+                    {docStatus.status === 'failed' && (
                       <p className="text-[#A32D2D] font-medium">上傳失敗，請重新上傳</p>
                     )}
                   </div>

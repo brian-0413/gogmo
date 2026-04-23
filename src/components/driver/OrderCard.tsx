@@ -2,6 +2,7 @@
 
 import { OrderStatusBadge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
+import { TripProgressTracker } from './TripProgressTracker'
 import { format, parseISO, differenceInMinutes } from 'date-fns'
 import { zhTW } from 'date-fns/locale'
 import { User, Package, FileText, ChevronDown, ChevronUp, Send, Sparkles } from 'lucide-react'
@@ -10,6 +11,18 @@ import { formatOrderNo } from '@/lib/utils'
 import { VEHICLE_LABELS, TYPE_COLORS, TYPE_LABELS, TRANSFER_FEE_RATE } from '@/lib/vehicle-compat'
 import type { OrderType, Order } from '@/types'
 import type { VehicleType } from '@/lib/vehicle'
+
+// Status color mapping for compact mode badges
+const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
+  COMPLETED:   { bg: '#E8F5E8', text: '#008A05' },
+  IN_PROGRESS: { bg: '#FFF3E0', text: '#B45309' },
+  ACCEPTED:    { bg: '#E8F0FA', text: '#0C447C' },
+  ARRIVED:     { bg: '#E8F0FA', text: '#0C447C' },
+  PICKED_UP:   { bg: '#FFF3E0', text: '#B45309' },
+  PENDING:     { bg: '#F4EFE9', text: '#717171' },
+  PUBLISHED:   { bg: '#F4EFE9', text: '#717171' },
+  ASSIGNED:    { bg: '#FFF3E0', text: '#B45309' },
+}
 
 export type { Order } from '@/types'
 
@@ -48,6 +61,9 @@ function OrderCard({ order, onAccept, onView, onTransferRequest, onCancel, onDis
   const urgency = getTimeUrgency(order.scheduledTime)
   const [notesExpanded, setNotesExpanded] = useState(false)
   const [compactNotesExpanded, setCompactNotesExpanded] = useState(false)
+  // Trip progress tracker state
+  const [showTripTracker, setShowTripTracker] = useState(false)
+  const [tripStep, setTripStep] = useState(-1)
   // Urgent countdown
   const [countdown, setCountdown] = useState('')
   useEffect(() => {
@@ -102,7 +118,14 @@ function OrderCard({ order, onAccept, onView, onTransferRequest, onCancel, onDis
               </span>
             )}
           </div>
-          <OrderStatusBadge status={order.status} />
+          {order.status && STATUS_COLORS[order.status] && (
+            <span
+              className="text-[11px] font-bold px-2 py-0.5 rounded-full"
+              style={{ backgroundColor: STATUS_COLORS[order.status].bg, color: STATUS_COLORS[order.status].text }}
+            >
+              {order.status === 'ACCEPTED' ? '已接單' : order.status === 'IN_PROGRESS' ? '進行中' : order.status === 'COMPLETED' ? '已完成' : order.status === 'ARRIVED' ? '已抵達' : order.status === 'ASSIGNED' ? '已指派' : order.status}
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-2 mb-2">
           <span className="text-sm font-medium text-[#222222]">
@@ -288,6 +311,16 @@ function OrderCard({ order, onAccept, onView, onTransferRequest, onCancel, onDis
           <span className="flex items-center gap-1"><Package className="w-3.5 h-3.5" /> {order.passengerCount}人 / {order.luggageCount}行李</span>
         </div>
 
+        {/* Trip Progress Tracker */}
+        {showTripTracker && (
+          <div className="mt-3">
+            <TripProgressTracker
+              currentStep={tripStep}
+              onAdvance={() => setTripStep(s => Math.min(s + 1, 3))}
+            />
+          </div>
+        )}
+
         {/* Actions */}
         {showActions && (
           <div className="flex flex-col gap-2 pt-2 border-t border-[#EBEBEB]">
@@ -410,7 +443,7 @@ function OrderCard({ order, onAccept, onView, onTransferRequest, onCancel, onDis
                 <div className="flex gap-2">
                   <Button
                     size="sm"
-                    onClick={onView ? () => onView(order.id) : undefined}
+                    onClick={() => setShowTripTracker(true)}
                     className="flex-1 py-2.5 sm:py-auto text-[14px] sm:text-[13px] font-bold bg-[#0C447C] text-white hover:bg-[#0a3a6e] transition-colors"
                   >
                     執行行程

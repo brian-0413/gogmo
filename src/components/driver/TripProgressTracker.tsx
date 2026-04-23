@@ -1,62 +1,68 @@
-'use client'
-
+import { cn } from '@/lib/utils'
 import { Check } from 'lucide-react'
 
+type ProgressStep = 'start' | 'arrive' | 'pickup' | 'complete'
+
+const STEPS: { key: ProgressStep; label: string; num: number }[] = [
+  { key: 'start', label: '開始', num: 1 },
+  { key: 'arrive', label: '抵達', num: 2 },
+  { key: 'pickup', label: '客上', num: 3 },
+  { key: 'complete', label: '客下', num: 4 },
+]
+
 interface TripProgressTrackerProps {
-  currentStep: number // -1=未開始, 0=start, 1=arrive, 2=onboard, 3=done
+  currentStep: number // -1 = not started, 0-3 = step index
   onAdvance: () => void
 }
 
-const STEPS = [
-  { label: '開始', color: '#2A6FAF' },
-  { label: '抵達', color: '#B45309' },
-  { label: '客上', color: '#FF385C' },
-  { label: '客下', color: '#008A05' },
-]
-
-const BUTTON_LABELS = [
-  '開始　前往上車地點',
-  '抵達　回報已抵達',
-  '客上　確認乘客上車',
-  '客下　確認乘客下車',
-]
-
-export default function TripProgressTracker({ currentStep, onAdvance }: TripProgressTrackerProps) {
-  const isCompleted = currentStep >= 3
-  const isNotStarted = currentStep < 0
-  const activeStep = isCompleted ? 3 : Math.max(0, currentStep)
+export function TripProgressTracker({ currentStep, onAdvance }: TripProgressTrackerProps) {
+  const completed = currentStep >= 3
 
   return (
-    <div className="w-full">
-      {/* Step dots + lines */}
-      <div className="flex items-center mb-3">
-        {STEPS.map((step, index) => {
-          const isDone = activeStep > index
-          const isCurrent = activeStep === index && !isCompleted
+    <div className="bg-[#FFF9F0] border border-[#FFE0B2] rounded-xl p-4">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-[14px] font-bold text-[#92400E]">行程進度</h3>
+        {completed && (
+          <span className="text-[12px] font-bold text-[#059669] bg-[#D1FAE5] px-2 py-1 rounded">
+            行程已完成
+          </span>
+        )}
+      </div>
 
+      {/* Progress Steps */}
+      <div className="flex items-center justify-center w-full">
+        {STEPS.map((step, i) => {
+          const lit = currentStep >= i
+          const isNext = currentStep === i - 1
           return (
-            <div key={step.label} className="flex items-center flex-1 last:flex-none">
-              {/* Dot */}
-              <div className="relative z-10 flex items-center justify-center w-8 h-8 rounded-full"
-                style={{
-                  backgroundColor: isDone || isCurrent ? step.color : '#E5E5E5',
-                  color: isDone ? '#fff' : isCurrent ? '#fff' : '#717171',
-                }}
-              >
-                {isDone ? (
-                  <Check size={16} strokeWidth={3} />
-                ) : (
-                  <span className="text-sm font-bold">{index + 1}</span>
-                )}
-              </div>
-
-              {/* Line to next dot */}
-              {index < STEPS.length - 1 && (
+            <div key={step.key} className="flex items-center flex-1">
+              <div className="flex flex-col items-center gap-1.5 flex-shrink-0">
                 <div
-                  className="flex-1 h-0.5 mx-1"
-                  style={{
-                    backgroundColor: activeStep > index ? step.color : '#E5E5E5',
-                  }}
+                  className={cn(
+                    'rounded-full flex-shrink-0 transition-all duration-300 flex items-center justify-center w-8 h-8',
+                    lit
+                      ? 'bg-[#0C447C] text-white'
+                      : 'bg-[#EEEEEE] text-[#AAAAAA]',
+                    isNext && 'animate-pulse ring-2 ring-[#0C447C]/40'
+                  )}
+                >
+                  {completed ? (
+                    <Check className="w-4 h-4" />
+                  ) : (
+                    <span className="text-[12px] font-bold">{step.num}</span>
+                  )}
+                </div>
+                <span className={cn('text-[11px] font-medium', lit ? 'text-[#0C447C]' : 'text-[#AAAAAA]')}>
+                  {step.label}
+                </span>
+              </div>
+              {i < STEPS.length - 1 && (
+                <div
+                  className={cn(
+                    'flex-1 mx-2 h-0.5 rounded',
+                    currentStep >= i + 1 ? 'bg-[#0C447C]' : 'bg-[#EEEEEE]'
+                  )}
                 />
               )}
             </div>
@@ -64,37 +70,28 @@ export default function TripProgressTracker({ currentStep, onAdvance }: TripProg
         })}
       </div>
 
-      {/* Step labels */}
-      <div className="flex items-center mb-4">
-        {STEPS.map((step, index) => {
-          const isDone = activeStep > index
-          return (
-            <div key={step.label} className="flex items-center flex-1 last:flex-none">
-              <span
-                className="text-[10px] font-bold text-center w-8"
-                style={{ color: isDone ? step.color : '#717171' }}
-              >
-                {step.label}
-              </span>
-              {index < STEPS.length - 1 && <div className="flex-1 mx-1" />}
-            </div>
-          )
-        })}
-      </div>
-
-      {/* Action button */}
-      {isCompleted ? (
-        <div className="w-full py-3 text-center text-white text-sm font-bold rounded-lg bg-[#008A05]">
-          行程已完成
+      {/* Advance Button */}
+      {!completed && currentStep >= 0 && (
+        <div className="mt-4">
+          <button
+            onClick={onAdvance}
+            className="w-full py-2.5 bg-[#0C447C] text-white text-[14px] font-bold rounded-lg hover:bg-[#0a3a6e] transition-colors"
+          >
+            確認 {STEPS[currentStep + 1]?.label}
+          </button>
         </div>
-      ) : (
-        <button
-          onClick={onAdvance}
-          className="w-full py-3 text-white text-sm font-bold rounded-lg transition-colors"
-          style={{ backgroundColor: STEPS[activeStep].color }}
-        >
-          {isNotStarted ? '開始行程' : BUTTON_LABELS[activeStep]}
-        </button>
+      )}
+
+      {/* Start Button */}
+      {currentStep < 0 && (
+        <div className="mt-4">
+          <button
+            onClick={onAdvance}
+            className="w-full py-2.5 bg-[#0C447C] text-white text-[14px] font-bold rounded-lg hover:bg-[#0a3a6e] transition-colors"
+          >
+            開始行程
+          </button>
+        </div>
       )}
     </div>
   )
